@@ -1,0 +1,44 @@
+@use 'functions' as fn;
+
+/* GLOBALS */
+$font-color: black;
+$font-family: "Neue Haas", sans-serif;
+
+/* COLORS */
+$white: floralwhite;
+$black: black;
+$darkgrey: #444444;
+$grey: #756F5E;
+$lightgrey: #D4CFC1;
+$lightgrey-m: #F8F6F140;
+
+/* FONT SIZES */
+$fs-h1: fn.toRem(102);
+$fs-h1-m: fn.toRem(94); // font size h1 medium
+$fs-h1-s: fn.toRem(80); // font size h1 small
+$fs-h1-xs: fn.toRem(64); // font size h1 extra small (mobile)
+$fs-h2: fn.toRem(38);
+$fs-h2-m: fn.toRem(30); // font size h2 medium
+$fs-h4: fn.toRem(22);
+$fs-p: fn.toRem(18);
+$fs-p-s: fn.toRem(14); // font size paragraph small
+
+/* FONT WEIGHTS */
+$fw-xl: 500;
+$fw-h1: 400;
+$fw-p: 300;
+
+/* LINE HEIGHTS */
+$lh-h1: fn.toRem(102);
+$lh-h1-m: fn.toRem(94); // line height h1 medium
+$lh-h1-s: fn.toRem(80);
+$lh-h2: fn.toRem(48);
+$lh-p-xl: fn.toRem(36); // line height paragraph extra large
+$lh-p: fn.toRem(32);
+$lh-p-m: fn.toRem(26); // line height paragraph medium
+$lh-p-s: fn.toRem(16); // line height paragraph small
+
+/* WIDTH */
+$main: calc(100dvw - fn.toRem(96)); // Remove the sum of the horizontal margin (here 48px (left) + 48x (right))
+
+/* FONTS */

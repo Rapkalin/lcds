@@ -1,0 +1,59 @@
+@use '../basics/variables' as var;
+@use '../basics/functions' as fn;
+
+.legal-wrapper {
+  margin-top: fn.toRem(146);
+  color: var.$darkgrey;
+
+  .legal-title {
+    font-size: fn.toRem(80);
+    line-height: fn.toRem(80);
+    font-weight: var.$fw-h1;
+    text-align: center;
+  }
+
+  .legal-container {
+    margin: fn.toRem(80) fn.toRem(275);
+
+    .block-legal-container {
+      margin-top: fn.toRem(48);
+
+      h2 {
+        font-size: var.$fs-h2-m;
+        line-height: var.$lh-p-xl;
+        font-weight: var.$fw-p;
+        margin-bottom: fn.toRem(24);
+      }
+
+      h3 {
+        font-size: var.$fs-h4;
+        line-height: var.$lh-p;
+        font-weight: var.$fw-p;
+        margin: fn.toRem(24) 0 fn.toRem(8) 0;
+      }
+
+      p {
+        font-size: var.$fs-p;
+        line-height: var.$lh-p-m;
+        font-weight: var.$fw-p;
+
+        a {
+          color: var.$darkgrey;
+          text-decoration-line: underline;
+        }
+      }
+    }
+  }
+}
+
+/* smartphones, iPhone, portrait 480x320 phones */
+/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (max-width:780px)  {
+  .legal-wrapper {
+    .legal-container {
+      padding: 0 fn.toRem(20) fn.toRem(48) fn.toRem(20);
+      margin: unset;
+    }
+  }
+}

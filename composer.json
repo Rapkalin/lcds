@@ -1,0 +1,55 @@
+{
+    "name": "rapkalin/lcds",
+    "description": "The La Clinique du Sourire's official website",
+    "type": "project",
+    "version": "1.0.10",
+    "autoload": {
+        "psr-4": {
+            "App\\": "website/app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Rapkalin",
+            "email": "raphael@rapkalin.fr"
+        }
+    ],
+    "repositories":[
+        {
+            "type":"composer",
+            "url":"https://wpackagist.org"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "johnpbloch/wordpress": "^6.3",
+        "composer/installers": "^1.12",
+        "vlucas/phpdotenv": "^5.5",
+
+        "wpackagist-plugin/webp-converter-for-media":"^6.2",
+        "phpmailer/phpmailer": "^6.10"
+    },
+
+    "require-dev": {
+        "symfony/var-dumper": "^5.4"
+    },
+
+    "config": {
+        "vendor-dir": "website/vendor",
+        "allow-plugins": {
+            "composer/installers": true,
+            "johnpbloch/wordpress-core-installer": true
+        }
+    },
+    "extra": {
+        "wordpress-install-dir": "website/wordpress-core",
+        "installer-paths": {
+            "website/app/themes/{$name}/": [
+                "type:wordpress-theme"
+            ],
+            "website/app/plugins/{$name}/": [
+                "type:wordpress-plugin"
+            ]
+        }
+    }
+}

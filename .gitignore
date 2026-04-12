@@ -1,0 +1,41 @@
+# Wordpress - ignore core, configuration, examples, uploads and logs.
+# https://github.com/github/gitignore/blob/main/WordPress.gitignore
+
+# Configuration
+# wp-config.php
+
+# Log files
+*.log
+
+# htaccess
+website/.htaccess
+
+# All plugins
+#
+# Note: If you wish to whitelist plugins,
+# uncomment the next line
+#/wp-content/plugins
+
+# All themes
+#
+# Note: If you wish to whitelist themes,
+# uncomment the next line
+#/wp-content/themes
+/vendor/
+
+# LCDS project
+website/vendor
+website/wordpress-core
+website/.env
+website/app/uploads/*
+website/app/uploads-webpc/*
+website/app/themes/lcds/node_modules
+website/app/themes/lcds/dist
+
+# LCDS plugins
+website/app/plugins/*
+!website/app/plugins/advanced-custom-fields-pro
+
+# Other
+.DS_Store
+.idea

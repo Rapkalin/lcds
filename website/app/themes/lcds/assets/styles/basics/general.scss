@@ -1,0 +1,57 @@
+/* UTILS / ABSTRACTS */
+@use "variables" as var;
+@use "functions" as fn;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var.$white;
+  width: 100vw;
+  margin: 0;
+  font-family: var.$font-family;
+
+  &.mobile-menu-open {
+    overflow: hidden; /* Prevent body to be scrollable when mobile menu is open */
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* Reset default margin */
+h1, h2, h4, p {
+  margin: unset;
+}
+
+a {
+  text-decoration-line: none;
+  color: var.$white;
+
+  &visited {
+    color: var.$black;
+  }
+}
+
+.main-wrapper {
+    padding: fn.toRem(40) fn.toRem(48);
+}
+
+.max-width-container {
+  width: auto;
+  max-width: 1600px;
+  margin: auto;
+}
+
+/* smartphones, iPhone, portrait 480x320 phones */
+/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (max-width:680px)  {
+  .main-wrapper {
+    padding: fn.toRem(24) fn.toRem(20);
+  }
+
+  .content-blocks {
+    margin-top: fn.toRem(48);
+  }
+}

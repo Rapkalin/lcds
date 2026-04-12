@@ -1,0 +1,40 @@
+@use '../basics/variables' as var;
+@use '../basics/functions' as fn;
+.section-block-text-wrapper {
+  display: flex;
+
+  .text-content {
+    width: 40%;
+    font-weight: var.$fw-p;
+    line-height: var.$lh-p-m;
+    font-size: var.$fs-p;
+  }
+
+  &.text-align {
+    &-right {
+      flex-direction: row-reverse;
+    }
+
+    &-center {
+      justify-content: center;
+      text-align: center;
+
+      .text-content {
+        width: 100%;
+      }
+    }
+  }
+}
+
+/* smartphones, iPhone, portrait 480x320 phones */
+/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (max-width:780px)  {
+  .section-block-text-wrapper {
+    padding: 0 fn.toRem(20);
+
+    .text-content {
+      width: 100%;
+    }
+  }
+}
