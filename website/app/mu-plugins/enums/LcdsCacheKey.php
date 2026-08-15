@@ -24,8 +24,10 @@ if (! defined('ABSPATH')) {
 
 enum LcdsCacheKey: string
 {
-    // Header navigation tree, rebuilt from wp_get_nav_menu_items() + ACF.
-    case HeaderMenu = 'header_menu';
+    // Entrée d'exemple, sans consommateur : à remplacer par la première vraie
+    // clé du projet. Conservée pour que le module reste démontré et couvert par
+    // les tests tant qu'aucune donnée n'est mise en cache.
+    case Example = 'example';
 
     /**
      * Time to live, in seconds, for this entry.
@@ -33,7 +35,7 @@ enum LcdsCacheKey: string
     public function ttl(): int
     {
         return match ($this) {
-            self::HeaderMenu => HOUR_IN_SECONDS,
+            self::Example => HOUR_IN_SECONDS,
         };
     }
 
@@ -43,7 +45,7 @@ enum LcdsCacheKey: string
     public function group(): LcdsCacheGroup
     {
         return match ($this) {
-            self::HeaderMenu => LcdsCacheGroup::Menus,
+            self::Example => LcdsCacheGroup::Content,
         };
     }
 }

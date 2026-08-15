@@ -40,16 +40,3 @@ parameters:
         # contract is the native `array` hint (see phpcs.xml). Element-type
         # documentation is not required.
         - identifier: missingType.iterableValue
-
-        # WordPress accepts `container => false` to omit the nav wrapper; the
-        # wp_nav_menu stub types the arg shape too strictly. Valid at runtime.
-        -
-            message: '#Parameter \#1 \$args of function wp_nav_menu#'
-            path: website/app/themes/lcds/footer.php
-
-        # Nav menu items are WP_Post objects decorated at runtime by
-        # wp_setup_nav_menu_item() with ->object_id/->title/etc. — real at
-        # runtime but absent from the WP_Post stub.
-        -
-            message: '#Access to an undefined property WP_Post::\$object_id#'
-            path: website/app/themes/lcds/inc/utils.php

@@ -1,5 +1,14 @@
 <?php
-// Exit if accessed directly.
+
+/**
+ * Gabarit générique — sert aussi de page d'accueil.
+ *
+ * Le thème n'a pas de front-page.php : WordPress retombe sur ce fichier pour la
+ * page d'accueil comme pour tout contenu sans gabarit dédié.
+ *
+ * @package lcds
+ */
+
 if (! defined('ABSPATH')) {
     exit;
 }
@@ -7,32 +16,20 @@ if (! defined('ABSPATH')) {
 get_header();
 ?>
 
-<?php if (!$_COOKIE["intro"]): ?>
-    <div class="intro-container" id="intro-start">Cookie accepté</div>
-<?php endif; ?>
+<main id="main-content" class="main-content">
+    <?php if (have_posts()) : ?>
+        <?php while (have_posts()) : the_post(); ?>
+            <article <?php post_class(); ?>>
+                <h1 class="entry-title"><?php the_title(); ?></h1>
+                <div class="entry-content">
+                    <?php the_content(); ?>
+                </div>
+            </article>
+        <?php endwhile; ?>
+    <?php else : ?>
+        <p><?php esc_html_e('Aucun contenu à afficher.', 'lcds'); ?></p>
+    <?php endif; ?>
+</main>
 
 <?php
-if (have_rows('content_blocks')) : ?>
-    <?php
-        $templateName  = basename(get_page_template());
-    $maxWidth = $templateName === 'page-x.php' || get_post_type() === 'projects' || is_front_page();
-    ?>
-    <div class="main-content-container <?= $maxWidth ? 'max-width-container' : '' ?>">
-        <?php while (have_rows('content_blocks')) : the_row(); ?>
-            <section class="content-blocks <?= get_row_layout() ?>">
-                <?php switch (get_row_layout()) {
-                    case 'block_x':
-                        get_template_part("components/block_x");
-                        break;
-                    case 'block_image_text':
-                        get_template_part("components/block_image_text_button");
-                        break;
-                    case 'block_image_with_text':
-                        get_template_part("components/block_image_with_text");
-                        break;
-                } ?>
-            </section>
-        <?php endwhile; ?>
-    </div>
-<?php endif;
 get_footer();

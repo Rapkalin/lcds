@@ -1,116 +1,23 @@
-@use "../basics/variables" as var;
-@use "../basics/functions" as fn;
+// Pied de page. Base minimale : la mise en forme du projet vient par-dessus.
 
-.menu-content,
-.menu-content > div > ul
-{
+.site-footer {
   display: flex;
-  gap: fn.toRem(12) fn.toRem(40);
-  flex-wrap: wrap;
-  list-style: none;
-  margin: unset;
-  padding: unset
-}
+  flex-direction: column;
+  gap: 1rem;
 
-#footer-container {
-  color: var.$white;
-  background-color: var.$darkgrey;
-
-  #footer-logo {
-    a {
-      img {
-        width: fn.toRem(69);
-        height: auto;
-        object-fit: cover;
-      }
-    }
-  }
-
-  .footer-navigation {
+  nav ul {
     display: flex;
-    justify-content: space-between;
     flex-wrap: wrap;
-    gap: fn.toRem(48);
-    margin-top: 80px;
-    border-top: solid 1px;
-    border-bottom: solid 1px;
-    border-color: var.$grey;
-    padding: fn.toRem(12) 0;
-    line-height: var.$lh-p-m;
-
-    #footer-social-media-navigation {
-      .menu-content {
-        li {
-          border-bottom: 1px solid var.$darkgrey;
-
-          &:after {
-            padding-left: fn.toRem(8);
-          }
-        }
-
-        li:hover {
-          border-bottom: 1px solid var.$white;
-        }
-      }
-    }
-
-    #footer-main-navigation {
-      .menu-content {
-        li {
-          border-bottom: 1px solid var.$darkgrey;
-
-          &:after {
-            padding-left: fn.toRem(8);
-          }
-        }
-
-        li:hover {
-          border-bottom: 1px solid var.$white;
-        }
-      }
-    }
-  }
-
-  .footer-legal {
-    display: flex;
-    justify-content: space-between;
-    margin-top: fn.toRem(24);
-    font-size: var.$fs-p-s;
-    line-height: var.$lh-p-s;
-
-    .menu-content {
-      gap: fn.toRem(24) fn.toRem(12)
-    }
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 }
 
-/* smartphones, iPhone, portrait 480x320 phones */
-/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
-/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
-@media (max-width:780px)  {
-  #footer-container {
-    .footer-addresses {
-      grid-template-rows: 1fr 1fr 1fr;
-      grid-template-columns: unset;
-    }
-
-    .footer-navigation {
-      flex-direction: column;
-    }
-  }
-
-  .menu-content,
-  .menu-content > div > ul
-  {
-    justify-content: space-between;
-  }
-
-  .menu-content > div > ul {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  #footer-menu {
-    width: 100%;
-  }
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
 }

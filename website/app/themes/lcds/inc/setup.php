@@ -1,6 +1,25 @@
 <?php
 
 /**
+ * Arguments d'un menu de navigation.
+ *
+ * `wp_nav_menu` produit lui-même le `<nav>` : écrire le conteneur à la main
+ * imposerait `container => false`, refusé par le stub WordPress. `fallback_cb`
+ * à false évite d'afficher la liste des pages quand aucun menu n'est assigné.
+ */
+function lcds_nav_menu_args(string $location, string $class, string $label): array
+{
+    return [
+        'theme_location' => $location,
+        'menu_id' => $location,
+        'container' => 'nav',
+        'container_class' => $class,
+        'container_aria_label' => $label,
+        'fallback_cb' => false,
+    ];
+}
+
+/**
  * Set up the LCDS theme
  **/
 if (!function_exists('theme_lcds_setup')) {
@@ -81,12 +100,12 @@ if (!function_exists('theme_custom_menu_order')) {
             return true;
         }
 
+        // Les types de contenu propres au projet viendront s'insérer ici au fur
+        // et à mesure de leur création.
         return [
             "index.php",
             "separator1",
             "edit.php?post_type=page",
-            "edit.php?post_type=articles",
-            "edit.php?post_type=projects",
             "upload.php",
             "separator2",
             "themes.php",

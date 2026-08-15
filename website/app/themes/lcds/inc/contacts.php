@@ -386,7 +386,6 @@ function getFormGroup(string $type, array $data = []): void
 
                 <label for="<?= esc_attr($label) ?>" class="custom-file-label">
                     <?= esc_html($label) ?>
-                    <?php get_template_part('components/svg-arrow-down'); ?>
                 </label>
 
                 <div class="file-info-container" style="display: none;">

@@ -1,51 +1,26 @@
+<?php
+
+/**
+ * Pied de page du site.
+ *
+ * @package lcds
+ */
+
+if (! defined('ABSPATH')) {
+    exit;
+}
+?>
+
+<footer id="site-footer" class="site-footer">
+    <?php wp_nav_menu(lcds_nav_menu_args('footer-menu', 'footer-navigation', __('Navigation de pied de page', 'lcds'))); ?>
+    <?php wp_nav_menu(lcds_nav_menu_args('social-menu', 'social-navigation', __('Réseaux sociaux', 'lcds'))); ?>
+
+    <div class="footer-legal">
+        <p>&copy; <?php echo esc_html(wp_date('Y')); ?> <?php bloginfo('name'); ?></p>
+        <?php wp_nav_menu(lcds_nav_menu_args('legal-menu', 'legal-navigation', __('Mentions légales', 'lcds'))); ?>
     </div>
+</footer>
 
-    <div id="footer-container" class="main-wrapper">
-        <div id="footer-logo">
-            <a href="<?= home_url('/'); ?>">
-                <?php get_template_part('components/logo-lcds') ?>
-            </a>
-        </div>
-
-        <?php get_template_part('components/block_addresses') ?>
-
-        <div class="footer-navigation">
-            <nav id="footer-main-navigation">
-                <ul class="menu-content">
-                    <?php wp_nav_menu([
-                        'theme_location' => 'footer-menu',
-                        'menu_id' => 'footer-menu',
-                        'items_wrap' => '%3$s',
-                        'container' => false,
-                    ]); ?>
-                </ul>
-            </nav>
-            <nav id="footer-social-media-navigation">
-                <ul class="menu-content">
-                    <?php wp_nav_menu([
-                        'theme_location' => 'social-menu',
-                        'menu_id' => 'social-menu',
-                        'items_wrap' => '%3$s',
-                        'container' => false,
-                    ]); ?>
-                </ul>
-            </nav>
-        </div>
-
-        <div class="footer-legal">
-            <div class="no-numbers-animation">© <?= date('Y') ?> LCDS</div>
-            <nav id="footer-legal-navigation">
-                <ul class="menu-content">
-                    <?php wp_nav_menu([
-                        'theme_location' => 'legal-menu',
-                        'menu_id' => 'legal-menu',
-                        'items_wrap' => '%3$s',
-                        'container' => false,
-                    ]); ?>
-                </ul>
-            </nav>
-        </div>
-    </div>
-
-    <?php wp_footer(); ?>
+<?php wp_footer(); ?>
 </body>
+</html>

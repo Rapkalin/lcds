@@ -5,17 +5,5 @@
 @use "partials/header" as *;
 @use "partials/footer" as *;
 
-/* COMPONENTS */
-@use "components/block-image-full" as *;
-@use "components/block-image-text-button" as *;
-@use "components/block-image-with-text" as *;
-@use "components/block-images" as *;
-@use "components/block-text" as *;
-
-
 /* PAGES */
-@use "pages/contact" as *;
-@use "pages/homepage" as *;
-@use "pages/legal" as *;
-@use "pages/team" as *;
 @use "pages/404" as *;

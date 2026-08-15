@@ -23,7 +23,9 @@ de base, à faire évoluer** selon les besoins.
 ### Utilisation
 
 ```php
-$menu = lcds_cache_remember(LcdsCacheKey::HeaderMenu, 'build_menu', $variant);
+$articles = lcds_cache_remember(LcdsCacheKey::Example, function () {
+    return get_posts(['numberposts' => 3]);
+});
 ```
 
 Signature :
@@ -42,11 +44,9 @@ clé** (l'enum `LcdsCacheKey`) : l'appel ne fait que choisir l'entrée et fourni
 le callback. Pour une entrée **paramétrée** (par page, par variante…), passer un
 `$suffix`.
 
-> ⚠️ **Le suffixe sert à séparer les variantes.** Le menu d'en-tête diffère entre
-> mobile et desktop (`get_item_menu_children()` retire les enfants de taxonomie
-> sur petit écran) : `get_header_menu()` passe donc `mobile` / `desktop` en
-> suffixe. Sans ça, le premier visiteur déciderait du menu servi à tous les
-> autres. **Tout ce qui fait varier la sortie doit être dans la clé.**
+> ⚠️ **Tout ce qui fait varier la sortie doit être dans la clé.** Langue, rôle,
+> variante mobile/desktop, identifiant de contenu : ce qui n'est pas dans la clé
+> (ou son suffixe) sera servi à tout le monde à partir du premier visiteur.
 
 ### Invalidation
 
@@ -63,14 +63,9 @@ Hooks d'invalidation automatique (`cache/invalidation.php`) :
 | Groupe | Invalidé par |
 | --- | --- |
 | `Content` | publication / màj / suppression de `post` et `page` (filtrable via `lcds_cache_content_post_types`) ; création / édition / suppression de termes |
-| `Menus` | mise à jour d'un menu (`wp_update_nav_menu`), **et** les mêmes événements que `Content` |
+| `Menus` | mise à jour d'un menu (`wp_update_nav_menu`) |
 | `Default` | jamais automatiquement (seulement `flush_all()` ou le TTL) |
 | *(tous)* | changement de thème (`switch_theme`) |
-
-> `Menus` suit aussi les contenus et les termes : le menu d'en-tête est construit
-> à partir du menu **et** des pages qu'il pointe (gabarit, identifiants de blocs
-> ACF) et d'une hiérarchie de taxonomie. Une page modifiée peut donc changer le
-> menu sans que `wp_update_nav_menu` ne soit jamais déclenché.
 
 ### Déclarer une clé
 
@@ -136,10 +131,10 @@ Le plugin est **fourni mais désactivé** (`WP_CACHE='false'`). Pour l'activer :
   de 12 à 24 h. Une page mise en cache avec un nonce périmé fait échouer toutes
   les soumissions. **Exclure `/contact` (et toute page à formulaire) via les
   « Rejected URIs » du plugin**, et garder un **TTL ≤ 12 h**.
-- ⚠️ **Variantes mobiles.** Le menu d'en-tête diffère selon le user-agent. Si le
-  cache pleine page est activé, il **doit** être configuré en mode « mobile
-  support », sinon la première version servie (mobile ou desktop) sera renvoyée à
-  tout le monde.
+- ⚠️ **Variantes.** Si le front finit par servir un rendu différent selon
+  l'appareil ou la langue, le cache pleine page **doit** être configuré en
+  conséquence (mode « mobile support », clés par langue), sinon la première
+  version générée est renvoyée à tout le monde.
 
 **Purge** après un déploiement ou une grosse mise à jour de contenu :
 

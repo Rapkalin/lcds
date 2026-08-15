@@ -11,12 +11,6 @@ body {
   width: 100vw;
   margin: 0;
   font-family: var.$font-family;
-
-  &.mobile-menu-open {
-    overflow: hidden; /* Prevent body to be scrollable when mobile menu is open */
-    position: fixed;
-    width: 100%;
-  }
 }
 
 /* Reset default margin */
@@ -49,9 +43,5 @@ a {
 @media (max-width:680px)  {
   .main-wrapper {
     padding: fn.toRem(24) fn.toRem(20);
-  }
-
-  .content-blocks {
-    margin-top: fn.toRem(48);
   }
 }

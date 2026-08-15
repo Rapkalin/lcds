@@ -36,10 +36,6 @@ function lcds_cache_content_post_types(): array
  *
  * We skip the noise (autosaves, revisions, auto-drafts) and only react to the
  * configured public post types, so the cache is not busted on every keystroke.
- *
- * "menus" is bumped too: the header menu is built from the nav menu AND from the
- * pages it points at (page template, ACF block ids), so a page edit can change
- * it without wp_update_nav_menu ever firing.
  */
 function lcds_cache_on_save_post(int $post_id, \WP_Post $post): void
 {
@@ -56,7 +52,6 @@ function lcds_cache_on_save_post(int $post_id, \WP_Post $post): void
     }
 
     lcds_cache_flush_group(LcdsCacheGroup::Content);
-    lcds_cache_flush_group(LcdsCacheGroup::Menus);
 }
 add_action('save_post', 'lcds_cache_on_save_post', 10, 2);
 
@@ -68,20 +63,18 @@ add_action('save_post', 'lcds_cache_on_save_post', 10, 2);
 function lcds_cache_on_post_removed(): void
 {
     lcds_cache_flush_group(LcdsCacheGroup::Content);
-    lcds_cache_flush_group(LcdsCacheGroup::Menus);
 }
 add_action('deleted_post', 'lcds_cache_on_post_removed');
 add_action('trashed_post', 'lcds_cache_on_post_removed');
 add_action('untrashed_post', 'lcds_cache_on_post_removed');
 
 /**
- * Invalidates "content" and "menus" when terms change: the header menu embeds a
- * taxonomy hierarchy, so a renamed term must not survive in a cached menu.
+ * Invalidates "content" when terms (categories, tags, taxonomies) change:
+ * useful for "list by category" fragments.
  */
 function lcds_cache_on_term_change(): void
 {
     lcds_cache_flush_group(LcdsCacheGroup::Content);
-    lcds_cache_flush_group(LcdsCacheGroup::Menus);
 }
 add_action('created_term', 'lcds_cache_on_term_change');
 add_action('edited_term', 'lcds_cache_on_term_change');

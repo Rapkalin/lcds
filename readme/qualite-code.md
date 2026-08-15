@@ -69,9 +69,9 @@ Les fonctions WordPress / ACF / Yoast sont connues via des packages de *stubs*.
 
 Toute neutralisation d'erreur doit être un `ignoreErrors` **ciblé sur un
 fichier et commenté** dans `phpstan.neon` — jamais un `@phpstan-ignore` semé dans
-le code, jamais une baseline globale. Les deux exceptions actuelles sont des
-limitations de stub documentées (`wp_nav_menu` avec `container => false`, et les
-propriétés que `wp_setup_nav_menu_item()` greffe à l'exécution sur `WP_Post`).
+le code, jamais une baseline globale. Le projet n'en a **aucun** aujourd'hui, en
+dehors de la règle générale sur les génériques `array<…>` : c'est l'état à
+préserver.
 
 ```bash
 composer stan
