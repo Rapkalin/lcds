@@ -33,8 +33,7 @@ website/app/themes/lcds/node_modules
 website/app/themes/lcds/dist
 
 # LCDS plugins
-website/app/plugins/*
-!website/app/plugins/advanced-custom-fields-pro
+website/app/plugins
 
 # Other
 .DS_Store

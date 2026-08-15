@@ -22,16 +22,16 @@
     ],
     "require": {
         "php": ">=8.4",
-        "johnpbloch/wordpress": "^6.3",
-        "composer/installers": "^1.12",
-        "vlucas/phpdotenv": "^5.5",
+        "johnpbloch/wordpress": "^7.0",
+        "composer/installers": "^2.3",
+        "vlucas/phpdotenv": "^5.6",
 
-        "wpackagist-plugin/webp-converter-for-media":"^6.2",
-        "phpmailer/phpmailer": "^6.10"
+        "wpackagist-plugin/webp-converter-for-media":"^6.6",
+        "phpmailer/phpmailer": "^7.1"
     },
 
     "require-dev": {
-        "symfony/var-dumper": "^5.4"
+        "symfony/var-dumper": "^8.1"
     },
 
     "config": {
