@@ -29,6 +29,18 @@ après le dernier commit doit pouvoir remonter un problème sur du code figé).
 > ce workflow échouera. Si LCDS est privé sans GHAS : supprimer
 > `codeql.yml` — les autres garde-fous restent en place.
 
+## Déploiement
+
+| Workflow | Déclencheur | Cible |
+| --- | --- | --- |
+| `deploy-preprod.yml` | poussée sur `develop`, ou manuel | `~/preprod-lcds` |
+| `deploy-prod.yml` | poussée d'un **tag** | `~/prod-lcds` |
+
+Les deux appellent le workflow réutilisable `deploy.yml` (build → sauvegarde →
+rsync → recréation des liens vers `shared/`), calqué sur celui de
+`~/Sites/code-cookie`. Procédure complète, arborescence serveur, secrets et
+rollback : **[`deploiement.md`](deploiement.md)**.
+
 ## Ce qui n'a pas été repris de game-france
 
 Le pipeline GitLab de référence contient des jobs liés à l'infrastructure privée
@@ -36,19 +48,7 @@ Steamulo : `helm_update`, `PhpFPMComposerInstall`, `Kube.gitlab-ci.yml`,
 `$REGISTRY_PROXY`, templates `gitlab-ci/gitlab-ci-templates`. Ils dépendent d'un
 GitLab et d'un cluster internes et **n'ont pas d'équivalent ici**.
 
-## Déploiement
-
-**Aucun workflow de déploiement n'est fourni** — la cible d'hébergement de LCDS
-n'est pas décrite dans le dépôt. Le `README` historique évoque un déploiement
-automatique par branche (`develop` → préprod, tag → prod) mais aucun workflow
-correspondant n'a jamais existé dans l'historique Git.
-
-Quand il sera écrit, ne pas oublier :
-
-- **exclure** le `.env` de production et `website/app/uploads/` du transfert ;
-- **rejouer `npm run build`** (le `dist/` du thème n'est pas versionné) ;
-- **recharger PHP-FPM** pour purger l'OPcache ;
-- **purger le cache pleine page** : `wp eval 'wp_cache_clear_cache();'` ;
-- **ne pas** régénérer `advanced-cache.php` / `wp-cache-config.php` en prod :
-  `DISALLOW_FILE_MODS=true` l'interdit, ces fichiers doivent être committés
-  (voir [`cache.md`](cache.md)).
+Le workflow gère déjà les points sensibles : `npm run build` rejoué (le `dist/`
+du thème n'est pas versionné), `.env` et médias exclus du transfert, purge des
+caches. Le rechargement de PHP-FPM (OPcache) est en commentaire à la fin de
+`deploy.yml`, à activer avec la commande de l'hébergeur.

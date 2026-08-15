@@ -1,0 +1,191 @@
+# Déploiement — workflow réutilisable, appelé par deploy-preprod.yml et
+# deploy-prod.yml (qui ne portent que le déclencheur et le chemin distant).
+#
+# Modèle repris de ~/Sites/code-cookie : build d'un artefact, sauvegarde de la
+# release en place, rsync, puis recréation des liens vers shared/.
+#
+# Arborescence cible sur le serveur :
+#
+#   <remote_path>/
+#   ├── shared/          ← JAMAIS écrasé : .env, plugins payants, médias, cache
+#   │   ├── .env
+#   │   ├── plugins/     ← plugins sous licence (ACF Pro…)
+#   │   ├── uploads/
+#   │   ├── uploads-webpc/
+#   │   └── cache/
+#   ├── config/          ← release
+#   ├── website/         ← release (docroot du vhost)
+#   ├── wp-cli.yml       ← release
+#   └── old_release/     ← copie de la release précédente (rollback)
+#
+# Secrets attendus (Settings > Secrets and variables > Actions) :
+#   DEPLOY_HOST · DEPLOY_USER · DEPLOY_KEY
+
+name: Déploiement
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Nom de l'environnement (affiché dans l'UI GitHub)"
+        required: true
+        type: string
+      remote_path:
+        description: "Racine du déploiement sur le serveur (contient shared/)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build de la release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      # Les plugins GRATUITS sont téléchargés ici (wpackagist), pas versionnés.
+      # Les plugins payants vivent dans shared/plugins/ côté serveur.
+      - name: Installer les dépendances PHP (sans dev)
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Installer Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: website/app/themes/lcds/package-lock.json
+
+      # dist/ n'est pas versionné : sans ce build, le site part sans CSS ni JS.
+      - name: Compiler le thème
+        working-directory: website/app/themes/lcds
+        run: |
+          npm ci
+          npm run build
+
+      # node_modules ne sert qu'au build : il n'a rien à faire sur le serveur.
+      - name: Assembler la release
+        run: |
+          rm -rf website/app/themes/lcds/node_modules
+          mkdir -p release
+          cp -a website config wp-cli.yml release/
+          tar -czf release.tar.gz -C release .
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ inputs.environment }}
+          path: release.tar.gz
+          retention-days: 5
+
+  deploy:
+    name: Déploiement (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Récupérer l'artefact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-${{ inputs.environment }}
+
+      - name: Déballer l'artefact
+        run: |
+          mkdir -p release
+          tar -xzf release.tar.gz -C release
+
+      # cp -a plutôt que mv : le site reste servi pendant la copie.
+      - name: Sauvegarder la release en place
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: 22
+          script: |
+            set -e
+            ROOT="${{ inputs.remote_path }}"
+            mkdir -p "$ROOT/shared/plugins" "$ROOT/shared/uploads" \
+                     "$ROOT/shared/uploads-webpc" "$ROOT/shared/cache"
+            rm -rf "$ROOT/old_release"
+            mkdir -p "$ROOT/old_release"
+            for DIR in website config; do
+              [ -d "$ROOT/$DIR" ] && cp -a "$ROOT/$DIR" "$ROOT/old_release/" || true
+            done
+
+      # --delete nettoie les fichiers supprimés du dépôt. Les exclusions
+      # protègent l'état persistant : shared/, la sauvegarde, et les chemins qui
+      # sont des liens vers shared/ (sinon rsync les remplacerait par des dossiers
+      # vides à chaque déploiement).
+      - name: Envoyer la release (rsync)
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: >-
+            -avzr --delete
+            --exclude=shared
+            --exclude=old_release
+            --exclude=.env
+            --exclude=website/app/uploads
+            --exclude=website/app/uploads-webpc
+            --exclude=website/app/cache
+          path: ./release/
+          remote_path: ${{ inputs.remote_path }}
+          remote_host: ${{ secrets.DEPLOY_HOST }}
+          remote_user: ${{ secrets.DEPLOY_USER }}
+          remote_key: ${{ secrets.DEPLOY_KEY }}
+
+      # Recréés à CHAQUE déploiement : rsync --delete emporte les liens des
+      # plugins payants, qui ne font pas partie de la release.
+      - name: Recréer les liens vers shared/
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: 22
+          script: |
+            set -e
+            ROOT="${{ inputs.remote_path }}"
+
+            ln -nsf "$ROOT/shared/.env"            "$ROOT/.env"
+            ln -nsf "$ROOT/shared/uploads"         "$ROOT/website/app/uploads"
+            ln -nsf "$ROOT/shared/uploads-webpc"   "$ROOT/website/app/uploads-webpc"
+            ln -nsf "$ROOT/shared/cache"           "$ROOT/website/app/cache"
+
+            # Plugins sous licence : une boucle, pour qu'ajouter un plugin dans
+            # shared/plugins/ ne demande pas de toucher à ce workflow.
+            for PLUGIN in "$ROOT"/shared/plugins/*/; do
+              [ -d "$PLUGIN" ] || continue
+              ln -nsf "${PLUGIN%/}" "$ROOT/website/app/plugins/$(basename "$PLUGIN")"
+              echo "plugin partagé lié : $(basename "$PLUGIN")"
+            done
+
+      # Étapes post-déploiement, tolérantes à l'absence de WP-CLI sur le serveur.
+      - name: Purger les caches
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: 22
+          script: |
+            ROOT="${{ inputs.remote_path }}"
+            cd "$ROOT"
+            if command -v wp >/dev/null 2>&1; then
+              wp cache flush || true
+              wp rewrite flush || true
+              wp eval 'if (function_exists("wp_cache_clear_cache")) { wp_cache_clear_cache(); }' || true
+            else
+              echo "WP-CLI absent du serveur : purge des caches à faire à la main."
+            fi
+            # ⚠️ L'OPcache n'est vidé que par un rechargement de PHP-FPM. À
+            # décommenter avec la commande de l'hébergeur, sinon l'ancien code
+            # continue de tourner après le déploiement.
+            # sudo systemctl reload php8.4-fpm

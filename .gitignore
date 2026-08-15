@@ -8,9 +8,17 @@ website/app/themes/lcds/node_modules
 website/app/themes/lcds/dist
 
 # ─────────────────────────────────────────────────────────────
+# shared/ — état persistant, jamais écrasé par un déploiement ni versionné :
+# le .env, les plugins payants (licence) et, en production, les médias et le
+# cache. Voir readme/deploiement.md.
+# ─────────────────────────────────────────────────────────────
+/shared/
+/.env
+
+# ─────────────────────────────────────────────────────────────
 # Contenu applicatif
-# Les plugins sont tous installés par Composer, sauf ACF Pro (licence, voir
-# readme/installation.md) : aucun n'est versionné.
+# Les plugins gratuits sont installés par Composer au build, les payants sont
+# liés depuis shared/plugins/ : aucun n'est versionné.
 # ─────────────────────────────────────────────────────────────
 website/app/plugins
 website/app/uploads/*
@@ -35,7 +43,6 @@ website/app/mu-plugins/*/
 # ─────────────────────────────────────────────────────────────
 # Environnement & secrets
 # ─────────────────────────────────────────────────────────────
-.env
 .env.*
 !.env.example
 auth.json

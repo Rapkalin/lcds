@@ -18,6 +18,9 @@
 
 ## 2. Qualité de code
 
+- **Le projet tourne dans Docker.** Toute commande PHP / Composer / WP-CLI passe
+  par `docker compose exec php …` — voir [`readme/docker.md`](readme/docker.md).
+  Ne jamais supposer que PHP est disponible sur l'hôte.
 - **`composer check` DOIT être au vert avant tout commit PHP.** C'est le gate du
   hook de pré-commit et de la CI — voir [`readme/qualite-code.md`](readme/qualite-code.md).
 - **Types natifs obligatoires** sur tout paramètre, retour et propriété. Le type
@@ -65,6 +68,11 @@
 - **Uploads** : allow-list d'extensions **et** vérification du type MIME réel.
 - **Ne pas modifier `website/wordpress-core/`** ni le contenu des plugins : ce
   sont des dépendances Composer, écrasées à la prochaine mise à jour.
+- **Avant de committer un `.htaccess`**, relire le `git diff` : les plugins les
+  régénèrent et y injectent parfois des chemins absolus propres à la machine,
+  faux dans tout autre environnement. Voir [`readme/securite.md`](readme/securite.md).
+- **Jamais de secret ni de plugin sous licence dans le dépôt** : ils vivent dans
+  `shared/`, qui n'est ni versionné ni écrasé par un déploiement.
 
 ---
 

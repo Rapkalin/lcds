@@ -6,6 +6,10 @@
 #           types via PHPCS/Slevomat (phpcs.xml) + analyse statique PHPStan
 #           (phpstan.neon).
 #
+# Les outils tournent DANS LE CONTENEUR 'php' quand il est démarré (même version
+# de PHP que la CI), sinon sur les binaires de l'hôte — website/vendor étant
+# bind-monté, les deux chemins voient les mêmes fichiers.
+#
 # Chaque vérification ne se déclenche que si un fichier PHP est stagé, et BLOQUE
 # le commit en cas de non-conformité. Aucun fichier n'est jamais modifié : la
 # correction reste manuelle (voir les messages).
@@ -25,18 +29,29 @@ STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM -- '*.php' || true)
 # Rien de pertinent stagé → rien à faire.
 [ -z "$STAGED_PHP" ] && exit 0
 
-if [ ! -x "$BIN/pint" ]; then
-    echo "✖ pre-commit : les dépendances de dev ne sont pas installées."
-    echo "  → composer install"
+# Choix du canal d'exécution.
+if docker compose ps --services --filter "status=running" 2>/dev/null | grep -qx php; then
+    RUNNER=(docker compose exec -T php)
+    echo "▶ pre-commit : outils lancés dans le conteneur 'php'."
+elif [ -x "$BIN/pint" ]; then
+    RUNNER=()
+    echo "▶ pre-commit : conteneur arrêté, outils lancés sur l'hôte."
+else
+    echo "✖ pre-commit : ni le conteneur 'php' ni les dépendances locales ne sont disponibles."
+    echo "  → docker compose up -d     (ou)  composer install"
     echo "    ou 'git commit --no-verify' pour passer outre ponctuellement."
     exit 1
 fi
+
+run() {
+    "${RUNNER[@]}" "$@"
+}
 
 # On NE passe PAS la liste des fichiers en argument à Pint : avec des chemins
 # explicites, il IGNORE le `exclude` de pint.json et analyserait du code généré.
 # On lance donc un scan complet, qui respecte `exclude` — comme la CI.
 echo "▶ pre-commit : vérification du style PHP (Pint)…"
-if ! "$BIN/pint" --test; then
+if ! run "$BIN/pint" --test; then
     echo "✖ Style PHP non conforme."
     echo "  → Corrige :  composer lint:fix"
     echo "    puis re-stage (git add) et recommite."
@@ -45,7 +60,7 @@ fi
 echo "✔ Style PHP conforme."
 
 echo "▶ pre-commit : déclaration des types PHP (PHPCS/Slevomat)…"
-if ! "$BIN/phpcs" -q; then
+if ! run "$BIN/phpcs" -q; then
     echo "✖ Types PHP non déclarés (paramètre/retour/propriété sans type natif)."
     echo "  → Auto-corrige :  composer types:fix"
     echo "    (les cas non auto-corrigeables sont à typer à la main),"
@@ -55,7 +70,7 @@ fi
 echo "✔ Types PHP déclarés."
 
 echo "▶ pre-commit : analyse statique PHP (PHPStan)…"
-if ! "$BIN/phpstan" analyse --no-progress --memory-limit=1G; then
+if ! run "$BIN/phpstan" analyse --no-progress --memory-limit=1G; then
     echo "✖ PHPStan a relevé des erreurs (voir ci-dessus)."
     echo "  → Corrige puis re-stage (git add) et recommite,"
     echo "    ou 'git commit --no-verify' pour passer outre ponctuellement."

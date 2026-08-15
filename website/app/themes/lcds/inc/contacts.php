@@ -56,6 +56,34 @@ function lcds_contact_allowed_uploads(): array
 }
 
 /**
+ * Sender address, from the environment.
+ *
+ * This MUST go through the `wp_mail_from` filter and not through
+ * `phpmailer_init`: wp_mail() calls setFrom() BEFORE firing phpmailer_init, so a
+ * From set in that hook arrives too late. WordPress' own default is
+ * `wordpress@{host}`, which PHPMailer rejects outright when the host carries no
+ * dot (`localhost`, `localhost:8080`) — every send would fail.
+ */
+function lcds_mail_from(string $from): string
+{
+    $configured = (string) env('MAIL_FROM');
+
+    return is_email($configured) ? $configured : $from;
+}
+add_filter('wp_mail_from', 'lcds_mail_from');
+
+/**
+ * Sender name, from the environment.
+ */
+function lcds_mail_from_name(string $name): string
+{
+    $configured = (string) env('MAIL_FROM_NAME');
+
+    return $configured !== '' ? $configured : $name;
+}
+add_filter('wp_mail_from_name', 'lcds_mail_from_name');
+
+/**
  * Point PHPMailer at the project SMTP relay when one is configured.
  *
  * Without SMTP_HOST we leave WordPress on PHP's mail(), which keeps local
@@ -75,9 +103,20 @@ function lcds_configure_smtp(\PHPMailer\PHPMailer\PHPMailer $phpmailer): void
     $phpmailer->SMTPAuth = (bool) env('SMTP_AUTH');
     $phpmailer->Username = (string) env('SMTP_USERNAME');
     $phpmailer->Password = (string) env('SMTP_PASSWORD');
-    $phpmailer->SMTPSecure = (string) (env('SMTP_SECURE') ?: 'tls');
+
+    $secure = (string) env('SMTP_SECURE');
+
+    if ($secure === '') {
+        // Relais local sans chiffrement (Mailpit) : PHPMailer tenterait
+        // STARTTLS d'office et l'envoi échouerait.
+        $phpmailer->SMTPAutoTLS = false;
+    } else {
+        $phpmailer->SMTPSecure = $secure;
+    }
+
+    // The From is already set by the wp_mail_from / wp_mail_from_name filters
+    // above, which run early enough for wp_mail() to accept it.
     $phpmailer->CharSet = 'UTF-8';
-    $phpmailer->setFrom((string) env('MAIL_FROM'), (string) env('MAIL_FROM_NAME'));
 }
 add_action('phpmailer_init', 'lcds_configure_smtp');
 

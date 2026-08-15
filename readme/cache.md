@@ -144,7 +144,7 @@ Le plugin est **fourni mais désactivé** (`WP_CACHE='false'`). Pour l'activer :
 **Purge** après un déploiement ou une grosse mise à jour de contenu :
 
 ```bash
-wp eval 'wp_cache_clear_cache();'
+docker compose exec php wp eval 'wp_cache_clear_cache();' --allow-root
 ```
 
 ---

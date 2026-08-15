@@ -38,11 +38,22 @@ $root_dir = dirname(__DIR__);
 $webroot_dir = $root_dir . '/website';
 
 /**
+ * Directory holding the .env.
+ *
+ * `shared/` survives deployments: it holds what must NOT be overwritten by a
+ * release (the .env, the paid plugins, uploads). The repository root is the
+ * fallback, so a checkout without shared/ still boots.
+ *
+ * @var string
+ */
+$env_dir = is_file($root_dir . '/shared/.env') ? $root_dir . '/shared' : $root_dir;
+
+/**
  * Load the .env file. .env.local overrides .env when present, which lets a
  * developer keep personal overrides out of the shared file.
  */
-if (file_exists($root_dir . '/.env')) {
-    $env_files = file_exists($root_dir . '/.env.local')
+if (file_exists($env_dir . '/.env')) {
+    $env_files = file_exists($env_dir . '/.env.local')
         ? ['.env', '.env.local']
         : ['.env'];
 
@@ -52,7 +63,7 @@ if (file_exists($root_dir . '/.env')) {
         ->immutable()
         ->make();
 
-    $dotenv = Dotenv\Dotenv::create($repository, $root_dir, $env_files, false);
+    $dotenv = Dotenv\Dotenv::create($repository, $env_dir, $env_files, false);
     $dotenv->load();
 
     $dotenv->required(['WP_HOME', 'WP_SITEURL']);

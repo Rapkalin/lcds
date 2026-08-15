@@ -9,6 +9,7 @@
     }
   },
   "exclude": [
+    "shared",
     "website/vendor",
     "website/wordpress-core",
     "website/app/plugins",

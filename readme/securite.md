@@ -28,6 +28,24 @@ Tout est dans le bloc `# BEGIN LCDS Security`, **au-dessus** des blocs généré
 par WordPress et Converter for Media (qui sont réécrits automatiquement : n'y
 placez jamais de règle à la main).
 
+> **Pourquoi le `.htaccess` et non le vhost du conteneur ?** Parce que le
+> `.htaccess` part avec le code en production, alors que
+> `docker/apache/000-default.conf` ne sert qu'au poste de développement. Une
+> seule source pour la CSP, appliquée partout. Le vhost se contente de poser
+> `AllowOverride All` — **sans lui, tout ce bloc est ignoré** et le site part
+> sans en-têtes de sécurité.
+
+> ⚠️ **Les deux `.htaccess` sont réécrits par des plugins.** *Converter for
+> Media* régénère ses blocs dans `website/.htaccess` **et**
+> `website/app/.htaccess` dès qu'on enregistre ses réglages, parfois avec des
+> **chemins absolus propres à la machine** (`/var/www/html/...` dans le
+> conteneur), qui seraient faux en production. `wp rewrite flush --hard` réécrit
+> aussi le bloc WordPress.
+> **Réflexe : après toute manipulation de ces plugins, relire `git diff` sur les
+> deux fichiers avant de committer**, et rejeter tout chemin absolu. Le bloc
+> `# BEGIN LCDS Security` est placé **au-dessus** des marqueurs générés
+> précisément pour survivre à ces réécritures.
+
 ### En-têtes posés
 
 | En-tête | Valeur | Rôle |

@@ -1,0 +1,147 @@
+# =============================================================================
+# LCDS — Environnement de développement Docker (Apache + MySQL 8.4)
+# Compose v2 (la clé "version:" est obsolète, volontairement omise)
+#
+# Services :
+#   php        : PHP 8.4 + Apache, sert le docroot website/
+#   db         : MySQL 8.4 (LTS)
+#   phpmyadmin : interface base de données
+#   mailpit    : capture les mails sortants (le formulaire de contact n'envoie
+#                donc JAMAIS de vrai mail depuis un poste de dev)
+#   node       : build du thème (profil "tools", ne démarre pas par défaut)
+#
+# URLs (ports pilotés par le .env) :
+#   Front       http://localhost:8020
+#   Admin       http://localhost:8020/wordpress-core/wp-admin
+#   phpMyAdmin  http://localhost:8021
+#   Mailpit     http://localhost:8025
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PHP 8.4 + Apache. L'entrypoint attend la base puis lance bin/init.sh
+  # (installation WordPress idempotente).
+  # ---------------------------------------------------------------------------
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: lcds-app:local
+    container_name: lcds-php
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8020}:80"
+    working_dir: /var/www/html
+    volumes:
+      # Bind mount du projet complet : le code édité sur l'hôte est servi
+      # immédiatement, et composer install écrit dans website/vendor côté hôte
+      # (ce qui garde le hook de pré-commit et l'IDE fonctionnels).
+      - ./:/var/www/html
+      # Volume nommé : les médias survivent à un `docker compose down` (mais pas
+      # à un `down -v`) et restent réellement inscriptibles par www-data.
+      - uploads:/var/www/html/website/app/uploads
+
+    # Pas de bloc `environment:` : toute la configuration vit dans le .env
+    # racine, lu par phpdotenv (PHP) et sourcé par bin/init.sh (shell). Dupliquer
+    # ici créerait deux sources de vérité qui divergeraient.
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lcds-network
+
+  # ---------------------------------------------------------------------------
+  # MySQL 8.4 (LTS)
+  # L'authentification par défaut est caching_sha2_password : PHP 8.4 (mysqlnd)
+  # la gère nativement, et l'entrypoint teste la connexion via mysqli — le même
+  # chemin que WordPress — plutôt qu'avec un client externe.
+  # ---------------------------------------------------------------------------
+  db:
+    image: mysql:8.4
+    container_name: lcds-db
+    restart: unless-stopped
+    command:
+      # utf8mb4 partout : emojis et caractères sur 4 octets dans les contenus.
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    # TLS reste ACTIF (défaut MySQL 8.4) : `caching_sha2_password` refuse
+    # l'authentification par mot de passe sur TCP en clair, donc le couper
+    # casserait toute connexion — y compris celle de WordPress.
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-lcds}
+      MYSQL_USER: ${DB_USER:-lcds}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-lcds}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      # Exposé sur 3307 pour ne pas entrer en conflit avec un MySQL/MAMP local.
+      - "${DB_PORT:-3307}:3306"
+    healthcheck:
+      # $$ échappe le $ pour Compose : la variable est résolue DANS le conteneur.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      start_period: 90s
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - lcds-network
+
+  # ---------------------------------------------------------------------------
+  # phpMyAdmin
+  # ---------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: lcds-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PMA_PORT:-8021}:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 256M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lcds-network
+
+  # ---------------------------------------------------------------------------
+  # Mailpit — relais SMTP local + webmail.
+  # SMTP_HOST='mailpit' dans le .env suffit à ce que le formulaire de contact
+  # y atterrisse. Aucun mail ne sort de la machine.
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit
+    container_name: lcds-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
+    networks:
+      - lcds-network
+
+  # ---------------------------------------------------------------------------
+  # Node 20 — build du thème. Profil "tools" : ne démarre PAS avec
+  # `docker compose up`. Utilisation ponctuelle :
+  #   docker compose run --rm node npm ci
+  #   docker compose run --rm node npm run build
+  #   docker compose run --rm --service-ports node npm run dev
+  # ---------------------------------------------------------------------------
+  node:
+    image: node:20
+    container_name: lcds-node
+    profiles: ["tools"]
+    working_dir: /app
+    volumes:
+      - ./website/app/themes/lcds:/app
+    networks:
+      - lcds-network
+
+# -----------------------------------------------------------------------------
+volumes:
+  db_data:
+  uploads:
+
+networks:
+  lcds-network:
+    driver: bridge

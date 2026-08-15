@@ -1,0 +1,63 @@
+# Le projet est bind-monté par docker-compose : le contexte de build sert
+# uniquement à construire l'image (Dockerfile + conf Apache + entrypoint).
+# Tout le reste est exclu pour garder le contexte léger.
+
+# Git
+.git
+.gitignore
+.gitattributes
+.githooks
+
+# Documentation
+README.md
+CHANGELOG.md
+CLAUDE.md
+readme/
+
+# Dépendances : réinstallées par l'entrypoint dans le volume monté
+website/vendor
+website/wordpress-core
+composer.phar
+auth.json
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Contenu applicatif
+website/app/plugins
+website/app/uploads
+website/app/uploads-webpc
+website/app/cache
+website/app/themes/lcds/node_modules
+website/app/themes/lcds/dist
+
+# Environnement — l'entrypoint copie .env.example en shared/.env au premier
+# démarrage. .env.example est volontairement CONSERVÉ dans le contexte.
+.env
+.env.local
+.env.*.local
+
+# shared/ : .env, plugins payants et médias. Bind-monté, jamais dans l'image.
+shared/
+
+# Tests / qualité
+tests/
+phpunit.xml
+phpunit.xml.dist
+.phpunit.result.cache
+.phpunit.cache
+pint.json
+phpcs.xml
+phpstan.neon
+
+# CI
+.github
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

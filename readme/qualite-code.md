@@ -4,6 +4,11 @@ Trois outils garantissent la qualité d'écriture du PHP du projet (thème +
 mu-plugins). Ils sont enchaînés par `composer check`, exécutés à chaque commit
 par `.githooks/pre-commit`, et rejoués en CI.
 
+> Toutes les commandes ci-dessous se lancent dans le conteneur :
+> `docker compose exec php composer <script>`, ou via les alias `dcheck` /
+> `dtest` après `source aliases.sh`. Le hook de pré-commit choisit
+> automatiquement le conteneur quand il tourne, l'hôte sinon.
+
 | Outil | Rôle | Config |
 | --- | --- | --- |
 | **Laravel Pint** | Style / formatage (auto-corrige) | `pint.json` |

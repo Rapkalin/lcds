@@ -1,108 +1,136 @@
 # Installation
 
-## Prérequis
+Le projet tourne sur **Docker**. Un seul prérequis sur la machine : Docker
+Desktop (ou Docker Engine + Compose v2). PHP, Composer, MySQL, WP-CLI et Node
+vivent dans les conteneurs.
 
-| Outil     | Version |
-| --------- | ------- |
-| PHP       | 8.4+    |
-| Composer  | 2       |
-| Node      | 20      |
-| npm       | 8+      |
-| MySQL     | 5.7+ / MariaDB 10.4+ |
-| Apache    | 2.4, avec `mod_rewrite`, `mod_headers`, `mod_deflate`, `mod_expires` |
-
-## 1. Cloner et installer les dépendances PHP
+## 1. Cloner et démarrer
 
 ```bash
-git clone git@github.com:Rapkalin/LCDS.git
-cd LCDS
-composer install
+git clone git@github.com:Rapkalin/LCDS.git && cd LCDS
+mkdir -p shared/plugins
+cp .env.example shared/.env
+ln -nsf shared/.env .env      # docker compose lit le .env à la racine
+docker compose up -d
 ```
 
-Cela installe le cœur WordPress dans `website/wordpress-core/`, les plugins dans
-`website/app/plugins/` et les dépendances dans `website/vendor/`. **Aucun de ces
-dossiers n'est versionné.**
+> **Pourquoi `shared/` ?** Ce dossier porte tout ce qui ne doit **jamais** être
+> écrasé par un déploiement ni versionné : le `.env`, les plugins sous licence
+> et, en production, les médias et le cache. Le lien `.env → shared/.env`
+> n'existe que pour Docker Compose, qui ne sait lire que la racine ; PHP, lui,
+> lit `shared/.env` directement. Détail : [`deploiement.md`](deploiement.md).
 
-## 2. Activer le hook de pré-commit
+Au premier démarrage, l'entrypoint enchaîne : `composer install` → génération des
+sels → attente de la base → `bin/init.sh` (installation WordPress, activation du
+thème et des plugins, langue fr_FR) → Apache. Suivre le déroulé :
 
-À faire **une fois par clone** — le hook n'est pas activé automatiquement par Git :
+```bash
+docker compose logs -f php
+```
+
+| Service | URL | Accès |
+| --- | --- | --- |
+| Front | <http://localhost:8020> | — |
+| Admin | <http://localhost:8020/wordpress-core/wp-admin> | `admin` / `admin` |
+| phpMyAdmin | <http://localhost:8021> | `lcds` / `lcds` |
+| Mailpit | <http://localhost:8025> | — |
+
+Les ports se changent dans le `.env` (`APP_PORT`, `PMA_PORT`, `MAILPIT_PORT`,
+`DB_PORT`). Si un port est déjà pris sur la machine (MAMP occupe souvent 80 et
+3306), c'est là qu'on l'ajuste.
+
+## 2. Construire le front
+
+Le thème est compilé par webpack et `dist/` n'est pas versionné :
+
+```bash
+docker compose run --rm node npm ci        # première fois
+docker compose run --rm node npm run build # production
+docker compose run --rm node npm run dev   # développement + watcher
+```
+
+> `npm ci` réinstalle `node_modules` pour Linux. Si tu avais déjà lancé `npm` sur
+> l'hôte, c'est normal et attendu — le build passe désormais par le conteneur.
+
+## 3. Installer les plugins payants (ACF Pro)
+
+Les plugins **gratuits** sont déclarés dans `composer.json` et installés
+automatiquement. Les plugins **payants** ne peuvent pas l'être (licence) : ils se
+déposent dans `shared/plugins/`, et `bin/init.sh` les relie dans
+`website/app/plugins/` à chaque démarrage — exactement comme le fait le
+déploiement sur le serveur.
+
+Sans ACF Pro, le thème s'affiche mais tous les contenus éditoriaux sont vides
+(`get_field()` / `get_sub_field()` sont appelés dans presque tous les templates).
+
+1. Télécharger la dernière version sur <https://advancedcustomfields.com/my-account/> ;
+2. Décompresser dans **`shared/plugins/advanced-custom-fields-pro/`** ;
+3. `docker compose restart php` — le lien est créé et le plugin activé ;
+4. Saisir la clé de licence dans l'admin.
+
+Tout nouveau plugin sous licence suit le même chemin : le déposer dans
+`shared/plugins/`, rien d'autre à configurer.
+
+## 4. Importer une base existante
+
+Le premier démarrage crée un site **vide**. Pour repartir d'une base existante :
+
+```bash
+source aliases.sh
+
+# 1. Exporter depuis l'ancienne base (hors Docker). Les identifiants d'avant
+#    la bascule sont conservés en commentaire « # LEGACY » dans le .env.
+mysqldump -h localhost -u <user> -p <base> > dump.sql
+
+# 2. Réinitialiser puis importer dans le conteneur
+db-drop && db-create
+db-import dump.sql
+
+# 3. Réécrire les URLs (l'ancienne base contient http://lcds.local)
+dwp search-replace 'http://lcds.local' 'http://localhost:8020' --all-tables
+dwp cache flush
+```
+
+> ⚠️ **`search-replace` est indispensable.** Une base qui contient encore
+> l'ancien domaine renvoie des redirections en boucle et des assets introuvables.
+> Utiliser `wp search-replace` et non un `sed` sur le dump : les URLs sont aussi
+> présentes dans des données PHP sérialisées, dont la longueur est encodée.
+
+Pour repartir totalement de zéro : `docker compose down -v` (⚠️ supprime la base
+**et** les médias) puis `docker compose up -d`.
+
+## 5. Activer le hook de pré-commit
+
+À faire **une fois par clone** — Git n'active pas les hooks automatiquement :
 
 ```bash
 composer setup-hooks
 ```
 
-Il lance Pint, PHPCS et PHPStan avant chaque commit — voir
-[`qualite-code.md`](qualite-code.md).
+Il lance Pint, PHPCS et PHPStan avant chaque commit, **dans le conteneur** quand
+il tourne (même version de PHP que la CI), sinon sur les binaires de l'hôte.
+Voir [`qualite-code.md`](qualite-code.md).
 
-## 3. Configurer l'environnement
-
-```bash
-cp .env.example .env
-```
-
-Puis compléter :
-
-- **`WP_ENV`** : `development` en local.
-- **`WP_HOME`** : URL publique, **sans slash final** (`http://lcds.local`).
-  `WP_SITEURL` en dérive automatiquement (`${WP_HOME}/wordpress-core`).
-- **`DB_*`** : accès à la base locale.
-- **Sels d'authentification** : générer un jeu complet sur
-  <https://roots.io/salts.html> et remplacer les huit `generateme`.
-  ⚠️ **Un jeu différent par environnement.** Des sels partagés entre la prod et
-  un poste de dev rendent un cookie de session valable sur les deux.
-- **`SMTP_*` / `MAIL_*`** : relais SMTP du formulaire de contact. Sans
-  `SMTP_HOST`, WordPress retombe sur `mail()` de PHP — suffisant en local.
-
-Le `.env` n'est **jamais** versionné, et le `.env` de production est géré côté
-serveur.
-
-## 4. Installer ACF Pro
-
-ACF Pro est une **dépendance payante non versionnée** : elle n'est ni dans le
-dépôt ni dans `composer.json`. Après `composer install`, l'installer à la main :
-
-1. Télécharger la dernière version depuis <https://advancedcustomfields.com/my-account/> ;
-2. Décompresser dans `website/app/plugins/advanced-custom-fields-pro/` ;
-3. Activer le plugin et saisir la clé de licence dans l'admin.
-
-> Sans ACF, le thème s'affiche mais tous les contenus éditoriaux sont vides :
-> `get_field()` / `get_sub_field()` sont appelés dans presque tous les templates.
-
-## 5. Configurer le vhost Apache
-
-Le `DocumentRoot` pointe sur **`website/`**, pas sur la racine du dépôt.
-`AllowOverride All` est **obligatoire** : sans lui, `website/.htaccess` est
-ignoré et les en-têtes de sécurité ne sont pas posés.
-
-```apache
-<VirtualHost *:80>
-  ServerName lcds.local
-  DocumentRoot "/chemin/vers/LCDS/website"
-  <Directory "/chemin/vers/LCDS/website">
-    Options FollowSymLinks
-    AllowOverride All
-    Require all granted
-  </Directory>
-</VirtualHost>
-```
-
-Puis ajouter `127.0.0.1 lcds.local` à `/etc/hosts`.
-
-## 6. Installer le front
+## 6. Vérifier
 
 ```bash
-cd website/app/themes/lcds
-nvm use            # Node 20, voir .nvmrc
-npm install
-npm run build      # production
-npm run dev        # développement + watcher
+docker compose exec php composer check   # Pint + PHPCS + PHPStan
+docker compose exec php composer test    # Pest
 ```
 
-`dist/` n'est pas versionné : le build doit être rejoué à chaque déploiement.
+Ou, après `source aliases.sh` : `dcheck` et `dtest`.
 
-## 7. Vérifier
+## Mails
 
-```bash
-composer check     # Pint + PHPCS + PHPStan
-composer test      # Pest
-```
+Aucun mail ne sort de la machine : le `.env` pointe `SMTP_HOST` sur le conteneur
+**Mailpit**, qui capture tout et l'affiche sur <http://localhost:8025>. C'est ce
+qui permet de tester le formulaire de contact sans risquer d'écrire à un vrai
+destinataire. Pour tester un relais réel, réactiver les lignes `# LEGACY`
+correspondantes du `.env`.
+
+## Sans Docker (non recommandé)
+
+Le projet reste utilisable sur un Apache natif : `DocumentRoot` sur `website/`,
+`AllowOverride All`, PHP 8.4, et `DB_HOST='localhost'` dans le `.env`. Aucune
+partie du code ne dépend de Docker. C'est simplement une configuration de plus à
+maintenir à la main.

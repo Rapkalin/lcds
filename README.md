@@ -10,32 +10,50 @@ Le site officiel de **La Clinique Du Sourire**.
 
 ## Démarrage rapide
 
+Seul prérequis : **Docker**. PHP, Composer, MySQL, WP-CLI et Node sont dans les
+conteneurs.
+
 ```bash
 git clone git@github.com:Rapkalin/LCDS.git && cd LCDS
-composer install
+mkdir -p shared/plugins
+cp .env.example shared/.env
+ln -nsf shared/.env .env       # docker compose lit le .env à la racine
+docker compose up -d
+docker compose run --rm node npm ci && docker compose run --rm node npm run build
 composer setup-hooks           # active le hook de pré-commit
-cp .env.example .env           # puis compléter DB_*, WP_HOME et les sels
-cd website/app/themes/lcds && npm install && npm run build
 ```
 
-Le `DocumentRoot` du vhost pointe sur **`website/`**, avec `AllowOverride All`.
-Détail complet : [`readme/installation.md`](readme/installation.md).
+| Service | URL | Accès |
+| --- | --- | --- |
+| Front | <http://localhost:8020> | — |
+| Admin | <http://localhost:8020/wordpress-core/wp-admin> | `admin` / `admin` |
+| phpMyAdmin | <http://localhost:8021> | `lcds` / `lcds` |
+| Mailpit (mails capturés) | <http://localhost:8025> | — |
+
+Les plugins gratuits arrivent par Composer ; les plugins **payants** se déposent
+dans `shared/plugins/` et sont reliés automatiquement (même mécanisme en local et
+sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 
 ## Documentation
 
 | Sujet | Fichier |
 | --- | --- |
-| Installation, prérequis, vhost, ACF Pro | [`readme/installation.md`](readme/installation.md) |
+| Installation, ACF Pro, import d'une base | [`readme/installation.md`](readme/installation.md) |
+| Environnement Docker, services, dépannage | [`readme/docker.md`](readme/docker.md) |
 | Arborescence et principes d'organisation | [`readme/structure.md`](readme/structure.md) |
 | Durcissement, en-têtes HTTP, CSP, formulaire de contact | [`readme/securite.md`](readme/securite.md) |
 | Cache applicatif, cache pleine page, OPcache | [`readme/cache.md`](readme/cache.md) |
 | Yoast, indexation, SEO technique | [`readme/seo.md`](readme/seo.md) |
 | Pint, PHPCS, PHPStan, Pest | [`readme/qualite-code.md`](readme/qualite-code.md) |
-| Workflows GitHub Actions et déploiement | [`readme/ci-cd.md`](readme/ci-cd.md) |
+| Workflows GitHub Actions | [`readme/ci-cd.md`](readme/ci-cd.md) |
+| Déploiement, `shared/`, plugins payants, rollback | [`readme/deploiement.md`](readme/deploiement.md) |
 | Aide-mémoire des commandes | [`readme/commandes.md`](readme/commandes.md) |
 
 ## Socle technique
 
+- **Environnement Docker** — Apache + PHP 8.4, MySQL 8.4, phpMyAdmin, Mailpit et un
+  conteneur Node pour le build du thème. Projet bind-monté, initialisation
+  idempotente au démarrage.
 - **Configuration par environnement** — `config/application.php` + `config/environments/`,
   alimentés par un `.env` à la racine. Aucun secret versionné.
 - **Sécurité** — constantes de durcissement, en-têtes HTTP + CSP dans
@@ -51,14 +69,16 @@ Détail complet : [`readme/installation.md`](readme/installation.md).
 ## Workflow Git
 
 - Une branche par ticket : `feature/xxx`.
-- `develop` = préprod, `main` = production, tag = livraison.
-- `composer check` doit être au vert avant tout commit PHP.
+- `docker compose exec php composer check` doit être au vert avant tout commit PHP.
 
 ```bash
+# Pousser sur develop déploie automatiquement la PRÉPROD
 git checkout develop && git merge origin/feature/xxx && git push
+
+# Puis, une fois validé, pousser un tag déploie la PRODUCTION
 git checkout main && git merge origin/develop && git push
-git tag -a x.x.x && git push --tags
+git tag -a x.x.x -m "…" && git push --tags
 ```
 
-> ⚠️ Aucun workflow de déploiement automatique n'existe à ce jour — voir
-> [`readme/ci-cd.md`](readme/ci-cd.md).
+Détail du déploiement, arborescence serveur et rollback :
+[`readme/deploiement.md`](readme/deploiement.md).

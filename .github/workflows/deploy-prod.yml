@@ -1,0 +1,26 @@
+# Déploiement production — sur poussée d'un tag.
+#
+#   git tag -a x.y.z -m "…" && git push --tags
+#
+# Le travail est fait par le workflow réutilisable deploy.yml ; ce fichier ne
+# porte que le déclencheur et le chemin distant.
+
+name: Déploiement production
+
+on:
+  push:
+    tags: ['*']
+
+# Un seul déploiement production à la fois. cancel-in-progress est à false :
+# interrompre un rsync en cours laisserait la release à moitié écrite.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      remote_path: ~/prod-lcds
+    secrets: inherit
