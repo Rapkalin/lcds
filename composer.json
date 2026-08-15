@@ -3,53 +3,82 @@
     "description": "The La Clinique du Sourire's official website",
     "type": "project",
     "version": "1.0.10",
-    "autoload": {
-        "psr-4": {
-            "App\\": "website/app/"
-        }
-    },
     "authors": [
         {
             "name": "Rapkalin",
             "email": "raphael@rapkalin.fr"
         }
     ],
-    "repositories":[
+    "repositories": [
         {
-            "type":"composer",
-            "url":"https://wpackagist.org"
+            "type": "composer",
+            "url": "https://wpackagist.org"
         }
     ],
     "require": {
         "php": ">=8.4",
-        "johnpbloch/wordpress": "^7.0",
         "composer/installers": "^2.3",
+        "johnpbloch/wordpress": "^7.0",
+        "oscarotero/env": "^2.1",
+        "roots/bedrock-autoloader": "^1.1",
+        "roots/bedrock-disallow-indexing": "^2.1",
+        "roots/wp-config": "^1.0",
         "vlucas/phpdotenv": "^5.6",
-
-        "wpackagist-plugin/webp-converter-for-media":"^6.6",
-        "phpmailer/phpmailer": "^7.1"
+        "wpackagist-plugin/webp-converter-for-media": "^6.6",
+        "wpackagist-plugin/wordpress-seo": "^28.2",
+        "wpackagist-plugin/wp-super-cache": "^3.1"
     },
-
     "require-dev": {
-        "symfony/var-dumper": "^8.1"
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.2",
+        "laravel/pint": "^1.30",
+        "pestphp/pest": "^4.7",
+        "php-stubs/acf-pro-stubs": "^6.8",
+        "php-stubs/wordpress-seo-stubs": "^20.5",
+        "phpstan/phpstan": "^2.2",
+        "slevomat/coding-standard": "^8.22",
+        "squizlabs/php_codesniffer": "^3.13",
+        "symfony/var-dumper": "^8.1",
+        "szepeviktor/phpstan-wordpress": "^2.0"
     },
-
     "config": {
         "vendor-dir": "website/vendor",
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
         "allow-plugins": {
             "composer/installers": true,
-            "johnpbloch/wordpress-core-installer": true
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "johnpbloch/wordpress-core-installer": true,
+            "pestphp/pest-plugin": true
         }
     },
     "extra": {
         "wordpress-install-dir": "website/wordpress-core",
         "installer-paths": {
-            "website/app/themes/{$name}/": [
-                "type:wordpress-theme"
+            "website/app/mu-plugins/{$name}/": [
+                "type:wordpress-muplugin"
             ],
             "website/app/plugins/{$name}/": [
                 "type:wordpress-plugin"
+            ],
+            "website/app/themes/{$name}/": [
+                "type:wordpress-theme"
             ]
         }
+    },
+    "scripts": {
+        "lint": "pint --test",
+        "lint:fix": "pint",
+        "types": "phpcs -q",
+        "types:fix": "phpcbf",
+        "stan": "phpstan analyse --memory-limit=1G",
+        "check": [
+            "@lint",
+            "@types",
+            "@stan"
+        ],
+        "_comment_test": "Pest derives its root from the vendor dir (website/vendor); --test-directory points it back at tests/ at the repository root.",
+        "test": "pest --test-directory=../tests",
+        "setup-hooks": "git config core.hooksPath .githooks"
     }
 }
