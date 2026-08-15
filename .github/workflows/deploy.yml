@@ -6,7 +6,7 @@
 #
 # Arborescence cible sur le serveur :
 #
-#   <remote_path>/
+#   $HOME/<remote_path>/
 #   ├── shared/          ← JAMAIS écrasé : .env, plugins payants, médias, cache
 #   │   ├── .env
 #   │   ├── .htaccess    ← SERVI par Apache (le fichier versionné l'amorce)
@@ -37,7 +37,11 @@ on:
         required: true
         type: string
       remote_path:
-        description: "Racine du déploiement sur le serveur (contient shared/)"
+        # RELATIF au home de l'utilisateur SSH, sans `~/` : un `~` transmis par
+        # une variable n'est PAS développé par le shell (`"$ROOT/x"` reste un
+        # chemin littéral commençant par `~`), ce qui crée un dossier nommé « ~ »
+        # au lieu de viser le home. Les scripts préfixent donc par $HOME.
+        description: "Dossier de déploiement, relatif au home SSH (ex. preprod-lcds)"
         required: true
         type: string
 
@@ -122,7 +126,7 @@ jobs:
           port: 22
           script: |
             set -e
-            ROOT="${{ inputs.remote_path }}"
+            ROOT="$HOME/${{ inputs.remote_path }}"
             mkdir -p "$ROOT/shared/plugins" "$ROOT/shared/uploads" \
                      "$ROOT/shared/uploads-webpc" "$ROOT/shared/cache"
             rm -rf "$ROOT/old_release"
@@ -174,12 +178,21 @@ jobs:
           port: 22
           script: |
             set -e
-            ROOT="${{ inputs.remote_path }}"
+            ROOT="$HOME/${{ inputs.remote_path }}"
 
-            ln -nsf "$ROOT/shared/.env"            "$ROOT/.env"
-            ln -nsf "$ROOT/shared/uploads"         "$ROOT/website/app/uploads"
-            ln -nsf "$ROOT/shared/uploads-webpc"   "$ROOT/website/app/uploads-webpc"
-            ln -nsf "$ROOT/shared/cache"           "$ROOT/website/app/cache"
+            # Remplace la destination par un lien. Le rm préalable traite le cas
+            # où rsync a laissé un VRAI dossier à cet emplacement : `ln -nsf`
+            # créerait alors le lien À L'INTÉRIEUR du dossier au lieu de le
+            # remplacer. `-n` ne couvre que le cas d'un lien déjà existant.
+            link_shared() {
+              [ -L "$2" ] || rm -rf "$2"
+              ln -nsf "$1" "$2"
+            }
+
+            link_shared "$ROOT/shared/.env"          "$ROOT/.env"
+            link_shared "$ROOT/shared/uploads"       "$ROOT/website/app/uploads"
+            link_shared "$ROOT/shared/uploads-webpc" "$ROOT/website/app/uploads-webpc"
+            link_shared "$ROOT/shared/cache"         "$ROOT/website/app/cache"
 
             # .htaccess : c'est shared/ qui est SERVI, pour que chaque
             # environnement puisse ajouter ses propres directives (protection par
@@ -214,7 +227,7 @@ jobs:
             # shared/plugins/ ne demande pas de toucher à ce workflow.
             for PLUGIN in "$ROOT"/shared/plugins/*/; do
               [ -d "$PLUGIN" ] || continue
-              ln -nsf "${PLUGIN%/}" "$ROOT/website/app/plugins/$(basename "$PLUGIN")"
+              link_shared "${PLUGIN%/}" "$ROOT/website/app/plugins/$(basename "$PLUGIN")"
               echo "plugin partagé lié : $(basename "$PLUGIN")"
             done
 
@@ -232,7 +245,7 @@ jobs:
           fingerprint: ${{ secrets.DEPLOY_FINGERPRINT }}
           port: 22
           script: |
-            ROOT="${{ inputs.remote_path }}"
+            ROOT="$HOME/${{ inputs.remote_path }}"
             cd "$ROOT"
             if command -v wp >/dev/null 2>&1; then
               wp cache flush || true

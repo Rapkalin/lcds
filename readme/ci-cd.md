@@ -55,8 +55,8 @@ touché tant que tout n'est pas au vert.
 
 | Workflow | Déclencheur | Cible |
 | --- | --- | --- |
-| `deploy-preprod.yml` | poussée sur `develop`, ou manuel | `~/preprod-lcds` |
-| `deploy-prod.yml` | poussée d'un **tag** | `~/prod-lcds` |
+| `deploy-preprod.yml` | poussée sur `develop`, ou manuel | `$HOME/preprod-lcds` |
+| `deploy-prod.yml` | poussée d'un **tag** | `$HOME/prod-lcds` |
 
 Les deux appellent le workflow réutilisable `deploy.yml` (build → sauvegarde →
 rsync → recréation des liens vers `shared/`), calqué sur celui de

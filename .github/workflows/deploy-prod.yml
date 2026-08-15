@@ -41,5 +41,5 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     with:
       environment: production
-      remote_path: ~/prod-lcds
+      remote_path: prod-lcds
     secrets: inherit

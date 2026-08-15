@@ -4,8 +4,14 @@ Deux environnements, sur le **même serveur**, déployés par GitHub Actions.
 
 | Environnement | Déclencheur | Chemin distant |
 | --- | --- | --- |
-| Préprod | poussée sur `develop` (ou lancement manuel) | `~/preprod-lcds` |
-| Production | poussée d'un **tag** | `~/prod-lcds` |
+| Préprod | poussée sur `develop` (ou lancement manuel) | `$HOME/preprod-lcds` |
+| Production | poussée d'un **tag** | `$HOME/prod-lcds` |
+
+> L'entrée `remote_path` des workflows est **relative au home** de l'utilisateur
+> SSH (`preprod-lcds`, pas `~/preprod-lcds`), et les scripts la préfixent par
+> `$HOME`. Un `~` passé par une variable n'est **pas** développé par le shell :
+> `"$ROOT/website"` resterait un chemin littéral commençant par `~`, et créerait
+> un dossier nommé « ~ » dans le home au lieu de viser le bon endroit.
 
 Les deux appellent le même workflow réutilisable
 [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) ; les fichiers
