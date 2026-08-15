@@ -8,10 +8,13 @@
 name: CI
 
 on:
-  push:
-    branches: [main, develop]
+  # Garde-fou de merge : chaque pull request est vérifiée.
   pull_request:
     branches: [main, develop]
+  # Garde-fou de déploiement : les workflows de déploiement appellent ce
+  # workflow et n'envoient rien tant qu'il n'est pas vert. Pas de déclencheur
+  # `push` : il ferait tourner la CI deux fois sur les branches déployées.
+  workflow_call:
 
 # Une nouvelle poussée sur une branche annule le run précédent encore en cours.
 concurrency:

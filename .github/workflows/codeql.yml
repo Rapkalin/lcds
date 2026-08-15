@@ -13,14 +13,15 @@
 name: CodeQL
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
   schedule:
     # Une passe hebdomadaire rattrape les règles CodeQL publiées après le
     # dernier commit, sur du code qui n'a pas bougé.
     - cron: '0 3 * * 1'
+  # Appelé par les workflows de déploiement : rien n'est envoyé si l'analyse
+  # échoue. Le dépôt est public, donc CodeQL est gratuit.
+  workflow_call:
 
 permissions:
   contents: read

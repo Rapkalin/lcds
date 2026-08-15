@@ -12,6 +12,12 @@ Les deux appellent le même workflow réutilisable
 `deploy-preprod.yml` et `deploy-prod.yml` ne portent que le déclencheur et le
 chemin.
 
+**Les contrôles passent avant l'envoi.** Chaque workflow de déploiement lance
+d'abord `ci.yml` (Pint, PHPCS, PHPStan, Pest, CVE, gitleaks, build front) et
+`codeql.yml`, et le job d'envoi les attend (`needs: [ci, codeql]`). Si l'un
+échoue, le déploiement est **sauté** : le serveur n'est pas touché. Voir
+[`ci-cd.md`](ci-cd.md).
+
 ## Arborescence sur le serveur
 
 ```text

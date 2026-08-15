@@ -64,7 +64,8 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 - **Qualité** — `composer check` (Pint + PHPCS/Slevomat + PHPStan niveau 6) et
   suite Pest, joués au pré-commit et en CI.
 - **CI** — GitHub Actions : qualité, tests, CVE des dépendances, détection de
-  secrets, SAST CodeQL, build front.
+  secrets, SAST CodeQL, build front. **Aucun déploiement ne part si l'un de ces
+  contrôles échoue.**
 
 ## Workflow Git
 

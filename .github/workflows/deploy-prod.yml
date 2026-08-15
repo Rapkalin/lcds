@@ -2,8 +2,10 @@
 #
 #   git tag -a x.y.z -m "…" && git push --tags
 #
-# Le travail est fait par le workflow réutilisable deploy.yml ; ce fichier ne
-# porte que le déclencheur et le chemin distant.
+# Rien n'est envoyé tant que la CI et CodeQL ne sont pas verts : les deux sont
+# appelés ici comme workflows réutilisables, et le job de déploiement les attend
+# via `needs`. Un `needs` non satisfait n'échoue pas le déploiement, il le
+# **saute** — aucune release partielle possible.
 
 name: Déploiement production
 
@@ -17,8 +19,25 @@ concurrency:
   group: deploy-prod
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
+  ci:
+    name: Contrôles qualité
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  codeql:
+    name: Analyse de sécurité
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+
   deploy:
+    needs: [ci, codeql]
     uses: ./.github/workflows/deploy.yml
     with:
       environment: production
