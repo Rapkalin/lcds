@@ -1,0 +1,55 @@
+# PHPStan — static analysis for the project's own PHP (theme + mu-plugins).
+# Level 6 enables missing-type-hint reporting (parameters + return types).
+# WordPress / ACF / Yoast symbols come from stub packages so their functions
+# are not reported as undefined.
+includes:
+    - website/vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 6
+
+    # Always analyse against PHP 8.4, whatever the runtime version of the host
+    # or the CI image → reproducible result everywhere.
+    phpVersion: 80400
+
+    paths:
+        - website/app/themes/lcds
+        - website/app/mu-plugins
+
+    # Third-party code we ship but do not own — excluded from analysis.
+    excludePaths:
+        - website/app/themes/lcds/dist/*
+        - website/app/themes/lcds/node_modules/*
+        - website/app/mu-plugins/bedrock-autoloader.php
+        - website/app/mu-plugins/bedrock-disallow-indexing/*
+
+    # Extra symbol sources so plugin functions are known to the analyser.
+    scanFiles:
+        - website/vendor/php-stubs/acf-pro-stubs/acf-pro-stubs.php
+        - website/vendor/php-stubs/wordpress-seo-stubs/wordpress-seo-stubs.php
+
+    # The cache module is loaded by lcds-cache.php through require_once, and the
+    # theme calls into it; PHPStan analyses files in isolation, so it needs to be
+    # told where those symbols live.
+    scanDirectories:
+        - website/app/mu-plugins/enums
+        - website/app/mu-plugins/cache
+
+    ignoreErrors:
+        # array<…> generics are intentionally out of scope: the project's type
+        # contract is the native `array` hint (see phpcs.xml). Element-type
+        # documentation is not required.
+        - identifier: missingType.iterableValue
+
+        # WordPress accepts `container => false` to omit the nav wrapper; the
+        # wp_nav_menu stub types the arg shape too strictly. Valid at runtime.
+        -
+            message: '#Parameter \#1 \$args of function wp_nav_menu#'
+            path: website/app/themes/lcds/footer.php
+
+        # Nav menu items are WP_Post objects decorated at runtime by
+        # wp_setup_nav_menu_item() with ->object_id/->title/etc. — real at
+        # runtime but absent from the WP_Post stub.
+        -
+            message: '#Access to an undefined property WP_Post::\$object_id#'
+            path: website/app/themes/lcds/inc/utils.php

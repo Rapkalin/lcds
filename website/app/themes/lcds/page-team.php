@@ -5,7 +5,7 @@
  * @package WordPress
  */
 
-get_header(args:['color-logo' => '__grey']);
+get_header(args: ['color-logo' => '__grey']);
 ?>
 
 <div class="page-header-container">
@@ -25,8 +25,8 @@ get_header(args:['color-logo' => '__grey']);
                     <div class="block-people-container">
                     <?php foreach ($department['team'] as $i => $member): ?>
                         <?php
-                            $srcset = wp_get_attachment_image_srcset( $member['image']['ID']);
-                            $isPopUpActive = isset($member['popup_description']) && $member['popup_description'];
+                            $srcset = wp_get_attachment_image_srcset($member['image']['ID']);
+                        $isPopUpActive = isset($member['popup_description']) && $member['popup_description'];
                         ?>
                         <div
                             class="people-details <?= $isPopUpActive ? 'popup-active' : '' ?>"
@@ -38,7 +38,7 @@ get_header(args:['color-logo' => '__grey']);
                                 <img
                                     class="people-image"
                                     src="<?= esc_url($member['image']['url']) ?>"
-                                    srcset="<?php echo esc_attr( $srcset ); ?>"
+                                    srcset="<?php echo esc_attr($srcset); ?>"
                                     alt="<?= esc_attr($member['image']['title']) ?>"
                                     width="<?= $member['image']['width'] ?>"
                                     height="<?= $member['image']['height'] ?>"

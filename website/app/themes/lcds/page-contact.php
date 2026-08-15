@@ -5,7 +5,7 @@
  * @package WordPress
  */
 
-get_header(args:['color-logo' => '__grey']);
+get_header(args: ['color-logo' => '__grey']);
 ?>
 <div class="contact-container contact-header-container">
     <div class="contact-title"><?= get_field('title') ?></div>
@@ -25,9 +25,9 @@ get_header(args:['color-logo' => '__grey']);
                         <div class="next-title">
                             <?php
                                 get_template_part('components/svg-bullet');
-                                $next_title = get_sub_field('title');
-                                $next_description = get_sub_field('description', false)
-                            ?>
+                    $next_title = get_sub_field('title');
+                    $next_description = get_sub_field('description', false)
+                    ?>
                             <?= $next_title ?>
                         </div>
                         <div class="next-description"><?= $next_description ?></div>
@@ -37,7 +37,7 @@ get_header(args:['color-logo' => '__grey']);
         <?php endif; ?>
     </div>
     <form id="dynamic-form" method="post">
-        <?php // <div class="g-recaptcha" data-sitekey="votre_cle_de_site"></div> ?>
+        <?php // <div class="g-recaptcha" data-sitekey="votre_cle_de_site"></div>?>
         <?php
         if (have_rows('form')):
             while (have_rows('form')): the_row();
@@ -45,27 +45,27 @@ get_header(args:['color-logo' => '__grey']);
                     case 'simple': // simple
                         getFormGroup(
                             get_sub_field('field_type'),
-                            ['label' => get_sub_field('text_label')]
+                            ['label' => get_sub_field('text_label')],
                         );
                         break;
                     case 'cities':
                         if ($cities = get_sub_field('cities')) {
                             getFormGroup(
                                 'cities',
-                                ['label' => get_sub_field('text_label'), 'cities' => $cities]
+                                ['label' => get_sub_field('text_label'), 'cities' => $cities],
                             );
                         }
                         break;
                 endswitch;
             endwhile;
         endif;
-        ?>
-        <input
-            type="hidden"
-            id="email-from"
-            name="email_from"
-            value="<?= get_field('mail_choice') ?>"
-        >
+?>
+        <?php
+// Nonce + page id only. The recipient stays server-side (resolved from
+// this page's ACF settings): exposing it here would publish the address
+// to scrapers and let anyone re-point the form at another mailbox.
+lcds_contact_form_hidden_fields(get_the_ID());
+?>
         <div class="legal-text">
             * Champs obligatoires.  <br>
             Les données collectées sur ce formulaire sont enregistrées afin d'étudier votre demande et de vous répondre.

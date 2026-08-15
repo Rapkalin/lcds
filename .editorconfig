@@ -1,0 +1,25 @@
+# EditorConfig — https://editorconfig.org
+# Règles de style partagées entre éditeurs/IDE pour ce projet.
+
+root = true
+
+# Règles par défaut pour tous les fichiers.
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# PHP : 4 espaces (cohérent avec Laravel Pint — preset PER/PSR-12).
+[*.php]
+indent_size = 4
+
+# Fichiers de configuration et front : 2 espaces.
+[*.{yml,yaml,json,js,css,scss,html,md}]
+indent_size = 2
+
+# Markdown : ne pas supprimer les espaces de fin (sauts de ligne « hard break »).
+[*.md]
+trim_trailing_whitespace = false

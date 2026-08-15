@@ -1,0 +1,43 @@
+# SAST — analyse statique de sécurité CodeQL.
+#
+# Équivalent GitHub du job `sast` du pipeline GitLab de référence.
+#
+# ⚠️ CodeQL NE SUPPORTE PAS PHP. Seul le JavaScript du thème est analysé ici ;
+#    la couverture sécurité du PHP repose sur PHPStan (composer check) et sur
+#    l'audit CVE des dépendances (workflow ci.yml).
+#
+# ⚠️ Sur un dépôt PRIVÉ, CodeQL exige GitHub Advanced Security (payant) et ce
+#    workflow échouera. Si le dépôt LCDS est privé et que GHAS n'est pas activé,
+#    supprimer ce fichier — les autres garde-fous restent en place.
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Une passe hebdomadaire rattrape les règles CodeQL publiées après le
+    # dernier commit, sur du code qui n'a pas bougé.
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyse CodeQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialiser CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+
+      - name: Analyser
+        uses: github/codeql-action/analyze@v3

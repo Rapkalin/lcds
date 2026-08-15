@@ -1,5 +1,5 @@
 <?php
-get_header(args:['color-logo' => '__grey']);
+get_header(args: ['color-logo' => '__grey']);
 ?>
 
 <div class="main-wrapper max-width-container notfound-container">

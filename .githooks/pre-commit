@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Hook Git pre-commit — vérifications de qualité avant chaque commit.
+#
+#   - PHP : style Laravel Pint (preset PER, pint.json) + déclaration native des
+#           types via PHPCS/Slevomat (phpcs.xml) + analyse statique PHPStan
+#           (phpstan.neon).
+#
+# Chaque vérification ne se déclenche que si un fichier PHP est stagé, et BLOQUE
+# le commit en cas de non-conformité. Aucun fichier n'est jamais modifié : la
+# correction reste manuelle (voir les messages).
+#
+# Activation (une fois par clone) :  composer setup-hooks
+#                          (ou)      git config core.hooksPath .githooks
+#
+# Échappatoire ponctuelle :          git commit --no-verify
+# =============================================================================
+set -euo pipefail
+
+BIN="website/vendor/bin"
+
+# Fichiers PHP stagés (Ajoutés / Copiés / Modifiés).
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM -- '*.php' || true)
+
+# Rien de pertinent stagé → rien à faire.
+[ -z "$STAGED_PHP" ] && exit 0
+
+if [ ! -x "$BIN/pint" ]; then
+    echo "✖ pre-commit : les dépendances de dev ne sont pas installées."
+    echo "  → composer install"
+    echo "    ou 'git commit --no-verify' pour passer outre ponctuellement."
+    exit 1
+fi
+
+# On NE passe PAS la liste des fichiers en argument à Pint : avec des chemins
+# explicites, il IGNORE le `exclude` de pint.json et analyserait du code généré.
+# On lance donc un scan complet, qui respecte `exclude` — comme la CI.
+echo "▶ pre-commit : vérification du style PHP (Pint)…"
+if ! "$BIN/pint" --test; then
+    echo "✖ Style PHP non conforme."
+    echo "  → Corrige :  composer lint:fix"
+    echo "    puis re-stage (git add) et recommite."
+    exit 1
+fi
+echo "✔ Style PHP conforme."
+
+echo "▶ pre-commit : déclaration des types PHP (PHPCS/Slevomat)…"
+if ! "$BIN/phpcs" -q; then
+    echo "✖ Types PHP non déclarés (paramètre/retour/propriété sans type natif)."
+    echo "  → Auto-corrige :  composer types:fix"
+    echo "    (les cas non auto-corrigeables sont à typer à la main),"
+    echo "    puis re-stage (git add) et recommite."
+    exit 1
+fi
+echo "✔ Types PHP déclarés."
+
+echo "▶ pre-commit : analyse statique PHP (PHPStan)…"
+if ! "$BIN/phpstan" analyse --no-progress --memory-limit=1G; then
+    echo "✖ PHPStan a relevé des erreurs (voir ci-dessus)."
+    echo "  → Corrige puis re-stage (git add) et recommite,"
+    echo "    ou 'git commit --no-verify' pour passer outre ponctuellement."
+    exit 1
+fi
+echo "✔ PHPStan OK."

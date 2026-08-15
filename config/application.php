@@ -1,0 +1,171 @@
+<?php
+
+/**
+ * Base configuration, shared by every environment.
+ *
+ * Environment-specific overrides go in config/environments/{{WP_ENV}}.php.
+ * Deviate from this file as little as possible: whatever can be defined here
+ * should be defined here.
+ *
+ * Values come from the .env file at the repository root. `Config::define()`
+ * (roots/wp-config) defers the actual `define()` until `Config::apply()`, which
+ * is what lets an environment file override a value declared here.
+ */
+
+use Roots\WPConfig\Config;
+
+use function Env\env;
+
+Env\Env::$options
+    = Env\Env::CONVERT_BOOL
+    | Env\Env::CONVERT_NULL
+    | Env\Env::CONVERT_INT
+    | Env\Env::STRIP_QUOTES
+    | Env\Env::LOCAL_FIRST;
+
+/**
+ * Repository root (one level above this config directory).
+ *
+ * @var string
+ */
+$root_dir = dirname(__DIR__);
+
+/**
+ * Document root served by Apache — the vhost DocumentRoot points here.
+ *
+ * @var non-falsy-string
+ */
+$webroot_dir = $root_dir . '/website';
+
+/**
+ * Load the .env file. .env.local overrides .env when present, which lets a
+ * developer keep personal overrides out of the shared file.
+ */
+if (file_exists($root_dir . '/.env')) {
+    $env_files = file_exists($root_dir . '/.env.local')
+        ? ['.env', '.env.local']
+        : ['.env'];
+
+    $repository = Dotenv\Repository\RepositoryBuilder::createWithNoAdapters()
+        ->addAdapter(Dotenv\Repository\Adapter\EnvConstAdapter::class)
+        ->addAdapter(Dotenv\Repository\Adapter\PutenvAdapter::class)
+        ->immutable()
+        ->make();
+
+    $dotenv = Dotenv\Dotenv::create($repository, $root_dir, $env_files, false);
+    $dotenv->load();
+
+    $dotenv->required(['WP_HOME', 'WP_SITEURL']);
+    $dotenv->required(['DB_NAME', 'DB_USER', 'DB_PASSWORD']);
+}
+
+/**
+ * Global environment constant. Defaults to the safest value.
+ */
+define('WP_ENV', env('WP_ENV') ?: 'production');
+
+if (! defined('WP_ENVIRONMENT_TYPE')) {
+    $wp_environment_type = env('WP_ENVIRONMENT_TYPE');
+
+    if ($wp_environment_type) {
+        Config::define('WP_ENVIRONMENT_TYPE', $wp_environment_type);
+    } elseif (in_array(WP_ENV, ['production', 'staging', 'development', 'local'], true)) {
+        Config::define('WP_ENVIRONMENT_TYPE', WP_ENV);
+    }
+}
+
+/**
+ * URLs — WordPress core is served from /wordpress-core, content from /app.
+ */
+Config::define('WP_HOME', env('WP_HOME'));
+Config::define('WP_SITEURL', env('WP_SITEURL'));
+
+/**
+ * Custom content directory (replaces wp-content).
+ */
+Config::define('CONTENT_DIR', '/app');
+Config::define('WP_CONTENT_DIR', $webroot_dir . Config::get('CONTENT_DIR'));
+Config::define('WP_CONTENT_URL', Config::get('WP_HOME') . Config::get('CONTENT_DIR'));
+
+/**
+ * Database.
+ */
+if (env('DB_SSL')) {
+    Config::define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+}
+
+Config::define('DB_NAME', env('DB_NAME'));
+Config::define('DB_USER', env('DB_USER'));
+Config::define('DB_PASSWORD', env('DB_PASSWORD'));
+Config::define('DB_HOST', env('DB_HOST') ?: 'localhost');
+Config::define('DB_CHARSET', 'utf8mb4');
+Config::define('DB_COLLATE', '');
+$table_prefix = env('DB_PREFIX') ?: 'wp_';
+
+/**
+ * Authentication keys and salts — generated per environment, never committed.
+ * Generate a set at https://roots.io/salts.html
+ */
+Config::define('AUTH_KEY', env('AUTH_KEY'));
+Config::define('SECURE_AUTH_KEY', env('SECURE_AUTH_KEY'));
+Config::define('LOGGED_IN_KEY', env('LOGGED_IN_KEY'));
+Config::define('NONCE_KEY', env('NONCE_KEY'));
+Config::define('AUTH_SALT', env('AUTH_SALT'));
+Config::define('SECURE_AUTH_SALT', env('SECURE_AUTH_SALT'));
+Config::define('LOGGED_IN_SALT', env('LOGGED_IN_SALT'));
+Config::define('NONCE_SALT', env('NONCE_SALT'));
+
+/**
+ * Theme.
+ */
+Config::define('WP_DEFAULT_THEME', 'lcds');
+
+/**
+ * Hardening — see readme/securite.md.
+ *
+ * Updates and file writes go through Composer and Git, never through the admin:
+ * the admin is not a deployment channel, and a compromised account must not be
+ * able to write PHP to the server.
+ */
+Config::define('AUTOMATIC_UPDATER_DISABLED', true);
+Config::define('DISALLOW_FILE_EDIT', true);
+Config::define('DISALLOW_FILE_MODS', true);
+Config::define('CONCATENATE_SCRIPTS', false);
+Config::define('WP_POST_REVISIONS', env('WP_POST_REVISIONS') ?? true);
+Config::define('DISABLE_WP_CRON', env('DISABLE_WP_CRON') ?: false);
+
+/**
+ * Full-page cache (WP Super Cache): OFF unless WP_CACHE is set in .env.
+ * See readme/cache.md.
+ */
+Config::define('WP_CACHE', env('WP_CACHE') ?: false);
+
+/**
+ * Debugging — production defaults. Overridden in config/environments/.
+ */
+Config::define('WP_DEBUG', false);
+Config::define('WP_DEBUG_DISPLAY', false);
+Config::define('WP_DEBUG_LOG', false);
+Config::define('SCRIPT_DEBUG', false);
+ini_set('display_errors', '0');
+
+/**
+ * Let WordPress detect HTTPS behind a reverse proxy or load balancer.
+ *
+ * @see https://developer.wordpress.org/reference/functions/is_ssl/
+ */
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+    $_SERVER['HTTPS'] = 'on';
+}
+
+$env_config = __DIR__ . '/environments/' . WP_ENV . '.php';
+
+if (file_exists($env_config)) {
+    require_once $env_config;
+}
+
+Config::apply();
+
+if (! defined('ABSPATH')) {
+    define('ABSPATH', $webroot_dir . '/wordpress-core/');
+}

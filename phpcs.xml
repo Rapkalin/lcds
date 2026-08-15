@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ruleset name="lcds-types">
+    <description>
+        Enforce native type declarations on parameters, return values and
+        properties. Code style (braces, spacing, colon) is handled by Pint;
+        this ruleset intentionally checks type hints only.
+    </description>
+
+    <!-- Project-owned code only. -->
+    <file>website/app/themes/lcds</file>
+    <file>website/app/mu-plugins</file>
+
+    <!-- Generated / third-party code we ship but do not own. -->
+    <exclude-pattern>*/dist/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>website/app/mu-plugins/bedrock-autoloader.php</exclude-pattern>
+    <exclude-pattern>website/app/mu-plugins/bedrock-disallow-indexing/*</exclude-pattern>
+
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <arg name="extensions" value="php"/>
+
+    <!-- Parameters must declare a native type hint (array<…> generics not required). -->
+    <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint">
+        <exclude name="SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingTraversableTypeHintSpecification"/>
+    </rule>
+
+    <!-- Functions/methods must declare a native return type. -->
+    <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint">
+        <exclude name="SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingTraversableTypeHintSpecification"/>
+    </rule>
+
+    <!-- Typed properties must declare a native type. -->
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint">
+        <exclude name="SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingTraversableTypeHintSpecification"/>
+    </rule>
+</ruleset>

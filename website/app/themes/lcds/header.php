@@ -23,7 +23,7 @@
                 </div>
 
                 <nav id="navigation">
-                    <?php $menuItems = build_menu(); ?>
+                    <?php $menuItems = get_header_menu(); ?>
                     <div class="menu-content">
                         <?php foreach ($menuItems as $index => $menuItem): ?>
                             <div class="menu-item<?= $menuItem['children'] ? ' has-children' : '' ?>" data-menu-index="<?= $index ?>">
@@ -42,7 +42,7 @@
                                 <span><?php get_template_part('components/svg-bullet') ?></span>
                                 <div class="side-title"><?= $menuItem['title'] ?></div>
                             </div>
-                            <?php if(!empty($menuItem['children'])): ?>
+                            <?php if (!empty($menuItem['children'])): ?>
                                 <div class="expanded-menu-section">
                                     <?php foreach ($menuItem['children'] as $label => $child): ?>
                                         <?php $url = $menuItem['type'] === 'pages' ? $child['url'] : ($menuItem['type'] === 'anchors' ? "{$menuItem['url']}#$child" : '#') ?>
@@ -63,7 +63,7 @@
                                         <?php endif; ?>
                                     <?php endforeach; ?>
 
-                                    <?php if($menuItem['is_contact']): ?>
+                                    <?php if ($menuItem['is_contact']): ?>
                                         <?php get_template_part('components/block_addresses', args: [
                                             'extraClasses' => ['section__addresses__white'],
                                         ]) ?>
@@ -102,9 +102,9 @@
                                 class="mobile-menu-item<?= $menuItem['children'] ? ' has-children' : '' ?>"
                                 data-menu-index="<?= $index ?>"
                                 data-level="0"
-                                <?php if($menuItem['is_contact']): ?>data-addresses="<?= htmlspecialchars(json_encode(get_addresses()), ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
+                                <?php if ($menuItem['is_contact']): ?>data-addresses="<?= htmlspecialchars(json_encode(get_addresses()), ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
                             >
-                                <?php if($menuItem['children']): ?>
+                                <?php if ($menuItem['children']): ?>
                                     <div class="mobile-menu-item-title">
                                         <?= $menuItem['title'] ?>
                                         <span class="arrow"><?php get_template_part("components/svg-arrow-right"); ?></span>
@@ -131,7 +131,7 @@
 </div>
 <?php
     $templateName  = basename(get_page_template());
-    $maxWidth = $templateName !== 'page-projects.php' && get_post_type() !== 'projects' && !is_front_page();
+$maxWidth = $templateName !== 'page-projects.php' && get_post_type() !== 'projects' && !is_front_page();
 ?>
 <div class="container <?= $maxWidth ? 'max-width-container' : '' ?>">
 

@@ -1,5 +1,5 @@
 <?php
-    $button = $args['button'] ?? get_sub_field('button')
+$button = $args['button'] ?? get_sub_field('button')
 ?>
 <?php if ($button): ?>
     <a

@@ -3,9 +3,22 @@
 /**
 * Return images folder path
 */
-function asset($path): string
+function asset(string $path): string
 {
     return get_template_directory_uri() . '/assets/images/' . $path;
+}
+
+/**
+ * Addresses attached to the "contact" entry of the mobile menu.
+ *
+ * header.php has always called this function, but it was never defined: every
+ * render of a contact menu entry on mobile was a fatal error. The data source
+ * (ACF options group) is not wired yet — returning an empty list keeps the
+ * header rendering, and the filter is where the real addresses plug in.
+ */
+function get_addresses(): array
+{
+    return apply_filters('lcds_contact_addresses', []);
 }
 
 function get_terms_hierarchy(string $taxonomy): array
@@ -26,17 +39,23 @@ function get_terms_hierarchy(string $taxonomy): array
     return $terms;
 }
 
+/**
+ * Header navigation tree, served from the application cache.
+ *
+ * The tree differs between small and large screens (get_item_menu_children()
+ * drops the taxonomy children on mobile/tablet), so the device variant is part
+ * of the cache key — otherwise the first visitor would decide which menu every
+ * other visitor gets.
+ */
+function get_header_menu(): array
+{
+    $variant = isMobileOrTablet() ? 'mobile' : 'desktop';
+
+    return lcds_cache_remember(LcdsCacheKey::HeaderMenu, 'build_menu', $variant);
+}
+
 function build_menu(): array
 {
-    /*
-     * If menu is cached, we return the cached version
-     * All transient keys are prefixed with lcds_
-     */
-    // $transientKey = get_transient_key('menu_items');
-    //if ($cachedData = get_transient($transientKey)) {
-    //    return $cachedData;
-    //}
-
     $menu = [];
     $items = wp_get_nav_menu_items('header-menu', [
         'theme_location' => 'header-menu',
@@ -48,7 +67,7 @@ function build_menu(): array
             'title' => $item->title,
             'url' => $item->url,
             'children' => [],
-            'is_contact' => false
+            'is_contact' => false,
         ];
 
         if ($item->object === 'page') {
@@ -61,7 +80,7 @@ function build_menu(): array
          *  -> child one
          *  -> child two
          */
-        if((int) $item->menu_item_parent && isset($menu[$item->menu_item_parent])) {
+        if ((int) $item->menu_item_parent && isset($menu[$item->menu_item_parent])) {
             $menu[$item->menu_item_parent]['children'][$menuItem['title']] = $menuItem;
             $menu[$item->menu_item_parent]['type'] = 'pages';
         } else {
@@ -71,9 +90,6 @@ function build_menu(): array
 
     // Set the contact block for the menu
     set_menu_entry_contact($menu);
-
-    // Cache for 1 hour
-   // set_transient($transientKey, $menu, HOUR_IN_SECONDS);
 
     return $menu;
 }
@@ -106,8 +122,8 @@ function get_page_block_ids(int $pageId): array
 
     foreach ($fields['content_blocks'] as $block) {
         if (
-            $block['block_id']['label'] &&
-            $block['block_id']['identifier']
+            $block['block_id']['label']
+            && $block['block_id']['identifier']
         ) {
             $block_ids[$block['block_id']['label']] = $block['block_id']['identifier'];
         }
@@ -144,22 +160,13 @@ function check_menu_entry_contact(array $childrenItem): bool
     return false;
 }
 
-function get_transient_key(string $key): mixed
-{
-    // Create transient key
-    return CACHE_PREFIX .$key . md5(serialize([
-            'locale' => get_locale(),
-            'user_role' => wp_get_current_user()->roles[0] ?? 'guest',
-    ]));
-}
-
-function isMobileOrTablet() : bool
+function isMobileOrTablet(): bool
 {
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
     return preg_match(
-            '/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i',
-            $userAgent
-        ) === 1
+        '/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i',
+        $userAgent,
+    ) === 1
     ;
 }

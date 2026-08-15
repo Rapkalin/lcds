@@ -1,0 +1,148 @@
+# BEGIN LCDS Security
+# ! --- Bloc maintenu à la main. Ne PAS le déplacer sous les marqueurs générés
+#       par WordPress ou Converter for Media : ils sont réécrits automatiquement.
+#       Documentation : readme/securite.md
+# -----------------------------------------------------------------------------
+# Prérequis : AllowOverride All sur le vhost, et les modules mod_headers,
+# mod_deflate et mod_expires activés. Chaque bloc est encapsulé dans un
+# <IfModule> : si un module manque, Apache démarre quand même.
+# -----------------------------------------------------------------------------
+
+Options -Indexes
+
+# Fichiers sensibles jamais servis, même si PHP cesse de s'exécuter.
+<FilesMatch "(^\.|^wp-config\.php$|^composer\.(json|lock)$|^package(-lock)?\.json$|\.(env|log|ini|sh|sql|bak)$)">
+  Require all denied
+</FilesMatch>
+
+# Dépendances installées sous /app (thèmes, plugins). Passe par mod_rewrite :
+# <Directory>/<DirectoryMatch> sont interdits en contexte .htaccess. Non ancré
+# globalement, sinon on bloquerait aussi wordpress-core/wp-includes/js/dist/vendor/
+# et l'éditeur cesserait de fonctionner.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^app/.+/(vendor|node_modules)/ - [F,L]
+</IfModule>
+
+# XML-RPC : point d'entrée classique du bruteforce et de l'amplification
+# pingback. Également désactivé côté PHP (thème, inc/security.php).
+<Files "xmlrpc.php">
+  Require all denied
+</Files>
+
+# -----------------------------------------------------------------------------
+# En-têtes de sécurité. `always` couvre aussi les réponses d'erreur (404, 500).
+# -----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), browsing-topics=()"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+
+  # PRODUCTION / HTTPS uniquement — à décommenter une fois le site en HTTPS.
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # ---------------------------------------------------------------------------
+  # CSP en Report-Only, FRONT UNIQUEMENT.
+  # Le thème ne charge aucun script tiers : 'self' strict est tenable. Seul
+  # style-src a besoin de 'unsafe-inline' (styles inline émis par le cœur).
+  # L'admin et le login vivent sous /wordpress-core/ et reposent sur du script
+  # inline / eval (Gutenberg) : la CSP y est retirée.
+  # Passage en enforce : parcourir chaque template console ouverte, corriger les
+  # violations, puis retirer le suffixe -Report-Only.
+  # ---------------------------------------------------------------------------
+  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'"
+  <If "%{REQUEST_URI} =~ m#^/wordpress-core/#">
+    Header always unset Content-Security-Policy-Report-Only
+  </If>
+</IfModule>
+
+# -----------------------------------------------------------------------------
+# Compression des réponses textuelles.
+# -----------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain text/html text/css text/xml application/json application/javascript application/xml application/rss+xml application/atom+xml image/svg+xml
+</IfModule>
+
+# -----------------------------------------------------------------------------
+# Cache navigateur des assets statiques. Le build webpack produit des noms
+# stables : purge par déploiement, pas par empreinte. À revoir si un hash de
+# contenu est ajouté au nom des fichiers.
+# -----------------------------------------------------------------------------
+<IfModule mod_expires.c>
+  <FilesMatch "\.(css|js|jpg|jpeg|gif|png|webp|avif|svg|ico|woff|woff2|ttf|eot|otf|mp4|webm|ogg|ogv|pdf)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    <IfModule mod_headers.c>
+      Header set Cache-Control "public"
+    </IfModule>
+  </FilesMatch>
+</IfModule>
+# END LCDS Security
+
+
+# BEGIN Converter for Media
+# ! --- DO NOT EDIT PREVIOUS LINE --- !
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteOptions Inherit
+
+  RewriteCond %{QUERY_STRING} original$
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule . - [L]
+
+  RewriteCond %{HTTP_ACCEPT} image/avif
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.jpg.avif -f
+  RewriteRule (.+)\.jpg$ /app/uploads-webpc/$1.jpg.avif [NC,T=image/avif,L]
+  RewriteCond %{HTTP_ACCEPT} image/avif
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.png.avif -f
+  RewriteRule (.+)\.png$ /app/uploads-webpc/$1.png.avif [NC,T=image/avif,L]
+  RewriteCond %{HTTP_ACCEPT} image/avif
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.webp.avif -f
+  RewriteRule (.+)\.webp$ /app/uploads-webpc/$1.webp.avif [NC,T=image/avif,L]
+  RewriteCond %{HTTP_ACCEPT} image/avif
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.jpeg.avif -f
+  RewriteRule (.+)\.jpeg$ /app/uploads-webpc/$1.jpeg.avif [NC,T=image/avif,L]
+
+  RewriteCond %{HTTP_ACCEPT} image/webp
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.jpg.webp -f
+  RewriteRule (.+)\.jpg$ /app/uploads-webpc/$1.jpg.webp [NC,T=image/webp,L]
+  RewriteCond %{HTTP_ACCEPT} image/webp
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.png.webp -f
+  RewriteRule (.+)\.png$ /app/uploads-webpc/$1.png.webp [NC,T=image/webp,L]
+  RewriteCond %{HTTP_ACCEPT} image/webp
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteCond %{DOCUMENT_ROOT}/app/uploads-webpc/$1.jpeg.webp -f
+  RewriteRule (.+)\.jpeg$ /app/uploads-webpc/$1.jpeg.webp [NC,T=image/webp,L]
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "(?i)\.(jpg|png|webp|jpeg)(\.(webp|avif))?$">
+    Header always set Cache-Control "private"
+    Header append Vary "Accept"
+  </FilesMatch>
+</IfModule>
+# ! --- DO NOT EDIT NEXT LINE --- !
+# END Converter for Media
+
+# BEGIN WordPress
+# Les directives (lignes) entre « BEGIN WordPress » et « END WordPress » sont générées
+# dynamiquement, et doivent être modifiées uniquement via les filtres WordPress.
+# Toute modification des directives situées entre ces marqueurs sera surchargée.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+
+# END WordPress

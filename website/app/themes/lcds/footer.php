@@ -16,7 +16,7 @@
                         'theme_location' => 'footer-menu',
                         'menu_id' => 'footer-menu',
                         'items_wrap' => '%3$s',
-                        'container' => false
+                        'container' => false,
                     ]); ?>
                 </ul>
             </nav>
@@ -26,7 +26,7 @@
                         'theme_location' => 'social-menu',
                         'menu_id' => 'social-menu',
                         'items_wrap' => '%3$s',
-                        'container' => false
+                        'container' => false,
                     ]); ?>
                 </ul>
             </nav>
@@ -40,7 +40,7 @@
                         'theme_location' => 'legal-menu',
                         'menu_id' => 'legal-menu',
                         'items_wrap' => '%3$s',
-                        'container' => false
+                        'container' => false,
                     ]); ?>
                 </ul>
             </nav>

@@ -4,7 +4,7 @@
         class="block-image <?= $withText ? 'with-text' : 'no-text' ?>"
         style="background-image: url(<?= get_sub_field('image')['url']; ?>);"
     >
-        <?php if($withText): ?>
+        <?php if ($withText): ?>
             <h2 class="block-text">
                 <?php get_template_part('components/svg-quote') ?>
                 <?= nl2br($withText) ?>

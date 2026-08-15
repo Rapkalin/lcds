@@ -1,40 +1,56 @@
-# Wordpress - ignore core, configuration, examples, uploads and logs.
-# https://github.com/github/gitignore/blob/main/WordPress.gitignore
-
-# Configuration
-# wp-config.php
-
-# Log files
-*.log
-
-# htaccess
-website/.htaccess
-
-# All plugins
-#
-# Note: If you wish to whitelist plugins,
-# uncomment the next line
-#/wp-content/plugins
-
-# All themes
-#
-# Note: If you wish to whitelist themes,
-# uncomment the next line
-#/wp-content/themes
+# ─────────────────────────────────────────────────────────────
+# Dépendances — installées par Composer / npm, jamais versionnées
+# ─────────────────────────────────────────────────────────────
 /vendor/
-
-# LCDS project
 website/vendor
 website/wordpress-core
-website/.env
-website/app/uploads/*
-website/app/uploads-webpc/*
 website/app/themes/lcds/node_modules
 website/app/themes/lcds/dist
 
-# LCDS plugins
+# ─────────────────────────────────────────────────────────────
+# Contenu applicatif
+# Les plugins sont tous installés par Composer, sauf ACF Pro (licence, voir
+# readme/installation.md) : aucun n'est versionné.
+# ─────────────────────────────────────────────────────────────
 website/app/plugins
+website/app/uploads/*
+!website/app/uploads/.gitkeep
+website/app/uploads-webpc/*
+!website/app/uploads-webpc/.gitkeep
+website/app/cache/*
+!website/app/cache/.gitkeep
+website/app/upgrade
 
-# Other
+# mu-plugins : les modules installés par Composer sont ignorés, les nôtres
+# (fichier d'entrée + enums/ + cache/) sont versionnés.
+website/app/mu-plugins/*/
+!website/app/mu-plugins/enums/
+!website/app/mu-plugins/cache/
+
+# Drop-ins générés par WP Super Cache. À committer une fois générés si le
+# cache pleine page est activé sur le projet — voir readme/cache.md.
+# website/app/advanced-cache.php
+# website/app/wp-cache-config.php
+
+# ─────────────────────────────────────────────────────────────
+# Environnement & secrets
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+auth.json
+
+# ─────────────────────────────────────────────────────────────
+# Logs & caches d'outillage
+# ─────────────────────────────────────────────────────────────
+*.log
+phpunit.xml
+.phpunit.result.cache
+.phpunit.cache
+
+# ─────────────────────────────────────────────────────────────
+# OS / IDE
+# ─────────────────────────────────────────────────────────────
 .DS_Store
-.idea
+.idea/
+.vscode/
