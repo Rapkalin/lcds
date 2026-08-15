@@ -1,3 +1,5 @@
+@use "../basics/functions" as fn;
+
 // En-tête. Base minimale : la mise en forme du projet vient par-dessus.
 
 .skip-link {
@@ -19,15 +21,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: fn.toRem(16);
+  padding: fn.toRem(24) fn.toRem(48);
 }
 
-.site-navigation {
-  ul {
-    display: flex;
-    gap: 1rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+@media (max-width: 680px) {
+  .site-header {
+    padding: fn.toRem(16) fn.toRem(20);
   }
 }

@@ -3,9 +3,9 @@
 /**
  * En-tête du site.
  *
- * Les menus laissent `wp_nav_menu` produire son propre conteneur `<nav>` :
- * l'écrire à la main obligerait à passer `container => false`, que le stub
- * WordPress refuse, et Pint désaligne les appels multi-lignes noyés dans du HTML.
+ * Volontairement réduit au nom du site : pas de navigation tant que
+ * l'arborescence du projet n'est pas arrêtée. Les emplacements de menu restent
+ * déclarés dans inc/setup.php, prêts à être rendus ici.
  *
  * @package lcds
  */
@@ -31,6 +31,4 @@ if (! defined('ABSPATH')) {
     <div class="site-branding">
         <a href="<?php echo esc_url(home_url('/')); ?>" rel="home"><?php bloginfo('name'); ?></a>
     </div>
-
-    <?php wp_nav_menu(lcds_nav_menu_args('header-menu', 'site-navigation', __('Navigation principale', 'lcds'))); ?>
 </header>

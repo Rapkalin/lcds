@@ -1,0 +1,13 @@
+@use "../basics/variables" as var;
+
+.block-media-full {
+  // Même principe que le média du bloc deux colonnes : le ratio fait la hauteur.
+  aspect-ratio: 16 / 9;
+  background: var.$black;
+}
+
+@media (max-width: 680px) {
+  .block-media-full {
+    aspect-ratio: 4 / 3;
+  }
+}

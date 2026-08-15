@@ -18,12 +18,14 @@ h1, h2, h4, p {
   margin: unset;
 }
 
+// $white sur un body $white rendait tout lien invisible : on repart de la
+// couleur de texte, à ajuster quand la charte sera arrêtée.
 a {
   text-decoration-line: none;
-  color: var.$white;
+  color: var.$font-color;
 
-  &visited {
-    color: var.$black;
+  &:visited {
+    color: var.$font-color;
   }
 }
 

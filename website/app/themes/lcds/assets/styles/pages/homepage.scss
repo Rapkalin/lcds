@@ -1,0 +1,15 @@
+@use "../basics/functions" as fn;
+
+// L'espacement entre blocs est porté par le conteneur, pas par les blocs :
+// chaque composant reste ainsi réutilisable sans marge parasite.
+.front-page {
+  display: flex;
+  flex-direction: column;
+  gap: fn.toRem(64);
+}
+
+@media (max-width: 680px) {
+  .front-page {
+    gap: fn.toRem(40);
+  }
+}

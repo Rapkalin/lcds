@@ -1,0 +1,44 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Le bloc pleine largeur voisin est volontairement à fond perdu : c'est donc
+// celui-ci qui porte ses propres marges latérales.
+.block-text-media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: fn.toRem(32);
+  padding: 0 fn.toRem(48);
+
+  // Aplat en attendant le visuel : sans ratio, un conteneur vide n'a aucune
+  // hauteur et le bloc serait invisible.
+  &__media {
+    aspect-ratio: 4 / 3;
+    background: var.$black;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: fn.toRem(16);
+
+    h2 {
+      font-size: var.$fs-h2;
+      line-height: var.$lh-h2;
+      font-weight: var.$fw-h1;
+    }
+
+    p {
+      font-size: var.$fs-p;
+      line-height: var.$lh-p;
+      font-weight: var.$fw-p;
+    }
+  }
+}
+
+@media (max-width: 680px) {
+  .block-text-media {
+    grid-template-columns: 1fr;
+    padding: 0 fn.toRem(20);
+  }
+}

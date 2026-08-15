@@ -5,5 +5,10 @@
 @use "partials/header" as *;
 @use "partials/footer" as *;
 
+/* COMPONENTS */
+@use "components/block-text-media" as *;
+@use "components/block-media-full" as *;
+
 /* PAGES */
+@use "pages/homepage" as *;
 @use "pages/404" as *;

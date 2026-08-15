@@ -12,13 +12,7 @@ if (! defined('ABSPATH')) {
 ?>
 
 <footer id="site-footer" class="site-footer">
-    <?php wp_nav_menu(lcds_nav_menu_args('footer-menu', 'footer-navigation', __('Navigation de pied de page', 'lcds'))); ?>
-    <?php wp_nav_menu(lcds_nav_menu_args('social-menu', 'social-navigation', __('Réseaux sociaux', 'lcds'))); ?>
-
-    <div class="footer-legal">
-        <p>&copy; <?php echo esc_html(wp_date('Y')); ?> <?php bloginfo('name'); ?></p>
-        <?php wp_nav_menu(lcds_nav_menu_args('legal-menu', 'legal-navigation', __('Mentions légales', 'lcds'))); ?>
-    </div>
+    <p class="footer-legal">&copy; <?php bloginfo('name'); ?> <?php echo esc_html(wp_date('Y')); ?></p>
 </footer>
 
 <?php wp_footer(); ?>
