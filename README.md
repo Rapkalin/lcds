@@ -3,7 +3,7 @@
 ## ABOUT
 The La Clinique Du Sourire's website
 
-![wordpress](https://img.shields.io/badge/wordpress-v6.7-0678BE.svg?style=flat-square)
+![wordpress](https://img.shields.io/badge/wordpress-v7.0-0678BE.svg?style=flat-square)
 ![php](https://img.shields.io/badge/PHP-v8.4-828cb7.svg?style=flat-square)
 ![composer](https://img.shields.io/badge/composer-v2-126E75.svg?style=flat-square)
 ![Node](https://img.shields.io/badge/node-v20-644D31.svg?style=flat-square)
