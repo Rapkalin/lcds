@@ -43,6 +43,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Arborescence et principes d'organisation | [`readme/structure.md`](readme/structure.md) |
 | Durcissement, en-têtes HTTP, CSP, formulaire de contact | [`readme/securite.md`](readme/securite.md) |
 | Cache applicatif, cache pleine page, OPcache | [`readme/cache.md`](readme/cache.md) |
+| Menus : emplacements et création automatique | [`readme/menus.md`](readme/menus.md) |
 | Yoast, indexation, SEO technique | [`readme/seo.md`](readme/seo.md) |
 | Pint, PHPCS, PHPStan, Pest | [`readme/qualite-code.md`](readme/qualite-code.md) |
 | Workflows GitHub Actions | [`readme/ci-cd.md`](readme/ci-cd.md) |

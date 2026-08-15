@@ -35,6 +35,14 @@ placez jamais de règle à la main).
 > `AllowOverride All` — **sans lui, tout ce bloc est ignoré** et le site part
 > sans en-têtes de sécurité.
 
+> ⚠️ **En production et en préprod, c'est `shared/.htaccess` qui est servi**, pas
+> le fichier versionné : il est lié au déploiement pour que chaque environnement
+> puisse ajouter ses directives (mot de passe sur la préprod). Le fichier du
+> dépôt reste la **référence** — il amorce `shared/` sur un nouvel environnement,
+> et toute divergence est signalée dans le log de déploiement. Conséquence :
+> **une modification des en-têtes ici doit être reportée à la main** sur les
+> serveurs déjà en place. Voir [`deploiement.md`](deploiement.md).
+
 > ⚠️ **Les deux `.htaccess` sont réécrits par des plugins.** *Converter for
 > Media* régénère ses blocs dans `website/.htaccess` **et**
 > `website/app/.htaccess` dès qu'on enregistre ses réglages, parfois avec des

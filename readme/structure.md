@@ -24,6 +24,8 @@ lcds/
 ├── readme/                     # Documentation détaillée (ce dossier)
 ├── shared/                     # NON versionné, jamais écrasé par un déploiement
 │   ├── .env                    # Configuration et secrets de l'environnement
+│   ├── .htaccess               # Servi par Apache (le fichier versionné l'amorce)
+│   ├── .htpasswd               # Optionnel : protection par mot de passe (préprod)
 │   ├── plugins/                # Plugins sous licence (ACF Pro…)
 │   └── uploads/, cache/        # En production uniquement
 ├── tests/                      # Suite Pest (hors WordPress)

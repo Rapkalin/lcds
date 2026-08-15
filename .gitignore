@@ -47,6 +47,10 @@ website/app/mu-plugins/*/
 !.env.example
 auth.json
 
+# Protection par mot de passe : le fichier vit dans shared/ sur le serveur,
+# jamais dans le dépôt (il contient des empreintes de mots de passe).
+website/.htpasswd
+
 # ─────────────────────────────────────────────────────────────
 # Logs & caches d'outillage
 # ─────────────────────────────────────────────────────────────

@@ -47,6 +47,8 @@ release y est reliée par des liens symboliques recréés après chaque rsync.
 | Chemin dans la release | Pointe vers |
 | --- | --- |
 | `.env` | `shared/.env` |
+| `website/.htaccess` | `shared/.htaccess` |
+| `website/.htpasswd` | `shared/.htpasswd` *(si présent)* |
 | `website/app/uploads` | `shared/uploads` |
 | `website/app/uploads-webpc` | `shared/uploads-webpc` |
 | `website/app/cache` | `shared/cache` |
@@ -79,6 +81,50 @@ ln -nsf ~/prod-lcds/shared/plugins/advanced-custom-fields-pro \
 
 En local, le même mécanisme tourne : `bin/init.sh` relie tout ce qui est dans
 `shared/plugins/` à chaque démarrage du conteneur.
+
+## `.htaccess` : le dépôt est la référence, `shared/` est ce qui est servi
+
+C'est le seul cas où un fichier **versionné** n'est pas celui qu'Apache applique.
+La raison : chaque environnement a besoin de ses propres directives — typiquement
+la protection par mot de passe de la préprod, qui exige un `AuthUserFile` en
+chemin **absolu**, donc impossible à écrire dans un fichier partagé.
+
+Le workflow gère la bascule :
+
+1. rsync livre le `website/.htaccess` du dépôt ;
+2. si `shared/.htaccess` **n'existe pas**, il est **initialisé** depuis ce
+   fichier — un nouvel environnement démarre donc avec tous les en-têtes de
+   sécurité et la CSP ;
+3. s'il existe et **diverge**, le diff est affiché dans le log du déploiement ;
+4. `website/.htaccess` est remplacé par un lien vers `shared/.htaccess`.
+
+> ⚠️ **Le point de vigilance.** Une fois `shared/.htaccess` créé, une
+> modification des en-têtes de sécurité committée dans le dépôt **n'atteint plus
+> le serveur toute seule**. L'étape 3 est là pour que ça ne passe pas inaperçu :
+> **lire le log de déploiement** quand il signale une divergence, et reporter le
+> changement à la main sur chaque environnement.
+
+### Protéger la préprod par mot de passe
+
+```bash
+ssh user@serveur
+htpasswd -c ~/preprod-lcds/shared/.htpasswd nom-utilisateur
+```
+
+Puis ajouter en tête de `~/preprod-lcds/shared/.htaccess` :
+
+```apache
+AuthType Basic
+AuthName "Acces restreint"
+AuthUserFile /home/USER/preprod-lcds/shared/.htpasswd
+Require valid-user
+```
+
+Le chemin d'`AuthUserFile` doit être **absolu** — c'est précisément ce qui
+interdit de mettre ce bloc dans le fichier versionné. Le lien
+`website/.htpasswd` est recréé à chaque déploiement quand le fichier existe, et
+supprimé sinon : la production reste ouverte tant qu'on n'y dépose pas de
+`.htpasswd`.
 
 ## Ce que fait le workflow
 

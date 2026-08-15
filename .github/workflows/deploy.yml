@@ -9,6 +9,8 @@
 #   <remote_path>/
 #   ├── shared/          ← JAMAIS écrasé : .env, plugins payants, médias, cache
 #   │   ├── .env
+#   │   ├── .htaccess    ← SERVI par Apache (le fichier versionné l'amorce)
+#   │   ├── .htpasswd    ← optionnel : protection par mot de passe (préprod)
 #   │   ├── plugins/     ← plugins sous licence (ACF Pro…)
 #   │   ├── uploads/
 #   │   ├── uploads-webpc/
@@ -144,6 +146,7 @@ jobs:
             --exclude=website/app/uploads
             --exclude=website/app/uploads-webpc
             --exclude=website/app/cache
+            --exclude=website/.htpasswd
           path: ./release/
           remote_path: ${{ inputs.remote_path }}
           remote_host: ${{ secrets.DEPLOY_HOST }}
@@ -177,6 +180,35 @@ jobs:
             ln -nsf "$ROOT/shared/uploads"         "$ROOT/website/app/uploads"
             ln -nsf "$ROOT/shared/uploads-webpc"   "$ROOT/website/app/uploads-webpc"
             ln -nsf "$ROOT/shared/cache"           "$ROOT/website/app/cache"
+
+            # .htaccess : c'est shared/ qui est SERVI, pour que chaque
+            # environnement puisse ajouter ses propres directives (protection par
+            # mot de passe en préprod). Le fichier versionné, livré par rsync,
+            # sert de RÉFÉRENCE : il amorce shared/ au premier déploiement, et
+            # toute divergence ultérieure est signalée dans ce log — sinon une
+            # modification des en-têtes de sécurité committée dans le dépôt
+            # n'atteindrait jamais le serveur, en silence.
+            if [ ! -f "$ROOT/shared/.htaccess" ]; then
+              cp "$ROOT/website/.htaccess" "$ROOT/shared/.htaccess"
+              echo "shared/.htaccess initialisé depuis le fichier versionné."
+            elif ! diff -q "$ROOT/website/.htaccess" "$ROOT/shared/.htaccess" >/dev/null 2>&1; then
+              echo "!!! ATTENTION : shared/.htaccess diverge du fichier versionné."
+              echo "!!! Le serveur applique shared/.htaccess. Reporter les changements à la main."
+              diff -u "$ROOT/shared/.htaccess" "$ROOT/website/.htaccess" || true
+            fi
+            rm -f "$ROOT/website/.htaccess"
+            ln -nsf "$ROOT/shared/.htaccess" "$ROOT/website/.htaccess"
+
+            # .htpasswd : présent uniquement là où l'accès est restreint. Le lien
+            # n'est créé que si le fichier existe, sinon Apache renverrait une 500
+            # sur un AuthUserFile pointant dans le vide.
+            if [ -f "$ROOT/shared/.htpasswd" ]; then
+              ln -nsf "$ROOT/shared/.htpasswd" "$ROOT/website/.htpasswd"
+              echo "shared/.htpasswd lié : accès restreint actif."
+            else
+              rm -f "$ROOT/website/.htpasswd"
+              echo "Pas de shared/.htpasswd : accès libre sur cet environnement."
+            fi
 
             # Plugins sous licence : une boucle, pour qu'ajouter un plugin dans
             # shared/plugins/ ne demande pas de toucher à ce workflow.

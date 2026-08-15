@@ -9,12 +9,8 @@ if (!function_exists('theme_lcds_setup')) {
         add_theme_support('title-tag');
         add_theme_support('menus');
         add_theme_support('block-templates');
-        register_nav_menus([
-            'header-menu' => esc_html__('Header Menu', 'lcds'),
-            'footer-menu' => esc_html__('Footer Menu', 'lcds'),
-            'social-menu' => esc_html__('Social Media Menu', 'lcds'),
-            'legal-menu' => esc_html__('Legal Menu', 'lcds'),
-        ]);
+        // Les emplacements de menu sont déclarés dans inc/menus.php, à partir
+        // de l'enum LcdsMenuLocation.
 
         add_filter('use_block_editor_for_post', 'desactivate_gutemberg_pages', 10, 2);
         show_admin_bar(false);
