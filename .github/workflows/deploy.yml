@@ -18,8 +18,12 @@
 #   ├── wp-cli.yml       ← release
 #   └── old_release/     ← copie de la release précédente (rollback)
 #
-# Secrets attendus (Settings > Secrets and variables > Actions) :
-#   DEPLOY_HOST · DEPLOY_USER · DEPLOY_KEY
+# Secrets (Settings > Secrets and variables > Actions) :
+#   OBLIGATOIRES   DEPLOY_HOST · DEPLOY_USER · DEPLOY_KEY
+#   OPTIONNELS     DEPLOY_KEY_PASS (clé protégée par passphrase)
+#                  DEPLOY_FINGERPRINT (vérification de l'hôte, anti-MITM)
+# Un secret optionnel non défini vaut la chaîne vide et est simplement ignoré.
+# Détail : readme/deploiement.md
 
 name: Déploiement
 
@@ -103,11 +107,16 @@ jobs:
 
       # cp -a plutôt que mv : le site reste servi pendant la copie.
       - name: Sauvegarder la release en place
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
+          # Vides = ignorés. Renseigner DEPLOY_KEY_PASS si la clé est protégée
+          # par une passphrase, et DEPLOY_FINGERPRINT pour vérifier l'identité
+          # du serveur (anti-MITM) — voir readme/deploiement.md.
+          passphrase: ${{ secrets.DEPLOY_KEY_PASS }}
+          fingerprint: ${{ secrets.DEPLOY_FINGERPRINT }}
           port: 22
           script: |
             set -e
@@ -125,7 +134,7 @@ jobs:
       # sont des liens vers shared/ (sinon rsync les remplacerait par des dossiers
       # vides à chaque déploiement).
       - name: Envoyer la release (rsync)
-        uses: burnett01/rsync-deployments@7.0.1
+        uses: burnett01/rsync-deployments@v9
         with:
           switches: >-
             -avzr --delete
@@ -140,15 +149,25 @@ jobs:
           remote_host: ${{ secrets.DEPLOY_HOST }}
           remote_user: ${{ secrets.DEPLOY_USER }}
           remote_key: ${{ secrets.DEPLOY_KEY }}
+          remote_key_pass: ${{ secrets.DEPLOY_KEY_PASS }}
+          # rsync ne sait pas exploiter DEPLOY_FINGERPRINT : sa vérification
+          # d'hôte s'appuie sur un known_hosts. À passer à "true" seulement après
+          # avoir vérifié que l'hôte est connu, sinon le déploiement échoue.
+          # strict_hostkeys_checking: "true"
 
       # Recréés à CHAQUE déploiement : rsync --delete emporte les liens des
       # plugins payants, qui ne font pas partie de la release.
       - name: Recréer les liens vers shared/
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
+          # Vides = ignorés. Renseigner DEPLOY_KEY_PASS si la clé est protégée
+          # par une passphrase, et DEPLOY_FINGERPRINT pour vérifier l'identité
+          # du serveur (anti-MITM) — voir readme/deploiement.md.
+          passphrase: ${{ secrets.DEPLOY_KEY_PASS }}
+          fingerprint: ${{ secrets.DEPLOY_FINGERPRINT }}
           port: 22
           script: |
             set -e
@@ -169,11 +188,16 @@ jobs:
 
       # Étapes post-déploiement, tolérantes à l'absence de WP-CLI sur le serveur.
       - name: Purger les caches
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
+          # Vides = ignorés. Renseigner DEPLOY_KEY_PASS si la clé est protégée
+          # par une passphrase, et DEPLOY_FINGERPRINT pour vérifier l'identité
+          # du serveur (anti-MITM) — voir readme/deploiement.md.
+          passphrase: ${{ secrets.DEPLOY_KEY_PASS }}
+          fingerprint: ${{ secrets.DEPLOY_FINGERPRINT }}
           port: 22
           script: |
             ROOT="${{ inputs.remote_path }}"

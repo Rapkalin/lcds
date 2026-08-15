@@ -96,14 +96,49 @@ En local, le même mécanisme tourne : `bin/init.sh` relie tout ce qui est dans
 
 ## Secrets GitHub à configurer
 
-*Settings > Secrets and variables > Actions* — ce sont les mêmes que pour les
-autres projets déployés sur ce serveur :
+*Settings > Secrets and variables > Actions > New repository secret.*
 
-| Secret | Rôle |
+### Obligatoires
+
+| Secret | Contenu |
 | --- | --- |
-| `DEPLOY_HOST` | Hôte / IP du serveur |
+| `DEPLOY_HOST` | Hôte ou IP du serveur (ex. `ssh.monhebergeur.fr`) |
 | `DEPLOY_USER` | Utilisateur SSH |
-| `DEPLOY_KEY` | Clé privée SSH |
+| `DEPLOY_KEY` | **Clé privée** SSH complète, en-têtes compris (`-----BEGIN OPENSSH PRIVATE KEY-----` … `-----END OPENSSH PRIVATE KEY-----`), suivie d'un saut de ligne. La clé **publique** correspondante doit être dans le `~/.ssh/authorized_keys` du serveur. |
+
+Ces trois suffisent à déployer. C'est le jeu utilisé par les autres projets sur
+ce serveur : les mêmes valeurs sont réutilisables.
+
+### Optionnels
+
+Non définis, ils valent la chaîne vide et sont ignorés — aucun effet sur le
+déploiement.
+
+| Secret | Quand le renseigner |
+| --- | --- |
+| `DEPLOY_KEY_PASS` | La clé privée est protégée par une **passphrase**. Sans lui, le déploiement échoue sur `Load key: incorrect passphrase`. |
+| `DEPLOY_FINGERPRINT` | Pour **vérifier l'identité du serveur** et fermer la porte à une attaque de l'homme du milieu. Empreinte SHA256 de la clé publique de l'hôte, obtenue par `ssh-keyscan <host> \| ssh-keygen -lf -`. |
+
+> **Ce qui n'est PAS utilisé** : `KNOWN_HOSTS`, `PRIVATE_KEY`, `PASSPHRASE_KEY`.
+> Ce sont des conventions d'autres projets. Ici la clé s'appelle `DEPLOY_KEY`,
+> sa passphrase `DEPLOY_KEY_PASS`, et la vérification d'hôte passe par une
+> empreinte (`DEPLOY_FINGERPRINT`) plutôt que par un `known_hosts` complet.
+>
+> La brique `rsync` ne sait pas exploiter une empreinte : sa propre vérification
+> d'hôte (`strict_hostkeys_checking`) s'appuie sur un `known_hosts` et reste
+> **désactivée**, en commentaire dans `deploy.yml`. Le trajet SSH est chiffré
+> dans tous les cas ; seule l'authentification du serveur diffère.
+
+### Environnements GitHub
+
+Les jobs déclarent `environment: preprod` / `environment: production`. Créer ces
+deux environnements dans *Settings > Environments* permet, si besoin :
+
+- de **surcharger un secret par environnement** (un `DEPLOY_HOST` différent, par
+  exemple) — le secret d'environnement l'emporte sur celui du dépôt ;
+- d'exiger une **approbation manuelle** avant tout déploiement en production.
+
+Sans les créer, les secrets du dépôt s'appliquent et tout fonctionne.
 
 ## Première mise en service d'un environnement
 
