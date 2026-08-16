@@ -28,7 +28,7 @@ d'abord `ci.yml` (Pint, PHPCS, PHPStan, Pest, CVE, gitleaks, build front) et
 
 ```text
 ~/prod-lcds/
-├── shared/              # JAMAIS écrasé par un déploiement
+├── shared/              # JAMAIS écrasé : uniquement de l'état persistant
 │   ├── .env             # configuration et secrets de l'environnement
 │   ├── plugins/         # plugins sous licence (ACF Pro…)
 │   ├── uploads/         # médias
@@ -53,7 +53,6 @@ release y est reliée par des liens symboliques recréés après chaque rsync.
 | Chemin dans la release | Pointe vers |
 | --- | --- |
 | `.env` | `shared/.env` |
-| `website/config` | `shared/config` |
 | `website/.htaccess` | `shared/.htaccess` |
 | `website/.htpasswd` | `shared/.htpasswd` *(si présent)* |
 | `website/app/uploads` | `shared/uploads` |
@@ -89,27 +88,27 @@ ln -nsf ~/prod-lcds/shared/plugins/advanced-custom-fields-pro \
 En local, le même mécanisme tourne : `bin/init.sh` relie tout ce qui est dans
 `shared/plugins/` à chaque démarrage du conteneur.
 
-## `config/` : chargé depuis `shared/`, amorcé par le dépôt
+## `config/` : livré par la release, au même niveau que `website/`
 
-`wp-config.php` charge `website/config/application.php`, et `website/config` est
-un **lien vers `shared/config`**. Comme pour le `.htaccess`, le `config/` livré
-par la release sert de **référence** : il amorce `shared/config` sur un nouvel
-environnement, et toute divergence ultérieure est affichée dans le log du
-déploiement.
+`config/` est du **code versionné**, pas de l'état persistant : il n'a rien à
+faire dans `shared/`. La release le dépose à la racine du déploiement, exactement
+comme il est placé en local, et `wp-config.php` le charge par
+`dirname(__DIR__) . '/config'`. Aucun lien, aucune copie, aucune dérive possible.
 
-En local, `bin/init.sh` crée le même lien vers le `config/` versionné : le chemin
-de chargement est **identique partout**, donc un bug de configuration ne peut pas
-n'apparaître que sur le serveur.
+La variation par environnement ne passe pas par ce dossier mais par le `.env` et
+par `WP_ENV`, qui choisit le fichier de `config/environments/`.
 
 > ⚠️ **Le docroot est passé explicitement** par `wp-config.php`
-> (`$lcds_webroot_dir = __DIR__;`). PHP résout `__DIR__` vers le **chemin réel** :
-> depuis `shared/config`, un `dirname(__DIR__) . '/website'` donnerait
-> `shared/website`, qui n'existe pas — `ABSPATH` et `WP_CONTENT_DIR` seraient
-> faux. Ne pas revenir à un calcul basé sur `__DIR__` dans `application.php`.
+> (`$lcds_webroot_dir = __DIR__;`) plutôt que déduit dans `application.php` :
+> `wp-config.php` est le seul fichier dont WordPress garantit l'emplacement, et
+> une déduction casserait si `config/` venait à être atteint par un lien
+> symbolique (PHP résout `__DIR__` vers le chemin réel).
 
-> ⚠️ Même contrepartie que le `.htaccess` : une fois `shared/config` créé, une
-> modification de `application.php` committée dans le dépôt **n'atteint plus le
-> serveur toute seule**. Le log de déploiement affiche le diff — le lire.
+> ⚠️ **`env()` dans un fichier de `config/environments/`** exige d'y ajouter
+> `use function Env\env;` : l'import de `application.php` ne vaut que pour son
+> propre fichier. Sans lui, « Call to undefined function env() » fait tomber
+> l'environnement entier. Pint supprimant les imports inutilisés, il ne peut pas
+> être posé d'avance — d'où l'avertissement en commentaire dans chaque fichier.
 
 ## `.htaccess` : le dépôt est la référence, `shared/` est ce qui est servi
 

@@ -7,19 +7,13 @@
  */
 
 /**
- * Docroot, passé explicitement à la configuration : sur le serveur, config/ est
- * atteint via un lien (website/config -> shared/config) et PHP résout __DIR__
- * vers le chemin RÉEL. Le calculer depuis application.php viserait shared/ au
- * lieu de website/.
+ * Docroot, passé explicitement plutôt que déduit dans application.php : ce
+ * fichier-ci est le seul dont l'emplacement est garanti par WordPress. Une
+ * déduction depuis application.php casserait dès que config/ serait atteint par
+ * un lien symbolique, PHP résolvant __DIR__ vers le chemin réel.
  */
 $lcds_webroot_dir = __DIR__;
 
-/**
- * Emplacement de la configuration : dans le docroot sur le serveur (lien vers
- * shared/config), à la racine du dépôt en local. Pas de lien à créer en local.
- */
-$lcds_config_dir = is_dir(__DIR__ . '/config') ? __DIR__ . '/config' : dirname(__DIR__) . '/config';
-
 require_once __DIR__ . '/vendor/autoload.php';
-require_once $lcds_config_dir . '/application.php';
+require_once dirname(__DIR__) . '/config/application.php';
 require_once ABSPATH . 'wp-settings.php';

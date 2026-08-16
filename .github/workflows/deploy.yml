@@ -11,15 +11,13 @@
 #   │   ├── .env
 #   │   ├── .htaccess    ← SERVI par Apache (le fichier versionné l'amorce)
 #   │   ├── .htpasswd    ← optionnel : protection par mot de passe (préprod)
-#   │   ├── config/      ← CHARGÉ par wp-config (le config/ versionné l'amorce)
 #   │   ├── plugins/     ← plugins sous licence (ACF Pro…)
 #   │   ├── uploads/
 #   │   ├── uploads-webpc/
 #   │   └── cache/
-#   ├── config/          ← release : sert de référence à shared/config
+#   ├── config/          ← release, au même niveau que website/ (comme en local)
 #   ├── website/         ← release (docroot du vhost)
-#   │   ├── .env         ← lien vers shared/.env
-#   │   └── config       ← lien vers shared/config
+#   │   └── .env         ← lien vers shared/.env
 #   ├── wp-cli.yml       ← release
 #   └── old_release/     ← copie de la release précédente (rollback)
 #
@@ -154,7 +152,6 @@ jobs:
             --exclude=website/app/uploads-webpc
             --exclude=website/app/cache
             --exclude=website/.htpasswd
-            --exclude=website/config
           path: ./release/
           remote_path: ${{ inputs.remote_path }}
           remote_host: ${{ secrets.DEPLOY_HOST }}
@@ -200,20 +197,6 @@ jobs:
             link_shared "$ROOT/shared/uploads"       "$ROOT/website/app/uploads"
             link_shared "$ROOT/shared/uploads-webpc" "$ROOT/website/app/uploads-webpc"
             link_shared "$ROOT/shared/cache"         "$ROOT/website/app/cache"
-
-            # config/ : wp-config.php charge website/config/application.php, lié
-            # vers shared/config. Le config/ livré par rsync sert de RÉFÉRENCE —
-            # il amorce shared/config sur un nouvel environnement, et toute
-            # divergence est signalée ici. Même contrat que .htaccess.
-            if [ ! -d "$ROOT/shared/config" ]; then
-              cp -a "$ROOT/config" "$ROOT/shared/config"
-              echo "shared/config initialisé depuis le config/ versionné."
-            elif ! diff -qr "$ROOT/config" "$ROOT/shared/config" >/dev/null 2>&1; then
-              echo "!!! ATTENTION : shared/config diverge du config/ versionné."
-              echo "!!! Le site charge shared/config. Reporter les changements à la main."
-              diff -ur "$ROOT/shared/config" "$ROOT/config" || true
-            fi
-            link_shared "$ROOT/shared/config" "$ROOT/website/config"
 
             # .htaccess : c'est shared/ qui est SERVI, pour que chaque
             # environnement puisse ajouter ses propres directives (protection par

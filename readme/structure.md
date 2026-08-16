@@ -22,19 +22,17 @@ lcds/
 │       ├── staging.php
 │       └── production.php
 ├── readme/                     # Documentation détaillée (ce dossier)
-├── shared/                     # NON versionné, jamais écrasé par un déploiement
+├── shared/                     # SERVEUR uniquement — état persistant, jamais écrasé
 │   ├── .env                    # Configuration et secrets de l'environnement
 │   ├── .htaccess               # Servi par Apache (le fichier versionné l'amorce)
 │   ├── .htpasswd               # Optionnel : protection par mot de passe (préprod)
-│   ├── config/                 # Chargé par wp-config (le config/ versionné l'amorce)
 │   ├── plugins/                # Plugins sous licence (ACF Pro…)
-│   └── uploads/, cache/        # En production uniquement
+│   └── uploads/, cache/        # Médias et cache pleine page
 ├── tests/                      # Suite Pest (hors WordPress)
 ├── website/                    # DOCROOT — c'est ici que pointe le vhost Apache
 │   ├── .htaccess               # En-têtes de sécurité, CSP, gzip, cache assets
 │   ├── index.php               # Front controller
 │   ├── wp-config.php           # Autoload + config/ + wp-settings
-│   ├── config -> shared/config # Lien, créé au démarrage et au déploiement
 │   ├── wordpress-core/         # Cœur WordPress (Composer, non versionné)
 │   ├── vendor/                 # Dépendances Composer (non versionné)
 │   └── app/                    # Contenu (remplace wp-content)
@@ -48,7 +46,7 @@ lcds/
 │       ├── cache/              # Cache pleine page WP Super Cache
 │       ├── languages/          # Traductions
 │       └── uploads/            # Médias (non versionnés)
-├── .env                        # Lien vers shared/.env (pour Docker Compose)
+├── .env                        # Config locale (JAMAIS versionnée). Sur le serveur : shared/.env
 ├── .env.example                # Modèle de configuration
 ├── .editorconfig
 ├── aliases.sh                  # Raccourcis Docker (source aliases.sh)
@@ -73,14 +71,13 @@ par Composer et n'est pas versionné. On ne modifie jamais son contenu : une mis
 à jour l'écraserait.
 
 **`wp-config.php` ne contient aucune valeur.** Il charge l'autoloader puis
-`website/config/application.php` — un **lien** vers le `config/` du projet en
-local, vers `shared/config` sur le serveur — qui lit `shared/.env`. Les secrets
-ne sont donc jamais dans un fichier versionné, et la configuration diffère par
-environnement sans duplication — voir [`installation.md`](installation.md).
+`config/application.php`, qui lit le `.env`. Les secrets ne sont donc jamais dans
+un fichier versionné, et la configuration diffère par environnement sans
+duplication — voir [`installation.md`](installation.md).
 
-> `wp-config.php` passe le docroot explicitement (`$lcds_webroot_dir = __DIR__;`)
-> parce que PHP résout `__DIR__` vers le chemin **réel** : depuis
-> `shared/config`, un calcul relatif viserait `shared/website`. Voir
+> `config/` reste au même niveau que `website/` sur le serveur comme en local :
+> c'est du code versionné, livré par la release, pas de l'état persistant. Seul
+> ce qui doit survivre aux déploiements vit dans `shared/` — voir
 > [`deploiement.md`](deploiement.md).
 
 **Une release est jetable, `shared/` ne l'est pas.** Le déploiement écrase
