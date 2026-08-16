@@ -140,18 +140,24 @@ jobs:
       # protègent l'état persistant : shared/, la sauvegarde, et les chemins qui
       # sont des liens vers shared/ (sinon rsync les remplacerait par des dossiers
       # vides à chaque déploiement).
+      #
+      # Le `/` initial de chaque motif est OBLIGATOIRE : il ancre l'exclusion à la
+      # racine du transfert. Sans lui, rsync exclut TOUT composant de chemin
+      # portant ce nom, à n'importe quelle profondeur — `--exclude=shared` avait
+      # ainsi supprimé wp-includes/blocks/navigation-link/shared/ du cœur
+      # WordPress, rendant le site fatal.
       - name: Envoyer la release (rsync)
         uses: burnett01/rsync-deployments@v9
         with:
           switches: >-
             -avzr --delete
-            --exclude=shared
-            --exclude=old_release
-            --exclude=website/.env
-            --exclude=website/app/uploads
-            --exclude=website/app/uploads-webpc
-            --exclude=website/app/cache
-            --exclude=website/.htpasswd
+            --exclude=/shared
+            --exclude=/old_release
+            --exclude=/website/.env
+            --exclude=/website/app/uploads
+            --exclude=/website/app/uploads-webpc
+            --exclude=/website/app/cache
+            --exclude=/website/.htpasswd
           path: ./release/
           remote_path: ${{ inputs.remote_path }}
           remote_host: ${{ secrets.DEPLOY_HOST }}

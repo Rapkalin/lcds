@@ -169,8 +169,8 @@ supprimé sinon : la production reste ouverte tant qu'on n'y dépose pas de
 
 1. copie de la release en place vers `old_release/` (`cp -a` : le site reste
    servi pendant la copie) ;
-2. `rsync -avzr --delete` avec exclusion de `shared`, `old_release`, `.env` et
-   des chemins qui sont des liens vers `shared/` ;
+2. `rsync -avzr --delete` avec exclusion de `/shared`, `/old_release`, `/website/.env`
+   et des chemins qui sont des liens vers `shared/` ;
 3. recréation des liens vers `shared/` ;
 4. purge des caches si WP-CLI est présent sur le serveur.
 
@@ -260,6 +260,11 @@ for p in shared/plugins/*/; do ln -nsf "$PWD/${p%/}" "website/app/plugins/$(base
 
 ## Points d'attention
 
+- **Les exclusions rsync doivent commencer par `/`.** Sans slash initial, rsync
+  exclut *tout* composant de chemin portant ce nom, à n'importe quelle
+  profondeur : `--exclude=shared` avait ainsi supprimé
+  `wp-includes/blocks/navigation-link/shared/` du cœur WordPress, avec un fatal
+  à la clé. Le `/` ancre le motif à la racine du transfert.
 - **OPcache.** Il n'est pas vidé par le déploiement. Sans rechargement de
   PHP-FPM, l'ancien code continue de tourner. La commande est en commentaire à
   la fin de `deploy.yml`, à activer avec celle de l'hébergeur.
