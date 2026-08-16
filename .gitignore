@@ -8,12 +8,13 @@ website/app/themes/lcds/node_modules
 website/app/themes/lcds/dist
 
 # ─────────────────────────────────────────────────────────────
-# shared/ — état persistant, jamais écrasé par un déploiement ni versionné :
-# le .env, les plugins payants (licence) et, en production, les médias et le
-# cache. Voir readme/deploiement.md.
+# Environnement. En local le .env est à la racine ; sur le serveur il vit dans
+# shared/ et est lié dans le docroot (website/.env). shared/ est un concept
+# SERVEUR — voir readme/deploiement.md.
 # ─────────────────────────────────────────────────────────────
 /shared/
 /.env
+website/.env
 
 # ─────────────────────────────────────────────────────────────
 # Contenu applicatif

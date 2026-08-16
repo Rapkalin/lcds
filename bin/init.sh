@@ -15,10 +15,10 @@ set -e
 APP_DIR="/var/www/html"
 cd "$APP_DIR"
 
-# Le .env canonique vit dans shared/ (non écrasé par un déploiement). La racine
-# reste le repli, pour un simple checkout sans shared/.
-if [ -f "$APP_DIR/shared/.env" ]; then
-    ENV_FILE="$APP_DIR/shared/.env"
+# Le .env vit dans le docroot sur le serveur (website/.env, lien vers
+# shared/.env) et à la racine du dépôt en local.
+if [ -f "$APP_DIR/website/.env" ]; then
+    ENV_FILE="$APP_DIR/website/.env"
 else
     ENV_FILE="$APP_DIR/.env"
 fi
@@ -70,38 +70,7 @@ for DIR in website/app/uploads website/app/uploads-webpc website/app/cache websi
 done
 
 # -----------------------------------------------------------------------------
-# 3) config/ : wp-config.php charge website/config/application.php. Sur le
-#    serveur, ce chemin est un lien vers shared/config ; en local le dossier
-#    versionné est à la racine. On crée le lien pour que le chemin de
-#    chargement soit LE MÊME partout — sinon un bug de configuration ne se
-#    reproduit que sur le serveur.
-# -----------------------------------------------------------------------------
-if [ ! -e "$APP_DIR/website/config" ]; then
-    ln -nsf "$APP_DIR/config" "$APP_DIR/website/config"
-    echo "==> [init] website/config lié vers le config/ versionné."
-fi
-
-# -----------------------------------------------------------------------------
-# 4) Plugins payants : liés depuis shared/plugins/ vers website/app/plugins/.
-#    Ils ne sont ni dans le dépôt ni dans Composer (licence) et doivent survivre
-#    à un déploiement : shared/ n'est jamais écrasé par une release. Le lien est
-#    recréé à chaque démarrage, comme le fait le workflow de déploiement.
-# -----------------------------------------------------------------------------
-SHARED_PLUGINS="$APP_DIR/shared/plugins"
-
-if [ -d "$SHARED_PLUGINS" ]; then
-    for PLUGIN_PATH in "$SHARED_PLUGINS"/*/; do
-        [ -d "$PLUGIN_PATH" ] || continue
-        PLUGIN_NAME="$(basename "$PLUGIN_PATH")"
-        ln -nsf "$PLUGIN_PATH" "$APP_DIR/website/app/plugins/$PLUGIN_NAME"
-        echo "==> [init] Plugin partagé lié : ${PLUGIN_NAME}"
-    done
-else
-    echo "==> [init] Aucun dossier shared/plugins (ignoré)."
-fi
-
-# -----------------------------------------------------------------------------
-# 5) Installation initiale : UNIQUEMENT si WordPress n'est pas encore installé.
+# 3) Installation initiale : UNIQUEMENT si WordPress n'est pas encore installé.
 #    Aucune création de contenu ici : le site a déjà ses pages, et un dump
 #    importé ne doit jamais être complété par des contenus de démo.
 # -----------------------------------------------------------------------------
@@ -136,7 +105,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 6) Thème : activé à chaque démarrage (idempotent).
+# 4) Thème : activé à chaque démarrage (idempotent).
 # -----------------------------------------------------------------------------
 if wp theme is-installed lcds --allow-root 2>/dev/null; then
     wp theme activate lcds --allow-root >/dev/null 2>&1 || true
@@ -146,7 +115,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 7) Plugins. Activation réconciliée à chaque démarrage : un plugin installé par
+# 5) Plugins. Activation réconciliée à chaque démarrage : un plugin installé par
 #    Composer n'est pas actif pour autant, et DISALLOW_FILE_MODS n'empêche pas
 #    l'activation d'un plugin déjà présent sur le disque.
 #    ACF Pro n'est pas géré par Composer (licence) : activé s'il est là, ignoré
@@ -163,7 +132,7 @@ for PLUGIN in wordpress-seo webp-converter-for-media advanced-custom-fields-pro;
 done
 
 # -----------------------------------------------------------------------------
-# 8) Cache pleine page (WP Super Cache) : réconcilié avec WP_CACHE à chaque
+# 6) Cache pleine page (WP Super Cache) : réconcilié avec WP_CACHE à chaque
 #    démarrage. Livré désactivé. L'activation génère le drop-in
 #    website/app/advanced-cache.php — voir readme/cache.md.
 # -----------------------------------------------------------------------------
@@ -176,7 +145,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 9) Langue du site : fr_FR à chaque démarrage. Les packs de langue sont
+# 7) Langue du site : fr_FR à chaque démarrage. Les packs de langue sont
 #    téléchargés s'ils manquent (idempotent).
 # -----------------------------------------------------------------------------
 echo "==> [init] Langue du site : fr_FR"

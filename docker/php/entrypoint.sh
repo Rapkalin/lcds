@@ -10,10 +10,14 @@ set -e
 APP_DIR="/var/www/html"
 cd "$APP_DIR"
 
-# Le .env canonique vit dans shared/ : ce dossier n'est jamais écrasé par un
-# déploiement, et porte aussi les plugins payants et les médias.
-SHARED_DIR="$APP_DIR/shared"
-ENV_FILE="$SHARED_DIR/.env"
+# Le .env vit à la racine du dépôt en local, dans le docroot sur le serveur
+# (website/.env, lien vers shared/.env). shared/ est un concept SERVEUR : il n'a
+# pas à exister sur un poste de dev.
+if [ -f "$APP_DIR/website/.env" ]; then
+    ENV_FILE="$APP_DIR/website/.env"
+else
+    ENV_FILE="$APP_DIR/.env"
+fi
 
 echo "==> [entrypoint] Démarrage du conteneur PHP/Apache"
 
@@ -29,12 +33,10 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 2) Arborescence shared/ + fichier .env (copié depuis .env.example s'il manque)
+# 2) Fichier .env (copié depuis .env.example s'il manque)
 # -----------------------------------------------------------------------------
-mkdir -p "$SHARED_DIR/plugins"
-
 if [ ! -f "$ENV_FILE" ]; then
-    echo "==> [entrypoint] shared/.env absent : copie depuis .env.example"
+    echo "==> [entrypoint] .env absent : copie depuis .env.example"
     cp "$APP_DIR/.env.example" "$ENV_FILE"
 fi
 

@@ -18,6 +18,7 @@
 #   │   └── cache/
 #   ├── config/          ← release : sert de référence à shared/config
 #   ├── website/         ← release (docroot du vhost)
+#   │   ├── .env         ← lien vers shared/.env
 #   │   └── config       ← lien vers shared/config
 #   ├── wp-cli.yml       ← release
 #   └── old_release/     ← copie de la release précédente (rollback)
@@ -148,7 +149,7 @@ jobs:
             -avzr --delete
             --exclude=shared
             --exclude=old_release
-            --exclude=.env
+            --exclude=website/.env
             --exclude=website/app/uploads
             --exclude=website/app/uploads-webpc
             --exclude=website/app/cache
@@ -192,7 +193,10 @@ jobs:
               ln -nsf "$1" "$2"
             }
 
-            link_shared "$ROOT/shared/.env"          "$ROOT/.env"
+            # .env dans le docroot, à côté de wp-config.php : c'est là que la
+            # configuration le cherche. Il n'est PAS servi par Apache — le bloc
+            # FilesMatch de website/.htaccess refuse tous les .env.
+            link_shared "$ROOT/shared/.env"          "$ROOT/website/.env"
             link_shared "$ROOT/shared/uploads"       "$ROOT/website/app/uploads"
             link_shared "$ROOT/shared/uploads-webpc" "$ROOT/website/app/uploads-webpc"
             link_shared "$ROOT/shared/cache"         "$ROOT/website/app/cache"

@@ -46,13 +46,13 @@ $root_dir = dirname($webroot_dir);
 /**
  * Directory holding the .env.
  *
- * `shared/` survives deployments: it holds what must NOT be overwritten by a
- * release (the .env, the paid plugins, uploads). The repository root is the
- * fallback, so a checkout without shared/ still boots.
+ * Sur le SERVEUR il vit dans le docroot (`website/.env`, lien vers
+ * `shared/.env`, qui survit aux déploiements). En LOCAL il est simplement à la
+ * racine du dépôt, à côté de `website/` — pas de `shared/` sur un poste de dev.
  *
  * @var string
  */
-$env_dir = is_file($root_dir . '/shared/.env') ? $root_dir . '/shared' : $root_dir;
+$env_dir = is_file($webroot_dir . '/.env') ? $webroot_dir : $root_dir;
 
 /**
  * Load the .env file. .env.local overrides .env when present, which lets a
