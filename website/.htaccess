@@ -8,7 +8,14 @@
 # <IfModule> : si un module manque, Apache démarre quand même.
 # -----------------------------------------------------------------------------
 
-Options -Indexes
+# Pas de listage de répertoire. `Options -Indexes` serait plus net, mais exige
+# `AllowOverride Options` — refusé par beaucoup de mutualisés, et un refus fait
+# tomber TOUT le site en 500 ("Options not allowed here"). IndexIgnore relève de
+# la classe Indexes, bien plus souvent accordée.
+# À remplacer par `Options -Indexes` si l'hébergeur autorise la classe Options.
+<IfModule mod_autoindex.c>
+  IndexIgnore *
+</IfModule>
 
 # Fichiers sensibles jamais servis, même si PHP cesse de s'exécuter.
 <FilesMatch "(^\.|^wp-config\.php$|^composer\.(json|lock)$|^package(-lock)?\.json$|\.(env|log|ini|sh|sql|bak)$)">
@@ -52,10 +59,10 @@ Options -Indexes
   # Passage en enforce : parcourir chaque template console ouverte, corriger les
   # violations, puis retirer le suffixe -Report-Only.
   # ---------------------------------------------------------------------------
-  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'"
-  <If "%{REQUEST_URI} =~ m#^/wordpress-core/#">
-    Header always unset Content-Security-Policy-Report-Only
-  </If>
+  # La condition `expr=` de mod_headers restreint l'en-tête au front. Un bloc
+  # <If> ferait la même chose mais exige `AllowOverride All` : refusé, il ferait
+  # tomber tout le site en 500. `expr=` relève de FileInfo, comme Header.
+  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" "expr=%{REQUEST_URI} !~ m#^/wordpress-core/#"
 </IfModule>
 
 # -----------------------------------------------------------------------------

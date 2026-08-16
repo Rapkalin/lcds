@@ -5,7 +5,7 @@
 # via `needs`. Un `needs` non satisfait n'échoue pas le déploiement, il le
 # **saute** — aucune release partielle possible.
 
-name: Déploiement préprod
+name: Déploiement preprod
 
 on:
   push:
