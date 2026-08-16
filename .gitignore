@@ -51,6 +51,9 @@ auth.json
 # jamais dans le dépôt (il contient des empreintes de mots de passe).
 website/.htpasswd
 
+# Lien vers le dossier de configuration, recréé au démarrage et au déploiement.
+website/config
+
 # ─────────────────────────────────────────────────────────────
 # Logs & caches d'outillage
 # ─────────────────────────────────────────────────────────────

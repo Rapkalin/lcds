@@ -26,13 +26,15 @@ lcds/
 │   ├── .env                    # Configuration et secrets de l'environnement
 │   ├── .htaccess               # Servi par Apache (le fichier versionné l'amorce)
 │   ├── .htpasswd               # Optionnel : protection par mot de passe (préprod)
+│   ├── config/                 # Chargé par wp-config (le config/ versionné l'amorce)
 │   ├── plugins/                # Plugins sous licence (ACF Pro…)
 │   └── uploads/, cache/        # En production uniquement
 ├── tests/                      # Suite Pest (hors WordPress)
 ├── website/                    # DOCROOT — c'est ici que pointe le vhost Apache
 │   ├── .htaccess               # En-têtes de sécurité, CSP, gzip, cache assets
 │   ├── index.php               # Front controller
-│   ├── wp-config.php           # 3 lignes : autoload + config/ + wp-settings
+│   ├── wp-config.php           # Autoload + config/ + wp-settings
+│   ├── config -> shared/config # Lien, créé au démarrage et au déploiement
 │   ├── wordpress-core/         # Cœur WordPress (Composer, non versionné)
 │   ├── vendor/                 # Dépendances Composer (non versionné)
 │   └── app/                    # Contenu (remplace wp-content)
@@ -71,10 +73,15 @@ par Composer et n'est pas versionné. On ne modifie jamais son contenu : une mis
 à jour l'écraserait.
 
 **`wp-config.php` ne contient aucune valeur.** Il charge l'autoloader puis
-`config/application.php`, qui lit `shared/.env` (ou le `.env` racine en repli).
-Les secrets ne sont donc jamais dans un fichier versionné, et la configuration
-diffère par environnement sans duplication — voir
-[`installation.md`](installation.md).
+`website/config/application.php` — un **lien** vers le `config/` du projet en
+local, vers `shared/config` sur le serveur — qui lit `shared/.env`. Les secrets
+ne sont donc jamais dans un fichier versionné, et la configuration diffère par
+environnement sans duplication — voir [`installation.md`](installation.md).
+
+> `wp-config.php` passe le docroot explicitement (`$lcds_webroot_dir = __DIR__;`)
+> parce que PHP résout `__DIR__` vers le chemin **réel** : depuis
+> `shared/config`, un calcul relatif viserait `shared/website`. Voir
+> [`deploiement.md`](deploiement.md).
 
 **Une release est jetable, `shared/` ne l'est pas.** Le déploiement écrase
 `website/` et `config/` sans réfléchir ; tout ce qui doit survivre — `.env`,

@@ -53,6 +53,7 @@ release y est reliée par des liens symboliques recréés après chaque rsync.
 | Chemin dans la release | Pointe vers |
 | --- | --- |
 | `.env` | `shared/.env` |
+| `website/config` | `shared/config` |
 | `website/.htaccess` | `shared/.htaccess` |
 | `website/.htpasswd` | `shared/.htpasswd` *(si présent)* |
 | `website/app/uploads` | `shared/uploads` |
@@ -87,6 +88,28 @@ ln -nsf ~/prod-lcds/shared/plugins/advanced-custom-fields-pro \
 
 En local, le même mécanisme tourne : `bin/init.sh` relie tout ce qui est dans
 `shared/plugins/` à chaque démarrage du conteneur.
+
+## `config/` : chargé depuis `shared/`, amorcé par le dépôt
+
+`wp-config.php` charge `website/config/application.php`, et `website/config` est
+un **lien vers `shared/config`**. Comme pour le `.htaccess`, le `config/` livré
+par la release sert de **référence** : il amorce `shared/config` sur un nouvel
+environnement, et toute divergence ultérieure est affichée dans le log du
+déploiement.
+
+En local, `bin/init.sh` crée le même lien vers le `config/` versionné : le chemin
+de chargement est **identique partout**, donc un bug de configuration ne peut pas
+n'apparaître que sur le serveur.
+
+> ⚠️ **Le docroot est passé explicitement** par `wp-config.php`
+> (`$lcds_webroot_dir = __DIR__;`). PHP résout `__DIR__` vers le **chemin réel** :
+> depuis `shared/config`, un `dirname(__DIR__) . '/website'` donnerait
+> `shared/website`, qui n'existe pas — `ABSPATH` et `WP_CONTENT_DIR` seraient
+> faux. Ne pas revenir à un calcul basé sur `__DIR__` dans `application.php`.
+
+> ⚠️ Même contrepartie que le `.htaccess` : une fois `shared/config` créé, une
+> modification de `application.php` committée dans le dépôt **n'atteint plus le
+> serveur toute seule**. Le log de déploiement affiche le diff — le lire.
 
 ## `.htaccess` : le dépôt est la référence, `shared/` est ce qui est servi
 

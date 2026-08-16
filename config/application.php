@@ -24,18 +24,24 @@ Env\Env::$options
     | Env\Env::LOCAL_FIRST;
 
 /**
- * Repository root (one level above this config directory).
- *
- * @var string
- */
-$root_dir = dirname(__DIR__);
-
-/**
  * Document root served by Apache — the vhost DocumentRoot points here.
+ *
+ * Passed by wp-config.php rather than derived from __DIR__: on the server this
+ * file is reached through website/config -> shared/config, and PHP resolves
+ * __DIR__ to the real path. Deriving from it would place the docroot in
+ * shared/website, which does not exist. The fallback covers a direct include
+ * from the repository layout (tooling, one-off scripts).
  *
  * @var non-falsy-string
  */
-$webroot_dir = $root_dir . '/website';
+$webroot_dir = isset($lcds_webroot_dir) ? $lcds_webroot_dir : dirname(__DIR__) . '/website';
+
+/**
+ * Deployment root: the directory holding website/ and shared/.
+ *
+ * @var string
+ */
+$root_dir = dirname($webroot_dir);
 
 /**
  * Directory holding the .env.
