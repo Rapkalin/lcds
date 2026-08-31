@@ -34,6 +34,7 @@ parameters:
     scanDirectories:
         - website/app/mu-plugins/enums
         - website/app/mu-plugins/cache
+        - website/app/mu-plugins/webp
 
     ignoreErrors:
         # array<…> generics are intentionally out of scope: the project's type

@@ -13,4 +13,5 @@ require_once __DIR__ . '/inc/security.php';
 require_once __DIR__ . '/inc/setup.php';
 require_once __DIR__ . '/inc/menus.php';
 require_once __DIR__ . '/inc/navigation.php';
+require_once __DIR__ . '/inc/images.php';
 require_once __DIR__ . '/inc/contacts.php';

@@ -30,11 +30,14 @@ website/app/cache/*
 !website/app/cache/.gitkeep
 website/app/upgrade
 
-# mu-plugins : les modules installés par Composer sont ignorés, les nôtres
-# (fichier d'entrée + enums/ + cache/) sont versionnés.
+# mu-plugins : les modules installés par Composer sont ignorés, les nôtres sont
+# versionnés par exception. AJOUTER UN MODULE = AJOUTER SA NÉGATION ICI, sinon
+# son fichier d'entrée part au déploiement sans les fichiers qu'il requiert, et
+# le site tombe en erreur fatale sur toutes les pages.
 website/app/mu-plugins/*/
 !website/app/mu-plugins/enums/
 !website/app/mu-plugins/cache/
+!website/app/mu-plugins/webp/
 
 # Drop-ins générés par WP Super Cache. À committer une fois générés si le
 # cache pleine page est activé sur le projet — voir readme/cache.md.

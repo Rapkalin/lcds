@@ -39,8 +39,10 @@ lcds/
 │       ├── mu-plugins/
 │       │   ├── bedrock-autoloader.php   # Charge les mu-plugins en sous-dossier
 │       │   ├── lcds-cache.php           # Cache applicatif (point d'entrée)
+│       │   ├── lcds-webp.php            # Conversion WebP (point d'entrée)
 │       │   ├── enums/                   # LcdsCacheKey, LcdsCacheGroup
-│       │   └── cache/                   # Moteur + invalidation
+│       │   ├── cache/                   # Moteur + invalidation
+│       │   └── webp/                    # Configuration + filtres de conversion
 │       ├── plugins/            # Installés par Composer / ACF Pro (non versionné)
 │       ├── themes/lcds/        # Thème du projet
 │       ├── cache/              # Cache pleine page WP Super Cache
