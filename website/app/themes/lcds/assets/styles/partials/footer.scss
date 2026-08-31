@@ -4,14 +4,14 @@
 // Pied de page. Base minimale : la mise en forme du projet vient par-dessus.
 
 .site-footer {
-  padding: fn.toRem(40) fn.toRem(48);
+  padding: fn.toRem(40) var.$header-padding;
 }
 
 .footer-legal {
-  font-size: var.$fs-p-s;
+  font-size: var.$fs-cta;
 }
 
-@media (max-width: 680px) {
+@media (max-width: var.$bp-mobile) {
   .site-footer {
     padding: fn.toRem(24) fn.toRem(20);
   }

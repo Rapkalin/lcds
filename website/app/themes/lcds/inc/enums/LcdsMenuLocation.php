@@ -20,6 +20,7 @@ if (! defined('ABSPATH')) {
 enum LcdsMenuLocation: string
 {
     case Header = 'header-menu';
+    case HeaderCta = 'header-cta-menu';
     case Footer = 'footer-menu';
     case Social = 'social-menu';
     case Legal = 'legal-menu';
@@ -34,6 +35,7 @@ enum LcdsMenuLocation: string
     {
         return match ($this) {
             self::Header => __('Menu principal', 'lcds'),
+            self::HeaderCta => __("Bouton d'action de l'en-tête", 'lcds'),
             self::Footer => __('Menu pied de page', 'lcds'),
             self::Social => __('Réseaux sociaux', 'lcds'),
             self::Legal => __('Mentions légales', 'lcds'),

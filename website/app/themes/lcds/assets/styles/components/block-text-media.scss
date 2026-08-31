@@ -8,7 +8,7 @@
   grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: fn.toRem(32);
-  padding: 0 fn.toRem(48);
+  padding: 0 var.$header-padding;
 
   // Aplat en attendant le visuel : sans ratio, un conteneur vide n'a aucune
   // hauteur et le bloc serait invisible.
@@ -22,21 +22,10 @@
     flex-direction: column;
     gap: fn.toRem(16);
 
-    h2 {
-      font-size: var.$fs-h2;
-      line-height: var.$lh-h2;
-      font-weight: var.$fw-h1;
-    }
-
-    p {
-      font-size: var.$fs-p;
-      line-height: var.$lh-p;
-      font-weight: var.$fw-p;
-    }
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: var.$bp-mobile) {
   .block-text-media {
     grid-template-columns: 1fr;
     padding: 0 fn.toRem(20);

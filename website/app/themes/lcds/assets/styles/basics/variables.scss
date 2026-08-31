@@ -1,44 +1,66 @@
 @use 'functions' as fn;
 
-/* GLOBALS */
-$font-color: black;
-$font-family: "Neue Haas", sans-serif;
+// Tokens issus des variables de bibliothèque de la maquette Figma (LCDS | UI).
+// Une teinte ou une taille absente d'ici est absente de la maquette : l'ajouter
+// d'abord côté design, pas ici.
 
 /* COLORS */
-$white: floralwhite;
-$black: black;
-$darkgrey: #444444;
-$grey: #756F5E;
-$lightgrey: #D4CFC1;
-$lightgrey-m: #F8F6F140;
+$blue: #00387a;
+$turquoise: #048b8c;
+$orange: #e25304;
+$blue-pale: #f2f8ff;
+$white: #ffffff;
+$black: #000000;
 
-/* FONT SIZES */
-$fs-h1: fn.toRem(102);
-$fs-h1-m: fn.toRem(94); // font size h1 medium
-$fs-h1-s: fn.toRem(80); // font size h1 small
-$fs-h1-xs: fn.toRem(64); // font size h1 extra small (mobile)
-$fs-h2: fn.toRem(38);
-$fs-h2-m: fn.toRem(30); // font size h2 medium
-$fs-h4: fn.toRem(22);
-$fs-p: fn.toRem(18);
-$fs-p-s: fn.toRem(14); // font size paragraph small
-
-/* FONT WEIGHTS */
-$fw-xl: 500;
-$fw-h1: 400;
-$fw-p: 300;
-
-/* LINE HEIGHTS */
-$lh-h1: fn.toRem(102);
-$lh-h1-m: fn.toRem(94); // line height h1 medium
-$lh-h1-s: fn.toRem(80);
-$lh-h2: fn.toRem(48);
-$lh-p-xl: fn.toRem(36); // line height paragraph extra large
-$lh-p: fn.toRem(32);
-$lh-p-m: fn.toRem(26); // line height paragraph medium
-$lh-p-s: fn.toRem(16); // line height paragraph small
-
-/* WIDTH */
-$main: calc(100dvw - fn.toRem(96)); // Remove the sum of the horizontal margin (here 48px (left) + 48x (right))
+$font-color: $blue;
 
 /* FONTS */
+// Sligoil et Inter ne sont pas encore auto-hébergées : tant que les fichiers
+// manquent, seule la pile de secours s'applique. Voir readme/front.md.
+// Sligoil est une police à chasse fixe (vérifié sur le rendu Figma : titres et
+// numéros d'étape monospacés, zéro barré). Le repli doit l'être aussi, sinon la
+// mise en page saute tant que la police n'est pas chargée.
+$font-title: "Sligoil", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+$font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+/* FONT SIZES */
+// Toute la maquette tient sur ces quatre styles.
+$fs-h2: fn.toRem(48);
+$fs-h3: fn.toRem(24);
+$fs-p: fn.toRem(16);
+$fs-cta: fn.toRem(13);
+
+/* LINE HEIGHTS */
+// Sans unité : suivent la taille de police au lieu de la contredire.
+$lh-title: 1.2;
+$lh-p: 1.4;
+$lh-cta: 1;
+
+/* FONT WEIGHTS */
+// Figma annonce un poids 90 pour « Sligoil Micro » : c'est le nom de la coupe,
+// pas un poids CSS. Le fichier de police portera le 400.
+$fw-title: 400;
+$fw-p: 600;
+$fw-cta: 500;
+
+/* LETTER SPACING */
+// 8 % de la taille dans la maquette. En `em`, la valeur suit n'importe quelle
+// taille, là où les 1.04px relevés ne valent qu'à 13px.
+$ls-cta: 0.08em;
+
+/* GRID */
+// Maquette dessinée sur 1440. La gouttière de 12px est constante partout.
+$gutter: fn.toRem(12);
+$content-width: fn.toRem(1118);
+$content-padding: fn.toRem(161);
+$header-padding: fn.toRem(48);
+$logo-size: fn.toRem(80);
+$logo-size-mobile: fn.toRem(56);
+// Boutons ronds, pastilles et piste de progression des carrousels.
+$module: fn.toRem(52);
+$radius: fn.toRem(8);
+
+/* BREAKPOINTS */
+// Provisoires : aucune maquette mobile n'existe à ce jour.
+$bp-tablet: 1024px;
+$bp-mobile: 680px;

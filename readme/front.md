@@ -1,0 +1,109 @@
+# Socle front
+
+## Les tokens viennent de Figma, pas du CSS
+
+`assets/styles/basics/variables.scss` est la transposition des **variables de
+bibliothèque** du fichier Figma `LCDS | UI`. Règle : une teinte ou une taille
+absente de ce fichier est absente de la maquette. On l'ajoute d'abord côté
+design, jamais directement ici.
+
+| | Valeur |
+| --- | --- |
+| Bleu | `#00387A` |
+| Turquoise | `#048B8C` |
+| Orange | `#E25304` |
+| Fond clair | `#F2F8FF` |
+
+Toute la maquette tient sur **quatre styles de texte** — vérifié en recoupant
+les hauteurs de bloc relevées dans Figma, toutes multiples de la hauteur de
+ligne correspondante :
+
+| Style | Taille / interligne | Graisse |
+| --- | --- | --- |
+| H2 | 48 / 1.2 | Sligoil Micro |
+| H3 | 24 / 1.2 | Sligoil Micro |
+| Paragraphe | 16 / 1.4 | Inter SemiBold |
+| CTA | 13 / 1, interlettrage 8 % | Inter Medium |
+
+Deux transpositions plutôt que des recopies :
+
+- **L'interlettrage est en `em`.** Figma affiche `1.04px`, ce qui n'est vrai qu'à
+  13px ; la variable de bibliothèque dit 8 %. `0.08em` suit n'importe quelle
+  taille.
+- **Les hauteurs de ligne sont sans unité** (`1.2`, `1.4`) : elles suivent la
+  taille de police au lieu de la contredire.
+
+## Grille
+
+Gouttière de **12px**, constante partout dans la maquette. Le contenu fait
+**1118px** dans un cadre de 1440, soit des marges de **161px** — sauf l'en-tête,
+qui respire moins (**48px**). Les blocs de **666px** se décomposent en
+`101 + 12 + 553` : colonne du numéro, gouttière, colonne de texte.
+
+Le module de **52px** revient partout : boutons ronds, pastilles, piste de
+progression des carrousels.
+
+> **Points de rupture provisoires.** `1024px` pour l'en-tête (la navigation
+> mesure 620px et déborderait bien avant 680), `680px` pour le reste. Aucune
+> maquette mobile n'existe à ce jour : tout le comportement mobile est une
+> proposition, à revalider.
+
+## Polices — pas encore auto-hébergées
+
+| Police | Rôle | Licence |
+| --- | --- | --- |
+| [Sligoil](https://velvetyne.fr/fonts/sligoil/) (coupe *Micro*) | Titres | Libre, Velvetyne — usage commercial autorisé, redistribution sous la même licence |
+| [Inter](https://github.com/rsms/inter) | Textes | SIL OFL 1.1 |
+
+Les deux sont libres : auto-hébergement en `@font-face`, sans licence à acheter
+et **sans toucher à la CSP** (pas de Google Fonts). Tant que les fichiers
+manquent, seule la pile de secours s'applique.
+
+**Sligoil est une police à chasse fixe** (vérifié sur le rendu Figma : titres et
+numéros d'étape monospacés, zéro barré). Son repli doit l'être aussi, sinon la
+mise en page saute avant le chargement.
+
+> Figma annonce un poids `90` pour « Sligoil Micro ». C'est le nom de la coupe,
+> pas un poids CSS — la famille compte *Micro*, *Micro Medium* et *Micro Bold*
+> depuis juin 2025, et la maquette utilise la régulière. À confirmer sur le
+> fichier de police une fois installé.
+
+### Ajouter les fichiers
+
+**Ne pas ajouter de règle `asset/resource` pour les polices dans
+`webpack.config.js`.** Webpack 5 les gère déjà, en leur donnant un nom dérivé de
+leur contenu. Ce hachage est indispensable : `.htaccess` sert `dist/` avec un
+`Expires` à un mois, donc un nom de fichier fixe figerait la police chez les
+visiteurs déjà venus. Vérifié dans les deux sens : le build passe sans règle et
+émet `<hash>.woff2` ; avec une règle `[name][ext]`, il émet un nom stable et
+perd l'invalidation.
+
+Déposer les `.woff2` dans `assets/fonts/`, déclarer les `@font-face` dans un
+partiel de `basics/`, et l'importer depuis `app.scss`.
+
+## Invalidation du cache des assets
+
+`main.css` et `main.js` gardent un nom fixe et sont servis avec le même
+`Expires` d'un mois. WordPress n'ajoutait que `?ver=` suivi de **sa propre
+version** : une mise en production ne parvenait donc pas aux visiteurs déjà
+venus, jusqu'à trente jours.
+
+`theme_lcds_asset_version()` (dans `inc/setup.php`) dérive la version de la date
+de modification du fichier. Tout nouvel asset compilé mis en file doit passer
+par elle.
+
+## Compilation
+
+Webpack, via le conteneur jetable `node` (profil `tools`) :
+
+```bash
+docker compose run --rm node npm run build   # ou : dnpm run build
+docker compose run --rm node npm run dev     # surveillance
+```
+
+`dist/` n'est pas versionné. La CI vérifie que le build passe, le déploiement le
+rejoue — voir [`ci-cd.md`](ci-cd.md).
+
+## Vérification
+
+Le front a sa propre campagne d'assertions : voir [`qa.md`](qa.md).

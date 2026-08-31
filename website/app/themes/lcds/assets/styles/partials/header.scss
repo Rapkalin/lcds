@@ -1,6 +1,6 @@
+@use "sass:color";
+@use "../basics/variables" as var;
 @use "../basics/functions" as fn;
-
-// En-tête. Base minimale : la mise en forme du projet vient par-dessus.
 
 .skip-link {
   position: absolute;
@@ -13,20 +13,191 @@
     top: 0;
     z-index: 100;
     padding: 0.5rem 1rem;
-    background: #fff;
+    background: var.$white;
   }
 }
 
 .site-header {
+  position: relative;
+  z-index: 10;
   display: flex;
-  align-items: center;
+  // La maquette cale la navigation en haut, pas au centre du logo.
+  align-items: flex-start;
   justify-content: space-between;
-  gap: fn.toRem(16);
-  padding: fn.toRem(24) fn.toRem(48);
+  gap: fn.toRem(24);
+  padding: fn.toRem(24) var.$header-padding;
+  background: var.$white;
+
+  &__logo {
+    flex-shrink: 0;
+    // Un SVG en inline reste une boîte en ligne : sans ceci, le lien traîne
+    // quelques pixels de descendante sous le logo.
+    line-height: 0;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: var.$gutter;
+  }
+
+  &__toggle {
+    display: none;
+  }
 }
 
-@media (max-width: 680px) {
+.site-logo {
+  display: block;
+  width: var.$logo-size;
+  height: var.$logo-size;
+}
+
+/* Navigation et bouton d'action partagent la pastille : seul le fond change. */
+.site-nav__list,
+.site-header__cta {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav__list a,
+.site-header__cta a {
+  display: block;
+  padding: fn.toRem(8) fn.toRem(16);
+  border-radius: var.$radius;
+  font-size: var.$fs-cta;
+  font-weight: var.$fw-cta;
+  line-height: var.$lh-cta;
+  letter-spacing: var.$ls-cta;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.site-nav__list a {
+  color: var.$blue;
+
+  &:hover,
+  &:focus-visible {
+    background: var.$blue-pale;
+  }
+}
+
+.site-header__cta a {
+  background: var.$orange;
+  color: var.$white;
+
+  &:hover,
+  &:focus-visible {
+    background: color.adjust(var.$orange, $lightness: -8%);
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
   .site-header {
+    align-items: center;
     padding: fn.toRem(16) fn.toRem(20);
+  }
+
+  .site-header__toggle {
+    display: grid;
+    place-items: center;
+    width: fn.toRem(44);
+    height: fn.toRem(44);
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  // Trois barres pour deux pseudo-éléments et l'élément lui-même.
+  .site-header__toggle-bars {
+    position: relative;
+    display: block;
+    width: fn.toRem(24);
+    height: fn.toRem(2);
+    background: var.$blue;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: inherit;
+    }
+
+    &::before {
+      top: fn.toRem(-7);
+    }
+
+    &::after {
+      top: fn.toRem(7);
+    }
+  }
+
+  // Le panneau couvre tout l'écran et le logo comme le bouton passent au-dessus.
+  // Un décalage vertical calculé sur la hauteur de l'en-tête se désynchroniserait
+  // au premier changement de taille du logo.
+  .site-header__logo,
+  .site-header__toggle {
+    position: relative;
+    z-index: 1;
+  }
+
+  .site-header__nav {
+    position: fixed;
+    inset: 0;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: fn.toRem(24);
+    padding: fn.toRem(32) fn.toRem(20);
+    background: var.$white;
+    // `visibility` plutôt qu'un `display: none` : le panneau reste hors de
+    // l'ordre de tabulation tant qu'il est fermé.
+    //
+    // `visibility` s'anime par paliers discrets, à la moitié de la durée : la
+    // faire durer autant que le fondu masquerait le panneau pendant la première
+    // moitié de son apparition. Elle est donc instantanée, et seulement retardée
+    // à la fermeture pour laisser le fondu se terminer.
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .site-nav__list,
+  .site-header__cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: fn.toRem(8);
+  }
+
+  .site-nav__list a,
+  .site-header__cta a {
+    padding: fn.toRem(16);
+    font-size: var.$fs-h3;
+    text-align: center;
+  }
+
+  .site-logo {
+    width: var.$logo-size-mobile;
+    height: var.$logo-size-mobile;
+  }
+
+  .is-menu-open {
+    overflow: hidden;
+
+    .site-header__nav {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.2s ease, visibility 0s;
+    }
   }
 }

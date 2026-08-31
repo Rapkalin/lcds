@@ -6,43 +6,71 @@ html {
   scroll-behavior: smooth;
 }
 
+// `width: 100vw` incluait la largeur de la barre de défilement et provoquait un
+// débordement horizontal de quelques pixels sur toute page assez haute.
 body {
-  background: var.$white;
-  width: 100vw;
   margin: 0;
-  font-family: var.$font-family;
+  background: var.$white;
+  color: var.$font-color;
+  font-family: var.$font-body;
+  font-size: var.$fs-p;
+  font-weight: var.$fw-p;
+  line-height: var.$lh-p;
 }
 
 /* Reset default margin */
-h1, h2, h4, p {
+h1, h2, h3, h4, p {
   margin: unset;
 }
 
-// $white sur un body $white rendait tout lien invisible : on repart de la
-// couleur de texte, à ajuster quand la charte sera arrêtée.
+h1, h2, h3 {
+  font-family: var.$font-title;
+  font-weight: var.$fw-title;
+  line-height: var.$lh-title;
+}
+
+h2 {
+  font-size: var.$fs-h2;
+}
+
+h3 {
+  font-size: var.$fs-h3;
+}
+
 a {
+  color: inherit;
   text-decoration-line: none;
-  color: var.$font-color;
 
   &:visited {
-    color: var.$font-color;
+    color: inherit;
   }
 }
 
+// Retire un libellé du flux visuel en le laissant lisible par un lecteur
+// d'écran. `display: none` le retirerait aussi de l'arbre d'accessibilité.
+.screen-reader-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .main-wrapper {
-    padding: fn.toRem(40) fn.toRem(48);
+  padding: fn.toRem(40) var.$header-padding;
 }
 
 .max-width-container {
   width: auto;
-  max-width: 1600px;
+  max-width: fn.toRem(1600);
   margin: auto;
 }
 
-/* smartphones, iPhone, portrait 480x320 phones */
-/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
-/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
-@media (max-width:680px)  {
+@media (max-width: var.$bp-mobile) {
   .main-wrapper {
     padding: fn.toRem(24) fn.toRem(20);
   }

@@ -3,9 +3,8 @@
 /**
  * En-tête du site.
  *
- * Volontairement réduit au nom du site : pas de navigation tant que
- * l'arborescence du projet n'est pas arrêtée. Les emplacements de menu restent
- * déclarés dans inc/setup.php, prêts à être rendus ici.
+ * La navigation et le bouton d'action viennent chacun de leur propre
+ * emplacement de menu — voir inc/navigation.php.
  *
  * @package lcds
  */
@@ -27,7 +26,18 @@ if (! defined('ABSPATH')) {
 <a class="skip-link" href="#main-content"><?php esc_html_e('Aller au contenu', 'lcds'); ?></a>
 
 <header id="site-header" class="site-header">
-    <div class="site-branding">
-        <a href="<?php echo esc_url(home_url('/')); ?>" rel="home"><?php bloginfo('name'); ?></a>
+    <a class="site-header__logo" href="<?php echo esc_url(home_url('/')); ?>" rel="home">
+        <?php get_template_part('components/site-logo'); ?>
+        <span class="screen-reader-text"><?php echo esc_html(get_bloginfo('name')); ?></span>
+    </a>
+
+    <button class="site-header__toggle" type="button" aria-expanded="false" aria-controls="site-header-nav">
+        <span class="site-header__toggle-bars" aria-hidden="true"></span>
+        <span class="screen-reader-text"><?php esc_html_e('Menu', 'lcds'); ?></span>
+    </button>
+
+    <div id="site-header-nav" class="site-header__nav">
+        <?php lcds_header_nav(); ?>
+        <?php lcds_header_cta(); ?>
     </div>
 </header>

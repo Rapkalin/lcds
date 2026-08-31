@@ -43,9 +43,11 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Arborescence et principes d'organisation | [`readme/structure.md`](readme/structure.md) |
 | Durcissement, en-têtes HTTP, CSP, formulaire de contact | [`readme/securite.md`](readme/securite.md) |
 | Cache applicatif, cache pleine page, OPcache | [`readme/cache.md`](readme/cache.md) |
+| Tokens, grille, polices, invalidation des assets | [`readme/front.md`](readme/front.md) |
 | Menus : emplacements et création automatique | [`readme/menus.md`](readme/menus.md) |
 | Yoast, indexation, SEO technique | [`readme/seo.md`](readme/seo.md) |
 | Pint, PHPCS, PHPStan, Pest | [`readme/qualite-code.md`](readme/qualite-code.md) |
+| QA : portes à passer, campagne front | [`readme/qa.md`](readme/qa.md) |
 | Workflows GitHub Actions | [`readme/ci-cd.md`](readme/ci-cd.md) |
 | Déploiement, `shared/`, plugins payants, rollback | [`readme/deploiement.md`](readme/deploiement.md) |
 | Aide-mémoire des commandes | [`readme/commandes.md`](readme/commandes.md) |

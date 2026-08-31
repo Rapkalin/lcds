@@ -32,7 +32,7 @@ if (! defined('ABSPATH')) {
  * Version d'amorçage. À incrémenter pour rejouer la création sur tous les
  * environnements (après l'ajout d'un emplacement, par exemple).
  */
-const LCDS_MENUS_SEED_VERSION = 1;
+const LCDS_MENUS_SEED_VERSION = 2;
 
 /**
  * Option stockant la version d'amorçage déjà appliquée à cette base.

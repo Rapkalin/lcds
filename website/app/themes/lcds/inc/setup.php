@@ -99,22 +99,51 @@ if (!function_exists('theme_custom_menu_order')) {
 }
 
 /**
+ * Version d'un asset compilé, dérivée de sa date de modification.
+ *
+ * Indispensable : le .htaccess sert dist/ avec un `Expires` à un mois et les
+ * fichiers produits par webpack gardent un nom fixe. Sans cette version, une
+ * mise en production ne parvenait pas aux visiteurs déjà venus — WordPress
+ * n'ajoutait que `?ver=` suivi de SA propre version, identique d'un déploiement
+ * à l'autre.
+ **/
+if (!function_exists('theme_lcds_asset_version')) {
+    function theme_lcds_asset_version(string $relative_path): string
+    {
+        $modified_at = filemtime(get_template_directory() . '/' . $relative_path);
+
+        return $modified_at === false ? '1.0' : (string) $modified_at;
+    }
+}
+
+/**
  * Enqueue scripts and styles.
  **/
 if (!function_exists('theme_lcds_scripts')) {
     function theme_lcds_scripts(): void
     {
-        wp_enqueue_style('lcds', get_stylesheet_directory_uri() . '/dist/main.css');
+        wp_enqueue_style(
+            'lcds',
+            get_template_directory_uri() . '/dist/main.css',
+            [],
+            theme_lcds_asset_version('dist/main.css'),
+        );
         wp_deregister_script('jquery');
         wp_dequeue_style('wp-block-library');
         wp_dequeue_style('wp-block-library-theme');
         wp_dequeue_style('wc-block-style'); // Remove WoocCommerce block css
         wp_dequeue_style('global-styles'); // Remove theme.json
         wp_dequeue_style('wp-emoji-styles'); // Remove emoji style
-        wp_enqueue_script('main-js', get_template_directory_uri() . '/dist/main.js', [], '1.0', [
-            'strategy' => 'defer',
-            'in_footer' => true,
-        ]);
+        wp_enqueue_script(
+            'main-js',
+            get_template_directory_uri() . '/dist/main.js',
+            [],
+            theme_lcds_asset_version('dist/main.js'),
+            [
+                'strategy' => 'defer',
+                'in_footer' => true,
+            ],
+        );
     }
     add_action('wp_enqueue_scripts', 'theme_lcds_scripts');
 }

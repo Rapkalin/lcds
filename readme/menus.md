@@ -6,6 +6,7 @@ Les emplacements de menu et leur création vivent dans le thème :
 | --- | --- |
 | `inc/enums/LcdsMenuLocation.php` | **Source unique de vérité** : un cas = un emplacement |
 | `inc/menus.php` | Enregistrement des emplacements + création automatique |
+| `inc/navigation.php` | **Rendu** : un helper par menu affiché |
 
 ## Création automatique
 
@@ -54,13 +55,42 @@ Les menus sont créés **vides** : les remplir est un travail éditorial.
 L'enregistrement (`register_nav_menus`) est dérivé de l'enum : il n'y a rien à
 ajouter ailleurs.
 
-> `container => 'nav'` plutôt qu'un `<nav>` écrit à la main : `container => false`
-> est refusé par le stub WordPress utilisé par PHPStan. `fallback_cb => false`
-> évite d'afficher la liste des pages quand aucun menu n'est assigné.
+> `container => 'nav'` plutôt qu'un `<nav>` écrit à la main. Pour se passer de
+> conteneur, utiliser `container => ''` et **non** `false` : les deux sont falsy
+> pour WordPress, mais le stub utilisé par PHPStan type l'option en `string` et
+> refuse `false`. `fallback_cb => false` évite d'afficher la liste des pages
+> quand aucun menu n'est assigné.
+
+> Les tableaux d'arguments vivent dans `inc/navigation.php`, jamais dans un
+> gabarit : Pint désaligne un tableau multi-lignes noyé dans du balisage
+> (`statement_indentation`).
 
 ## Affichage actuel
 
-**Aucun menu n'est rendu** pour l'instant : `header.php` et `footer.php` sont
-réduits au nom du site et à la ligne de copyright, le temps que l'arborescence
-soit arrêtée. Les emplacements existent, les menus sont créés et administrables :
-il ne reste qu'à les afficher.
+| Emplacement | Rendu |
+| --- | --- |
+| `header-menu` | Navigation de l'en-tête, `depth: 1` |
+| `header-cta-menu` | Bouton « Prendre RDV » de l'en-tête |
+| `footer-menu`, `social-menu`, `legal-menu` | Pas encore affichés |
+
+### Pourquoi le bouton d'action a son propre emplacement
+
+Le CTA de l'en-tête est un **emplacement de menu à part**, pas un item du menu
+principal ni un champ ACF.
+
+- **Pas dans le menu principal** : sa mise en forme (pastille orange) n'a aucun
+  sens au milieu des liens. Un emplacement séparé rend le glisser-déposer
+  impossible.
+- **Pas en champ ACF** : l'en-tête est une pièce de structure. Le lier à un
+  plugin sous licence, c'est risquer une page blanche si le plugin est absent ou
+  désactivé.
+- **En emplacement de menu** : réutilise l'amorçage existant, l'échappement et
+  les classes d'état courant restent à la charge de WordPress, et le
+  contributeur l'édite là où il édite déjà la navigation.
+
+### `depth: 1` sur la navigation
+
+La maquette ne prévoit aucun déroulant. Un second niveau ajouté en
+administration **ne serait pas rendu** — c'est délibéré, pas un oubli. Le jour
+où un déroulant est maquetté, il faudra lever cette limite *et* écrire le CSS
+qui va avec.

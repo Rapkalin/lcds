@@ -27,6 +27,24 @@ Avant toute réponse impliquant une décision technique, se poser ces questions 
 5. **Sur quoi je m'avance ?** Version d'un paquet, comportement d'une API,
    existence d'une option : **vérifier plutôt qu'affirmer**.
 
+### Prouver, et déclarer ce qui reste supposé
+
+Toute affirmation technique doit reposer sur un **élément concret** produit dans
+la session : sortie de commande, mesure, source lue, test exécuté. « Ça devrait
+marcher » n'est pas une vérification.
+
+- **Vérifier dans les deux sens.** Affirmer qu'un correctif était nécessaire
+  suppose d'avoir constaté l'échec sans lui. Une règle ajoutée « au cas où » se
+  révèle parfois inutile, voire nuisible.
+- **Un test qui ne peut pas échouer ne vaut rien.** Après en avoir écrit un,
+  casser volontairement le code qu'il surveille et vérifier qu'il passe au rouge.
+- **Ne jamais conclure à une absence depuis un outil non exhaustif.** Cas
+  vérifié : `get_metadata` de Figma renvoie des cadres comme dépourvus d'enfants
+  alors qu'ils en ont — voir [`readme/qa.md`](readme/qa.md).
+- **Déclarer explicitement ce qui reste supposé**, en fin de réponse, plutôt que
+  de le noyer dans une formulation prudente. L'utilisateur doit pouvoir repérer
+  d'un coup d'œil ce qui est prouvé et ce qui ne l'est pas.
+
 Règles de conduite :
 
 - **Signaler ≠ bloquer.** Exposer la réserve en une ou deux phrases, puis

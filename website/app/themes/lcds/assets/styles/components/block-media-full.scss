@@ -6,7 +6,7 @@
   background: var.$black;
 }
 
-@media (max-width: 680px) {
+@media (max-width: var.$bp-mobile) {
   .block-media-full {
     aspect-ratio: 4 / 3;
   }
