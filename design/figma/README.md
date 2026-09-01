@@ -4,6 +4,44 @@ Le connecteur Figma est **limité en nombre d'appels** (offre Starter). Ce dossi
 est le cache : tout ce qui a déjà été relevé est ici, **versionné**, et ne doit
 plus jamais être redemandé à Figma.
 
+## Les PDF sont devenus la source principale
+
+Les maquettes exportées en PDF vivent hors du dépôt, dans
+`~/Documents/Perso/LCDS/maquettes/`. **Elles remplacent le connecteur pour tout
+ce qui est géométrie et texte**, et ne coûtent aucun appel.
+
+Le point décisif : les pages PDF font **exactement la taille des cadres Figma**
+(1440 × 4268 pour la page d'accueil, 1440 × 4724,06 pour les blocs de fin). Les
+coordonnées du PDF sont donc celles de la maquette, au point près.
+
+L'outillage est `poppler` (déjà installé) :
+
+```bash
+pdfinfo  "HP_01_LCDS_hp full.pdf"                      # confirmer la taille de page
+pdftotext -layout "…​.pdf" -                             # toute la copie, lisible
+pdftotext -bbox   "…​.pdf" sortie.xhtml                  # position de CHAQUE mot
+pdftoppm -png -r 72 -x 0 -y 900 -W 1440 -H 1328 "…​.pdf" out   # rendu 1:1 d'une zone
+```
+
+`-r 72` fait correspondre 1 point à 1 pixel : les coordonnées relevées sur le
+rendu sont directement celles de la maquette. Pour un détail, monter à `-r 216`
+et multiplier les coordonnées par 3.
+
+Ce que ça permet, et que le connecteur ne donnait pas :
+
+- **les couleurs exactes**, en échantillonnant les pixels — c'est ainsi qu'a été
+  trouvé `#A8BED6`, absent des variables de bibliothèque ;
+- **les cotes exactes** de tout élément, y compris les formes sans texte ;
+- **la copie réelle**, à recopier sans faute de frappe.
+
+> Piège : les libellés à fort interlettrage (étiquettes, boutons d'action) sortent
+> de `pdftotext` avec des espaces parasites — « l e pa r c o u r s d e s o i n ».
+> Normaliser avant de recopier.
+
+Ce qui reste du ressort du connecteur : la **structure** des composants (quel
+nœud est une instance de quoi), les **variantes**, et les tokens nommés. Le PDF
+est un aplat, il ne dit pas ce qui est un composant.
+
 ## Protocole
 
 1. **Avant tout appel, lire ce dossier.** `inventory.md` dit ce qui est déjà

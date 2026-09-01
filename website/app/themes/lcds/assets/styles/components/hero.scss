@@ -1,0 +1,104 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Maquette : 1440 × 900. Le ratio fait la hauteur sur les écrans plus étroits ;
+// au-delà de 1440 la hauteur dessinée sert de plafond, sinon le hero occuperait
+// 1200px de haut sur un écran large. `object-fit` absorbe l'écart de cadrage.
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  aspect-ratio: 16 / 10;
+  max-height: fn.toRem(900);
+  padding: 0 var.$header-padding fn.toRem(24);
+  overflow: hidden;
+
+  &__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    // Le visuel couvre toute la surface : sans ceci il intercepterait le clic
+    // destiné à la carte.
+    pointer-events: none;
+
+    &--placeholder {
+      background: var.$blue;
+    }
+  }
+
+  &__card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var.$gutter;
+    width: fn.toRem(327);
+    padding: fn.toRem(8) fn.toRem(12) fn.toRem(8) fn.toRem(8);
+    border-radius: fn.toRem(12);
+    background: var.$white;
+    color: var.$blue;
+  }
+
+  &__thumbnail {
+    flex-shrink: 0;
+    width: fn.toRem(93);
+    height: fn.toRem(93);
+    overflow: hidden;
+    border-radius: var.$radius;
+    background: var.$blue-pale;
+  }
+
+  &__thumbnail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__card-body {
+    display: flex;
+    flex: 1 0 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: fn.toRem(4);
+    // Autorise la colonne à se rétrécir : sans cela un mot long la fait
+    // déborder de la carte.
+    min-width: 0;
+  }
+
+  &__card-label {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: fn.toRem(8);
+    font-size: var.$fs-cta;
+    font-weight: var.$fw-cta;
+    line-height: var.$lh-cta;
+    letter-spacing: var.$ls-cta;
+    text-transform: uppercase;
+  }
+}
+
+// Taille naturelle du tracé. La maquette la place dans une boîte de 20 × 20 ;
+// l'écart d'alignement vertical qui en résulte est d'un pixel et demi.
+.icon-calendar {
+  flex-shrink: 0;
+  width: fn.toRem(17.1541);
+  height: fn.toRem(17.5);
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-mobile) {
+  .hero {
+    aspect-ratio: 3 / 4;
+    max-height: none;
+    padding: 0 fn.toRem(20) fn.toRem(20);
+
+    &__card {
+      width: 100%;
+    }
+  }
+}

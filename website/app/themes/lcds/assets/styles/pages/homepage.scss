@@ -1,16 +1,9 @@
 @use "../basics/variables" as var;
-@use "../basics/functions" as fn;
 
-// L'espacement entre blocs est porté par le conteneur, pas par les blocs :
-// chaque composant reste ainsi réutilisable sans marge parasite.
+// Les sections portent désormais leur propre retrait vertical et leur fond :
+// un écart au niveau du conteneur les décollerait les unes des autres, alors que
+// la maquette les enchaîne sans interruption.
 .front-page {
   display: flex;
   flex-direction: column;
-  gap: fn.toRem(64);
-}
-
-@media (max-width: var.$bp-mobile) {
-  .front-page {
-    gap: fn.toRem(40);
-  }
 }

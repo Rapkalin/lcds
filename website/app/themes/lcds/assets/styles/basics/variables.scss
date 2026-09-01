@@ -9,6 +9,10 @@ $blue: #00387a;
 $turquoise: #048b8c;
 $orange: #e25304;
 $blue-pale: #f2f8ff;
+// Bordures et pistes inactives. Relevé au pixel sur les maquettes PDF, mais
+// ABSENT des variables de bibliothèque Figma : à faire promouvoir côté design,
+// sinon la prochaine nuance de bordure divergera.
+$blue-light: #a8bed6;
 $white: #ffffff;
 $black: #000000;
 
@@ -58,7 +62,13 @@ $logo-size: fn.toRem(80);
 $logo-size-mobile: fn.toRem(56);
 // Boutons ronds, pastilles et piste de progression des carrousels.
 $module: fn.toRem(52);
+// Retrait vertical d'une section, et rythme interne entre ses blocs.
+$section-padding: fn.toRem(128);
+$block-gap: fn.toRem(80);
 $radius: fn.toRem(8);
+// Pastilles pleinement arrondies (étiquettes, badges de durée) : une valeur
+// bien supérieure à la moitié de la hauteur reste juste quelle que soit celle-ci.
+$radius-pill: fn.toRem(999);
 
 /* BREAKPOINTS */
 // Provisoires : aucune maquette mobile n'existe à ce jour.

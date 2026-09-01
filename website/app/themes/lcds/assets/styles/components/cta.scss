@@ -1,0 +1,46 @@
+@use "sass:color";
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Deux pastilles distinctes séparées de 2px, et non une seule avec un séparateur :
+// c'est ce liseré de fond qui creuse l'encoche visible sur la maquette.
+.cta {
+  display: inline-flex;
+  align-items: stretch;
+  gap: fn.toRem(2);
+  height: fn.toRem(29);
+  color: var.$white;
+  font-size: var.$fs-cta;
+  font-weight: var.$fw-cta;
+  line-height: var.$lh-cta;
+  letter-spacing: var.$ls-cta;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &__icon,
+  &__label {
+    display: flex;
+    align-items: center;
+    border-radius: var.$radius;
+    background: var.$blue;
+    transition: background-color 0.2s ease;
+  }
+
+  &__icon {
+    justify-content: center;
+    width: fn.toRem(44);
+    // L'émoji ne suit pas l'interlettrage du libellé.
+    letter-spacing: normal;
+  }
+
+  &__label {
+    padding: 0 fn.toRem(16);
+  }
+
+  &:hover &__icon,
+  &:hover &__label,
+  &:focus-visible &__icon,
+  &:focus-visible &__label {
+    background: color.adjust(var.$blue, $lightness: -6%);
+  }
+}

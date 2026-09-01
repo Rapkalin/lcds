@@ -33,6 +33,16 @@ Deux transpositions plutôt que des recopies :
 - **Les hauteurs de ligne sont sans unité** (`1.2`, `1.4`) : elles suivent la
   taille de police au lieu de la contredire.
 
+## `box-sizing: border-box`, sans exception
+
+Déclaré sur `*` dans `basics/general.scss`. **Ce n'est pas une préférence de
+style** : par défaut une largeur ou un `aspect-ratio` s'applique à la boîte de
+contenu, et le rembourrage s'ajoute par-dessus. Toute cote relevée sur la
+maquette est alors fausse de la valeur du rembourrage.
+
+Constaté sur le hero : 864px rendus pour 900 dessinés, et sa carte à 347 pour
+327. Trois assertions de [`qa.md`](qa.md) verrouillent désormais ces cotes.
+
 ## Grille
 
 Gouttière de **12px**, constante partout dans la maquette. Le contenu fait

@@ -2,6 +2,16 @@
 @use "variables" as var;
 @use "functions" as fn;
 
+// Sans ceci, une largeur ou un `aspect-ratio` s'applique à la boîte de contenu :
+// le rembourrage s'ajoute par-dessus et toute cote relevée sur la maquette est
+// fausse. Constaté sur le hero (864px rendus pour 900 dessinés) et sur sa carte
+// (347 pour 327) — dans les deux cas l'écart valait exactement le rembourrage.
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
 }

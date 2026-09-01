@@ -6,8 +6,10 @@
 @use "partials/footer" as *;
 
 /* COMPONENTS */
-@use "components/block-text-media" as *;
-@use "components/block-media-full" as *;
+@use "components/tag" as *;
+@use "components/cta" as *;
+@use "components/hero" as *;
+@use "components/block-intro" as *;
 
 /* PAGES */
 @use "pages/homepage" as *;

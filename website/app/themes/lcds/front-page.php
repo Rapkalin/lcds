@@ -4,8 +4,11 @@
  * Page d'accueil.
  *
  * WordPress donne la priorité à ce gabarit sur index.php pour la page d'accueil.
- * Le contenu est encore en dur : c'est un point de départ de mise en page, à
- * remplacer par des champs éditables quand la maquette sera arrêtée.
+ *
+ * Le contenu vient encore d'ici, en dur : c'est la copie relevée sur les
+ * maquettes, en attendant que la source d'édition soit arbitrée. Ces chaînes ne
+ * passent PAS par __() — ce n'est pas de l'interface traduisible, c'est du
+ * contenu éditorial, qui n'a pas à vivre dans un fichier de traduction.
  *
  * Les arguments des blocs sont préparés ici, avant le HTML : un tableau
  * multi-lignes noyé dans le balisage se fait désaligner par Pint.
@@ -17,17 +20,33 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+$hero_block = [
+    'image' => 0,
+    'thumbnail' => 0,
+    'label' => __('Prendre RDV', 'lcds'),
+    'text' => __('Phrase d\'accroche à remplacer.', 'lcds'),
+    'url' => '',
+];
+
 $intro_block = [
-    'title' => __('Titre de section', 'lcds'),
-    'text' => __('Texte de présentation à remplacer. Ce bloc pose la structure deux colonnes : le média à gauche, le texte à droite.', 'lcds'),
+    'label' => 'l’histoire',
+    'dot' => 'turquoise',
+    'paragraphs' => [
+        'Depuis septembre 1986, le Docteur Yann Le Fur et son équipe n’ont cessé de développer la Clinique du Sourire. Après 40 ans, il s’est associé aux praticiens présents depuis plusieurs années afin de faire perdurer le professionnalisme et l’ambiance familiale du cabinet.',
+        'Le cabinet est représenté aujourd’hui par le Dr Yann Le Fur, le Dr Sofia Denarié, le Dr Boris Fouquet, le Dr Martin Monteil et le Dr Alice Le Fur.',
+    ],
+    'cta' => [
+        'label' => 'en savoir plus',
+        'url' => '#',
+    ],
 ];
 
 get_header();
 ?>
 
 <main id="main-content" class="main-content front-page">
-    <?php get_template_part('components/block-text-media', null, $intro_block); ?>
-    <?php get_template_part('components/block-media-full'); ?>
+    <?php get_template_part('components/hero', null, $hero_block); ?>
+    <?php get_template_part('components/block-intro', null, $intro_block); ?>
 </main>
 
 <?php

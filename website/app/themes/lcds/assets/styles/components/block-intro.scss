@@ -1,0 +1,50 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Le fond court sur toute la largeur, le contenu est calé sur un axe centré de
+// 1118px : à 1440 cela redonne exactement les marges de 161px de la maquette,
+// sans écrire 161 nulle part. Le retrait n'est posé qu'à gauche pour que le rail
+// du carrousel puisse filer jusqu'au bord droit.
+.block-intro {
+  padding: var.$section-padding 0;
+  padding-left: max(#{fn.toRem(20)}, calc(50% - #{var.$content-width} / 2));
+  background: var.$blue-pale;
+  color: var.$blue;
+
+  &__header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var.$gutter;
+    max-width: var.$content-width;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: fn.toRem(48);
+  }
+
+  // Une ligne vide sépare les paragraphes dans la maquette : l'écart vaut donc
+  // exactement une hauteur de ligne.
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: calc(#{var.$fs-p} * #{var.$lh-p});
+  }
+}
+
+@media (max-width: var.$bp-mobile) {
+  .block-intro {
+    padding-right: fn.toRem(20);
+
+    &__header {
+      grid-template-columns: 1fr;
+      gap: fn.toRem(32);
+    }
+
+    &__content {
+      gap: fn.toRem(32);
+    }
+  }
+}

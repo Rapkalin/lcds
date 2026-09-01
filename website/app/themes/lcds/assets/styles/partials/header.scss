@@ -17,6 +17,10 @@
   }
 }
 
+// L'en-tête est TRANSPARENT : sur la maquette la photo du hero passe dessous,
+// et ce sont les pastilles blanches des liens qui les rendent lisibles. Vérifié
+// au pixel sur le PDF — #BEDAFF (le ciel) au-dessus du header, #FFFFFF
+// seulement derrière les liens.
 .site-header {
   position: relative;
   z-index: 10;
@@ -26,7 +30,6 @@
   justify-content: space-between;
   gap: fn.toRem(24);
   padding: fn.toRem(24) var.$header-padding;
-  background: var.$white;
 
   &__logo {
     flex-shrink: 0;
@@ -44,6 +47,17 @@
   &__toggle {
     display: none;
   }
+}
+
+// Le recouvrement ne s'applique que si la page porte un hero : ailleurs
+// l'en-tête reste dans le flux et réserve sa hauteur, sinon le premier bloc
+// passerait dessous. Piloté par la présence du hero plutôt que par une classe
+// de body, qui pourrait se désynchroniser du gabarit.
+body:has(.hero) .site-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
 }
 
 .site-logo {
@@ -76,7 +90,10 @@
   transition: background-color 0.2s ease;
 }
 
+// Fond blanc au repos, et non au survol : l'en-tête est transparent au-dessus
+// de la photo du hero, ce sont ces pastilles qui rendent les liens lisibles.
 .site-nav__list a {
+  background: var.$white;
   color: var.$blue;
 
   &:hover,
@@ -104,6 +121,8 @@
     padding: fn.toRem(16) fn.toRem(20);
   }
 
+  // L'en-tête recouvre aussi la photo sur mobile : le bouton burger a besoin
+  // d'un fond pour rester lisible, contrairement aux liens qui ont le leur.
   .site-header__toggle {
     display: grid;
     place-items: center;
@@ -111,7 +130,8 @@
     height: fn.toRem(44);
     padding: 0;
     border: 0;
-    background: none;
+    border-radius: var.$radius;
+    background: var.$white;
     cursor: pointer;
   }
 

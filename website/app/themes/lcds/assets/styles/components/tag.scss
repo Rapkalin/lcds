@@ -1,0 +1,37 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Étiquette de section. Le retrait gauche est plus faible que le droit : une
+// puce ronde demande moins d'air que du texte pour paraître centrée. Valeurs
+// relevées au pixel sur les maquettes.
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var.$gutter;
+  height: fn.toRem(29);
+  padding: 0 fn.toRem(16) 0 fn.toRem(10);
+  border: 1px solid var.$blue-light;
+  border-radius: var.$radius-pill;
+  color: var.$blue;
+  font-size: var.$fs-cta;
+  font-weight: var.$fw-cta;
+  line-height: var.$lh-cta;
+  letter-spacing: var.$ls-cta;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &__dot {
+    flex-shrink: 0;
+    width: fn.toRem(12);
+    height: fn.toRem(12);
+    border-radius: 50%;
+  }
+}
+
+.tag--turquoise .tag__dot {
+  background: var.$turquoise;
+}
+
+.tag--orange .tag__dot {
+  background: var.$orange;
+}

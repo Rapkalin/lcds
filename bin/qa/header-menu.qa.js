@@ -38,6 +38,25 @@ window.runHeaderMenuQa = async (win) => {
     const isOpen = () => toggle.getAttribute("aria-expanded") === "true";
     const hasBodyClass = () => doc.body.classList.contains("is-menu-open");
 
+    // Le hero porte les seules cotes chiffrées de la maquette qui soient
+    // vérifiables sans les polices : elles ont attrapé un `box-sizing` manquant,
+    // qui faussait toute largeur combinée à un rembourrage.
+    const hero = doc.querySelector(".hero");
+    const card = doc.querySelector(".hero__card");
+
+    if (hero !== null && card !== null && win.innerWidth === 1440) {
+        const heroBox = hero.getBoundingClientRect();
+        const cardBox = card.getBoundingClientRect();
+        const round = (value) => Math.round(value);
+
+        assert(`hauteur du hero = 900 (${round(heroBox.height)})`, round(heroBox.height) === 900);
+        assert(`largeur de la carte = 327 (${round(cardBox.width)})`, round(cardBox.width) === 327);
+        assert(
+            `carte à 48px du bord droit (${round(win.innerWidth - cardBox.right)})`,
+            round(win.innerWidth - cardBox.right) === 48
+        );
+    }
+
     if (win.innerWidth > 1024) {
         assert(`rendu en mise en page desktop (${win.innerWidth}px > 1024)`, true);
         assert("bouton burger masqué en desktop", styleOf(toggle).display === "none");
