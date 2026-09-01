@@ -24,6 +24,32 @@ d'abord `ci.yml` (Pint, PHPCS, PHPStan, Pest, CVE, gitleaks, build front) et
 échoue, le déploiement est **sauté** : le serveur n'est pas touché. Voir
 [`ci-cd.md`](ci-cd.md).
 
+## Prérequis côté hébergeur
+
+À contrôler **avant** le premier déploiement sur un nouvel hébergement, puis
+après toute montée de version de PHP :
+
+```bash
+php -r 'var_dump(gd_info()["WebP Support"]);'   # doit renvoyer bool(true)
+php -v                                          # web ET cli : voir la note ci-dessous
+```
+
+**Le support WebP de GD n'est pas optionnel** : sans lui, `wp_get_attachment_image()`
+sert des sous-tailles qui n'ont pas pu être encodées — voir [`images.md`](images.md).
+
+Deux pièges déjà rencontrés :
+
+- **La version de PHP en ligne de commande peut différer de celle du web.** Un
+  écart met WP-CLI en échec côté serveur, `platform_check.php` de Composer
+  refusant de charger l'autoloader.
+- **`AllowOverride` peut être restreint.** Une directive refusée dans un
+  `.htaccess` produit une 500 sur *toutes* les requêtes, sans message — voir
+  [`securite.md`](securite.md).
+
+> Sur un mutualisé OVH, le docroot se règle par domaine : *Hébergements >
+> Multisite > Modifier > Dossier racine*. Y mettre `<remote_path>/website`, la
+> structure de release décrite plus bas restant inchangée.
+
 ## Arborescence sur le serveur
 
 ```text
@@ -32,7 +58,6 @@ d'abord `ci.yml` (Pint, PHPCS, PHPStan, Pest, CVE, gitleaks, build front) et
 │   ├── .env             # configuration et secrets de l'environnement
 │   ├── plugins/         # plugins sous licence (ACF Pro…)
 │   ├── uploads/         # médias
-│   ├── uploads-webpc/   # dérivés WebP/AVIF
 │   └── cache/           # cache pleine page
 ├── config/              # release
 ├── website/             # release — DocumentRoot du vhost
@@ -56,7 +81,6 @@ release y est reliée par des liens symboliques recréés après chaque rsync.
 | `website/.htaccess` | `shared/.htaccess` |
 | `website/.htpasswd` | `shared/.htpasswd` *(si présent)* |
 | `website/app/uploads` | `shared/uploads` |
-| `website/app/uploads-webpc` | `shared/uploads-webpc` |
 | `website/app/cache` | `shared/cache` |
 | `website/app/plugins/<plugin-payant>` | `shared/plugins/<plugin-payant>` |
 
@@ -224,7 +248,7 @@ Sans les créer, les secrets du dépôt s'appliquent et tout fonctionne.
 
 ```bash
 ssh user@serveur
-mkdir -p ~/prod-lcds/shared/{plugins,uploads,uploads-webpc,cache}
+mkdir -p ~/prod-lcds/shared/{plugins,uploads,cache}
 ```
 
 Puis créer `~/prod-lcds/shared/.env` à partir de
@@ -253,7 +277,6 @@ rm -rf website config
 cp -a old_release/website old_release/config .
 ln -nsf "$PWD/shared/.env" .env
 ln -nsf "$PWD/shared/uploads" website/app/uploads
-ln -nsf "$PWD/shared/uploads-webpc" website/app/uploads-webpc
 ln -nsf "$PWD/shared/cache" website/app/cache
 for p in shared/plugins/*/; do ln -nsf "$PWD/${p%/}" "website/app/plugins/$(basename "$p")"; done
 ```

@@ -13,7 +13,6 @@
 #   │   ├── .htpasswd    ← optionnel : protection par mot de passe (préprod)
 #   │   ├── plugins/     ← plugins sous licence (ACF Pro…)
 #   │   ├── uploads/
-#   │   ├── uploads-webpc/
 #   │   └── cache/
 #   ├── config/          ← release, au même niveau que website/ (comme en local)
 #   ├── website/         ← release (docroot du vhost)
@@ -128,8 +127,7 @@ jobs:
           script: |
             set -e
             ROOT="$HOME/${{ inputs.remote_path }}"
-            mkdir -p "$ROOT/shared/plugins" "$ROOT/shared/uploads" \
-                     "$ROOT/shared/uploads-webpc" "$ROOT/shared/cache"
+            mkdir -p "$ROOT/shared/plugins" "$ROOT/shared/uploads" "$ROOT/shared/cache"
             rm -rf "$ROOT/old_release"
             mkdir -p "$ROOT/old_release"
             for DIR in website config; do
@@ -155,7 +153,6 @@ jobs:
             --exclude=/old_release
             --exclude=/website/.env
             --exclude=/website/app/uploads
-            --exclude=/website/app/uploads-webpc
             --exclude=/website/app/cache
             --exclude=/website/.htpasswd
           path: ./release/
@@ -199,10 +196,9 @@ jobs:
             # .env dans le docroot, à côté de wp-config.php : c'est là que la
             # configuration le cherche. Il n'est PAS servi par Apache — le bloc
             # FilesMatch de website/.htaccess refuse tous les .env.
-            link_shared "$ROOT/shared/.env"          "$ROOT/website/.env"
-            link_shared "$ROOT/shared/uploads"       "$ROOT/website/app/uploads"
-            link_shared "$ROOT/shared/uploads-webpc" "$ROOT/website/app/uploads-webpc"
-            link_shared "$ROOT/shared/cache"         "$ROOT/website/app/cache"
+            link_shared "$ROOT/shared/.env"    "$ROOT/website/.env"
+            link_shared "$ROOT/shared/uploads" "$ROOT/website/app/uploads"
+            link_shared "$ROOT/shared/cache"   "$ROOT/website/app/cache"
 
             # .htaccess : c'est shared/ qui est SERVI, pour que chaque
             # environnement puisse ajouter ses propres directives (protection par

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c334cea073e584cfc636889eb94fa209",
+    "content-hash": "d3a23fe372ec31f7724795ea949c7f13",
     "packages": [
         {
             "name": "composer/installers",
@@ -1007,24 +1007,6 @@
                 }
             ],
             "time": "2026-08-24T18:07:49+00:00"
-        },
-        {
-            "name": "wpackagist-plugin/webp-converter-for-media",
-            "version": "6.6.5",
-            "source": {
-                "type": "svn",
-                "url": "https://plugins.svn.wordpress.org/webp-converter-for-media/",
-                "reference": "tags/6.6.5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/webp-converter-for-media.6.6.5.zip"
-            },
-            "require": {
-                "composer/installers": "^1.0 || ^2.0"
-            },
-            "type": "wordpress-plugin",
-            "homepage": "https://wordpress.org/plugins/webp-converter-for-media/"
         },
         {
             "name": "wpackagist-plugin/wordpress-seo",

@@ -41,6 +41,9 @@ marcher » n'est pas une vérification.
 - **Ne jamais conclure à une absence depuis un outil non exhaustif.** Cas
   vérifié : `get_metadata` de Figma renvoie des cadres comme dépourvus d'enfants
   alors qu'ils en ont — voir [`readme/qa.md`](readme/qa.md).
+- **Le connecteur Figma est limité en nombre d'appels.** Lire
+  [`design/figma/README.md`](design/figma/README.md) **avant** tout appel : le
+  relevé est peut-être déjà en cache, et le protocole évite d'en gaspiller.
 - **Déclarer explicitement ce qui reste supposé**, en fin de réponse, plutôt que
   de le noyer dans une formulation prudente. L'utilisateur doit pouvoir repérer
   d'un coup d'œil ce qui est prouvé et ce qui ne l'est pas.

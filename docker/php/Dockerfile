@@ -25,8 +25,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         less \
     && rm -rf /var/lib/apt/lists/*
 
-# gd est compilé avec webp et freetype : le plugin webp-converter-for-media en
-# dépend pour générer les dérivés WebP/AVIF.
+# gd est compilé avec webp : le mu-plugin lcds-webp en dépend pour encoder les
+# sous-tailles d'images. Retirer --with-webp casserait la conversion en silence,
+# WordPress se rabattant sur le format source — voir readme/images.md.
 RUN docker-php-ext-configure intl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \

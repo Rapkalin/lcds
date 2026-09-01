@@ -77,6 +77,11 @@ volontairement le code qu'il surveille et vérifier qu'il passe au rouge.
 dépourvu d'enfants alors qu'il contient une image de fond et une carte
 flottante. Reproductible, ce n'est pas un cache.
 
-**Conséquence : ne jamais conclure à l'absence de quelque chose depuis
-`get_metadata`.** Pour affirmer qu'un élément n'existe pas, passer par
-`get_design_context` ou une capture — les deux rendent ce qui est réellement là.
+**Ne jamais conclure à l'absence de quelque chose depuis `get_metadata`.** Pour
+affirmer qu'un élément n'existe pas, passer par `get_design_context` ou une
+capture — les deux rendent ce qui est réellement là.
+
+Le connecteur est en outre **limité en nombre d'appels**. Le protocole de relevé
+et le cache versionné des maquettes vivent dans
+[`../design/figma/README.md`](../design/figma/README.md) : **le lire avant tout
+appel à Figma.**

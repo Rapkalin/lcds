@@ -24,8 +24,6 @@ website/.env
 website/app/plugins
 website/app/uploads/*
 !website/app/uploads/.gitkeep
-website/app/uploads-webpc/*
-!website/app/uploads-webpc/.gitkeep
 website/app/cache/*
 !website/app/cache/.gitkeep
 website/app/upgrade

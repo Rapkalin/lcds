@@ -24,7 +24,6 @@
         "roots/bedrock-disallow-indexing": "^2.1",
         "roots/wp-config": "^1.0",
         "vlucas/phpdotenv": "^5.6",
-        "wpackagist-plugin/webp-converter-for-media": "^6.6",
         "wpackagist-plugin/wordpress-seo": "^28.2",
         "wpackagist-plugin/wp-super-cache": "^3.1"
     },

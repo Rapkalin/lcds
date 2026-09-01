@@ -70,7 +70,7 @@ démarrage :
 `bin/init.sh` est lui aussi idempotent :
 
 - génère les sels encore à `generateme` ;
-- pose les droits sur `uploads/`, `uploads-webpc/`, `cache/`, `languages/` ;
+- pose les droits sur `uploads/`, `cache/`, `languages/` ;
 - **installe WordPress uniquement s'il ne l'est pas déjà** — aucun contenu de démo
   n'est créé, pour qu'un dump importé ne soit jamais complété ni écrasé ;
 - réconcilie à chaque démarrage : thème actif, plugins activés, WP Super Cache

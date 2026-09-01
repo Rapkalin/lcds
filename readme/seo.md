@@ -40,9 +40,8 @@ résultats de recherche, la prod si.
 
 Les points qui pèsent sur le Core Web Vitals sont traités ailleurs :
 
-- **Images WebP/AVIF** : `webp-converter-for-media` sert automatiquement des
-  formats modernes via des règles de réécriture (bloc « Converter for Media »
-  dans `website/.htaccess`) ;
+- **Images WebP** : les sous-tailles générées sont encodées en WebP par le
+  mu-plugin `lcds-webp`, servies par `srcset` — voir [`images.md`](images.md) ;
 - **Cache navigateur et compression** : `mod_expires` / `mod_deflate`, voir
   [`securite.md`](securite.md) ;
 - **Cache pleine page** : voir [`cache.md`](cache.md) ;

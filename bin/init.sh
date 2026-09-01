@@ -63,7 +63,7 @@ fi
 #    on tolère l'échec plutôt que de bloquer le démarrage.
 # -----------------------------------------------------------------------------
 echo "==> [init] Droits d'écriture sur les dossiers de contenu"
-for DIR in website/app/uploads website/app/uploads-webpc website/app/cache website/app/languages; do
+for DIR in website/app/uploads website/app/cache website/app/languages; do
     mkdir -p "$APP_DIR/$DIR"
     chown -R www-data:www-data "$APP_DIR/$DIR" 2>/dev/null || true
     chmod -R u+rwX,g+rwX "$APP_DIR/$DIR" 2>/dev/null || true
@@ -121,7 +121,7 @@ fi
 #    ACF Pro n'est pas géré par Composer (licence) : activé s'il est là, ignoré
 #    sinon — voir readme/installation.md.
 # -----------------------------------------------------------------------------
-for PLUGIN in wordpress-seo webp-converter-for-media advanced-custom-fields-pro; do
+for PLUGIN in wordpress-seo advanced-custom-fields-pro; do
     if wp plugin is-installed "$PLUGIN" --allow-root 2>/dev/null; then
         wp plugin activate "$PLUGIN" --allow-root >/dev/null 2>&1 \
             && echo "==> [init] Plugin '${PLUGIN}' actif." \

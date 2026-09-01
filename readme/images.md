@@ -76,27 +76,92 @@ WebP. Pour les régénérer :
 dwp media regenerate --yes
 ```
 
-## Le plugin `webp-converter-for-media`
+## Pourquoi pas de plugin
 
-Le projet embarque aussi ce plugin, qui poursuit le **même objectif par un
-mécanisme opposé** : des copies dans `app/uploads-webpc/` servies par des
-réécritures `.htaccess`, au lieu d'une conversion à la génération.
+Le projet embarquait `webp-converter-for-media`, qui poursuivait le même objectif
+par un mécanisme opposé : des copies dans `app/uploads-webpc/` servies par des
+réécritures `.htaccess`, au lieu d'une conversion à la génération. Il a été
+retiré le 01/09/2026 sur ce constat :
 
-État constaté : **actif, jamais configuré** (aucune option `webpc_settings` en
-base) et **zéro média converti** — le seul fichier présent dans
-`app/uploads-webpc/` est sa propre icône d'autotest. Ses règles de réécriture
-sont en revanche bien inscrites dans le `website/.htaccess` versionné, et
-s'évaluent à chaque requête d'image (plusieurs tests de présence de fichier)
-sans jamais aboutir, faute de copies à servir.
+- **actif depuis six mois, jamais configuré** (aucune option `webpc_settings`) et
+  **zéro média converti** — le seul fichier produit était son icône d'autotest ;
+- son bloc dans le `website/.htaccess` versionné posait un
+  `Header always set Cache-Control "private"` qui **doublait** le
+  `Cache-Control: public` du bloc voisin. Mesuré : deux en-têtes contradictoires
+  sur chaque image, sur toutes les requêtes.
 
-Le module natif rendant le plugin superflu, son retrait libérerait :
+### Et l'AVIF ?
 
-- une dépendance Composer ;
-- **30 lignes de réécritures dans le `.htaccess` versionné** — le fichier
-  responsable de trois pannes de préprod, voir [`securite.md`](securite.md) ;
-- le répertoire `shared/uploads-webpc`, son lien symbolique et son exclusion
-  rsync dans [`deploiement.md`](deploiement.md) ;
-- le doublonnage de chaque image sur le disque, s'il venait à être configuré.
+Rien n'a été perdu en retirant le plugin. **WordPress sait produire de l'AVIF
+depuis la 6.5**, par le même filtre `image_editor_output_format` : passer à
+l'AVIF, ce serait une seule valeur à changer dans `config.php`, puis
+`wp media regenerate`. Ce n'est donc pas une question d'architecture.
 
-Contrepartie : le plugin sait produire de l'**AVIF**, ce que le filtre natif ne
-fait pas. Le gain d'AVIF sur WebP est de l'ordre de 10 à 20 % de poids.
+Ce qui bloque est en dessous : **l'encodage AVIF exige une bibliothèque GD
+compilée avec le support AVIF**, et ce n'est le cas ni de l'image Docker du
+projet, ni de l'hébergement mutualisé visé.
+
+| | WebP | AVIF |
+| --- | --- | --- |
+| Conteneur du projet (`gd_info()`) | oui | **non** |
+| `wp_image_editor_supports()` | oui | **non** |
+| Mutualisé OVH, PHP 8.2 et 8.5 ([fil communauté](https://community.ovhcloud.com/t/support-avif-php-gd-imageavif-disponible-sur-nouvelles-offres-mutualisees-startup-ou-pro/53092)) | oui | **non**, `imageavif()` renvoie `false` |
+
+Le plugin n'aurait donc rien pu produire de plus : il encode par GD ou Imagick,
+et aucun des deux ne sait faire d'AVIF sur cet hébergement (Imagick n'est même
+pas chargé dans le conteneur, WordPress retombe sur GD).
+
+**Recommandation : rester sur le WebP.** Le gain d'AVIF est de l'ordre de 10 à
+20 % de poids, mais son encodage coûte nettement plus de temps processeur à
+chaque téléversement — un mauvais compromis sur un mutualisé. À rouvrir
+seulement si le poids des images devient un problème *mesuré* **et** que
+l'hébergeur gagne le support AVIF.
+
+### Quand ce plugin réécrivait-il les `.htaccess` ?
+
+Documenté ici parce que le mécanisme a coûté du temps à diagnostiquer, et que
+d'autres plugins fonctionnent pareil.
+
+Il écrivait dans **trois répertoires** — `app/`, `app/uploads/` et
+`app/uploads-webpc/` — et **jamais dans `website/.htaccess`**. Sa routine
+d'écriture retirait son bloc `# BEGIN/END Converter for Media` par expression
+régulière puis **préfixait** les nouvelles règles en tête de fichier.
+
+> Corollaire : le bloc trouvé au *milieu* du `website/.htaccess` versionné n'avait
+> pas été écrit par le plugin. C'était une copie manuelle, que ni la
+> désactivation ni la désinstallation n'auraient retirée.
+
+L'écriture était déclenchée par l'action `webpc_refresh_loader`, elle-même tirée
+de six endroits :
+
+| Déclencheur | Effet |
+| --- | --- |
+| Activation du plugin | Écrit les blocs |
+| **`admin_init`, si la version du plugin diffère de l'option `webpc_latest_version`** | Écrit les blocs |
+| Désactivation | **Retire** les blocs (fichiers ramenés à 0 octet) |
+| Enregistrement de la page de réglages | Réécrit |
+| Page de débogage | Réécrit |
+| Détecteurs d'erreur (`RewritesErrorsDetector`, `PassthruExecutionDetector`) | Réécrivent, depuis l'admin |
+
+**C'est la deuxième ligne qui surprend** : une simple mise à jour Composer ne
+déclenche aucun hook d'activation, mais la première requête d'administration qui
+suit constate l'écart de version et réécrit les fichiers. C'est exactement ce qui
+s'est produit lors du passage en 6.6.5.
+
+> **Leçon générale.** Un plugin qui gère des fichiers de configuration doit être
+> **désactivé par WordPress avant** que ses fichiers ne soient supprimés :
+> `dwp plugin deactivate` puis `dwp plugin uninstall`, et seulement ensuite
+> `composer remove`. Dans l'autre ordre, le hook de désactivation ne peut plus
+> s'exécuter et ses blocs restent en place pour toujours.
+
+## Sur le serveur
+
+Le déploiement ne relie plus `website/app/uploads-webpc`. Le `shared/uploads-webpc`
+existant devient inerte et peut être supprimé à la main :
+
+```bash
+rm -rf ~/preprod-lcds/shared/uploads-webpc
+```
+
+L'exclusion rsync ayant disparu, le lien symbolique résiduel dans la release est
+retiré au premier déploiement.

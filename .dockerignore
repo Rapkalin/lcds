@@ -26,7 +26,6 @@ yarn-error.log
 # Contenu applicatif
 website/app/plugins
 website/app/uploads
-website/app/uploads-webpc
 website/app/cache
 website/app/themes/lcds/node_modules
 website/app/themes/lcds/dist
