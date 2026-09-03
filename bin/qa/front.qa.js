@@ -10,7 +10,21 @@
 window.runFrontQa = async (win) => {
     const out = [];
     const assert = (name, ok) => out.push(`${ok ? "PASS" : "FAIL"} :: ${name}`);
-    const settle = () => new Promise((resolve) => setTimeout(resolve, 350));
+    // On interroge l'état jusqu'à ce qu'il arrive, plutôt que d'attendre une
+    // durée fixe : la transition dure 200ms, et une attente de 350ms ne laissait
+    // que 150ms de marge — dépassée dès que la machine est chargée. La campagne
+    // échouait alors une fois sur quatre, ce qui est pire qu'une absence de test.
+    const until = async (condition, limite = 40) => {
+        for (let essai = 0; essai < limite; essai += 1) {
+            if (condition()) {
+                return true;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+
+        return condition();
+    };
 
     const doc = win.document;
     const styleOf = (node) => win.getComputedStyle(node);
@@ -158,8 +172,10 @@ window.runFrontQa = async (win) => {
     doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     assert("échap ferme", !isOpen() && !hasBodyClass());
     assert("panneau encore visible pendant le fondu", styleOf(panel).visibility === "visible");
-    await settle();
-    assert("panneau masqué après le fondu", styleOf(panel).visibility === "hidden");
+    assert(
+        "panneau masqué après le fondu",
+        await until(() => styleOf(panel).visibility === "hidden")
+    );
 
     toggle.click();
     const link = panel.querySelector("a");

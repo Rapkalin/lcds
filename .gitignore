@@ -28,6 +28,13 @@ website/app/cache/*
 !website/app/cache/.gitkeep
 website/app/upgrade
 
+# Outils de démonstration locaux : du confort de développement, pas du code de
+# projet. Le thème ne dépend d'AUCUN des deux — la démo se branche par le filtre
+# `lcds_front_page_blocks` et son absence ne fait que remettre les aplats.
+# Vérifié en simulant leur absence : site debout, `composer check` au vert.
+bin/seed-demo.sh
+website/app/mu-plugins/lcds-local-demo.php
+
 # mu-plugins : les modules installés par Composer sont ignorés, les nôtres sont
 # versionnés par exception. AJOUTER UN MODULE = AJOUTER SA NÉGATION ICI, sinon
 # son fichier d'entrée part au déploiement sans les fichiers qu'il requiert, et

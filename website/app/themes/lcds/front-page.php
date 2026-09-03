@@ -13,6 +13,11 @@
  * Les arguments des blocs sont préparés ici, avant le HTML : un tableau
  * multi-lignes noyé dans le balisage se fait désaligner par Pint.
  *
+ * Ils passent ensuite par le filtre `lcds_front_page_blocks`. C'est la couture
+ * par laquelle la future source d'édition viendra les remplir — et, en attendant,
+ * par laquelle un outil local peut y injecter des visuels de démonstration sans
+ * que ce gabarit n'en sache rien.
+ *
  * @package lcds
  */
 
@@ -25,7 +30,7 @@ $hero_block = [
     'thumbnail' => 0,
     'label' => __('Prendre RDV', 'lcds'),
     'text' => __('Phrase d\'accroche à remplacer.', 'lcds'),
-    'url' => '',
+    'url' => '#',
 ];
 
 $intro_block = [
@@ -73,6 +78,22 @@ $treatments_block = [
         'url' => '#',
     ],
 ];
+
+/**
+ * Un filtre peut retirer une clé : chaque bloc retombe alors sur un tableau vide,
+ * donc sur ses valeurs de repli, plutôt que sur une erreur.
+ *
+ * @var array $blocks
+ */
+$blocks = apply_filters('lcds_front_page_blocks', [
+    'hero' => $hero_block,
+    'intro' => $intro_block,
+    'treatments' => $treatments_block,
+]);
+
+$hero_block = $blocks['hero'] ?? [];
+$intro_block = $blocks['intro'] ?? [];
+$treatments_block = $blocks['treatments'] ?? [];
 
 get_header();
 ?>

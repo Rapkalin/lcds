@@ -28,6 +28,7 @@ Le projet tourne dans Docker : tout s'exécute dans le conteneur `php`.
 | `docker compose exec php composer test` | Suite Pest. | `dtest` |
 | `bin/qa-front.sh` | QA du front : build, assets, rendu et comportement de l'en-tête. Nécessite Chrome. | — |
 | `bin/qa-front.sh --no-build` | Idem sans recompiler. | — |
+| `bin/seed-demo.sh` | Peuple la médiathèque avec les visuels des maquettes. **Non versionné** — voir [`front.md`](front.md). | — |
 | `docker compose exec php composer audit --locked` | CVE des dépendances PHP. | — |
 | `composer setup-hooks` | Active `.githooks/` — **une fois par clone**. | — |
 

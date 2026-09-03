@@ -61,19 +61,29 @@ check_url() {
 # mois : sans version dérivée du fichier, une mise en production ne parvient pas
 # aux visiteurs déjà venus. On vérifie le comportement, pas la valeur.
 check_asset_version() {
-    local label="$1" file="$2" pattern="$3" before after
+    local label="$1" file="$2" pattern="$3" before after essais=0
 
     before="$(curl -s "$SITE_URL/" | grep -o "$pattern" | head -1)"
     sleep 1
     touch "$DIST/$file"
-    after="$(curl -s "$SITE_URL/" | grep -o "$pattern" | head -1)"
 
-    if [ -n "$before" ] && [ "$before" != "$after" ]; then
-        printf '  PASS :: %s (%s puis %s)\n' "$label" "$before" "$after"
-        return 0
-    fi
+    # Le cache `realpath` de PHP (120s par défaut) peut servir un mtime périmé
+    # dans un worker Apache persistant : la nouvelle version n'apparaît pas
+    # forcément à la requête suivante. On interroge jusqu'à ce qu'elle arrive,
+    # au lieu de conclure trop tôt — c'était une source d'échecs intermittents.
+    while [ "$essais" -lt 12 ]; do
+        after="$(curl -s "$SITE_URL/" | grep -o "$pattern" | head -1)"
 
-    printf '  FAIL :: %s (%s puis %s)\n' "$label" "$before" "$after"
+        if [ -n "$before" ] && [ "$after" != "$before" ]; then
+            printf '  PASS :: %s (%s puis %s)\n' "$label" "$before" "$after"
+            return 0
+        fi
+
+        sleep 1
+        essais=$((essais + 1))
+    done
+
+    printf '  FAIL :: %s (inchangée après %ss : %s)\n' "$label" "$essais" "$before"
     return 1
 }
 

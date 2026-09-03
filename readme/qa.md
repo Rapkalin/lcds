@@ -51,6 +51,12 @@ horizontal — une capture d'écran ne le montre pas.
 > marqueur de fin dans la sortie puis termine le processus, plutôt que d'attendre
 > sa sortie. `timeout` n'existe pas sur macOS, ne pas l'utiliser ici.
 
+> **Invalidation du cache : l'assertion interroge, elle ne conclut pas d'un
+> coup.** Le cache `realpath` de PHP (120 s par défaut) peut servir un `mtime`
+> périmé dans un worker Apache persistant : la nouvelle version d'un asset
+> n'apparaît pas forcément à la requête qui suit le `touch`. Le script réessaie
+> pendant douze secondes. Sans cela, la campagne échouait par intermittence.
+
 ### Ajouter une assertion
 
 Tout est dans `bin/qa/header-menu.qa.js`. La fonction reçoit la fenêtre de

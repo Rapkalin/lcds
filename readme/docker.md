@@ -67,6 +67,17 @@ démarrage :
 5. `bin/init.sh` ;
 6. `apache2-foreground`.
 
+> **Modifier le `.env` n'a pas d'effet immédiat sur le web.** Le chargement se
+> fait par un dépôt `immutable()` doublé de `PutenvAdapter` : la valeur reste
+> dans l'environnement du processus Apache, qui survit à la requête. Un worker
+> déjà chaud continue donc de servir l'ancienne valeur.
+>
+> **Recycler après toute modification :** `docker compose restart php`.
+>
+> Piège associé : **WP-CLI voit le changement tout de suite**, puisqu'il démarre
+> un processus neuf. Un écart entre `dwp eval` et la page servie ne signifie donc
+> pas que le code est faux — il signifie que le worker n'a pas été recyclé.
+
 `bin/init.sh` est lui aussi idempotent :
 
 - génère les sels encore à `generateme` ;
