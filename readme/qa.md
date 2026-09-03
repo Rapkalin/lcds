@@ -51,11 +51,22 @@ horizontal — une capture d'écran ne le montre pas.
 > marqueur de fin dans la sortie puis termine le processus, plutôt que d'attendre
 > sa sortie. `timeout` n'existe pas sur macOS, ne pas l'utiliser ici.
 
-> **Invalidation du cache : l'assertion interroge, elle ne conclut pas d'un
-> coup.** Le cache `realpath` de PHP (120 s par défaut) peut servir un `mtime`
-> périmé dans un worker Apache persistant : la nouvelle version d'un asset
-> n'apparaît pas forcément à la requête qui suit le `touch`. Le script réessaie
-> pendant douze secondes. Sans cela, la campagne échouait par intermittence.
+### Deux sources d'intermittence, et comment elles ont été traitées
+
+Une campagne qui échoue une fois sur quatre est pire qu'une absence de campagne :
+elle apprend à ignorer le rouge. Les deux cas rencontrés :
+
+**Invalidation du cache des assets.** Le cache `realpath` de PHP (120 s par
+défaut) peut servir un `mtime` périmé dans un worker Apache persistant : la
+nouvelle version n'apparaît pas forcément à la requête qui suit le `touch`.
+L'assertion **interroge pendant douze secondes** au lieu de conclure d'un coup.
+
+**Fin d'une transition CSS.** Ne jamais l'attendre : sous `--virtual-time-budget`,
+`setTimeout` avance instantanément alors que la transition suit les images
+réellement produites. Ni une attente fixe ni un sondage ne sont fiables.
+Vérifier la **déclaration** (`transitionProperty`, `transitionDelay`) plutôt que
+son aboutissement — c'est ce que le code doit garantir, la fin de l'animation
+étant l'affaire du navigateur.
 
 ### Ajouter une assertion
 
