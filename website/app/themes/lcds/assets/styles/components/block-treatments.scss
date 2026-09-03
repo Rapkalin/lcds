@@ -1,0 +1,122 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Même fond que la section d'intro : les deux s'enchaînent sans rupture visible
+// sur la maquette.
+.block-treatments {
+  padding: var.$section-padding 0;
+  background: var.$blue-pale;
+  color: var.$blue;
+
+  &__inner {
+    // 1118 = 440 + 12 + 666. Les parts en `fr` redonnent ces largeurs exactes
+    // sans les écrire, et se répartissent proportionnellement ailleurs.
+    display: grid;
+    grid-template-columns: 440fr 666fr;
+    gap: var.$gutter;
+    max-width: var.$content-outer;
+    margin: 0 auto;
+    padding: 0 var.$gutter-min;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Le bouton d'action est aligné sur le bord droit de la colonne, contrairement
+  // à celui de la section d'intro.
+  &__cta {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var.$block-gap;
+  }
+}
+
+// Rythme de l'accordéon : 48px de part et d'autre du filet séparateur, et aucun
+// retrait aux extrémités — le retrait de section s'en charge.
+.accordion {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    padding: fn.toRem(48) 0;
+    border-top: 1px solid var.$blue-separator;
+
+    &:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  &__heading {
+    margin: 0;
+  }
+
+  &__trigger {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: fn.toRem(24);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var.$module;
+    height: var.$module;
+    border: 1px solid var.$blue-light;
+    border-radius: var.$radius;
+    // Centré sur la PREMIÈRE ligne du titre, pas sur le titre entier :
+    // (58 − 52) / 2 = 3. Calculé, donc juste si l'échelle typographique bouge.
+    margin-top: calc((#{var.$fs-h2} * #{var.$lh-title} - #{var.$module}) / 2);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  &__trigger:hover &__icon,
+  &__trigger:focus-visible &__icon {
+    border-color: var.$blue;
+    background: var.$white;
+  }
+
+  &__panel {
+    padding-top: fn.toRem(24);
+  }
+}
+
+// Panneau ouvert : la barre verticale disparaît, le « + » devient « − ».
+.accordion__trigger[aria-expanded="true"] .icon-plus__bar {
+  display: none;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-mobile) {
+  .block-treatments__inner {
+    grid-template-columns: 1fr;
+    gap: fn.toRem(32);
+  }
+
+  .accordion__item {
+    padding: fn.toRem(24) 0;
+  }
+
+  .accordion__trigger {
+    gap: fn.toRem(16);
+  }
+}

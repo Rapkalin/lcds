@@ -13,6 +13,9 @@ $blue-pale: #f2f8ff;
 // ABSENT des variables de bibliothèque Figma : à faire promouvoir côté design,
 // sinon la prochaine nuance de bordure divergera.
 $blue-light: #a8bed6;
+// Filets séparateurs, plus clairs que les bordures. Relevé au pixel, et lui
+// aussi absent des variables de bibliothèque Figma.
+$blue-separator: #d9e4f1;
 $white: #ffffff;
 $black: #000000;
 
@@ -64,6 +67,12 @@ $ls-cta: 0.08em;
 $gutter: fn.toRem(12);
 $content-width: fn.toRem(1118);
 $content-padding: fn.toRem(161);
+// Marge minimale sur petit écran, et largeur EXTERNE d'un conteneur centré.
+// `box-sizing: border-box` fait entrer le rembourrage dans la largeur : sans
+// cette addition, un conteneur à `max-width: $content-width` ne laisse que
+// 1078px de contenu et décale tout de 20px vers l'intérieur.
+$gutter-min: fn.toRem(20);
+$content-outer: calc(#{fn.toRem(1118)} + 2 * #{fn.toRem(20)});
 $header-padding: fn.toRem(48);
 $logo-size: fn.toRem(80);
 $logo-size-mobile: fn.toRem(56);

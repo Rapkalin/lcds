@@ -109,3 +109,43 @@ maquette. Proposition : opacité réduite.
 
 **La couleur `#A8BED6`** (bordures, piste inactive) est dans la maquette mais
 absente des variables de bibliothèque. À faire promouvoir côté design.
+
+## Section « les différents traitements » — implémentée
+
+`components/block-treatments.php` et `components/icon-plus.php`. Accordéon de
+cinq entrées, découpage 440 + 12 + 666, sur le même fond `#F2F8FF` que la
+section d'intro — les deux s'enchaînent sans rupture visible.
+
+| Mesure | Attendu | Obtenu |
+| --- | --- | --- |
+| Section, haut / hauteur | 2228 / 1249 | 2228 / 1249 |
+| Étiquette, x / haut | 161 / 2356 | 161 / 2356 |
+| Titres, x | 613 | 613 |
+| Colonne, largeur | 666 | 666 |
+| Bouton, x / taille | 1227 / 52 | 1227 / 52 |
+| Filets, y | 2462 · 2675 · 2920 · 3133 | identiques |
+| CTA, haut / bord droit | 3320 / 1279 | 3320 / 1279 |
+
+Rythme : chaque entrée porte 48px de part et d'autre du filet séparateur, aucun
+retrait aux extrémités. Le panneau ouvert vient 24px sous son titre. Le bouton
+d'action est **aligné à droite**, contrairement à celui de la section d'intro.
+
+Glyphes : `+` fermé, `−` ouvert, 17,5 × 17,5, trait de 1,5 — un seul tracé, la
+barre verticale étant masquée en CSS à l'ouverture.
+
+### Points relevés
+
+**Le bouton est centré sur la PREMIÈRE ligne du titre**, soit `(58 − 52) / 2 = 3`.
+La maquette est inconstante sur ce point — décalage de 3px sur les entrées 1 et
+3, de 0 sur les entrées 2, 4 et 5. Le décalage calculé a été retenu partout.
+
+**Nouvelle teinte : `#D9E4F1`** pour les filets, plus claire que le `#A8BED6`
+des bordures. Elle non plus n'est pas dans les variables de bibliothèque.
+
+**Plusieurs panneaux peuvent être ouverts à la fois.** La maquette n'en montre
+qu'un, ce qui se lit comme une démonstration de l'état ouvert plutôt qu'une
+règle — et refermer un panneau que le visiteur n'a pas demandé à fermer est plus
+gênant qu'une page longue.
+
+**La page d'accueil n'a aucun `h1`.** Les titres de l'accordéon sont des `h2`,
+et rien ne les précède : le hero ne porte pas de texte. À trancher.

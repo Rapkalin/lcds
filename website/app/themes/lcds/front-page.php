@@ -54,12 +54,33 @@ $intro_block = [
     ],
 ];
 
+$treatments_block = [
+    'label' => 'Les différents traitements',
+    'dot' => 'turquoise',
+    'items' => [
+        ['title' => 'Interceptif'],
+        ['title' => 'Gouttières / Aligneurs'],
+        [
+            'title' => 'Multibagues',
+            'open' => true,
+            'text' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec non viverra sem. Suspendisse ut pretium mauris. Vivamus molestie, metus eget rutrum feugiat, dui ligula vulputate tortor, vitae ultrices elit enim in lectus.',
+        ],
+        ['title' => 'Orthèses pour l’apnée du sommeil'],
+        ['title' => 'Protège-dents'],
+    ],
+    'cta' => [
+        'label' => 'voir tous les traitements',
+        'url' => '#',
+    ],
+];
+
 get_header();
 ?>
 
 <main id="main-content" class="main-content front-page">
     <?php get_template_part('components/hero', null, $hero_block); ?>
     <?php get_template_part('components/block-intro', null, $intro_block); ?>
+    <?php get_template_part('components/block-treatments', null, $treatments_block); ?>
 </main>
 
 <?php

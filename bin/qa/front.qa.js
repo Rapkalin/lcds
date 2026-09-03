@@ -103,6 +103,36 @@ window.runFrontQa = async (win) => {
         await tick();
     }
 
+    // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
+    const items = doc.querySelectorAll(".accordion__item");
+
+    if (items.length > 0 && win.innerWidth === 1440) {
+        const round = (value) => Math.round(value);
+        const offsetTop = (node) => round(node.getBoundingClientRect().top + win.scrollY);
+        const first = items[0].getBoundingClientRect();
+        const icon = doc.querySelector(".accordion__icon").getBoundingClientRect();
+
+        assert(`accordéon : 5 entrées (${items.length})`, items.length === 5);
+        assert(`colonne : 666 de large (${round(first.width)})`, round(first.width) === 666);
+        assert(`bouton : 52 et calé à droite (${round(icon.left)})`,
+            round(icon.width) === 52 && round(icon.left) === 1227);
+        // La bordure entre dans la boîte : le filet est AU sommet de l'élément.
+        assert(`filets aux bons y (${offsetTop(items[1])}, ${offsetTop(items[4])})`,
+            offsetTop(items[1]) === 2462 && offsetTop(items[4]) === 3133);
+
+        const closed = [...doc.querySelectorAll(".accordion__trigger")]
+            .find((node) => node.getAttribute("aria-expanded") === "false");
+        const panel = doc.getElementById(closed.getAttribute("aria-controls"));
+
+        assert("panneau fermé masqué", panel.hidden === true);
+        closed.click();
+        assert("un clic ouvre le panneau",
+            closed.getAttribute("aria-expanded") === "true" && panel.hidden === false);
+        closed.click();
+        assert("un second clic le referme",
+            closed.getAttribute("aria-expanded") === "false" && panel.hidden === true);
+    }
+
     if (win.innerWidth > 1024) {
         assert(`rendu en mise en page desktop (${win.innerWidth}px > 1024)`, true);
         assert("bouton burger masqué en desktop", styleOf(toggle).display === "none");

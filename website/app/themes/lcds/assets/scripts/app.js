@@ -122,7 +122,31 @@ const initCarousels = () => {
     });
 };
 
+/**
+ * Disclosure panels (treatments accordion).
+ *
+ * Several panels may be open at once. The mockup shows a single one open, but
+ * that reads as a demonstration of the open state rather than a rule — and
+ * closing a panel the visitor did not ask to close is worse than a long page.
+ */
+const initAccordions = () => {
+    document.querySelectorAll(".accordion__trigger").forEach((trigger) => {
+        const panel = document.getElementById(trigger.getAttribute("aria-controls"));
+
+        if (panel === null) {
+            return;
+        }
+
+        trigger.addEventListener("click", () => {
+            const isOpen = trigger.getAttribute("aria-expanded") === "true";
+            trigger.setAttribute("aria-expanded", String(!isOpen));
+            panel.hidden = isOpen;
+        });
+    });
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initCarousels();
+    initAccordions();
 });

@@ -43,6 +43,17 @@ Deux transpositions plutôt que des recopies :
 - **Les hauteurs de ligne sont sans unité** (`1.2`, `1.4`) : elles suivent la
   taille de police au lieu de la contredire.
 
+## Conteneur centré : `$content-outer`, pas `$content-width`
+
+`box-sizing: border-box` fait entrer le rembourrage **dans** la largeur. Un
+conteneur à `max-width: $content-width` avec `padding: 0 20px` ne laisse donc
+que 1078px de contenu, et décale tout de 20px vers l'intérieur.
+
+`$content-outer` ajoute les deux marges à la largeur utile : à 1440 le contenu
+retrouve ses 1118px et ses marges de 161px. Constaté sur la section des
+traitements — colonne à 642 au lieu de 666, boutons à 1207 au lieu de 1227.
+Deux assertions de [`qa.md`](qa.md) verrouillent ces cotes.
+
 ## `box-sizing: border-box`, sans exception
 
 Déclaré sur `*` dans `basics/general.scss`. **Ce n'est pas une préférence de
