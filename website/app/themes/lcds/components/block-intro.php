@@ -9,6 +9,8 @@
  *   dot        string  Couleur de la puce de l'étiquette.
  *   paragraphs array   Paragraphes, un par entrée.
  *   cta        array   Arguments du bouton d'action (label, url).
+ *   gallery    array   Arguments du carrousel (items, label). Absent : pas de
+ *                      rail rendu.
  *
  * @package lcds
  */
@@ -21,6 +23,7 @@ $label = isset($args['label']) ? (string) $args['label'] : '';
 $dot = isset($args['dot']) ? (string) $args['dot'] : 'turquoise';
 $paragraphs = isset($args['paragraphs']) && is_array($args['paragraphs']) ? $args['paragraphs'] : [];
 $cta = isset($args['cta']) && is_array($args['cta']) ? $args['cta'] : [];
+$gallery = isset($args['gallery']) && is_array($args['gallery']) ? $args['gallery'] : [];
 ?>
 
 <section class="block-intro">
@@ -39,4 +42,8 @@ $cta = isset($args['cta']) && is_array($args['cta']) ? $args['cta'] : [];
             <?php get_template_part('components/cta', null, $cta); ?>
         </div>
     </div>
+
+    <?php if ($gallery !== []) : ?>
+        <?php get_template_part('components/carousel', null, $gallery); ?>
+    <?php endif; ?>
 </section>

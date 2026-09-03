@@ -14,7 +14,7 @@ SITE_URL="${LCDS_SITE_URL:-http://localhost:8020}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/website/app/themes/lcds/dist"
 HARNESS_NAME="_qa-harness.html"
-DRIVER_NAME="header-menu.qa.js"
+DRIVER_NAME="front.qa.js"
 SCRATCH="$(mktemp -d)"
 FAILURES=0
 RUN_BUILD=1
@@ -82,7 +82,10 @@ check_asset_version() {
 dump_dom() {
     local width="$1" out="$SCRATCH/dump-$width.html" pid attempts=0
 
+    # --force-prefers-reduced-motion : rend le défilement du carrousel
+    # instantané, donc mesurable. Sans cela rien n'est déterministe.
     "$CHROME" --headless --disable-gpu --no-first-run --no-default-browser-check \
+        --force-prefers-reduced-motion \
         --window-size="$width,900" --virtual-time-budget=8000 --dump-dom \
         --user-data-dir="$SCRATCH/profile-$width" \
         "$SITE_URL/app/themes/lcds/dist/$HARNESS_NAME" > "$out" 2>/dev/null &

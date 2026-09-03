@@ -28,7 +28,7 @@ Et `666 = 101 + 12 + 553` : colonne du numéro, gouttière, colonne de texte.
 | Enfant | y | Hauteur | Contenu |
 | --- | --- | --- | --- |
 | `226:1189` hero | 0 | 900 | Voir [son relevé](226-1189-hero.md) |
-| `226:1211` header | 0 | 128 | Voir [son relevé](226-1211-header.md) |
+| `226:1211` header | 0 | 128 | **Recouvre le hero**, voir [son relevé](226-1211-header.md) |
 | `226:1191` Desktop - 1 | 900 | 1328 | Intro + galerie horizontale |
 | `17:408` Desktop - 4 | 2228 | 1249 | Accordéon des traitements |
 | `87:303` Desktop - 7 | 3368 | 900 | Parcours du soin, étape 01 |
@@ -63,3 +63,49 @@ du sommeil` · `Protège-dents`
 
 Seule **Multibagues** porte un paragraphe : c'est l'**état ouvert** qui a été
 maquetté. Les autres états sont à demander au designer. Un CTA ferme le bloc.
+
+## L'en-tête recouvre le hero
+
+Le hero et l'en-tête sont tous deux à `y = 0` : **l'en-tête est transparent et
+posé par-dessus la photo.** C'est pour cela que chaque lien de navigation porte
+une pastille blanche et le bouton d'action une pastille orange — sans elles, le
+texte serait illisible sur le visuel.
+
+Vérifié au pixel sur le PDF : `#BEDAFF` (le ciel) au-dessus de la navigation,
+`#FFFFFF` seulement derrière les liens.
+
+> Conséquence pratique : construire un en-tête sans le hero sous lui masque
+> l'omission. C'est ainsi qu'un fond blanc et l'absence de pastilles sont passés
+> inaperçus à l'étape 1.
+
+## Section intro + galerie — implémentée
+
+`components/block-intro.php`, `components/tag.php`, `components/cta.php` et
+`components/carousel.php`, mesurés contre les cotes du PDF :
+
+| Mesure | Attendu | Obtenu |
+| --- | --- | --- |
+| Section, haut | 900 | 900 |
+| Étiquette, x / haut | 161 / 1028 | 161 / 1028 |
+| Bloc de texte, hauteur | 154 | 154 |
+| Rail, haut / hauteur | 1339 / 629 | 1339 / 629 |
+| Rail, bord droit | 1440 | 1440 |
+| Éléments, largeurs | 892 / 553 / 666 / 503,2 / 36 | identiques |
+| Visuel empilé, hauteur | 309,5 | 309,5 |
+| Piste, x / largeur / haut | 161 / 214 / 2073 | identiques |
+| Boutons, bord droit | 1279 | 1279 |
+
+### Deux points restés en suspens
+
+**La piste de progression.** La maquette la dessine remplie sur 162 des 214px,
+et ce **sur les deux carrousels** — même valeur, ce qui trahit un état dessiné
+une fois plutôt qu'un état calculé. Aucune lecture ne colle au contenu réel :
+la part visible vaut 1279/2698 = 47 %, pas 76 %. Implémenté en indicateur de
+défilement : largeur du curseur = part visible, position = avancement. À
+confirmer avec le designer.
+
+**L'état désactivé des boutons** en début et fin de course n'existe pas dans la
+maquette. Proposition : opacité réduite.
+
+**La couleur `#A8BED6`** (bordures, piste inactive) est dans la maquette mais
+absente des variables de bibliothèque. À faire promouvoir côté design.

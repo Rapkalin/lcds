@@ -15,14 +15,14 @@
     devient celle de l'iframe, donc les media queries répondent normalement.
 -->
 <iframe id="qa-target" src="/"></iframe>
-<script src="header-menu.qa.js"></script>
+<script src="front.qa.js"></script>
 <script>
     window.addEventListener("load", async () => {
         const frame = document.getElementById("qa-target");
         let out;
 
         try {
-            out = await window.runHeaderMenuQa(frame.contentWindow);
+            out = await window.runFrontQa(frame.contentWindow);
         } catch (error) {
             out = ["FAIL :: exception pendant la campagne :: " + error.message];
         }

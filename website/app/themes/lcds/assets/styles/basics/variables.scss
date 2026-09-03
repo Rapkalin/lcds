@@ -36,8 +36,15 @@ $fs-cta: fn.toRem(13);
 
 /* LINE HEIGHTS */
 // Sans unité : suivent la taille de police au lieu de la contredire.
-$lh-title: 1.2;
-$lh-p: 1.4;
+//
+// ATTENTION aux valeurs annoncées par Figma. Il affiche 1.2 et 1.4, mais
+// ARRONDIT l'interligne rendu au pixel entier — ce que CSS ne fait pas. Mesuré
+// sur les PDF : 58,000 pour un titre de 48 (et non 57,6) et 22,000 pour un
+// paragraphe de 16 (et non 22,4). Les rapports ci-dessous restituent ces
+// entiers aux tailles de la maquette : 48 × 1.2083333 = 58, 24 × 1.2083333 = 29,
+// 16 × 1.375 = 22. Reprendre 1.2 et 1.4 décalait toute la page de 3px.
+$lh-title: 1.2083333;
+$lh-p: 1.375;
 $lh-cta: 1;
 
 /* FONT WEIGHTS */

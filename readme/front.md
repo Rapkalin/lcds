@@ -25,6 +25,16 @@ ligne correspondante :
 | Paragraphe | 16 / 1.4 | Inter SemiBold |
 | CTA | 13 / 1, interlettrage 8 % | Inter Medium |
 
+> **Piège des interlignes annoncés par Figma.** Il affiche 1.2 et 1.4, mais
+> **arrondit au pixel entier** l'interligne rendu — ce que CSS ne fait pas.
+> Mesuré sur les PDF : **58,000** pour un titre de 48 (et non 57,6) et
+> **22,000** pour un paragraphe de 16 (et non 22,4). Les rapports retenus,
+> `1.2083333` et `1.375`, restituent ces entiers aux tailles de la maquette.
+> Reprendre 1.2 et 1.4 décalait toute la page de 3px.
+>
+> Corollaire : à une taille de police non prévue par la maquette, aucun rapport
+> ne peut reproduire l'arrondi de Figma. Le décalage y sera infra-pixel.
+
 Deux transpositions plutôt que des recopies :
 
 - **L'interlettrage est en `em`.** Figma affiche `1.04px`, ce qui n'est vrai qu'à

@@ -39,6 +39,19 @@ $intro_block = [
         'label' => 'en savoir plus',
         'url' => '#',
     ],
+    // Les largeurs sont celles dessinées sur la maquette : la composition du
+    // rail est un choix graphique, pas une conséquence du format des photos,
+    // qui sont recadrées dans ces cadres.
+    'gallery' => [
+        'label' => 'Le cabinet en images',
+        'items' => [
+            ['width' => 892, 'images' => [0]],
+            ['width' => 553, 'images' => [0, 0]],
+            ['width' => 666, 'images' => [0]],
+            ['width' => 503.2, 'images' => [0]],
+            ['width' => 36, 'images' => [0]],
+        ],
+    ],
 ];
 
 get_header();

@@ -10,7 +10,7 @@ URL d'un nœud : `https://www.figma.com/design/kfPEAXr7clNODJUq5rT9GF/LCDS-%7C-U
 | `12:207` | LCDS_hp full | Racine de la page d'accueil (1440 × 4268) | [structure](nodes/12-207-accueil.md) — partiel |
 | `226:1211` | header | En-tête : logo, 4 liens, CTA | [complet](nodes/226-1211-header.md) |
 | `226:1189` | hero | Photo pleine page + carte « Prendre RDV » | [complet](nodes/226-1189-hero.md) |
-| `226:1191` | Desktop - 1 | Intro + galerie horizontale | non relevé |
+| `226:1191` | Desktop - 1 | Intro + galerie horizontale | **relevé par PDF**, implémenté |
 | `17:408` | Desktop - 4 | Accordéon des traitements | [structure](nodes/12-207-accueil.md) — partiel |
 | `243:352` | Frame 54 | Blocs de fin + footer (1440 × 4724) | [structure](nodes/243-352-fin-de-page.md) — partiel |
 | `276:1063` | footer | Pied de page (1440 × 1255) | non relevé |
@@ -32,7 +32,7 @@ Détail : [nodes/parcours-du-soin.md](nodes/parcours-du-soin.md) — partiel.
 
 Par ordre de besoin, **un appel `get_design_context` par ligne** :
 
-1. `226:1191` — intro et galerie horizontale (étape 2 du développement) ;
+1. ~~`226:1191` — intro et galerie~~ : **fait par les PDF**, sans appel Figma ;
 2. un parent commun des six étapes du parcours, si la maquette en a un — sinon
    `71:155` seul suffira à établir le gabarit, les cinq autres n'étant que du
    contenu ;

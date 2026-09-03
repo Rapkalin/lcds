@@ -11,6 +11,12 @@
   background: var.$blue-pale;
   color: var.$blue;
 
+  // Le rail vient 80px sous l'en-tête de section, comme les contrôles viennent
+  // 80px sous le rail : c'est le rythme de la maquette.
+  .carousel {
+    margin-top: var.$block-gap;
+  }
+
   &__header {
     display: grid;
     grid-template-columns: 1fr 1fr;

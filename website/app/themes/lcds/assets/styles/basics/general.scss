@@ -12,8 +12,12 @@
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
+// Le défilement fluide est retiré quand l'utilisateur demande à réduire les
+// animations : la préférence est posée au niveau du système, pas du site.
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 // `width: 100vw` incluait la largeur de la barre de défilement et provoquait un

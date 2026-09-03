@@ -1,5 +1,5 @@
 /**
- * Assertions QA de l'en-tête, jouées dans un navigateur sans interface.
+ * Assertions QA du front, jouées dans un navigateur sans interface.
  *
  * La cible est la fenêtre d'un iframe qui charge le site réel : les assertions
  * portent donc sur la page servie et sur son propre JavaScript, pas sur une
@@ -7,7 +7,7 @@
  *
  * Chargé par bin/qa-front.sh, qui relit le <pre id="qa-results"> produit.
  */
-window.runHeaderMenuQa = async (win) => {
+window.runFrontQa = async (win) => {
     const out = [];
     const assert = (name, ok) => out.push(`${ok ? "PASS" : "FAIL"} :: ${name}`);
     const settle = () => new Promise((resolve) => setTimeout(resolve, 350));
@@ -55,6 +55,52 @@ window.runHeaderMenuQa = async (win) => {
             `carte à 48px du bord droit (${round(win.innerWidth - cardBox.right)})`,
             round(win.innerWidth - cardBox.right) === 48
         );
+    }
+
+    // Carrousel : les cotes de la maquette, puis le comportement des boutons.
+    // Le défilement est instantané parce que la campagne force la préférence de
+    // réduction des animations — sans quoi rien ne serait mesurable au tick près.
+    const rail = doc.querySelector(".carousel__rail");
+
+    if (rail !== null && win.innerWidth === 1440) {
+        const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
+        const thumb = doc.querySelector("[data-carousel-thumb]");
+        const previous = doc.querySelector("[data-carousel-prev]");
+        const next = doc.querySelector("[data-carousel-next]");
+        const offset = () => parseFloat(thumb.style.getPropertyValue("--thumb-offset")) || 0;
+        const page = rail.clientWidth;
+        const furthest = rail.scrollWidth - rail.clientWidth;
+        const railBox = rail.getBoundingClientRect();
+
+        assert(`rail : hauteur = 629 (${Math.round(railBox.height)})`, Math.round(railBox.height) === 629);
+        assert(
+            `rail : plein-bord droit (${Math.round(railBox.right)} = ${win.innerWidth})`,
+            Math.round(railBox.right) === win.innerWidth
+        );
+        assert("précédent désactivé au repos", previous.disabled === true);
+        assert(`curseur à l'origine (${offset().toFixed(1)}%)`, offset() < 0.1);
+
+        next.click();
+        await tick();
+        assert(`un clic défile d'une page (${Math.round(rail.scrollLeft)}/${page})`,
+            Math.abs(rail.scrollLeft - page) < 2);
+        assert("précédent réactivé après un clic", previous.disabled === false);
+
+        // Deux clics rapprochés doivent s'ajouter, non se remplacer.
+        next.click();
+        next.click();
+        await tick();
+        assert(`clics rapprochés cumulés et bornés (${Math.round(rail.scrollLeft)}/${Math.round(furthest)})`,
+            Math.abs(rail.scrollLeft - furthest) < 2);
+        assert("suivant désactivé en fin de course", next.disabled === true);
+
+        previous.click();
+        await tick();
+        assert(`précédent recule d'une page (${Math.round(rail.scrollLeft)})`,
+            Math.abs(rail.scrollLeft - (furthest - page)) < 2);
+
+        rail.scrollTo({ left: 0, behavior: "auto" });
+        await tick();
     }
 
     if (win.innerWidth > 1024) {
