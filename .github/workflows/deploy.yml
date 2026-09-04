@@ -312,7 +312,9 @@ jobs:
       #
       # Configuration (Settings > Environments > <env>) :
       #   Secret   WATCHA_TOKEN   jeton généré sur la fiche du site dans Watcha
-      #   Secret   WATCHA_URL     ex. https://preprod-watcha.rapkalin.fr
+      #   Variable WATCHA_URL     ex. https://preprod-watcha.rapkalin.fr
+      #                           (SANS « / » final ; accepté aussi en secret,
+      #                           mais masqué dans les logs, donc moins pratique)
       #   Secret   WATCHA_BASIC   « identifiant:motdepasse » — UNIQUEMENT si
       #                           l'instance Watcha visée est protégée par
       #                           htpasswd (c'est le cas de la préprod).
@@ -330,13 +332,19 @@ jobs:
         continue-on-error: true
         env:
           WATCHA_TOKEN: ${{ secrets.WATCHA_TOKEN }}
-          WATCHA_URL: ${{ secrets.WATCHA_URL }}
+          # Déclarée de préférence en VARIABLE : ce n'est pas un secret, et une
+          # variable reste lisible dans les logs — un 404 y devient évident.
+          WATCHA_URL: ${{ vars.WATCHA_URL || secrets.WATCHA_URL }}
           WATCHA_BASIC: ${{ secrets.WATCHA_BASIC }}
         run: |
           if [ -z "$WATCHA_TOKEN" ] || [ -z "$WATCHA_URL" ]; then
             echo "WATCHA_TOKEN ou WATCHA_URL non défini : envoi ignoré."
             exit 0
           fi
+          # Un « / » final donnerait « //api/inventory », que Symfony ne route
+          # pas (la route est /api/inventory exactement) : 404 difficile à
+          # relier à sa cause, surtout si l'URL est un secret et donc masquée.
+          while [ "${WATCHA_URL%/}" != "$WATCHA_URL" ]; do WATCHA_URL="${WATCHA_URL%/}"; done
           # Une instance derrière htpasswd (la préprod) refuse l'appel au niveau
           # d'Apache, avant même que Watcha ne voie le jeton. -u n'est ajouté
           # que si WATCHA_BASIC existe, pour qu'une prod sans htpasswd
