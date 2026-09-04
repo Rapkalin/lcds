@@ -310,7 +310,11 @@ jobs:
       # Configuration (Settings > Environments > <env>) :
       #   Secret   WATCHA_TOKEN   jeton généré sur la fiche du site dans Watcha
       #   Variable WATCHA_URL     ex. https://watcha.rapkalin.fr
-      # Tant que les deux ne sont pas définis, l'étape ne fait rien.
+      #   Secret   WATCHA_BASIC   « identifiant:motdepasse » — UNIQUEMENT si
+      #                           l'instance Watcha visée est protégée par
+      #                           htpasswd (c'est le cas de la préprod).
+      # Tant que WATCHA_TOKEN et WATCHA_URL ne sont pas définis, l'étape ne fait
+      # rien.
       - name: Signaler l'inventaire à Watcha
         # Le déploiement a réussi : une veille injoignable ne doit pas le
         # marquer en échec. L'étape apparaît en orange dans l'UI, le job reste
@@ -319,13 +323,19 @@ jobs:
         env:
           WATCHA_TOKEN: ${{ secrets.WATCHA_TOKEN }}
           WATCHA_URL: ${{ vars.WATCHA_URL }}
+          WATCHA_BASIC: ${{ secrets.WATCHA_BASIC }}
         run: |
           if [ -z "$WATCHA_TOKEN" ] || [ -z "$WATCHA_URL" ]; then
             echo "WATCHA_TOKEN ou WATCHA_URL non défini : envoi ignoré."
             exit 0
           fi
+          # Une instance derrière htpasswd (la préprod) refuse l'appel au niveau
+          # d'Apache, avant même que Watcha ne voie le jeton. -u n'est ajouté
+          # que si WATCHA_BASIC existe, pour qu'une prod sans htpasswd
+          # fonctionne sans changement.
+          if [ -n "$WATCHA_BASIC" ]; then set -- -u "$WATCHA_BASIC"; else set --; fi
           # -f : un jeton révoqué renvoie 401 ; sans lui, curl sortirait en 0 et
           # l'inventaire vieillirait en silence tout en paraissant à jour.
-          curl -sSf -X POST "$WATCHA_URL/api/inventory" \
+          curl -sSf "$@" -X POST "$WATCHA_URL/api/inventory" \
             -H "Authorization: Bearer $WATCHA_TOKEN" \
             -F "lock=@composer.lock"
