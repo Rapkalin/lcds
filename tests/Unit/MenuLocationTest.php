@@ -40,3 +40,51 @@ it('never repeats a label across locations', function () {
     // label would silently be assigned the very same menu at seeding time.
     expect(array_unique($labels))->toHaveCount(count($labels));
 });
+
+/**
+ * The default items' contract. These live in the enum rather than in a
+ * contributor's hands because header.php calls wp_nav_menu() with
+ * `fallback_cb => false`: an empty menu renders NOTHING. Before the items were
+ * seeded, a freshly deployed environment shipped a header with no navigation at
+ * all — verified by emptying the menus and hitting the front.
+ *
+ * `items()` is a `match` with no default arm, so iterating over every case is
+ * what turns a forgotten location into a CI failure rather than a location that
+ * silently seeds nothing.
+ */
+it('decides explicitly what every location seeds', function (LcdsMenuLocation $location) {
+    expect($location->items())->toBeArray();
+})->with(LcdsMenuLocation::cases());
+
+it('gives every seeded item a title and a destination', function (LcdsMenuLocation $location) {
+    $items = $location->items();
+
+    // Asserted before the loop, so a location that seeds nothing still carries
+    // a real assertion instead of being reported as a risky test. It is also
+    // the shape the seeding relies on: lcds_seed_menu_items() derives
+    // menu-item-position from the array index.
+    expect(array_is_list($items))->toBeTrue();
+
+    foreach ($items as $item) {
+        expect($item)->toHaveKeys(['title', 'url']);
+        expect($item['title'])->toBeString()->not->toBe('');
+
+        // An empty URL is accepted by wp_update_nav_menu_item() but renders an
+        // <a> with no href — not a link: not focusable, unreachable by
+        // keyboard. Verified against WordPress, not assumed.
+        expect($item['url'])->toBeString()->not->toBe('');
+    }
+})->with(LcdsMenuLocation::cases());
+
+it('seeds the two locations the header cannot render without', function () {
+    // header.php has no fallback: these two empty means a header with neither
+    // navigation nor call to action.
+    expect(LcdsMenuLocation::Header->items())->not->toBeEmpty();
+    expect(LcdsMenuLocation::HeaderCta->items())->not->toBeEmpty();
+});
+
+it('never repeats a title inside one location', function (LcdsMenuLocation $location) {
+    $titles = array_column($location->items(), 'title');
+
+    expect(array_unique($titles))->toHaveCount(count($titles));
+})->with(LcdsMenuLocation::cases());

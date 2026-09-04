@@ -258,6 +258,68 @@ check_asset_version "version du script" "main.js" "main\.js?ver=[0-9]*" || FAILU
 cp "$ROOT/bin/qa/harness.html" "$DIST/$HARNESS_NAME"
 cp "$ROOT/bin/qa/$DRIVER_NAME" "$DIST/$DRIVER_NAME"
 
+# La navigation vient de menus amorcés par le code, pas de saisie manuelle :
+# header.php appelle wp_nav_menu() avec `fallback_cb => false`, donc un menu
+# vide sort un en-tête sans navigation. Les assertions d'en-tête ci-dessous
+# passaient sur des entrées saisies à la main dans une base locale, invisibles
+# du dépôt — exactement le trou que ce bloc ferme.
+check_menus() {
+    local out
+
+    out="$(cd "$ROOT" && docker compose exec -T php wp eval '
+$manquants = array();
+$sans_entree = array();
+
+foreach (LcdsMenuLocation::cases() as $location) {
+    $mods = get_theme_mod("nav_menu_locations", array());
+    $menu_id = (int) ($mods[$location->value] ?? 0);
+
+    if ($menu_id === 0 || ! wp_get_nav_menu_object($menu_id)) {
+        $manquants[] = $location->value;
+
+        continue;
+    }
+
+    // Seuls les deux emplacements de l entete sont exigés non vides : aucune
+    // maquette ne dessine encore le pied de page.
+    $attendus = $location->items();
+
+    if ($attendus !== array() && count((array) wp_get_nav_menu_items($menu_id)) === 0) {
+        $sans_entree[] = $location->value;
+    }
+}
+
+printf(
+    "%s|un menu par emplacement declare|%d/%d%s\n",
+    $manquants === array() ? "PASS" : "FAIL",
+    count(LcdsMenuLocation::cases()) - count($manquants),
+    count(LcdsMenuLocation::cases()),
+    $manquants === array() ? "" : ", sans menu : " . implode(", ", $manquants),
+);
+
+printf(
+    "%s|entrees en place la ou l enum en declare|%s\n",
+    $sans_entree === array() ? "PASS" : "FAIL",
+    $sans_entree === array() ? "aucun emplacement vide" : "vides : " . implode(", ", $sans_entree),
+);
+' --allow-root 2>/dev/null | tr -d '\r')"
+
+    if [ -z "$out" ]; then
+        printf '  FAIL :: navigation amorcée (WP-CLI muet)\n'
+        return 1
+    fi
+
+    printf '%s\n' "$out" | while IFS='|' read -r verdict label detail; do
+        printf '  %s :: %s (%s)\n' "$verdict" "$label" "$detail"
+    done
+
+    printf '%s' "$out" | grep -q '^FAIL' && return 1
+    return 0
+}
+
+echo "== Navigation amorcée =="
+check_menus || FAILURES=$((FAILURES + 1))
+
 echo "== Aperçu dans l'éditeur =="
 check_editor_preview || FAILURES=$((FAILURES + 1))
 

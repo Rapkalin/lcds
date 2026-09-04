@@ -7,8 +7,9 @@
  * porte à la fois le libellé affiché dans l'admin et le nom du menu créé au
  * premier démarrage.
  *
- * Ajouter un emplacement = ajouter un cas ici et son bras dans `label()`. Il est
- * alors enregistré, et son menu créé, sans autre intervention — voir menus.php.
+ * Ajouter un emplacement = ajouter un cas ici et ses bras dans `label()` ET
+ * `items()`. Il est alors enregistré, et son menu créé puis garni, sans autre
+ * intervention — voir menus.php.
  *
  * @package lcds
  */
@@ -39,6 +40,40 @@ enum LcdsMenuLocation: string
             self::Footer => __('Menu pied de page', 'lcds'),
             self::Social => __('Réseaux sociaux', 'lcds'),
             self::Legal => __('Mentions légales', 'lcds'),
+        };
+    }
+
+    /**
+     * Entrées créées à l'amorçage, dans l'ordre d'affichage.
+     *
+     * Les liens valent `#` : les pages cibles n'existent pas encore. Une URL
+     * vide est ACCEPTÉE par wp_update_nav_menu_item() — vérifié — mais rend un
+     * `<a>` sans `href`, qui n'est pas un lien : ni focalisable, ni atteignable
+     * au clavier. Le contributeur remplace la destination sans avoir à recréer
+     * la navigation.
+     *
+     * Les trois emplacements du pied de page rendent un tableau VIDE : aucune
+     * maquette ne les dessine à ce jour. Y mettre des entrées inventées ferait
+     * apparaître en production une navigation que personne n'a validée.
+     *
+     * Pas de `default` dans le match : un emplacement ajouté sans décision
+     * explicite lève UnhandledMatchError plutôt que de partir vide en silence.
+     *
+     * @return array<int, array{title: string, url: string}>
+     */
+    public function items(): array
+    {
+        return match ($this) {
+            self::Header => [
+                ['title' => __('Le cabinet', 'lcds'), 'url' => '#'],
+                ['title' => __('L’équipe', 'lcds'), 'url' => '#'],
+                ['title' => __('Les traitements', 'lcds'), 'url' => '#'],
+                ['title' => __('Contact', 'lcds'), 'url' => '#'],
+            ],
+            self::HeaderCta => [
+                ['title' => __('Prendre RDV', 'lcds'), 'url' => '#'],
+            ],
+            self::Footer, self::Social, self::Legal => [],
         };
     }
 

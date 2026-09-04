@@ -238,7 +238,7 @@ jobs:
             done
 
       # Étapes post-déploiement, tolérantes à l'absence de WP-CLI sur le serveur.
-      - name: Purger les caches
+      - name: Amorcer la navigation et purger les caches
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -254,11 +254,18 @@ jobs:
             ROOT="$HOME/${{ inputs.remote_path }}"
             cd "$ROOT"
             if command -v wp >/dev/null 2>&1; then
+              # Les menus et leurs entrées par défaut. L'amorçage est accroché à
+              # `admin_init` dans le thème : sans cet appel, le site n'aurait pas
+              # de navigation avant la première visite d'un administrateur —
+              # `wp_nav_menu()` est appelé avec `fallback_cb => false`.
+              # Idempotent, et un menu déjà garni par un contributeur n'est
+              # jamais retouché — voir readme/menus.md.
+              wp eval 'lcds_seed_default_menus();' || true
               wp cache flush || true
               wp rewrite flush || true
               wp eval 'if (function_exists("wp_cache_clear_cache")) { wp_cache_clear_cache(); }' || true
             else
-              echo "WP-CLI absent du serveur : purge des caches à faire à la main."
+              echo "WP-CLI absent du serveur : amorçage de la navigation et purge des caches à faire à la main."
             fi
             # ⚠️ L'OPcache n'est vidé que par un rechargement de PHP-FPM. À
             # décommenter avec la commande de l'hébergeur, sinon l'ancien code

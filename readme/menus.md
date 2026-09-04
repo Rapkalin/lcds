@@ -10,13 +10,38 @@ Les emplacements de menu et leur création vivent dans le thème :
 
 ## Création automatique
 
-Un contributeur ne doit jamais tomber sur l'écran « Créez votre premier menu ».
-À la première requête d'admin d'un environnement, chaque emplacement déclaré
-reçoit un menu **vide**, rattaché automatiquement.
+Un contributeur ne doit jamais tomber sur l'écran « Créez votre premier menu »,
+ni avoir à saisir la navigation d'un site qu'on vient de lui livrer. Chaque
+emplacement déclaré reçoit un menu, rattaché automatiquement, **garni des
+entrées portées par l'enum**.
 
-Le mécanisme est branché sur `admin_init` et gardé par une option
-(`lcds_menus_seed_version`) : passé le premier passage, il se réduit à une
-lecture d'option. **Le front n'est jamais ralenti.**
+Le mécanisme est gardé par une option (`lcds_menus_seed_version`) : passé le
+premier passage, il se réduit à une lecture d'option. **Le front n'est jamais
+ralenti.** Il est déclenché de trois façons :
+
+| Déclencheur | Quand |
+| --- | --- |
+| `admin_init` | à la première requête d'administration |
+| `bin/init.sh` | au démarrage d'un environnement local |
+| `deploy.yml` | juste après un déploiement, par WP-CLI |
+
+Les trois sont nécessaires. Accroché au seul `admin_init`, le site n'aurait pas
+de navigation avant qu'un administrateur ouvre le back-office.
+
+### Pourquoi les entrées sont versionnées
+
+`wp_nav_menu()` est appelé avec **`fallback_cb => false`** : un menu vide ne rend
+donc **rien du tout**, pas même la liste des pages. Sans entrées par défaut, un
+environnement fraîchement déployé sort un en-tête **sans navigation**.
+
+Ce n'était pas une hypothèse : les entrées de la navigation n'ont longtemps
+existé que dans une base locale, saisies à la main et invisibles du dépôt. En
+les supprimant, le front rendait `site-nav__list` **zéro fois**.
+
+Les destinations valent `#` : les pages cibles n'existent pas encore. Une URL
+vide est *acceptée* par `wp_update_nav_menu_item()` — vérifié — mais rend un
+`<a>` sans `href`, qui n'est pas un lien : ni focalisable, ni atteignable au
+clavier.
 
 ### Ce qui n'est jamais écrasé
 
@@ -28,18 +53,33 @@ C'est le point important : le code amorce, il ne reprend jamais la main.
 | L'emplacement est déjà pourvu | **Laissé intact** — le choix du contributeur prime |
 | Le menu a été supprimé | **Pas ressuscité** : la version d'amorçage est déjà enregistrée |
 | Le menu a été renommé ou rempli | Aucun effet, le code n'y touche pas |
+| Le menu porte **déjà une entrée** | **Laissé intact**, même à l'incrément de version |
 
-Les menus sont créés **vides** : les remplir est un travail éditorial.
+Cette dernière ligne est le garde-fou central : les entrées par défaut ne sont
+posées que dans un menu **vide**. Un contributeur qui a remanié sa navigation ne
+doit pas la voir se dédoubler au prochain amorçage. Les brouillons comptent — une
+entrée dépubliée reste le travail de quelqu'un.
+
+Vérifié dans les deux sens : une navigation remaniée survit à un réamorçage
+forcé, et un menu vidé ou détaché de son emplacement est bien réparé par
+l'amorçage.
+
+Les trois emplacements du pied de page restent **vides** : aucune maquette ne les
+dessine à ce jour, et y mettre des entrées inventées ferait apparaître en
+production une navigation que personne n'a validée.
 
 ## Ajouter un emplacement
 
-1. Ajouter un cas à `LcdsMenuLocation` et son bras dans `label()` :
+1. Ajouter un cas à `LcdsMenuLocation` et ses bras dans `label()` **et**
+   `items()` :
    ```php
    case Practitioners = 'practitioners-menu';
    // dans label() : self::Practitioners => __('Menu praticiens', 'lcds'),
+   // dans items() : self::Practitioners => [],
    ```
-   > Oublier le libellé lève `UnhandledMatchError` : un emplacement a donc
-   > toujours un nom.
+   > Oublier l'un des deux lève `UnhandledMatchError` : un emplacement a donc
+   > toujours un nom, et son contenu par défaut est toujours une décision
+   > explicite — `[]` compris.
 2. **Incrémenter `LCDS_MENUS_SEED_VERSION`** dans `inc/menus.php`. Sans ça, les
    environnements déjà amorcés ne créeront pas le nouveau menu — leur option est
    à jour et le code s'arrête avant.

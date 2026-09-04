@@ -121,16 +121,6 @@ fi
 #    ACF Pro n'est pas géré par Composer (licence) : activé s'il est là, ignoré
 #    sinon — voir readme/installation.md.
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# 6. Page d'accueil : la page, ses quatre blocs de section, et le réglage qui la
-#    désigne comme accueil du site. Idempotent — une page déjà en place n'est
-#    jamais réécrite, le contenu d'un contributeur ne doit pas disparaître au
-#    redémarrage d'un conteneur.
-# -----------------------------------------------------------------------------
-echo "==> [init] Page d'accueil"
-wp eval-file "$APP_DIR/bin/seed-homepage.php" --allow-root || \
-    echo "!!! [init] Amorçage de la page d'accueil échoué (ignoré)."
-
 for PLUGIN in wordpress-seo advanced-custom-fields-pro; do
     if wp plugin is-installed "$PLUGIN" --allow-root 2>/dev/null; then
         wp plugin activate "$PLUGIN" --allow-root >/dev/null 2>&1 \
@@ -142,7 +132,33 @@ for PLUGIN in wordpress-seo advanced-custom-fields-pro; do
 done
 
 # -----------------------------------------------------------------------------
-# 6) Cache pleine page (WP Super Cache) : réconcilié avec WP_CACHE à chaque
+# 6) Navigation : les menus, leur rattachement aux emplacements, et leurs
+#    entrées par défaut. Sans ça l'en-tête sort vide — wp_nav_menu() est appelé
+#    avec `fallback_cb => false`. Idempotent, et un menu déjà garni par un
+#    contributeur n'est jamais retouché — voir readme/menus.md.
+# -----------------------------------------------------------------------------
+echo "==> [init] Navigation"
+wp eval 'lcds_seed_default_menus();' --allow-root \
+    && echo "==> [init] Menus amorcés." \
+    || echo "!!! [init] Amorçage des menus échoué (ignoré)."
+
+# -----------------------------------------------------------------------------
+# 7) Page d'accueil : la page, ses quatre blocs de section, et le réglage qui la
+#    désigne comme accueil du site. Idempotent — une page déjà en place n'est
+#    jamais réécrite, le contenu d'un contributeur ne doit pas disparaître au
+#    redémarrage d'un conteneur.
+#
+#    APRÈS l'activation des plugins, impérativement : l'amorçage résout les clés
+#    de champ par acf_get_fields(), qui n'existe pas si ACF n'est pas encore
+#    actif. Joué trop tôt, il créait les quatre blocs SANS AUCUNE DONNÉE, et son
+#    idempotence interdisait toute correction au démarrage suivant.
+# -----------------------------------------------------------------------------
+echo "==> [init] Page d'accueil"
+wp eval-file "$APP_DIR/bin/seed-homepage.php" --allow-root || \
+    echo "!!! [init] Amorçage de la page d'accueil échoué (ignoré)."
+
+# -----------------------------------------------------------------------------
+# 8) Cache pleine page (WP Super Cache) : réconcilié avec WP_CACHE à chaque
 #    démarrage. Livré désactivé. L'activation génère le drop-in
 #    website/app/advanced-cache.php — voir readme/cache.md.
 # -----------------------------------------------------------------------------
@@ -155,7 +171,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 7) Langue du site : fr_FR à chaque démarrage. Les packs de langue sont
+# 9) Langue du site : fr_FR à chaque démarrage. Les packs de langue sont
 #    téléchargés s'ils manquent (idempotent).
 # -----------------------------------------------------------------------------
 echo "==> [init] Langue du site : fr_FR"
