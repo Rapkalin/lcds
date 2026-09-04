@@ -11,6 +11,15 @@
   font-size: var.$fs-cta;
 }
 
+// Repère technique, pas une information éditoriale : discret, mais pas au point
+// d'échouer au contraste. `$blue` sur blanc mesure 11,37:1.
+.footer-version {
+  margin-top: fn.toRem(8);
+  color: var.$blue;
+  font-size: var.$fs-cta;
+  letter-spacing: var.$ls-cta;
+}
+
 @media (max-width: var.$bp-mobile) {
   .site-footer {
     padding: fn.toRem(24) fn.toRem(20);

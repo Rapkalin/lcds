@@ -55,6 +55,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Workflows GitHub Actions | [`readme/ci-cd.md`](readme/ci-cd.md) |
 | Déploiement, `shared/`, plugins payants, rollback | [`readme/deploiement.md`](readme/deploiement.md) |
 | Aide-mémoire des commandes | [`readme/commandes.md`](readme/commandes.md) |
+| Journal des modifications et version du site | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## Socle technique
 

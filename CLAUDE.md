@@ -146,3 +146,25 @@ Règles de conduite :
 
 Tenir à jour `readme/` quand une décision de socle change (sécurité, cache, CI,
 qualité). Une règle non documentée sera contournée au prochain sprint.
+
+---
+
+## 8. Version et journal des modifications
+
+- **La version du site fait foi dans `composer.json`.** C'est elle que le pied
+  de page affiche, via `lcds_site_version()` (`inc/template.php`). Ne jamais la
+  dupliquer ailleurs.
+- **À chaque livraison, faire les deux :** incrémenter la version dans
+  `composer.json` **et** ajouter l'entrée correspondante dans
+  [`CHANGELOG.md`](CHANGELOG.md). Une version qui bouge sans entrée rend le
+  journal inutile ; une entrée sans version rend la version fausse.
+- **Sémantique** : `MAJOR` sur une rupture de contribution ou de déploiement,
+  `MINOR` sur une fonctionnalité, `PATCH` sur un correctif seul.
+- Le journal dit **ce qui change pour l'utilisateur ou le contributeur**, pas la
+  liste des fichiers touchés. Un `git log` fait déjà ça mieux.
+- `composer.json` est embarqué dans l'artefact de déploiement pour cette
+  lecture. Il vit hors du docroot : Apache ne le sert pas. **Ne jamais y mettre
+  de secret** — la règle 4 s'applique deux fois ici.
+- L'en-tête `Version:` de `website/app/themes/lcds/style.css` reste à part :
+  WordPress le parse comme du texte et il ne peut pas contenir de PHP. Il n'est
+  donc **pas** synchronisé, et c'est assumé.

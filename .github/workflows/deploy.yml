@@ -85,7 +85,10 @@ jobs:
         run: |
           rm -rf website/app/themes/lcds/node_modules
           mkdir -p release
-          cp -a website config wp-cli.yml release/
+          # composer.json part avec l'artefact : le pied de page y lit la version
+          # du site. Il vit hors du docroot, donc Apache ne le sert pas — et il
+          # ne contient aucun secret, vérifié.
+          cp -a website config wp-cli.yml composer.json release/
           tar -czf release.tar.gz -C release .
 
       - name: Publier l'artefact

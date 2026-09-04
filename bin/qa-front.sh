@@ -357,6 +357,30 @@ check_a11y_serveur() {
     return 1
 }
 
+# Le pied de page lit composer.json : une désynchronisation est impossible par
+# construction, il n'y a qu'une source. Ce qui est vérifié ici, c'est que le
+# fichier est ATTEIGNABLE — il vit hors du docroot et n'est embarqué dans
+# l'artefact de déploiement que par une ligne explicite. Oubliée, le pied de
+# page perd sa version en silence. Éprouvé en rendant le fichier illisible.
+# Voir la règle 8 de CLAUDE.md.
+check_version() {
+    local declaree affichee
+
+    declaree="$(python3 -c "import json;print(json.load(open('$ROOT/composer.json')).get('version',''))" 2>/dev/null)"
+    affichee="$(curl -s "$SITE_URL/" | grep -o 'Version [0-9][0-9A-Za-z.+-]*' | head -1 | sed 's/^Version //')"
+
+    if [ -n "$declaree" ] && [ "$declaree" = "$affichee" ]; then
+        printf '  PASS :: version du pied de page = celle de composer.json (%s)\n' "$declaree"
+        return 0
+    fi
+
+    printf '  FAIL :: version du pied de page (%s) != composer.json (%s)\n' "${affichee:-absente}" "${declaree:-absente}"
+    return 1
+}
+
+echo "== Version du site =="
+check_version || FAILURES=$((FAILURES + 1))
+
 echo "== Accessibilité côté serveur =="
 check_a11y_serveur || FAILURES=$((FAILURES + 1))
 
