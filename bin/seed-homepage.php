@@ -247,6 +247,91 @@ $content = implode("\n\n", [
             ],
         ],
     ]),
+
+    $block('lcds-technologies', 'group_lcds_technologies', [
+        'etiquette' => 'les technologies',
+        'puce' => 'orange',
+        'cta' => ['title' => 'voir toutes les technologies', 'url' => $stub, 'target' => ''],
+        // La maquette ne nomme que deux cartes : la première y est OUVERTE,
+        // donc son titre est masqué. Les autres titres et tous les textes sont
+        // une rédaction de démonstration.
+        'cartes' => [
+            [
+                'titre' => 'Radiographie panoramique',
+                'texte' => $p(
+                    'Un cliché unique de l’ensemble des dents et des maxillaires, pris en quelques secondes debout et sans contact. Il révèle les dents non encore sorties, les racines et l’état de l’os.',
+                    'La dose de rayons est très faible, comparable à celle reçue lors d’un vol de deux heures.',
+                ),
+                'image' => $media('gallery-4'),
+                'ouvert' => 1,
+            ],
+            [
+                'titre' => 'Cone Beam 3D',
+                'texte' => $p('L’imagerie tridimensionnelle reconstitue le volume osseux et la position exacte de chaque racine. Elle n’est prescrite que lorsque la panoramique ne suffit pas à décider, par exemple pour une dent incluse.'),
+                'image' => $media('gallery-1'),
+                'ouvert' => 0,
+            ],
+            [
+                'titre' => 'Empreintes numériques',
+                'texte' => $p('Une caméra intra-orale remplace la pâte à empreinte : le confort est sans comparaison, et le modèle obtenu sert directement à la fabrication des gouttières. Plus de haut-le-cœur, plus d’attente.'),
+                'image' => $media('gallery-3'),
+                'ouvert' => 0,
+            ],
+            [
+                'titre' => 'Aligneurs sur mesure',
+                'texte' => $p('Chaque série de gouttières est usinée d’après le modèle numérique, étape par étape jusqu’à la position visée. La simulation permet de montrer le résultat avant même de commencer.'),
+                'image' => $media('gallery-5'),
+                'ouvert' => 0,
+            ],
+        ],
+    ]),
+
+    $block('lcds-infos', 'group_lcds_infos', [
+        'etiquette' => 'informations pratiques',
+        'puce' => 'orange',
+        'visuel' => $media('gallery-2a'),
+        'entrees' => [
+            [
+                'icone' => 'pin',
+                'titre' => 'Adresse du cabinet',
+                'surtitre' => 'cabinet d’orthodontie lcds',
+                'texte' => $p('2 place Saint-Maurice', '38200 Vienne'),
+                'lien' => ['title' => 'voir le plan', 'url' => $stub, 'target' => ''],
+            ],
+            [
+                'icone' => 'bus',
+                'titre' => 'Moyens de transport',
+                'surtitre' => 'bus',
+                'texte' => $p(
+                    'Bus - Jardin de Ville (lignes 1, 6, 5, 4 et 7)',
+                    'Bus - Saint-Maurice (lignes 1, 6, 5, 4 et 7)',
+                    'Bus - SNCF Brillier (ligne 7)',
+                ),
+                'lien' => '',
+            ],
+            [
+                'icone' => 'info',
+                'titre' => 'Accessibilité',
+                'surtitre' => '',
+                'texte' => $p('Entrée accessible', 'Parking gratuit'),
+                'lien' => '',
+            ],
+            [
+                'icone' => 'clock',
+                'titre' => 'Horaires',
+                'surtitre' => '',
+                'texte' => $p('Du lundi au vendredi : 09:00 - 19:00', 'Le Samedi : 08:00 - 13:00'),
+                'lien' => '',
+            ],
+            [
+                'icone' => 'user',
+                'titre' => 'Contact',
+                'surtitre' => '',
+                'texte' => $p('+33 (0) 4 74 78 33 22', 'contact@lacliniquedusourire.com'),
+                'lien' => '',
+            ],
+        ],
+    ]),
 ]);
 
 // wp_slash() est indispensable : wp_insert_post() attend des données ÉCHAPPÉES
@@ -274,4 +359,8 @@ if (is_wp_error($page_id)) {
 update_option('show_on_front', 'page');
 update_option('page_on_front', (int) $page_id);
 
-WP_CLI::log('==> [init] Page d\'accueil amorcée (ID ' . (int) $page_id . ', 4 blocs).');
+WP_CLI::log(sprintf(
+    '==> [init] Page d\'accueil amorcée (ID %d, %d blocs).',
+    (int) $page_id,
+    substr_count($content, '<!-- wp:acf/'),
+));

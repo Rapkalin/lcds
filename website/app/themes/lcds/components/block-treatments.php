@@ -63,6 +63,7 @@ if ($rows === []) {
                             <button
                                 class="accordion__trigger"
                                 type="button"
+                                data-disclosure
                                 aria-expanded="<?php echo $row['open'] ? 'true' : 'false'; ?>"
                                 aria-controls="<?php echo esc_attr($row['id']); ?>"
                             >

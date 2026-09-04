@@ -1,0 +1,39 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Maquette : bande de 926 sur fond bleu pâle. Étiquette et bouton d'action sur
+// une même ligne à y=128, rail de 204 à 698, contrôles de 746 à 798.
+//
+// Même construction que la section intro : le retrait n'est posé qu'à GAUCHE,
+// sur un axe centré de 1118, pour que le rail file jusqu'au bord droit sans
+// qu'aucun 161 soit écrit nulle part. Un conteneur centré classique arrêtait le
+// rail à 1299 et décalait la piste de 10px — mesuré.
+.block-techno {
+  padding: var.$section-padding 0;
+  padding-left: max(#{fn.toRem(20)}, calc(50% - #{var.$content-width} / 2));
+  background: var.$blue-pale;
+  color: var.$blue;
+
+  // 48 de part et d'autre du rail, et non les 80 de la section intro : la
+  // maquette resserre ce bloc.
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var.$gutter;
+    max-width: var.$content-width;
+    margin-bottom: fn.toRem(48);
+  }
+
+  .carousel__controls {
+    margin-top: fn.toRem(48);
+  }
+}
+
+@media (max-width: var.$bp-tablet) {
+  .block-techno__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: fn.toRem(24);
+  }
+}

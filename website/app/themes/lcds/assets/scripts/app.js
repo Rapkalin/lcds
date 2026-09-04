@@ -152,14 +152,19 @@ const initCarousels = () => {
 };
 
 /**
- * Disclosure panels (treatments accordion).
+ * Disclosure panels: the treatments accordion AND the technology cards.
+ *
+ * Selected by `data-disclosure` rather than by a component class: both use the
+ * exact same contract — a button carrying aria-expanded and aria-controls, and
+ * a panel that is really `hidden` rather than merely invisible. Two copies of
+ * this loop would have drifted apart.
  *
  * Several panels may be open at once. The mockup shows a single one open, but
  * that reads as a demonstration of the open state rather than a rule — and
  * closing a panel the visitor did not ask to close is worse than a long page.
  */
 const initAccordions = () => {
-    document.querySelectorAll(".accordion__trigger").forEach((trigger) => {
+    document.querySelectorAll("[data-disclosure]").forEach((trigger) => {
         const panel = document.getElementById(trigger.getAttribute("aria-controls"));
 
         if (panel === null) {
@@ -170,6 +175,9 @@ const initAccordions = () => {
             const isOpen = trigger.getAttribute("aria-expanded") === "true";
             trigger.setAttribute("aria-expanded", String(!isOpen));
             panel.hidden = isOpen;
+            // La carte de technologie masque son titre quand le panneau est
+            // ouvert : l'état vit sur la carte, pas sur le bouton.
+            trigger.closest(".tech-card")?.classList.toggle("tech-card--open", !isOpen);
         });
     });
 };

@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "acf/lcds-technologies",
+    "title": "LCDS — Carrousel de cartes",
+    "description": "Une étiquette de section, un bouton d'action, et un rail de cartes inclinées dont chacune révèle son texte par-dessus le visuel.",
+    "category": "lcds",
+    "icon": "slides",
+    "keywords": ["technologies", "carrousel", "cartes", "lcds"],
+    "supports": {
+        "align": ["full"],
+        "anchor": false,
+        "html": false,
+        "customClassName": false
+    },
+    "acf": {
+        "mode": "auto",
+        "renderTemplate": "render.php"
+    },
+    "align": "full"
+}

@@ -1,6 +1,16 @@
 # `243:352` — Frame 54 (blocs de fin + footer)
 
-Relevé **partiel** du 31/08/2026 : `get_metadata` seul. Cadre 1440 × 4724.
+Relevé `get_metadata` du 31/08/2026, **complété au pixel par le PDF**
+`HP_06_Frame 54.pdf` le 04/09/2026 — sans appel Figma supplémentaire. Cadre
+1440 × 4724, confirmé par `pdfinfo`.
+
+> **Le relevé Figma était trompeur sur un point.** Il annonçait des cartes
+> Technologies « légèrement décalées verticalement (0, 11,4 ou 23,4) — un effet
+> d'ondulation ». Mesuré sur le rendu du PDF, les trois cartes partagent en
+> réalité **le même centre vertical** : ce qui change est leur **rotation**
+> (+2,88 / 0 / −2,88 degrés). Les 0 / 11,4 / 23,4 étaient les hauteurs de boîte
+> englobante de cadres pivotés. Une deuxième illustration de la règle : ce que
+> `get_metadata` renvoie décrit la boîte, pas l'intention.
 
 | Enfant | y | Hauteur | Contenu |
 | --- | --- | --- | --- |
@@ -24,6 +34,31 @@ Relevé **partiel** du 31/08/2026 : `get_metadata` seul. Cadre 1440 × 4724.
 > Deux carrousels partagent donc exactement le même bloc de contrôles. À écrire
 > une fois, instancier deux fois.
 
+### Cotes mesurées sur le PDF — implémenté
+
+| Mesure | Attendu | Obtenu |
+| --- | --- | --- |
+| Étiquette, bord gauche / hauteur | 161 / 30 | identiques |
+| Bouton d'action, bord droit | 1279 | 1279 |
+| Rail, bord gauche / bord droit | 161 / 1440 | identiques |
+| Rail, hauteur | 494 | 494 |
+| Cartes, largeurs | 471,5 / 447,5 / 471,5 | identiques |
+| Cartes, inclinaisons | +2,88 / 0 / −2,88 | identiques |
+| Cartes, hauteur | 470 | 470 |
+| Piste, bord gauche / largeur | 161 / 214 | identiques |
+| Boutons, bord droit | 1279 | 1279 |
+
+Le rail est de 494 et non de 470 : la boîte englobante d'une carte de 471,5 ×
+470 pivotée de 2,88° mesure 493,1 de haut. Un rail à 470 rognait les coins ou
+faisait apparaître une barre de défilement verticale — le rail impose
+`overflow-x`, donc `overflow-y: auto`.
+
+Chaque carte porte un titre et un bouton qui **révèle son texte par-dessus la
+photo**. La maquette dessine la première carte OUVERTE, titre masqué : ça se lit
+comme une démonstration de l'état ouvert, comme pour l'accordéon. Même contrat
+que lui — `aria-expanded`, `aria-controls`, panneau réellement `hidden` — et le
+même code, sélectionné par `data-disclosure`.
+
 ## Infos pratiques (`307:623`)
 
 Découpage 553 + 12 + 553. À gauche un tag et un aplat de 440 × 549 (une carte,
@@ -40,4 +75,25 @@ titre en `H3/desktop` et d'un contenu, séparées par des filets de 1 px :
 
 Les icônes portent des noms d'un jeu tiers (`location-target-2--…`,
 `school-bus-side`, `information-circle--…`, `search-history-browser`,
-`user-circle-single--…`) : à extraire en SVG au moment de l'implémentation.
+`user-circle-single--…`) dont le projet n'a pas les fichiers. Elles ont été
+**redessinées** en 24 × 24, trait de 1,5, en `currentColor` — à remplacer par
+les assets du designer.
+
+### Cotes mesurées sur le PDF — implémenté
+
+| Mesure | Attendu | Obtenu |
+| --- | --- | --- |
+| Découpage des colonnes | 553 + 12 + 553 | identique |
+| Visuel de gauche | 440 × 549 | 440 × 549 |
+| Colonne de droite, bords | 726 → 1279 | identiques |
+| Icône, largeur | 24 | 24 |
+| Texte, bord gauche | 774 | 774 |
+| Bouton contourné, bord droit / hauteur | 1279 / 30 | identiques |
+| Filets | 1px `#D9E4F1`, 48 de part et d'autre | identiques |
+
+Le bouton « voir le plan » n'est pas le bouton d'action des autres sections :
+une seule pastille contournée, sans glyphe, 131 × 30 contre 321 × 30. D'où la
+variante `outline` du composant `cta`.
+
+Les filets tombent à y=274, 475, 625 et 771 de la bande, soit 48px de part et
+d'autre — le même rythme que l'accordéon des traitements.

@@ -52,6 +52,15 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 - **Accessibilité côté serveur** : aucun composant ne force `'alt' => ''`, et
   aucun gabarit de titre Yoast n'est resté en anglais.
 
+- **Cotes des blocs de fin, à 1440** : étiquettes, boutons, rail plein-bord,
+  largeurs et inclinaisons des cartes, colonnes et filets des informations
+  pratiques — comparés aux relevés du PDF.
+
+> La branche desktop du pilote se terminait par un `return` anticipé : **tout ce
+> qui suivait — cotes des blocs de fin et campagne d'accessibilité — ne tournait
+> qu'aux largeurs mobiles.** Constaté en cherchant pourquoi les cotes des
+> technologies n'apparaissaient pas à 1440. C'est désormais un `if/else`.
+
 ### Trois largeurs, dont un vrai 320px
 
 `1440`, `500` et `320`. La largeur est passée à l'**iframe** et non à la

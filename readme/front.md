@@ -191,6 +191,19 @@ maquettes — dossier réglable par `LCDS_MOCKUPS_DIR`.
 Le script est **ignoré par git** (`.gitignore`) : il dépend de maquettes qui ne
 sont pas dans le dépôt et ne sert qu'en local.
 
+## Un seul carrousel pour deux sections
+
+La maquette dessine les contrôles du carrousel Technologies **strictement
+identiques** à ceux de la galerie d'intro : piste de 214 à x=161, deux boutons
+de 52 alignés sur 1279. Le composant `carousel` accepte donc, par élément, du
+**balisage déjà produit** (`content`) en plus du chemin « simples visuels », plus
+une hauteur de rail et une inclinaison. Écrire un second composant aurait
+dupliqué le rail, les contrôles et leur câblage JavaScript.
+
+`lcds_capture()` (`inc/template.php`) sert à ça : `get_template_part()` écrit sur
+la sortie et n'offre aucun moyen de récupérer le résultat, or le rail a besoin du
+balisage de ses cartes sous forme de chaîne.
+
 ## Compilation
 
 Webpack, via le conteneur jetable `node` (profil `tools`) :

@@ -309,12 +309,17 @@ jobs:
       #
       # Configuration (Settings > Environments > <env>) :
       #   Secret   WATCHA_TOKEN   jeton généré sur la fiche du site dans Watcha
-      #   Variable WATCHA_URL     ex. https://watcha.rapkalin.fr
+      #   Secret   WATCHA_URL     ex. https://preprod-watcha.rapkalin.fr
       #   Secret   WATCHA_BASIC   « identifiant:motdepasse » — UNIQUEMENT si
       #                           l'instance Watcha visée est protégée par
       #                           htpasswd (c'est le cas de la préprod).
       # Tant que WATCHA_TOKEN et WATCHA_URL ne sont pas définis, l'étape ne fait
       # rien.
+      #
+      # ⚠️ WATCHA_TOKEN doit être défini au niveau de l'ENVIRONNEMENT, pas du
+      # dépôt : un secret de dépôt s'applique à preprod ET à production, qui
+      # écriraient alors dans le même site Watcha en s'écrasant mutuellement.
+      # Les secrets d'environnement l'emportent sur ceux du dépôt.
       - name: Signaler l'inventaire à Watcha
         # Le déploiement a réussi : une veille injoignable ne doit pas le
         # marquer en échec. L'étape apparaît en orange dans l'UI, le job reste
@@ -322,7 +327,7 @@ jobs:
         continue-on-error: true
         env:
           WATCHA_TOKEN: ${{ secrets.WATCHA_TOKEN }}
-          WATCHA_URL: ${{ vars.WATCHA_URL }}
+          WATCHA_URL: ${{ secrets.WATCHA_URL }}
           WATCHA_BASIC: ${{ secrets.WATCHA_BASIC }}
         run: |
           if [ -z "$WATCHA_TOKEN" ] || [ -z "$WATCHA_URL" ]; then
@@ -334,8 +339,13 @@ jobs:
           # que si WATCHA_BASIC existe, pour qu'une prod sans htpasswd
           # fonctionne sans changement.
           if [ -n "$WATCHA_BASIC" ]; then set -- -u "$WATCHA_BASIC"; else set --; fi
+          # Le jeton passe par X-Watcha-Token et NON par « Authorization:
+          # Bearer » : il n'existe qu'un seul en-tête Authorization, et curl
+          # abandonne silencieusement les identifiants Basic dès qu'on en
+          # fournit un explicitement. Les deux voyagent ainsi ensemble, et le
+          # même appel fonctionne que l'instance soit protégée ou non.
           # -f : un jeton révoqué renvoie 401 ; sans lui, curl sortirait en 0 et
           # l'inventaire vieillirait en silence tout en paraissant à jour.
           curl -sSf "$@" -X POST "$WATCHA_URL/api/inventory" \
-            -H "Authorization: Bearer $WATCHA_TOKEN" \
+            -H "X-Watcha-Token: $WATCHA_TOKEN" \
             -F "lock=@composer.lock"

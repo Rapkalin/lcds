@@ -242,50 +242,148 @@ window.runFrontQa = async (win) => {
         journey.classList.remove("journey--pinned");
     }
 
+    // if/else et non un `return` anticipé : la branche desktop rendait la main,
+    // et TOUT ce qui suit — géométrie des blocs de fin, campagne
+    // d'accessibilité — ne tournait donc qu'aux largeurs mobiles. Constaté en
+    // cherchant pourquoi les cotes des technologies n'apparaissaient pas à
+    // 1440.
     if (win.innerWidth > 1024) {
         assert(`rendu en mise en page desktop (${win.innerWidth}px > 1024)`, true);
         assert("bouton burger masqué en desktop", styleOf(toggle).display === "none");
         assert("navigation visible en desktop", styleOf(panel).visibility === "visible");
         assert("navigation dans le flux en desktop", styleOf(panel).position === "static");
         assert("liens alignés en ligne", styleOf(list).flexDirection === "row");
-        return out;
+    } else {
+        assert(`rendu en mise en page mobile (${win.innerWidth}px <= 1024)`, true);
+        assert("bouton burger visible en mobile", styleOf(toggle).display !== "none");
+        assert("liens empilés en mobile", styleOf(list).flexDirection === "column");
+        assert("état initial fermé", !isOpen() && !hasBodyClass());
+        assert("panneau masqué au repos", styleOf(panel).visibility === "hidden");
+
+        toggle.click();
+        assert("le clic ouvre", isOpen() && hasBodyClass());
+        // Le point qui avait échoué : `visibility` s'anime par paliers et ne doit pas
+        // attendre la moitié du fondu pour basculer.
+        assert("panneau visible dès l'ouverture", styleOf(panel).visibility === "visible");
+        assert("défilement de la page bloqué", styleOf(doc.body).overflow === "hidden");
+
+        doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        assert("échap ferme", !isOpen() && !hasBodyClass());
+        assert("panneau encore visible pendant le fondu", styleOf(panel).visibility === "visible");
+
+        // On vérifie la DÉCLARATION, non la fin de l'animation. Attendre qu'une
+        // transition s'achève n'est pas déterministe sous temps virtuel — setTimeout
+        // y avance instantanément alors que la transition suit les images produites,
+        // et l'assertion échouait une fois sur cinq. Ce que le correctif doit
+        // garantir, c'est le découplage : `visibility` instantanée à l'ouverture,
+        // retardée de la durée du fondu à la fermeture. Les deux assertions
+        // ci-dessus en montrent déjà l'effet.
+        const ferme = styleOf(panel);
+        assert(
+            `masquage retardé du fondu (${ferme.transitionProperty} / ${ferme.transitionDelay})`,
+            ferme.transitionProperty.includes("visibility") && ferme.transitionDelay.includes("0.2s")
+        );
+
+        toggle.click();
+        const link = panel.querySelector("a");
+        link.addEventListener("click", (event) => event.preventDefault());
+        link.click();
+        assert("le clic sur un lien ferme", !isOpen() && !hasBodyClass());
     }
 
-    assert(`rendu en mise en page mobile (${win.innerWidth}px <= 1024)`, true);
-    assert("bouton burger visible en mobile", styleOf(toggle).display !== "none");
-    assert("liens empilés en mobile", styleOf(list).flexDirection === "column");
-    assert("état initial fermé", !isOpen() && !hasBodyClass());
-    assert("panneau masqué au repos", styleOf(panel).visibility === "hidden");
+    /* --------------------------------------------------------------------- *
+     * Géométrie des deux blocs de fin, relevée au pixel sur le PDF de
+     * maquette. Le relevé `get_metadata` de Figma annonçait une ondulation
+     * « 0 / 11,4 / 23,4 » : c'étaient les boîtes englobantes de cadres
+     * PIVOTÉS. Les trois cartes partagent en réalité leur centre vertical, et
+     * seule leur rotation change.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        const boite = (sel, i = 0) => doc.querySelectorAll(sel)[i]?.getBoundingClientRect() ?? null;
+        const cote = (nom, obtenu, attendu, tolerance = 1) => assert(
+            `${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
+            obtenu !== null && Math.abs(obtenu - attendu) <= tolerance
+        );
+        const propriete = (sel, i, nom) => {
+            const node = doc.querySelectorAll(sel)[i];
 
-    toggle.click();
-    assert("le clic ouvre", isOpen() && hasBodyClass());
-    // Le point qui avait échoué : `visibility` s'anime par paliers et ne doit pas
-    // attendre la moitié du fondu pour basculer.
-    assert("panneau visible dès l'ouverture", styleOf(panel).visibility === "visible");
-    assert("défilement de la page bloqué", styleOf(doc.body).overflow === "hidden");
+            return node ? parseFloat(node.style.getPropertyValue(nom)) : null;
+        };
 
-    doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    assert("échap ferme", !isOpen() && !hasBodyClass());
-    assert("panneau encore visible pendant le fondu", styleOf(panel).visibility === "visible");
+        const railCards = boite(".carousel--cards .carousel__rail");
+        cote("techno : étiquette, bord gauche", boite(".block-techno .tag")?.left ?? null, 161);
+        cote("techno : bouton d'action, bord droit", boite(".block-techno .cta")?.right ?? null, 1279);
+        cote("techno : rail, bord gauche", railCards?.left ?? null, 161);
+        cote("techno : rail, plein-bord droit", railCards?.right ?? null, 1440);
+        cote("techno : rail, hauteur", railCards?.height ?? null, 494);
+        cote("techno : piste, bord gauche", boite(".carousel--cards .carousel__track")?.left ?? null, 161);
+        cote("techno : boutons, bord droit", boite(".carousel--cards .carousel__buttons")?.right ?? null, 1279);
 
-    // On vérifie la DÉCLARATION, non la fin de l'animation. Attendre qu'une
-    // transition s'achève n'est pas déterministe sous temps virtuel — setTimeout
-    // y avance instantanément alors que la transition suit les images produites,
-    // et l'assertion échouait une fois sur cinq. Ce que le correctif doit
-    // garantir, c'est le découplage : `visibility` instantanée à l'ouverture,
-    // retardée de la durée du fondu à la fermeture. Les deux assertions
-    // ci-dessus en montrent déjà l'effet.
-    const ferme = styleOf(panel);
-    assert(
-        `masquage retardé du fondu (${ferme.transitionProperty} / ${ferme.transitionDelay})`,
-        ferme.transitionProperty.includes("visibility") && ferme.transitionDelay.includes("0.2s")
-    );
+        for (const [i, largeur, inclinaison] of [[0, 471.5, 2.88], [1, 447.5, 0], [2, 471.5, -2.88]]) {
+            cote(`techno : carte ${i + 1}, largeur`, propriete(".carousel--cards .carousel__item", i, "--item-width"), largeur, 0.1);
+            cote(`techno : carte ${i + 1}, inclinaison`, propriete(".carousel--cards .carousel__item", i, "--item-tilt"), inclinaison, 0.01);
+        }
 
-    toggle.click();
-    const link = panel.querySelector("a");
-    link.addEventListener("click", (event) => event.preventDefault());
-    link.click();
-    assert("le clic sur un lien ferme", !isOpen() && !hasBodyClass());
+        const c0 = boite(".carousel--cards .carousel__item", 0);
+        const c1 = boite(".carousel--cards .carousel__item", 1);
+        assert(
+            `techno : les trois cartes partagent leur centre vertical (${Math.round((c0.top + c0.bottom) / 2)} / ${Math.round((c1.top + c1.bottom) / 2)})`,
+            Math.abs((c0.top + c0.bottom) / 2 - (c1.top + c1.bottom) / 2) < 1
+        );
+        // Le rail impose `overflow-x`, donc `overflow-y: auto` : une carte
+        // pivotée plus haute que le rail y ajouterait une barre de défilement
+        // verticale, ou verrait ses coins rognés.
+        //
+        // La hauteur ATTENDUE est calculée, pas relevée : la boîte réellement
+        // rendue dépendrait de la préférence de mouvement du navigateur, et une
+        // assertion qui change de sens selon un réglage système ne prouve rien.
+        const radians = (Math.abs(propriete(".carousel--cards .carousel__item", 0, "--item-tilt")) * Math.PI) / 180;
+        const carte = doc.querySelector(".carousel--cards .carousel__item");
+        const englobante = carte.offsetHeight * Math.cos(radians)
+            + parseFloat(carte.style.getPropertyValue("--item-width")) * Math.sin(radians);
+        assert(
+            `techno : la boîte de la carte inclinée tient dans le rail (${englobante.toFixed(1)} <= ${railCards.height})`,
+            englobante <= railCards.height + 1
+        );
+
+        cote("infos : étiquette, bord gauche", boite(".block-info .tag")?.left ?? null, 161);
+        cote("infos : visuel, largeur", boite(".block-info__media")?.width ?? null, 440);
+        cote("infos : visuel, hauteur", boite(".block-info__media")?.height ?? null, 549);
+        cote("infos : colonne de droite, bord gauche", boite(".block-info__entry")?.left ?? null, 726);
+        cote("infos : colonne de droite, bord droit", boite(".block-info__entry")?.right ?? null, 1279);
+        cote("infos : icône, largeur", boite(".block-info__icon")?.width ?? null, 24);
+        cote("infos : texte, bord gauche", boite(".block-info__head")?.left ?? null, 774);
+        cote("infos : bouton contourné, bord droit", boite(".block-info .cta--outline")?.right ?? null, 1279);
+
+        const secondeEntree = doc.querySelectorAll(".block-info__entry")[1];
+        const styleEntree = styleOf(secondeEntree);
+        assert(
+            `infos : filet de 1px et 48px au-dessus (${styleEntree.borderTopWidth} / ${styleEntree.paddingTop})`,
+            styleEntree.borderTopWidth === "1px" && styleEntree.paddingTop === "48px"
+        );
+    }
+
+    // Le panneau de la carte de technologie suit le MÊME contrat que
+    // l'accordéon — bouton `aria-expanded`/`aria-controls` et panneau
+    // réellement `hidden` — et le même code JavaScript, sélectionné par
+    // `data-disclosure`.
+    const carte = doc.querySelector(".tech-card__trigger[aria-expanded='false']");
+
+    if (carte !== null) {
+        const panneauCarte = doc.getElementById(carte.getAttribute("aria-controls"));
+        carte.click();
+        assert(
+            "carte de technologie : le clic révèle le texte",
+            carte.getAttribute("aria-expanded") === "true"
+                && !panneauCarte.hasAttribute("hidden")
+                && carte.closest(".tech-card").classList.contains("tech-card--open")
+        );
+        carte.click();
+        assert(
+            "carte de technologie : le second clic retire le texte de l'arbre",
+            carte.getAttribute("aria-expanded") === "false" && panneauCarte.hasAttribute("hidden")
+        );
+    }
 
     /* --------------------------------------------------------------------- *
      * Accessibilité. Ces assertions verrouillent des défauts CONSTATÉS, pas

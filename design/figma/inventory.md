@@ -12,7 +12,7 @@ URL d'un nœud : `https://www.figma.com/design/kfPEAXr7clNODJUq5rT9GF/LCDS-%7C-U
 | `226:1189` | hero | Photo pleine page + carte « Prendre RDV » | [complet](nodes/226-1189-hero.md) |
 | `226:1191` | Desktop - 1 | Intro + galerie horizontale | **relevé par PDF**, implémenté |
 | `17:408` | Desktop - 4 | Accordéon des traitements | [structure](nodes/12-207-accueil.md) — partiel |
-| `243:352` | Frame 54 | Blocs de fin + footer (1440 × 4724) | [structure](nodes/243-352-fin-de-page.md) — partiel |
+| `243:352` | Frame 54 | Blocs de fin + footer (1440 × 4724) | **relevé par PDF**, technologies et infos pratiques implémentées — [détail](nodes/243-352-fin-de-page.md) |
 | `276:1063` | footer | Pied de page (1440 × 1255) | non relevé |
 
 ## Parcours du soin — 6 étapes, un carrousel au scroll
@@ -36,8 +36,10 @@ Par ordre de besoin, **un appel `get_design_context` par ligne** :
 2. un parent commun des six étapes du parcours, si la maquette en a un — sinon
    `71:155` seul suffira à établir le gabarit, les cinq autres n'étant que du
    contenu ;
-3. `243:352` — blocs de fin, y compris le carrousel Technologies ;
-4. `276:1063` — footer.
+3. ~~`243:352` — blocs de fin, y compris le carrousel Technologies~~ : **fait
+   par le PDF `HP_06`**, sans appel Figma ;
+4. `276:1063` — footer. Le PDF `HP_06` le contient aussi (bande y 3469 → 4724) :
+   il n'y a donc **aucun appel Figma à dépenser** pour lui non plus.
 
 > Les nœuds marqués « partiel » n'ont été relevés qu'avec `get_metadata`, qui
 > **n'est pas exhaustif** : positions et tailles sont fiables, l'absence d'un

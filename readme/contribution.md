@@ -29,6 +29,8 @@ Tous sont regroupés dans la catégorie **LCDS** de l'insérateur.
 | **LCDS — Texte et galerie** | Étiquette, texte, bouton, rail de visuels défilable |
 | **LCDS — Accordéon** | Étiquette, entrées dépliables, bouton |
 | **LCDS — Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
+| **LCDS — Carrousel de cartes** | Étiquette, bouton, cartes inclinées dont chacune révèle son texte |
+| **LCDS — Informations pratiques** | Étiquette, visuel, entrées à icône : adresse, transports, horaires… |
 
 ### Le titre h1
 
@@ -70,12 +72,39 @@ champs : ils viennent de l'enum, par un filtre `acf/load_field/name=puce`.
 Accroché sur le **nom** du champ et non sur sa clé, les trois blocs à étiquette
 ayant chacun la leur.
 
+### Les cartes du carrousel s'inclinent par cycle de trois
+
+Largeurs et inclinaisons alternent : **471,5 / 447,5 / 471,5** et
+**+2,88° / 0 / −2,88°**, relevés au pixel sur le PDF. Le contributeur n'a rien à
+régler — il ajoute des cartes, le cycle se poursuit.
+
+Les inclinaisons ne sont pas retirées sous `prefers-reduced-motion` : cette
+préférence concerne le mouvement, et une inclinaison fixe n'en est pas un.
+
+### Les icônes des informations pratiques
+
+Un contributeur choisit un nom — « Adresse », « Transports », « Information »,
+« Horaires », « Contact » — jamais un fichier. La correspondance vit dans
+`inc/enums/LcdsInfoIcon.php`, **source unique**, et la liste de
+l'administration en est alimentée par un filtre `acf/load_field`.
+
+`tests/Unit/InfoIconTest.php` vérifie que chaque cas pointe vers un composant
+qui **existe sur le disque** : une icône sans fichier rendrait une entrée sans
+glyphe, sans erreur.
+
+> Les cinq glyphes sont des **redessins**. La maquette référence un jeu tiers
+> dont le projet n'a pas les fichiers — à remplacer par les assets du designer.
+
 ### Ce qui suit le nombre d'entrées
 
 - **Rail de visuels** : plus il y a de visuels, plus il défile. Rien ne plafonne
   leur nombre — voir [`../design/figma/nodes/12-207-accueil.md`](../design/figma/nodes/12-207-accueil.md).
 - **Parcours** : la numérotation et la barre de progression se déduisent du
   nombre d'étapes. En ajouter une renumérote et rééchelonne tout.
+- **Carrousel de cartes** : même règle que le rail de visuels, et le cycle
+  d'inclinaison se poursuit indéfiniment.
+- **Informations pratiques** : les filets se posent entre les entrées, jamais
+  avant la première ni après la dernière.
 
 ## Où l'on saisit : dans l'éditeur, pas dans la colonne de droite
 

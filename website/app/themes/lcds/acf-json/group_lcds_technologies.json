@@ -1,0 +1,173 @@
+{
+    "key": "group_lcds_technologies",
+    "title": "Bloc : LCDS — Carrousel de cartes",
+    "location": [
+        [
+            {
+                "param": "block",
+                "operator": "==",
+                "value": "acf/lcds-technologies"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "modified": 1788600000,
+    "fields": [
+        {
+            "key": "field_lcds_technologies_etiquette",
+            "label": "Étiquette de section",
+            "name": "etiquette",
+            "type": "text",
+            "instructions": "Libellé court, affiché en capitales. Exemple : « Les technologies ». C'est aussi le TITRE de la section dans le plan de la page.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 40,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_technologies_puce",
+            "label": "Couleur de la puce",
+            "name": "puce",
+            "type": "button_group",
+            "instructions": "Le libellé affiché est celui du client ; la valeur enregistrée reste celle du système de design.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {},
+            "default_value": "orange",
+            "allow_null": 0,
+            "other_choice": 0,
+            "layout": "horizontal",
+            "return_format": "value"
+        },
+        {
+            "key": "field_lcds_technologies_cta",
+            "label": "Bouton d'action",
+            "name": "cta",
+            "type": "link",
+            "instructions": "Laissé vide, le bouton n'est pas rendu — plutôt qu'un lien mort.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "array"
+        },
+        {
+            "key": "field_lcds_technologies_cartes",
+            "label": "Cartes",
+            "name": "cartes",
+            "type": "repeater",
+            "instructions": "Les cartes s'inclinent par cycle de trois (+2,88° / 0 / -2,88°), comme sur la maquette. Plus il y en a, plus le rail défile : rien ne plafonne leur nombre.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "collapsed": "field_lcds_technologies_titre",
+            "min": 1,
+            "max": 0,
+            "layout": "block",
+            "button_label": "Ajouter une carte",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_technologies_titre",
+                    "label": "Titre",
+                    "name": "titre",
+                    "type": "text",
+                    "instructions": "Affiché sur le visuel, et masqué quand le texte est révélé.",
+                    "required": 1,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_technologies_texte",
+                    "label": "Texte révélé",
+                    "name": "texte",
+                    "type": "wysiwyg",
+                    "instructions": "Contenu affiché par-dessus le visuel au clic sur le bouton. Sans texte, la carte n'a pas de bouton.",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "tabs": "all",
+                    "toolbar": "basic",
+                    "media_upload": 0,
+                    "delay": 0
+                },
+                {
+                    "key": "field_lcds_technologies_image",
+                    "label": "Visuel",
+                    "name": "image",
+                    "type": "image",
+                    "instructions": "Le texte alternatif se saisit dans la médiathèque, pas ici.",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "return_format": "id",
+                    "preview_size": "medium",
+                    "library": "all",
+                    "min_width": "",
+                    "min_height": "",
+                    "min_size": "",
+                    "max_width": "",
+                    "max_height": "",
+                    "max_size": "",
+                    "mime_types": ""
+                },
+                {
+                    "key": "field_lcds_technologies_ouvert",
+                    "label": "Texte révélé au chargement",
+                    "name": "ouvert",
+                    "type": "true_false",
+                    "instructions": "La maquette montre la première carte ouverte. À réserver à une seule carte.",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "message": "",
+                    "default_value": 0,
+                    "ui": 1,
+                    "ui_on_text": "Oui",
+                    "ui_off_text": "Non"
+                }
+            ]
+        }
+    ]
+}

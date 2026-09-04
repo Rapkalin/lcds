@@ -44,3 +44,43 @@
     background: color.adjust(var.$blue, $lightness: -6%);
   }
 }
+
+/* ------------------------------------------------------------------------- *
+ * Variante contournée : une seule pastille, sans glyphe. C'est le « voir le
+ * plan » des informations pratiques, mesuré 131 × 30 sur le PDF contre
+ * 321 × 30 pour la variante pleine.
+ * ------------------------------------------------------------------------- */
+.cta--outline .cta__label {
+  border: 1px solid var.$blue-light;
+  background: var.$white;
+  color: var.$blue;
+  transition: border-color 0.2s ease;
+}
+
+.cta--outline:hover .cta__label,
+.cta--outline:focus-visible .cta__label {
+  border-color: var.$blue;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ *
+ * Le libellé est en `nowrap` à la taille de la maquette, où il tient toujours.
+ * Sur une vue étroite, « voir toutes les technologies » mesure 279px et
+ * poussait la page à 345px de large pour 320 de vue — mesuré. Il peut donc
+ * revenir à la ligne, ce qui impose une hauteur libre.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
+  .cta {
+    height: auto;
+    white-space: normal;
+  }
+
+  .cta__icon {
+    flex-shrink: 0;
+  }
+
+  .cta__label {
+    padding: fn.toRem(7) fn.toRem(16);
+  }
+}

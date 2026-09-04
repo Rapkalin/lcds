@@ -16,6 +16,7 @@
 
 require_once __DIR__ . '/enums/LcdsMediaShape.php';
 require_once __DIR__ . '/enums/LcdsDotColor.php';
+require_once __DIR__ . '/enums/LcdsInfoIcon.php';
 
 if (! defined('ABSPATH')) {
     exit;
@@ -126,3 +127,16 @@ function lcds_load_dot_colors(array $field): array
     return $field;
 }
 add_filter('acf/load_field/name=puce', 'lcds_load_dot_colors');
+
+/**
+ * Alimente la liste d'icônes des informations pratiques depuis LcdsInfoIcon.
+ *
+ * @param array $field Définition du champ, telle qu'ACF la charge.
+ */
+function lcds_load_info_icons(array $field): array
+{
+    $field['choices'] = LcdsInfoIcon::choices();
+
+    return $field;
+}
+add_filter('acf/load_field/key=field_lcds_infos_icone', 'lcds_load_info_icons');

@@ -7,8 +7,11 @@
 .carousel {
   &__rail {
     display: flex;
+    align-items: center;
     gap: var.$gutter;
-    height: fn.toRem(629);
+    // Posée par le composant : 629 pour la galerie d'intro, 494 pour les cartes
+    // inclinées — dont la boîte englobante dépasse la carte de 24px.
+    height: var(--rail-height, #{fn.toRem(629)});
     margin: 0;
     // Le reliquat de 36px que la maquette dessine en bout de rail — sur les DEUX
     // carrousels — est une respiration, pas une image : un cadre de 36 × 629
@@ -116,6 +119,25 @@
   // Les deux flèches de la maquette sont l'image miroir l'une de l'autre.
   &__button--next .icon-arrow {
     transform: scaleX(-1);
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Variante « cartes » : les éléments sont inclinés, et pas de la même façon.
+ *
+ * L'inclinaison vient du composant, en variable : une seule règle sert les
+ * trois positions du cycle.
+ *
+ * Elle n'est PAS retirée sous `prefers-reduced-motion` : cette préférence
+ * concerne le mouvement, et une inclinaison fixe n'en est pas un. La retirer
+ * aurait écarté la maquette validée pour une demande que l'utilisateur n'a pas
+ * faite — et masqué au passage le cas incliné à la campagne de QA, qui tourne
+ * précisément avec cette préférence forcée.
+ * ------------------------------------------------------------------------- */
+.carousel--cards {
+  .carousel__item {
+    height: fn.toRem(470);
+    transform: rotate(var(--item-tilt, 0deg));
   }
 }
 

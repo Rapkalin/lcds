@@ -32,6 +32,23 @@ de `<body>` ne suffit pas : le logo est dans le même `<header>` que le panneau,
 il restait tabulable. Mesuré à 320px : **onze contrôles** derrière l'overlay
 étaient encore dans le parcours de tabulation.
 
+**Les cartes de technologie sont des panneaux à révéler, pas des blocs de
+texte masqués en CSS.** Même contrat que l'accordéon — `aria-expanded`,
+`aria-controls`, panneau réellement `hidden` — et le **même code**, sélectionné
+par `data-disclosure` plutôt que par une classe de composant. Deux copies de
+cette boucle auraient divergé.
+
+## Un voile ajouté hors maquette
+
+Le titre d'une carte de technologie est **blanc sur une photo fournie par un
+contributeur** : son contraste n'est pas mesurable, et une photo claire le
+rendrait illisible. `.tech-card__scrim` borne le pire cas par un dégradé sombre
+en haut de la carte.
+
+Ce n'est pas dans la maquette — le designer a choisi des photos sombres en haut.
+**À lui valider.** Sans ce voile, rien ne garantit la lisibilité dès que le
+client changera de visuel.
+
 ## Contrastes : ce qui est mesuré
 
 | Couple | Ratio | Verdict |
