@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "acf/lcds-histoire",
+    "title": "LCDS — Texte et galerie",
+    "description": "Une étiquette de section, un texte, un bouton d'action, et un rail de visuels défilable horizontalement.",
+    "category": "lcds",
+    "icon": "images-alt2",
+    "keywords": ["histoire", "galerie", "carrousel", "texte", "lcds"],
+    "supports": {
+        "align": ["full"],
+        "anchor": false,
+        "html": false,
+        "customClassName": false
+    },
+    "acf": {
+        "mode": "auto",
+        "renderTemplate": "render.php"
+    },
+    "align": "full"
+}

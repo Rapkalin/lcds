@@ -169,52 +169,27 @@ venus, jusqu'à trente jours.
 de modification du fichier. Tout nouvel asset compilé mis en file doit passer
 par elle.
 
-## Contenu de démonstration — hors dépôt
+## Contenu de démonstration
 
-Tant que la source d'édition n'est pas arbitrée, les gabarits n'ont aucun média à
-afficher et rendent des aplats. Deux fichiers **non versionnés** permettent de
-regarder le front avec du contenu :
+Le contenu de la page d'accueil est désormais **contribuable dans l'éditeur** —
+voir [`contribution.md`](contribution.md). Les gabarits ne portent plus aucune
+donnée, et le mu-plugin de démonstration qui les surchargeait a été retiré.
 
-| Fichier | Rôle |
-| --- | --- |
-| `bin/seed-demo.sh` | Extrait les visuels des PDF de maquette et les importe |
-| `website/app/mu-plugins/lcds-local-demo.php` | Les injecte dans les blocs |
+`bin/seed-demo.sh` reste utile en local : il importe dans la médiathèque les
+photos **extraites des PDF de maquette**, puis réamorce la page d'accueil pour
+les y placer — sans quoi l'aperçu de l'éditeur montrerait des cadres vides. Il
+**écrase donc le contenu saisi** dans l'éditeur.
 
 ```bash
-bin/seed-demo.sh            # amorce, ne refait rien si déjà fait
+bin/seed-demo.sh            # importe, ne refait rien si déjà fait
 bin/seed-demo.sh --force    # supprime les précédents et recommence
 ```
 
-Prérequis : `pdfimages` (poppler) et les maquettes. Le dossier est réglable par
-`LCDS_MOCKUPS_DIR`. Les identifiants sont enregistrés dans l'option
-`lcds_demo_media` — jamais dans le dépôt, un identifiant d'attachement ne voulant
-rien dire d'un environnement à l'autre.
+Prérequis : `pdfimages` (poppler) et `sips` (fourni par macOS), plus les
+maquettes — dossier réglable par `LCDS_MOCKUPS_DIR`.
 
-### Le thème n'en dépend pas
-
-C'est la condition pour pouvoir les ignorer sans rien casser. `front-page.php`
-passe ses blocs par le filtre **`lcds_front_page_blocks`**, et le mu-plugin s'y
-branche de l'extérieur. Aucun `require`, aucun appel de fonction : le thème ne
-sait pas que cet outil existe.
-
-Vérifié en déplaçant les deux fichiers hors du projet : site en 200, aucune
-erreur fatale, 1 aplat de hero et 6 aplats de carrousel à la place des visuels,
-`composer check` et la campagne de QA au vert. C'est l'état dans lequel tourne
-la CI.
-
-Ce filtre est aussi **la couture par laquelle la future source d'édition
-remplira les blocs** : ce n'est pas une prise posée pour la démo seule.
-
-### Deux garde-fous, éprouvés
-
-- **Rien ne s'affiche en production.** `wp_get_environment_type()` retombe sur
-  `production` quand rien n'est défini *et* quand la valeur n'est pas l'un des
-  quatre types reconnus. Vérifié de bout en bout.
-- **Un média supprimé retombe sur l'aplat**, l'identifiant orphelin étant écarté.
-
-> **Contrepartie de l'exclusion : ces deux fichiers disparaissent au prochain
-> clone**, et aucun coéquipier ne les reçoit. En garder une copie hors du dépôt
-> si tu ne veux pas les réécrire.
+Le script est **ignoré par git** (`.gitignore`) : il dépend de maquettes qui ne
+sont pas dans le dépôt et ne sert qu'en local.
 
 ## Compilation
 

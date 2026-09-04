@@ -89,3 +89,16 @@ a {
     padding: fn.toRem(24) fn.toRem(20);
   }
 }
+
+// Indice affiché dans l'éditeur quand un bloc n'a pas encore de contenu. Jamais
+// rendu côté visiteur : les gabarits de bloc ne l'émettent qu'en aperçu.
+.lcds-block-hint {
+  margin: 0;
+  padding: fn.toRem(24);
+  border: 1px dashed var.$blue-light;
+  border-radius: var.$radius;
+  background: var.$blue-pale;
+  color: var.$blue;
+  font-size: var.$fs-cta;
+  text-align: center;
+}

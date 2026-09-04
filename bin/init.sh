@@ -121,6 +121,16 @@ fi
 #    ACF Pro n'est pas géré par Composer (licence) : activé s'il est là, ignoré
 #    sinon — voir readme/installation.md.
 # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# 6. Page d'accueil : la page, ses quatre blocs de section, et le réglage qui la
+#    désigne comme accueil du site. Idempotent — une page déjà en place n'est
+#    jamais réécrite, le contenu d'un contributeur ne doit pas disparaître au
+#    redémarrage d'un conteneur.
+# -----------------------------------------------------------------------------
+echo "==> [init] Page d'accueil"
+wp eval-file "$APP_DIR/bin/seed-homepage.php" --allow-root || \
+    echo "!!! [init] Amorçage de la page d'accueil échoué (ignoré)."
+
 for PLUGIN in wordpress-seo advanced-custom-fields-pro; do
     if wp plugin is-installed "$PLUGIN" --allow-root 2>/dev/null; then
         wp plugin activate "$PLUGIN" --allow-root >/dev/null 2>&1 \

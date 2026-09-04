@@ -35,6 +35,15 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   en mobile, ouverture au clic, fermeture par Échap et au clic sur un lien,
   défilement bloqué, et bascule de `visibility` au bon moment.
 
+- **Aperçu dans l'éditeur** : la feuille du thème est bien servie à
+  l'administration ; chacun des quatre blocs produit un aperçu sans indice de
+  bloc vide ; chacun est en `"mode": "auto"` et rend son **formulaire dans le
+  canevas** quand il est sélectionné ; et ce formulaire ne fuit **jamais** en
+  front. Ce bloc passe par
+  WP-CLI et non par le navigateur : ouvrir wp-admin sans interface demanderait de
+  fabriquer un cookie d'authentification, hors de proportion pour ce que ça
+  prouve.
+
 ### Pourquoi un iframe
 
 `bin/qa/harness.html` charge **le site réel** dans un iframe et pilote son
@@ -103,6 +112,11 @@ volontairement le code qu'il surveille et vérifier qu'il passe au rouge.
   pixels — c'est attendu, pas un défaut.
 - **Les vrais appareils.** Aucune maquette mobile n'existe : le comportement
   mobile est une proposition.
+- **L'écran de contribution lui-même.** La campagne prouve que les styles y
+  arrivent et que les blocs y produisent leur balisage complet ; elle ne prouve
+  pas à quoi ça ressemble. L'éditeur n'exécute pas le JavaScript du thème, donc
+  le rail ne défile pas et les étapes du parcours s'y empilent — c'est le rendu
+  de repli, pas un défaut.
 
 ## Piège des outils Figma
 

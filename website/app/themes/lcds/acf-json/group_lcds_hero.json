@@ -1,0 +1,110 @@
+{
+    "key": "group_lcds_hero",
+    "title": "Bloc : LCDS — Hero",
+    "fields": [
+        {
+            "key": "field_lcds_hero_titre",
+            "label": "Titre principal (h1)",
+            "name": "titre_h1",
+            "type": "text",
+            "instructions": "Titre principal de la page. Invisible à l'écran — la maquette n'en prévoit aucun dans le hero — mais lu par les moteurs de recherche et les lecteurs d'écran. Y placer l'expression clé, par exemple « Cabinet d'orthodontie à Vienne ».",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_hero_visuel",
+            "label": "Visuel de fond",
+            "name": "visuel",
+            "type": "image",
+            "instructions": "Photographie pleine largeur. Cadrée automatiquement : prévoir un sujet centré.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "library": "all",
+            "preview_size": "medium",
+            "min_width": 1440,
+            "min_height": "",
+            "mime_types": "jpg,jpeg,png,webp"
+        },
+        {
+            "key": "field_lcds_hero_vignette",
+            "label": "Vignette de la carte",
+            "name": "carte_vignette",
+            "type": "image",
+            "instructions": "Petite image carrée affichée dans la carte d'appel.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "library": "all",
+            "preview_size": "thumbnail",
+            "mime_types": "jpg,jpeg,png,webp"
+        },
+        {
+            "key": "field_lcds_hero_lien",
+            "label": "Lien de la carte",
+            "name": "carte_lien",
+            "type": "link",
+            "instructions": "Le TEXTE du lien sert de libellé à la carte (« Prendre RDV »), son URL de destination.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "array"
+        },
+        {
+            "key": "field_lcds_hero_texte",
+            "label": "Phrase de la carte",
+            "name": "carte_texte",
+            "type": "textarea",
+            "instructions": "Deux lignes au maximum : au-delà, la carte s'allonge et déséquilibre le visuel.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 120,
+            "rows": 3,
+            "new_lines": ""
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "block",
+                "operator": "==",
+                "value": "acf/lcds-hero"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "modified": 1788515216
+}

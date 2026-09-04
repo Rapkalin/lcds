@@ -12,17 +12,12 @@ if (!function_exists('theme_lcds_setup')) {
         // Les emplacements de menu sont déclarés dans inc/menus.php, à partir
         // de l'enum LcdsMenuLocation.
 
-        add_filter('use_block_editor_for_post', 'desactivate_gutemberg_pages', 10, 2);
+        // L'éditeur de blocs N'EST PLUS désactivé : la contribution du site repose
+        // sur des blocs (`blocks/`, voir inc/blocks.php). Le filtre
+        // `use_block_editor_for_post` qui le coupait a été retiré le 04/09/2026.
         show_admin_bar(false);
     }
     add_action('after_setup_theme', 'theme_lcds_setup');
-}
-
-if (!function_exists('desactivate_gutemberg_pages')) {
-    function desactivate_gutemberg_pages(bool $use_block_editor, \WP_Post $post): bool
-    {
-        return false;
-    }
 }
 
 if (!function_exists('theme_lcds_title_separator')) {

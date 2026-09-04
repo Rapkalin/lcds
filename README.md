@@ -46,6 +46,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Tokens, grille, polices, invalidation des assets | [`readme/front.md`](readme/front.md) |
 | Images : conversion WebP et helper d'affichage | [`readme/images.md`](readme/images.md) |
 | Relevés Figma : protocole et cache des maquettes | [`design/figma/README.md`](design/figma/README.md) |
+| Contribution : blocs, champs, page d'accueil | [`readme/contribution.md`](readme/contribution.md) |
 | Menus : emplacements et création automatique | [`readme/menus.md`](readme/menus.md) |
 | Yoast, indexation, SEO technique | [`readme/seo.md`](readme/seo.md) |
 | Pint, PHPCS, PHPStan, Pest | [`readme/qualite-code.md`](readme/qualite-code.md) |

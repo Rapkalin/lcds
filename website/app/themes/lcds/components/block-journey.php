@@ -18,8 +18,7 @@
  *   dot   string  Couleur de la puce de l'étiquette.
  *   steps array   Une entrée par étape :
  *                   title    string  Titre de l'étape.
- *                   text     array   Blocs : une chaîne pour un paragraphe, un
- *                                    tableau pour une liste de lignes.
+ *                   text     string  Contenu riche : paragraphes et listes.
  *                   duration string  Durée indicative, facultative.
  *                   images   array   Cadres : chacun `width` en pixels, et
  *                                    `image` (identifiant d'attachement).
@@ -64,7 +63,7 @@ foreach ($steps as $index => $step) {
         // Numéroté à partir de 1 et sur deux chiffres, comme sur la maquette.
         'number' => str_pad((string) ((int) $index + 1), 2, '0', STR_PAD_LEFT),
         'title' => $title,
-        'text' => isset($step['text']) && is_array($step['text']) ? $step['text'] : [],
+        'text' => isset($step['text']) ? (string) $step['text'] : '',
         'duration' => isset($step['duration']) ? (string) $step['duration'] : '',
         'medias' => $medias,
     ];
@@ -99,17 +98,7 @@ $total = count($rows);
                             <h2 class="journey__title"><?php echo esc_html($row['title']); ?></h2>
 
                             <div class="journey__text">
-                                <?php foreach ($row['text'] as $block) : ?>
-                                    <?php if (is_array($block)) : ?>
-                                        <ul>
-                                            <?php foreach ($block as $line) : ?>
-                                                <li><?php echo esc_html((string) $line); ?></li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    <?php else : ?>
-                                        <p><?php echo esc_html((string) $block); ?></p>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
+                                <?php echo wp_kses_post($row['text']); ?>
                             </div>
 
                             <?php if ($row['duration'] !== '') : ?>

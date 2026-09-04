@@ -7,7 +7,8 @@
  * Arguments (via get_template_part) :
  *   label      string  Libellé de l'étiquette.
  *   dot        string  Couleur de la puce de l'étiquette.
- *   paragraphs array   Paragraphes, un par entrée.
+ *   text       string  Contenu riche (paragraphes). Assaini par wp_kses_post :
+ *                      c'est de la saisie de contributeur.
  *   cta        array   Arguments du bouton d'action (label, url).
  *   gallery    array   Arguments du carrousel (items, label). Absent : pas de
  *                      rail rendu.
@@ -21,7 +22,7 @@ if (! defined('ABSPATH')) {
 
 $label = isset($args['label']) ? (string) $args['label'] : '';
 $dot = isset($args['dot']) ? (string) $args['dot'] : 'turquoise';
-$paragraphs = isset($args['paragraphs']) && is_array($args['paragraphs']) ? $args['paragraphs'] : [];
+$text = isset($args['text']) ? (string) $args['text'] : '';
 $cta = isset($args['cta']) && is_array($args['cta']) ? $args['cta'] : [];
 $gallery = isset($args['gallery']) && is_array($args['gallery']) ? $args['gallery'] : [];
 ?>
@@ -34,9 +35,7 @@ $gallery = isset($args['gallery']) && is_array($args['gallery']) ? $args['galler
 
         <div class="block-intro__content">
             <div class="block-intro__text">
-                <?php foreach ($paragraphs as $paragraph) : ?>
-                    <p><?php echo esc_html((string) $paragraph); ?></p>
-                <?php endforeach; ?>
+                <?php echo wp_kses_post($text); ?>
             </div>
 
             <?php get_template_part('components/cta', null, $cta); ?>

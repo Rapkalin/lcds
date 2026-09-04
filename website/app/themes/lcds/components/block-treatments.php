@@ -11,7 +11,8 @@
  * Arguments (via get_template_part) :
  *   label string  Libellé de l'étiquette.
  *   dot   string  Couleur de la puce de l'étiquette.
- *   items array   Une entrée par traitement : title, text, open (booléen).
+ *   items array   Une entrée par traitement : title, text (contenu riche),
+ *                 open (booléen).
  *   cta   array   Arguments du bouton d'action.
  *
  * @package lcds
@@ -73,9 +74,7 @@ if ($rows === []) {
                         </h2>
 
                         <div class="accordion__panel" id="<?php echo esc_attr($row['id']); ?>" <?php echo $row['open'] ? '' : 'hidden'; ?>>
-                            <?php if ($row['text'] !== '') : ?>
-                                <p><?php echo esc_html($row['text']); ?></p>
-                            <?php endif; ?>
+                            <?php echo wp_kses_post($row['text']); ?>
                         </div>
                     </li>
                 <?php endforeach; ?>

@@ -133,6 +133,109 @@ report() {
     return 0
 }
 
+# L'aperçu de l'éditeur est le SEUL rendu que voit un contributeur. Deux choses
+# le conditionnent, et aucune n'est visible depuis le front : la feuille du thème
+# doit être servie à l'administration, et les blocs doivent produire quelque
+# chose en mode `preview`. Vérifié par WP-CLI, faute d'accès authentifié à
+# wp-admin depuis un navigateur sans interface.
+check_editor_preview() {
+    local out
+
+    out="$(cd "$ROOT" && docker compose exec -T php wp eval '
+require_once ABSPATH . "wp-admin/includes/admin.php";
+
+$page_id = (int) get_option("page_on_front");
+$post = get_post($page_id);
+
+if (! $post instanceof WP_Post) {
+    echo "FAIL|aucune page d\x27accueil|\n";
+
+    return;
+}
+
+$context = new WP_Block_Editor_Context(["name" => "core/edit-post", "post" => $post]);
+$settings = get_block_editor_settings(get_default_block_editor_settings(), $context);
+$octets = 0;
+
+foreach ($settings["styles"] ?? [] as $style) {
+    $css = (string) ($style["css"] ?? "");
+
+    if (str_contains($css, ".hero") && str_contains($css, ".journey")) {
+        $octets = strlen($css);
+    }
+}
+
+printf(
+    "%s|feuille du theme servie a l editeur|%d octets\n",
+    $octets > 0 ? "PASS" : "FAIL",
+    $octets,
+);
+
+$fuite = 0;
+
+foreach (parse_blocks($post->post_content) as $block) {
+    if (empty($block["blockName"])) {
+        continue;
+    }
+
+    $nom = str_replace("acf/lcds-", "", (string) $block["blockName"]);
+    $type = WP_Block_Type_Registry::get_instance()->get_registered((string) $block["blockName"]);
+    $mode = $type->mode ?? null;
+
+    // Bloc non sélectionné : l aperçu. C est ce que voit le contributeur qui
+    // parcourt la page.
+    $apercu = trim(acf_rendered_block($block["attrs"], "", true, $page_id));
+    $indices = substr_count($apercu, "lcds-block-hint");
+    $formulaire_en_apercu = str_contains($apercu, "acf-block-fields");
+
+    // Bloc sélectionné : le mode `auto` bascule sur `edit`, et ACF rend son
+    // formulaire DANS le canevas plutôt que dans la colonne de droite. C est le
+    // seul emplacement qu il sait servir hors de l inspecteur — vérifié dans
+    // son JS livré.
+    $attrs = $block["attrs"];
+    $attrs["mode"] = "edit";
+    $forme = acf_rendered_block($attrs, "", true, $page_id);
+    $champs = substr_count($forme, "class=\"acf-field ");
+
+    printf(
+        "%s|apercu du bloc %s|%d octets, %d indice(s) de bloc vide\n",
+        $apercu !== "" && $indices === 0 && ! $formulaire_en_apercu ? "PASS" : "FAIL",
+        $nom,
+        strlen($apercu),
+        $indices,
+    );
+
+    printf(
+        "%s|formulaire du bloc %s dans le canevas|mode %s, %d champs\n",
+        $mode === "auto" && str_contains($forme, "acf-block-fields") && $champs > 0 ? "PASS" : "FAIL",
+        $nom,
+        var_export($mode, true),
+        $champs,
+    );
+
+    $fuite += substr_count(apply_filters("the_content", $post->post_content), "acf-block-fields");
+}
+
+printf(
+    "%s|aucun formulaire ACF en front|%d occurrence(s)\n",
+    $fuite === 0 ? "PASS" : "FAIL",
+    $fuite,
+);
+' --allow-root 2>/dev/null | tr -d '\r')"
+
+    if [ -z "$out" ]; then
+        printf '  FAIL :: aperçu de l\x27éditeur (WP-CLI muet)\n'
+        return 1
+    fi
+
+    printf '%s\n' "$out" | while IFS='|' read -r verdict label detail; do
+        printf '  %s :: %s (%s)\n' "$verdict" "$label" "$detail"
+    done
+
+    printf '%s' "$out" | grep -q '^FAIL' && return 1
+    return 0
+}
+
 if [ "$RUN_BUILD" -eq 1 ]; then
     echo "== Compilation du front =="
     if ! (cd "$ROOT" && docker compose run --rm node npm run build > "$SCRATCH/build.log" 2>&1); then
@@ -154,6 +257,9 @@ check_asset_version "version du script" "main.js" "main\.js?ver=[0-9]*" || FAILU
 
 cp "$ROOT/bin/qa/harness.html" "$DIST/$HARNESS_NAME"
 cp "$ROOT/bin/qa/$DRIVER_NAME" "$DIST/$DRIVER_NAME"
+
+echo "== Aperçu dans l'éditeur =="
+check_editor_preview || FAILURES=$((FAILURES + 1))
 
 for width in 1440 500; do
     echo "== En-tête à ${width}px =="

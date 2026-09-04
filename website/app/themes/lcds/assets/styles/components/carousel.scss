@@ -10,7 +10,12 @@
     gap: var.$gutter;
     height: fn.toRem(629);
     margin: 0;
-    padding: 0;
+    // Le reliquat de 36px que la maquette dessine en bout de rail — sur les DEUX
+    // carrousels — est une respiration, pas une image : un cadre de 36 × 629
+    // rempli d'une photo n'est qu'une lamelle, et se lit comme un visuel
+    // tronqué. Il devient donc un retrait, et le rail ne porte que de vraies
+    // images.
+    padding: 0 fn.toRem(36) 0 0;
     overflow-x: auto;
     // Empêche le geste de déborder sur l'historique de navigation.
     overscroll-behavior-x: contain;

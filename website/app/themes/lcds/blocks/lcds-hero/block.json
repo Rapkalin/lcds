@@ -1,0 +1,22 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "acf/lcds-hero",
+    "title": "LCDS — Hero",
+    "description": "Visuel pleine largeur avec une carte d'appel en bas à droite. Porte aussi le titre principal (h1) de la page.",
+    "category": "lcds",
+    "icon": "cover-image",
+    "keywords": ["hero", "banniere", "accueil", "visuel", "lcds"],
+    "supports": {
+        "align": ["full"],
+        "anchor": false,
+        "html": false,
+        "customClassName": false,
+        "multiple": false
+    },
+    "acf": {
+        "mode": "auto",
+        "renderTemplate": "render.php"
+    },
+    "align": "full"
+}

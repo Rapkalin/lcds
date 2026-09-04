@@ -44,7 +44,7 @@ conséquence.
   collé aux 1440 — **plein-bord droit assumé**. Ses enfants vont jusqu'à
   `x = 2698`, soit plus du double de la largeur visible.
   Largeurs : 892, 553 (scindé en deux de 309,5), 666, 503, puis un reliquat de
-  36 px qui sert d'amorce visuelle.
+  36 px — voir ci-dessous.
 - `Frame 39` : les contrôles, 1118 de large.
   - piste de progression à `y=25`, haute de 2 px : un segment plein de 162 px
     puis un segment de 52 px à `x=214` ;
@@ -149,3 +149,36 @@ gênant qu'une page longue.
 
 **La page d'accueil n'a aucun `h1`.** Les titres de l'accordéon sont des `h2`,
 et rien ne les précède : le hero ne porte pas de texte. À trancher.
+
+## Le reliquat de 36px n'est pas une image
+
+La maquette termine le rail par un cadre de **36 × 629**, et fait de même sur le
+carrousel Technologies des blocs de fin. Il est posé à `x = 2662`, donc
+entièrement hors de la planche de 1440 : **son remplissage est invisible dans le
+PDF**, on ne peut pas savoir ce que le designer y mettait.
+
+Rempli d'une photo avec `object-fit: cover`, un cadre de 36 × 629 ne donne qu'une
+lamelle verticale — et se lit comme **un visuel tronqué**. C'est ce qui a été
+signalé comme bug.
+
+**Retenu : une respiration en fin de course**, implémentée en `padding-right`
+sur le rail. Le rail ne porte donc que de vraies images, et la largeur totale
+dessinée est préservée.
+
+À appliquer de la même façon au carrousel Technologies.
+
+### Le contrat du rail
+
+Vérifié, et verrouillé par trois assertions de [`../../../readme/qa.md`](../../../readme/qa.md) :
+
+| | 4 visuels | 6 visuels |
+| --- | --- | --- |
+| Somme + gouttières | 2650 | 3734 |
+| `scrollWidth` | 2686 | 3770 |
+| Course de défilement | 1407 | 2491 |
+| Dernier visuel | entier, 36px de marge | entier, 36px de marge |
+
+**Plus il y a d'images, plus on défile** — rien ne plafonne leur nombre, et
+aucune n'est tronquée. L'outil de démonstration local boucle d'ailleurs sur ses
+emplacements pour la même raison : ajouter un visuel ne doit pas le laisser sans
+photo.

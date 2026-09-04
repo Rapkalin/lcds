@@ -105,6 +105,35 @@ window.runFrontQa = async (win) => {
         assert(`précédent recule d'une page (${Math.round(rail.scrollLeft)})`,
             Math.abs(rail.scrollLeft - (furthest - page)) < 2);
 
+        // La course doit valoir la somme des visuels, et rien ne doit plafonner
+        // leur nombre : plus il y a d'images, plus on défile.
+        const cadres = [...rail.querySelectorAll(".carousel__item")];
+        const largeurs = cadres.map((node) => node.getBoundingClientRect().width);
+        const attendu =
+            largeurs.reduce((total, largeur) => total + largeur, 0) +
+            (cadres.length - 1) * 12 +
+            parseFloat(win.getComputedStyle(rail).paddingRight);
+
+        assert(
+            `course = somme des visuels + respiration (${rail.scrollWidth} / ${Math.round(attendu)})`,
+            Math.abs(rail.scrollWidth - attendu) < 2
+        );
+        // Un cadre étroit rempli d'une photo se lit comme un visuel tronqué :
+        // le reliquat de 36px de la maquette est une respiration, pas une image.
+        assert(
+            `aucun visuel étroit (${largeurs.map((l) => Math.round(l)).join("/")})`,
+            largeurs.every((largeur) => largeur >= 100)
+        );
+
+        rail.scrollTo({ left: rail.scrollWidth, behavior: "auto" });
+        await tick();
+        const fin = cadres[cadres.length - 1].getBoundingClientRect();
+        const bord = rail.getBoundingClientRect().right;
+        assert(
+            `dernier visuel entier en fin de course (respiration ${Math.round(bord - fin.right)}px)`,
+            fin.right <= bord + 1 && Math.round(bord - fin.right) === 36
+        );
+
         rail.scrollTo({ left: 0, behavior: "auto" });
         await tick();
     }
@@ -122,16 +151,28 @@ window.runFrontQa = async (win) => {
         assert(`colonne : 666 de large (${round(first.width)})`, round(first.width) === 666);
         assert(`bouton : 52 et calé à droite (${round(icon.left)})`,
             round(icon.width) === 52 && round(icon.left) === 1227);
-        // Mesurés depuis le haut de la section, et non depuis celui du document :
-        // la hauteur du hero dépend de la vue, donc les positions absolues de
-        // tout ce qui suit aussi. La bordure entre dans la boîte, le filet est
-        // donc AU sommet de l'élément.
-        const section = doc.querySelector(".block-treatments");
-        const depuisSection = (node) => offsetTop(node) - offsetTop(section);
+        // Le RYTHME, et non des positions absolues : depuis que le contenu est
+        // contribuable, la hauteur d'une entrée dépend de ce qu'on y saisit.
+        // Une assertion sur des y absolus mesurait le contenu, pas le CSS —
+        // elle est tombée dès que le panneau ouvert de la maquette a disparu du
+        // contenu semé. Ce qui doit tenir, c'est 48px de part et d'autre du
+        // filet, et aucun retrait aux extrémités.
+        const milieu = win.getComputedStyle(items[2]);
+        const premier = win.getComputedStyle(items[0]);
+        const dernier = win.getComputedStyle(items[items.length - 1]);
 
         assert(
-            `filets à 234 et 905 de la section (${depuisSection(items[1])}, ${depuisSection(items[4])})`,
-            depuisSection(items[1]) === 234 && depuisSection(items[4]) === 905
+            `entrée : 48px de part et d'autre du filet (${milieu.paddingTop}/${milieu.paddingBottom})`,
+            milieu.paddingTop === "48px" && milieu.paddingBottom === "48px"
+        );
+        assert(`filet de 1px (${milieu.borderTopWidth})`, milieu.borderTopWidth === "1px");
+        assert(
+            `première entrée sans filet ni retrait haut (${premier.borderTopWidth}/${premier.paddingTop})`,
+            premier.borderTopWidth === "0px" && premier.paddingTop === "0px"
+        );
+        assert(
+            `dernière entrée sans retrait bas (${dernier.paddingBottom})`,
+            dernier.paddingBottom === "0px"
         );
 
         const closed = [...doc.querySelectorAll(".accordion__trigger")]
