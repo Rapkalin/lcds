@@ -68,6 +68,22 @@ Vérifier la **déclaration** (`transitionProperty`, `transitionDelay`) plutôt 
 son aboutissement — c'est ce que le code doit garantir, la fin de l'animation
 étant l'affaire du navigateur.
 
+### Trois pièges du temps virtuel, tous rencontrés
+
+Le mode sans interface avance le temps sans produire d'images. D'où :
+
+1. **Le défilement animé n'avance pas.** Toujours `scrollTo({ behavior: "instant" })`
+   dans une sonde : le thème pose `scroll-behavior: smooth`, et un `scrollTo`
+   ordinaire s'arrête en chemin. Constaté : 564px atteints sur 3477 demandés.
+2. **Aucune image n'est produite si personne n'en réclame.** Tout code cadencé
+   par `requestAnimationFrame` paraît alors inerte. Le harnais entretient donc
+   deux pompes rAF, dans le parent **et** dans l'iframe — les deux sont
+   nécessaires, l'iframe seule ne suffit pas.
+3. **Le budget s'épuise vite** avec ces pompes : **un seul défilement fiable par
+   campagne.** Au second, ni évènement ni image. Préférer donc l'injection d'une
+   valeur et la mesure de ce que le CSS en fait, plutôt que le pilotage du
+   défilement.
+
 ### Ajouter une assertion
 
 Tout est dans `bin/qa/header-menu.qa.js`. La fonction reçoit la fenêtre de

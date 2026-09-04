@@ -145,8 +145,74 @@ const initAccordions = () => {
     });
 };
 
+/**
+ * Journey section: vertical scroll drives a horizontal rail.
+ *
+ * The script only ever computes one number — how far through the section we
+ * are — and hands it to CSS. The rail transform and the progress bar both read
+ * that same variable, so they cannot fall out of sync.
+ *
+ * Pinning is opt-in: the `journey--pinned` class is added here and nowhere
+ * else. Without JavaScript, or when the visitor asks for reduced motion, the
+ * steps stay stacked and every word remains reachable.
+ */
+const initJourneys = () => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    document.querySelectorAll("[data-journey]").forEach((journey) => {
+        let frame = null;
+
+        const update = () => {
+            frame = null;
+
+            if (!journey.classList.contains("journey--pinned")) {
+                return;
+            }
+
+            // La course utile : tout ce qui dépasse de la hauteur de la vue.
+            const course = journey.offsetHeight - window.innerHeight;
+
+            if (course <= 0) {
+                journey.style.setProperty("--journey-progress", "0");
+
+                return;
+            }
+
+            const travelled = -journey.getBoundingClientRect().top;
+            const progress = Math.min(1, Math.max(0, travelled / course));
+            journey.style.setProperty("--journey-progress", String(progress));
+        };
+
+        // Le défilement peut émettre bien plus souvent que le navigateur ne
+        // peint : on ne recalcule qu'une fois par image.
+        const schedule = () => {
+            if (frame === null) {
+                frame = window.requestAnimationFrame(update);
+            }
+        };
+
+        const apply = () => {
+            if (reduceMotion.matches) {
+                journey.classList.remove("journey--pinned");
+                journey.style.removeProperty("--journey-progress");
+
+                return;
+            }
+
+            journey.classList.add("journey--pinned");
+            update();
+        };
+
+        apply();
+        reduceMotion.addEventListener("change", apply);
+        window.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule);
+    });
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initCarousels();
     initAccordions();
+    initJourneys();
 });

@@ -132,6 +132,60 @@ window.runFrontQa = async (win) => {
             closed.getAttribute("aria-expanded") === "false" && panel.hidden === true);
     }
 
+    // Section parcours.
+    //
+    // La campagne force la réduction d'animations : le comportement ATTENDU est
+    // donc l'empilement, pas l'épinglage. C'est le repli accessible, et il vaut
+    // d'être vérifié — c'est aussi le rendu obtenu sans JavaScript.
+    //
+    // La mécanique épinglée est éprouvée autrement : on injecte l'avancement et
+    // on mesure ce que le CSS en fait. Cela couvre la seule partie où une erreur
+    // est probable — les deux formules — sans dépendre du défilement, dont le
+    // pilotage n'est pas fiable sous temps virtuel.
+    const journey = doc.querySelector("[data-journey]");
+
+    if (journey !== null && win.innerWidth === 1440) {
+        const round = (value) => Math.round(value);
+        const rect = (selector) => doc.querySelector(selector).getBoundingClientRect();
+        const barre = rect(".journey__progress");
+
+        assert(
+            "parcours empilé quand les animations sont réduites",
+            !journey.classList.contains("journey--pinned")
+        );
+        assert(`barre : x = 613 (${round(barre.left)})`, round(barre.left) === 613);
+        assert(`barre : largeur = 666 (${round(barre.width)})`, round(barre.width) === 666);
+        assert(`numéro : x = 613 (${round(rect(".journey__number").left)})`,
+            round(rect(".journey__number").left) === 613);
+        assert(`corps : x = 726, largeur = 553 (${round(rect(".journey__body").left)}/${round(rect(".journey__body").width)})`,
+            round(rect(".journey__body").left) === 726 && round(rect(".journey__body").width) === 553);
+        // Hauteur-indépendant : le retrait de section suit la hauteur de la vue,
+        // mais l'écart entre la barre et le titre vaut toujours 1 + 48.
+        assert(`titre : 49px sous la barre (${round(rect(".journey__title").top - barre.top)})`,
+            round(rect(".journey__title").top - barre.top) === 49);
+        assert(`six étapes (${doc.querySelectorAll(".journey__step").length})`,
+            doc.querySelectorAll(".journey__step").length === 6);
+
+        // Les deux formules, éprouvées sur trois valeurs. Le remplissage vaut
+        // (1 + p × 5) / 6, donc 1/6 au départ et non zéro : c'est la maquette.
+        journey.classList.add("journey--pinned");
+
+        for (const [progres, remplissage, vues] of [[0, 111, 0], [0.5, 388.5, 2.5], [1, 666, 5]]) {
+            journey.style.setProperty("--journey-progress", String(progres));
+            assert(
+                `avancement ${progres} : remplissage ≈ ${remplissage} (${round(rect(".journey__progress-fill").width)})`,
+                Math.abs(rect(".journey__progress-fill").width - remplissage) < 1.5
+            );
+            assert(
+                `avancement ${progres} : rail décalé de ${vues} vue(s) (${round(-rect(".journey__step").left)})`,
+                Math.abs(-rect(".journey__step").left - win.innerWidth * vues) < 2
+            );
+        }
+
+        journey.style.removeProperty("--journey-progress");
+        journey.classList.remove("journey--pinned");
+    }
+
     if (win.innerWidth > 1024) {
         assert(`rendu en mise en page desktop (${win.innerWidth}px > 1024)`, true);
         assert("bouton burger masqué en desktop", styleOf(toggle).display === "none");

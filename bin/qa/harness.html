@@ -19,6 +19,17 @@
 <script>
     window.addEventListener("load", async () => {
         const frame = document.getElementById("qa-target");
+
+        // Sous `--virtual-time-budget`, Chrome ne produit aucune image si
+        // personne n'en réclame : tout code cadencé par requestAnimationFrame
+        // — le carrousel, la section parcours — paraîtrait alors inerte. Ces
+        // deux pompes entretiennent la production, dans le parent comme dans
+        // l'iframe : les deux sont nécessaires.
+        const pompeParent = () => { requestAnimationFrame(pompeParent); };
+        const pompeCible = () => { frame.contentWindow.requestAnimationFrame(pompeCible); };
+        requestAnimationFrame(pompeParent);
+        frame.contentWindow.requestAnimationFrame(pompeCible);
+
         let out;
 
         try {

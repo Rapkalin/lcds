@@ -79,6 +79,81 @@ $treatments_block = [
     ],
 ];
 
+$journey_block = [
+    'label' => 'le parcours de soin',
+    'dot' => 'orange',
+    'steps' => [
+        [
+            'title' => 'Première consultation',
+            'text' => [
+                'Ce premier contact a pour but de faire votre connaissance, de définir vos attentes et de déterminer les objectifs de traitement réalisables en fonction de votre situation clinique actuelle.',
+                'Vous pourrez exprimer le motif de votre venue et l’orthodontiste réalisera un premier examen clinique qui permettra de déterminer si un traitement orthodontique est indiqué.',
+                'Si un traitement est envisagé, nous vous proposerons un rendez-vous afin de réaliser le bilan orthodontique, indispensable pour détailler le diagnostic et les possibilités de traitement ainsi que la durée approximative de celui-ci.',
+            ],
+            'images' => [
+                ['width' => 327, 'image' => 0],
+                ['width' => 214, 'image' => 0],
+            ],
+        ],
+        [
+            'title' => 'Bilan orthodontique',
+            'duration' => '30 min',
+            'text' => [
+                'Le bilan permettra de préciser le diagnostic, les objectifs thérapeutiques, le type d’appareillage le plus indiqué et la durée du traitement.',
+                'Lors de ce bilan, nous réaliserons :',
+                [
+                    'Des photos du visage et intra-buccale',
+                    'Des empreintes numériques pour réaliser un moulage d’étude',
+                    'Des clichés radiographiques (panoramique dentaire et téléradiographie de profil/face)',
+                ],
+            ],
+            'images' => [
+                ['width' => 214, 'image' => 0],
+                ['width' => 327, 'image' => 0],
+            ],
+        ],
+        [
+            'title' => 'Compte-rendu',
+            'duration' => '45 min',
+            'text' => [
+                'Au terme du bilan orthodontique, l’analyse des différents éléments du dossier orthodontique permettent d’établir un plan de traitement précis, qui sera donc abordé au rendez-vous de compte-rendu. Des documents vous seront fournis également (le devis précis comportant la durée du traitement et le type d’appareillage choisit ainsi que la demande d’entente préalable pour les patients de moins de 16 ans).',
+            ],
+            'images' => [
+                ['width' => 327, 'image' => 0],
+            ],
+        ],
+        [
+            'title' => 'Pose de l’appareillage',
+            'text' => [
+                'Pour l’appareil multi-attaches, l’orthodontiste place un écarteur afin d’écarter les lèvres et avoir une bonne visibilité sur les dents. Après un nettoyage des dents, un gel est appliqué sur chaque dent afin de les rendre un peu rugueuse, ce qui permettra à la colle qui fixe les brackets de mieux s’accrocher. Puis chaque bracket sera collé sur les dents, qui seront ensuite reliés par un fil.',
+            ],
+            'images' => [
+                ['width' => 214, 'image' => 0],
+                ['width' => 327, 'image' => 0],
+            ],
+        ],
+        [
+            'title' => 'Rendez-vous de suivi de contrôle et d’activations',
+            'text' => [
+                'Ce sont des rendez-vous de routine qui se répèteront environ toutes les 5 à 10 semaines. C’est lors de ces rendez-vous que l’orthodontiste change l’arc, effectue des activations d’autres appareils.',
+            ],
+            'images' => [
+                ['width' => 214, 'image' => 0],
+                ['width' => 327, 'image' => 0],
+            ],
+        ],
+        [
+            'title' => 'Dépose de l’appareil et contention',
+            'text' => [
+                'C’est lors de ce rendez-vous que l’appareil est enlevé. Ce n’est pas pour ça que le traitement s’arrête brutalement, bien au contraire.',
+                'Le travail de stabilisation du résultat commence avec la mise en place d’une contention permanente ou amovible (fil de contention collé sur la face interne des dents et/ou gouttière en port nocturne)',
+                'La contention est obligatoire après le traitement d’orthodontie, surtout la première année suivant la dépose de votre appareil.',
+                'Après l’alignement, les dents ont toujours tendance à revenir en position initiale. De plus, les dents bougent tout au long de la vie sous pression de la langue, des lèvres, des joues et elles se déplacent naturellement vers l’avant avec l’âge, d’où l’importance de la contention.',
+            ],
+        ],
+    ],
+];
+
 /**
  * Un filtre peut retirer une clé : chaque bloc retombe alors sur un tableau vide,
  * donc sur ses valeurs de repli, plutôt que sur une erreur.
@@ -89,11 +164,13 @@ $blocks = apply_filters('lcds_front_page_blocks', [
     'hero' => $hero_block,
     'intro' => $intro_block,
     'treatments' => $treatments_block,
+    'journey' => $journey_block,
 ]);
 
 $hero_block = $blocks['hero'] ?? [];
 $intro_block = $blocks['intro'] ?? [];
 $treatments_block = $blocks['treatments'] ?? [];
+$journey_block = $blocks['journey'] ?? [];
 
 get_header();
 ?>
@@ -102,6 +179,7 @@ get_header();
     <?php get_template_part('components/hero', null, $hero_block); ?>
     <?php get_template_part('components/block-intro', null, $intro_block); ?>
     <?php get_template_part('components/block-treatments', null, $treatments_block); ?>
+    <?php get_template_part('components/block-journey', null, $journey_block); ?>
 </main>
 
 <?php
