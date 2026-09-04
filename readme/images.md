@@ -1,5 +1,22 @@
 # Images (WebP)
 
+## Texte alternatif
+
+**Il vit dans la médiathèque, et nulle part ailleurs.** `lcds_render_image()` ne
+passe pas d'`alt` à `wp_get_attachment_image()`, qui va donc lire
+`_wp_attachment_image_alt` sur l'attachement. Renseigner le champ « Texte
+alternatif » d'un média suffit : toutes ses apparitions dans le site en héritent.
+
+> **Ne jamais repasser `'alt' => ''` depuis un composant.** C'était le cas des
+> quatre appelants, et ça rendait **les 16 images de la page d'accueil
+> décoratives d'office** — un contributeur n'avait aucun moyen de décrire une
+> image. Une assertion de `bin/qa-front.sh` fait maintenant échouer la campagne
+> si un composant le refait.
+
+Une image dont l'alternative n'est pas saisie sort en `alt=""`, donc décorative.
+C'est le comportement voulu : la décision appartient au contributeur, pas au
+gabarit. Le hero et les visuels d'étape sont dans ce cas par défaut.
+
 Le site sert ses images en **WebP** par deux briques complémentaires, reprises du
 socle Steamulo (game-france).
 

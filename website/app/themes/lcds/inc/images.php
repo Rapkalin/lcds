@@ -50,6 +50,12 @@ function lcds_render_image(int|array|string $image, array $attr = [], string $si
         return '';
     }
 
+    // `alt` par défaut UNIQUEMENT sur cette branche : sans attachement, il n'y a
+    // aucun texte alternatif à aller chercher. Sur la branche attachement,
+    // wp_get_attachment_image() lit `_wp_attachment_image_alt` dès qu'on ne le
+    // lui impose pas — c'est ce qui rend l'alternative contribuable depuis la
+    // médiathèque. Ne JAMAIS y passer 'alt' => '' : toutes les images du site
+    // redeviendraient décoratives d'office.
     $attr = array_merge(['loading' => 'lazy', 'decoding' => 'async', 'alt' => ''], $attr);
     $html = '<img src="' . esc_url($url) . '"';
 

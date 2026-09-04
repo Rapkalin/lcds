@@ -50,6 +50,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Menus : emplacements et création automatique | [`readme/menus.md`](readme/menus.md) |
 | Yoast, indexation, SEO technique | [`readme/seo.md`](readme/seo.md) |
 | Pint, PHPCS, PHPStan, Pest | [`readme/qualite-code.md`](readme/qualite-code.md) |
+| Accessibilité : RGAA, contrastes, décisions | [`readme/accessibilite.md`](readme/accessibilite.md) |
 | QA : portes à passer, campagne front | [`readme/qa.md`](readme/qa.md) |
 | Workflows GitHub Actions | [`readme/ci-cd.md`](readme/ci-cd.md) |
 | Déploiement, `shared/`, plugins payants, rollback | [`readme/deploiement.md`](readme/deploiement.md) |

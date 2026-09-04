@@ -103,12 +103,12 @@ body:has(.hero) .site-header {
 }
 
 .site-header__cta a {
-  background: var.$orange;
+  background: var.$orange-on-text;
   color: var.$white;
 
   &:hover,
   &:focus-visible {
-    background: color.adjust(var.$orange, $lightness: -8%);
+    background: color.adjust(var.$orange-on-text, $lightness: -8%);
   }
 }
 

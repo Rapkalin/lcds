@@ -8,6 +8,12 @@
 $blue: #00387a;
 $turquoise: #048b8c;
 $orange: #e25304;
+// Même orange, assombri pour porter du texte blanc. `$orange` mesure 3,84:1
+// contre du blanc : conforme pour un objet graphique (seuil 3), en échec pour
+// du texte de moins de 24px (seuil 4,5). Cette variante atteint 5,17:1.
+// À FAIRE ARBITRER PAR LE DESIGN : idéalement la bibliothèque Figma porte les
+// deux teintes, l'une pour les aplats, l'autre pour les fonds de texte.
+$orange-on-text: #c43f04;
 $blue-pale: #f2f8ff;
 // Bordures et pistes inactives. Relevé au pixel sur les maquettes PDF, mais
 // ABSENT des variables de bibliothèque Figma : à faire promouvoir côté design,

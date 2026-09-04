@@ -9,7 +9,16 @@
   height: 100dvh;
   color: var.$blue;
 
+  // Le titre domine, le code numérique l'accompagne : c'est « Page introuvable »
+  // qui porte le sens, le 404 n'est plus qu'un repère technique — il est en
+  // aria-hidden dans le gabarit.
   h1 {
     font-size: var.$fs-h2;
+  }
+
+  .notfound-code {
+    margin-bottom: fn.toRem(8);
+    font-family: var.$font-title;
+    font-size: var.$fs-h3;
   }
 }

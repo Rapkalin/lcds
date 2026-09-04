@@ -1,5 +1,36 @@
 # SEO
 
+## Les gabarits de titre de Yoast, et leur piège de langue
+
+Yoast écrit ses gabarits de titre dans l'option `wpseo_titles` **au moment de
+son activation**. Activé avant l'installation de son paquet de langue, il y range
+les chaînes anglaises — et installer la traduction ensuite **ne réécrit rien**.
+
+Constaté sur ce projet : `Page not found - La Clinique du Sourire`,
+`You searched for … `, plus quatre libellés de fil d'Ariane, sur un site dont
+`<html lang="fr">` et la locale valent bien `fr_FR`.
+
+Deux parades, et les deux sont en place :
+
+1. **Prévention** — `bin/init.sh` installe `wp language plugin install --all
+   fr_FR` **avant** d'activer les plugins. L'ordre est commenté sur place ;
+   l'inverser reproduit le défaut.
+2. **Rattrapage** — `lcds_reset_seo_titles()` (`inc/seo.php`), jouée par
+   `bin/init.sh` et par le workflow de déploiement.
+
+Le rattrapage est **non destructif**, et ce n'est pas une promesse : il bascule
+la locale en `en_US`, demande à Yoast ses défauts anglais, et ne retire que les
+clés dont la valeur enregistrée est *exactement* ce défaut anglais. Un gabarit
+saisi par un contributeur ne peut pas être touché — vérifié en posant un titre
+personnalisé, qui survit. Une clé retirée est recalculée par Yoast, cette fois
+traduite. Idempotent.
+
+Elle vit dans le **thème** et non dans `bin/` : l'artefact de déploiement ne
+contient que `website/`, `config/` et `wp-cli.yml`, un script de `bin/` serait
+introuvable sur le serveur.
+
+`bin/qa-front.sh` échoue si un gabarit repasse en anglais.
+
 ## Yoast SEO
 
 Le plugin **Yoast SEO** (`wpackagist-plugin/wordpress-seo`) est installé par

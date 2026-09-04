@@ -261,6 +261,13 @@ jobs:
               # Idempotent, et un menu déjà garni par un contributeur n'est
               # jamais retouché — voir readme/menus.md.
               wp eval 'lcds_seed_default_menus();' || true
+              # Les traductions des plugins ne sont pas dans l'artefact : sans
+              # elles, Yoast titre les 404 et la recherche en anglais sur un
+              # site déclaré en fr. Le script qui suit rattrape les gabarits
+              # déjà enregistrés en anglais, sans toucher à une valeur saisie
+              # par un contributeur — voir readme/seo.md.
+              wp language plugin install --all fr_FR || true
+              wp eval 'lcds_reset_seo_titles();' || true
               wp cache flush || true
               wp rewrite flush || true
               wp eval 'if (function_exists("wp_cache_clear_cache")) { wp_cache_clear_cache(); }' || true
@@ -271,3 +278,54 @@ jobs:
             # décommenter avec la commande de l'hébergeur, sinon l'ancien code
             # continue de tourner après le déploiement.
             # sudo systemctl reload php8.4-fpm
+
+      # Seul composer.lock est nécessaire ici (voir l'étape suivante) : on évite
+      # de cloner tout le dépôt pour un fichier.
+      # ⚠️ actions/checkout nettoie le workspace : ces deux étapes doivent rester
+      # les dernières du job, la release ayant déjà été envoyée par rsync.
+      - name: Récupérer composer.lock
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: composer.lock
+          sparse-checkout-cone-mode: false
+
+      # ---------------------------------------------------------------------
+      # Veille des dépendances (Watcha)
+      # ---------------------------------------------------------------------
+      # Envoie la liste des paquets réellement déployés à Watcha, qui compare
+      # chacun à la dernière version publiée et alerte le propriétaire.
+      #
+      # `composer.lock` n'est pas dans l'artefact (il ne contient que website/,
+      # config/ et wp-cli.yml) : on le récupère seul, sans cloner le dépôt.
+      #
+      # Bedrock oblige : le lock porte à la fois le cœur WordPress
+      # (johnpbloch/wordpress-core) et les extensions (wpackagist-plugin/*),
+      # donc un seul envoi décrit tout le site — WP-CLI n'est pas nécessaire.
+      #
+      # ⚠️ Un jeton par environnement : chaque envoi REMPLACE l'inventaire du
+      # site visé. Définir WATCHA_TOKEN dans les secrets de l'environnement
+      # (preprod / production), jamais au niveau du dépôt — sinon la préprod et
+      # la production s'écraseraient l'une l'autre.
+      #
+      # Configuration (Settings > Environments > <env>) :
+      #   Secret   WATCHA_TOKEN   jeton généré sur la fiche du site dans Watcha
+      #   Variable WATCHA_URL     ex. https://watcha.rapkalin.fr
+      # Tant que les deux ne sont pas définis, l'étape ne fait rien.
+      - name: Signaler l'inventaire à Watcha
+        # Le déploiement a réussi : une veille injoignable ne doit pas le
+        # marquer en échec. L'étape apparaît en orange dans l'UI, le job reste
+        # vert — l'erreur reste visible sans rien casser.
+        continue-on-error: true
+        env:
+          WATCHA_TOKEN: ${{ secrets.WATCHA_TOKEN }}
+          WATCHA_URL: ${{ vars.WATCHA_URL }}
+        run: |
+          if [ -z "$WATCHA_TOKEN" ] || [ -z "$WATCHA_URL" ]; then
+            echo "WATCHA_TOKEN ou WATCHA_URL non défini : envoi ignoré."
+            exit 0
+          fi
+          # -f : un jeton révoqué renvoie 401 ; sans lui, curl sortirait en 0 et
+          # l'inventaire vieillirait en silence tout en paraissant à jour.
+          curl -sSf -X POST "$WATCHA_URL/api/inventory" \
+            -H "Authorization: Bearer $WATCHA_TOKEN" \
+            -F "lock=@composer.lock"

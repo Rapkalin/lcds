@@ -89,6 +89,10 @@ check_asset_version() {
 
 # Chrome ne rend pas toujours la main après --dump-dom : on attend le marqueur
 # de fin dans la sortie plutôt que la fin du processus.
+#
+# La fenêtre est fixée à 1600px et la largeur éprouvée est passée à l'iframe :
+# Chrome plafonne la fenêtre à ~500px sur macOS, un --window-size=320 donnait
+# une vue de 500 — voir bin/qa/harness.html.
 dump_dom() {
     local width="$1" out="$SCRATCH/dump-$width.html" pid attempts=0
 
@@ -96,9 +100,9 @@ dump_dom() {
     # instantané, donc mesurable. Sans cela rien n'est déterministe.
     "$CHROME" --headless --disable-gpu --no-first-run --no-default-browser-check \
         --force-prefers-reduced-motion \
-        --window-size="$width,900" --virtual-time-budget=8000 --dump-dom \
+        --window-size=1600,900 --virtual-time-budget=8000 --dump-dom \
         --user-data-dir="$SCRATCH/profile-$width" \
-        "$SITE_URL/app/themes/lcds/dist/$HARNESS_NAME" > "$out" 2>/dev/null &
+        "$SITE_URL/app/themes/lcds/dist/$HARNESS_NAME?w=${width}px" > "$out" 2>/dev/null &
     pid=$!
 
     while [ "$attempts" -lt 30 ]; do
@@ -317,14 +321,53 @@ printf(
     return 0
 }
 
+# Deux vérifications qui ne se voient pas depuis le navigateur.
+check_a11y_serveur() {
+    local echecs=0 forces titres
+
+    # Le texte alternatif est une donnée de la médiathèque. Un composant qui
+    # repasse 'alt' => '' la court-circuite et rend l'image décorative d'office
+    # — constaté : les 16 images de la page d'accueil, sans exception.
+    forces="$(grep -rn "'alt' => ''" "$ROOT/website/app/themes/lcds/components" \
+        "$ROOT/website/app/themes/lcds/blocks" 2>/dev/null | wc -l | tr -d ' ')"
+
+    if [ "$forces" = "0" ]; then
+        printf '  PASS :: aucun composant ne force un alt vide\n'
+    else
+        printf '  FAIL :: %s composant(s) forcent un alt vide\n' "$forces"
+        grep -rn "'alt' => ''" "$ROOT/website/app/themes/lcds/components" \
+            "$ROOT/website/app/themes/lcds/blocks" 2>/dev/null | sed 's/^/    /'
+        echecs=$((echecs + 1))
+    fi
+
+    # Yoast range ses gabarits de titre à l'activation. Activé sans son paquet
+    # de langue, il y laisse l'anglais — « Page not found », « You searched
+    # for … » et quatre libellés de fil d'Ariane sur un site déclaré en fr.
+    titres="$(cd "$ROOT" && docker compose exec -T php wp eval \
+        'echo count(lcds_reset_seo_titles());' --allow-root 2>/dev/null | tr -d '\r')"
+
+    if [ "$titres" = "0" ]; then
+        printf '  PASS :: gabarits de titre Yoast tous traduits\n'
+    else
+        printf '  FAIL :: %s gabarit(s) de titre Yoast restes en anglais\n' "${titres:-?}"
+        echecs=$((echecs + 1))
+    fi
+
+    [ "$echecs" -eq 0 ] && return 0
+    return 1
+}
+
+echo "== Accessibilité côté serveur =="
+check_a11y_serveur || FAILURES=$((FAILURES + 1))
+
 echo "== Navigation amorcée =="
 check_menus || FAILURES=$((FAILURES + 1))
 
 echo "== Aperçu dans l'éditeur =="
 check_editor_preview || FAILURES=$((FAILURES + 1))
 
-for width in 1440 500; do
-    echo "== En-tête à ${width}px =="
+for width in 1440 500 320; do
+    echo "== Front à ${width}px =="
     report "$width" "$(dump_dom "$width")" || FAILURES=$((FAILURES + 1))
 done
 

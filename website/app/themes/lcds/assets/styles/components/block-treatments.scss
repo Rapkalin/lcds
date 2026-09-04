@@ -54,8 +54,11 @@
     }
   }
 
+  // Le niveau dit la hiérarchie, la classe dit l'apparence : l'entrée est un
+  // `h3` sous le `h2` de la section, et garde la taille relevée sur la maquette.
   &__heading {
     margin: 0;
+    font-size: var.$fs-h2;
   }
 
   &__trigger {

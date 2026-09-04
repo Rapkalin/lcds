@@ -287,5 +287,183 @@ window.runFrontQa = async (win) => {
     link.click();
     assert("le clic sur un lien ferme", !isOpen() && !hasBodyClass());
 
+    /* --------------------------------------------------------------------- *
+     * Accessibilité. Ces assertions verrouillent des défauts CONSTATÉS, pas
+     * des précautions : chacune a échoué avant son correctif.
+     * --------------------------------------------------------------------- */
+
+    // -- Contraste du texte, calculé sur les styles réels.
+    const canal = (c) => {
+        const v = c / 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    const luminance = ([r, g, b]) => 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b);
+    const contraste = (a, b) => {
+        const [haut, bas] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+        return (haut + 0.05) / (bas + 0.05);
+    };
+    const couleur = (valeur) => {
+        const trouve = /rgba?\(([^)]+)\)/.exec(valeur || "");
+
+        if (trouve === null) {
+            return null;
+        }
+
+        const parts = trouve[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+
+        return { rgb: [parts[0], parts[1], parts[2]], a: parts.length > 3 ? parts[3] : 1 };
+    };
+    const affiche = (node) => {
+        const cs = styleOf(node);
+
+        if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0) {
+            return false;
+        }
+
+        const box = node.getBoundingClientRect();
+
+        return box.width > 0 && box.height > 0;
+    };
+    // Le fond effectif : on remonte jusqu'à un aplat opaque. Une image de fond
+    // rend la mesure impossible — on écarte plutôt que de deviner.
+    const fondDe = (node) => {
+        let courant = node;
+
+        while (courant !== null && courant.nodeType === 1) {
+            const cs = styleOf(courant);
+
+            if (cs.backgroundImage !== "none") {
+                return null;
+            }
+
+            const fond = couleur(cs.backgroundColor);
+
+            if (fond !== null && fond.a === 1) {
+                return fond.rgb;
+            }
+
+            courant = courant.parentElement;
+        }
+
+        return [255, 255, 255];
+    };
+
+    const insuffisants = [];
+
+    for (const node of doc.querySelectorAll("body *")) {
+        const texte = Array.from(node.childNodes)
+            .filter((enfant) => enfant.nodeType === 3)
+            .map((enfant) => enfant.textContent.trim())
+            .join(" ")
+            .trim();
+
+        if (texte === "" || !affiche(node) || node.closest(".screen-reader-text") !== null) {
+            continue;
+        }
+
+        const cs = styleOf(node);
+        const avant = couleur(cs.color);
+        const fond = fondDe(node);
+
+        if (avant === null || avant.a < 1 || fond === null) {
+            continue;
+        }
+
+        const taille = parseFloat(cs.fontSize);
+        const grand = taille >= 24 || (Number(cs.fontWeight) >= 700 && taille >= 18.66);
+        const seuil = grand ? 3 : 4.5;
+        const mesure = contraste(avant.rgb, fond);
+
+        if (mesure < seuil) {
+            insuffisants.push(`${node.tagName.toLowerCase()} ${mesure.toFixed(2)}:1 < ${seuil}`);
+        }
+    }
+
+    // Le bouton d'action était à 3,84:1 : blanc sur l'orange de la maquette,
+    // 13px. D'où la variante assombrie $orange-on-text.
+    assert(
+        `contraste du texte (${insuffisants.length} sous le seuil${insuffisants.length === 0 ? "" : " : " + insuffisants.join(", ")})`,
+        insuffisants.length === 0
+    );
+
+    // -- Prise de focus : chaque contrôle affiché doit apparier :focus-visible.
+    const focusables = Array.from(doc.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex^="-"])'
+    )).filter(affiche);
+    const sansAnneau = focusables.filter((node) => {
+        node.focus({ preventScroll: true });
+        const apparie = node.matches(":focus-visible");
+        node.blur();
+
+        return !apparie;
+    });
+    assert(
+        `prise de focus visible sur les ${focusables.length} contrôles affichés (${sansAnneau.length} sans anneau)`,
+        sansAnneau.length === 0
+    );
+
+    // -- Alternatives : l'attribut doit EXISTER sur chaque image, et le thème ne
+    // doit plus l'imposer à vide — sinon aucune image du site ne peut être
+    // décrite depuis la médiathèque.
+    const images = Array.from(doc.querySelectorAll("img"));
+    assert(
+        `attribut alt présent sur les ${images.length} images`,
+        images.every((image) => image.hasAttribute("alt"))
+    );
+
+    // -- Plan de titres : un seul h1, aucun saut de niveau.
+    const titres = Array.from(doc.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+    const niveaux = titres.map((titre) => Number(titre.tagName[1]));
+    const sauts = niveaux.filter((niveau, index) => index > 0 && niveau > niveaux[index - 1] + 1);
+    assert(`un seul h1 (${niveaux.filter((n) => n === 1).length})`, niveaux.filter((n) => n === 1).length === 1);
+    assert(`aucun saut de niveau de titre (${sauts.length})`, sauts.length === 0);
+    // Le libellé de section EST le titre : sans lui, les titres d'items se
+    // retrouvaient en h2 frères, sans regroupement.
+    //
+    // On compte les étiquettes restées en <p>, et non celles passées en <h2> :
+    // « au moins une en h2 » passait avec deux sections sur trois corrigées —
+    // constaté en cassant volontairement une seule des trois.
+    assert(
+        `aucune étiquette de section restée hors du plan de titres (${doc.querySelectorAll("p.tag").length} en <p>)`,
+        doc.querySelectorAll("p.tag").length === 0
+    );
+
+    // -- Panneau mobile : la page derrière doit sortir du parcours de tabulation.
+    if (affiche(toggle)) {
+        toggle.click();
+
+        const horsPanneau = Array.from(doc.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex^="-"])'))
+            .filter((node) => !panel.contains(node) && node !== toggle)
+            .filter((node) => {
+                let courant = node;
+
+                while (courant !== null && courant.nodeType === 1) {
+                    const cs = styleOf(courant);
+
+                    // `inert` doit être testé explicitement : il retire du
+                    // parcours de tabulation sans toucher display ni visibility.
+                    if (cs.display === "none" || cs.visibility === "hidden"
+                        || courant.hasAttribute("hidden") || courant.hasAttribute("inert")) {
+                        return false;
+                    }
+
+                    courant = courant.parentElement;
+                }
+
+                return true;
+            });
+
+        assert(
+            `panneau ouvert : rien de la page derrière n'est tabulable (${horsPanneau.length})`,
+            horsPanneau.length === 0
+        );
+
+        toggle.click();
+        assert(
+            "panneau refermé : la page redevient tabulable",
+            doc.querySelectorAll("[inert]").length === 0
+        );
+    }
+
     return out;
 };

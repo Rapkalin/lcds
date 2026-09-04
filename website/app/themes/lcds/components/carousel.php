@@ -25,7 +25,12 @@ if (! defined('ABSPATH')) {
 }
 
 $items = isset($args['items']) && is_array($args['items']) ? $args['items'] : [];
-$label = isset($args['label']) ? (string) $args['label'] : '';
+
+// Le rail est focalisable pour être défilable au clavier : il lui faut donc un
+// nom. Un libellé vidé par un contributeur laisserait `aria-label=""`, que les
+// navigateurs traitent comme absent — d'où ce repli.
+$label = isset($args['label']) ? trim((string) $args['label']) : '';
+$label = $label === '' ? __('Galerie de visuels', 'lcds') : $label;
 
 if ($items === []) {
     return;
@@ -38,9 +43,11 @@ foreach ($items as $item) {
     $medias = [];
 
     foreach ($images as $image) {
+        // Pas d'`alt` imposé : il vient de la médiathèque. Une image sans
+        // alternative saisie est rendue décorative par WordPress, ce qui reste
+        // la décision du contributeur — voir readme/images.md.
         $medias[] = $image === 0 ? '' : lcds_render_image($image, [
             'class' => 'carousel__image',
-            'alt' => '',
         ], 'large');
     }
 
@@ -54,7 +61,8 @@ foreach ($items as $item) {
 ?>
 
 <div class="carousel" data-carousel>
-    <ul class="carousel__rail" tabindex="0" role="group" aria-label="<?php echo esc_attr($label); ?>">
+    <?php /* Pas de role="group" : il écrasait le rôle `list` du <ul>, et le nombre de visuels n'était plus annoncé. */ ?>
+    <ul class="carousel__rail" tabindex="0" aria-label="<?php echo esc_attr($label); ?>">
         <?php foreach ($rows as $row) : ?>
             <li class="carousel__item" style="--item-width: <?php echo esc_attr((string) $row['width']); ?>px">
                 <?php foreach ($row['medias'] as $media) : ?>

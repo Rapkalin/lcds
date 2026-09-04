@@ -13,6 +13,10 @@
   border: 1px solid var.$blue-light;
   border-radius: var.$radius-pill;
   color: var.$blue;
+  // Repiquées explicitement : l'étiquette est rendue en `h2` quand elle nomme
+  // une section, et hériterait alors la police de titre et la taille de `h2`
+  // posées dans basics/general.scss.
+  font-family: var.$font-body;
   font-size: var.$fs-cta;
   font-weight: var.$fw-cta;
   line-height: var.$lh-cta;

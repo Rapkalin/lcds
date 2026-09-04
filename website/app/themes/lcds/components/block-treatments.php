@@ -52,14 +52,14 @@ if ($rows === []) {
 <section class="block-treatments">
     <div class="block-treatments__inner">
         <div class="block-treatments__label">
-            <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot]); ?>
+            <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2']); ?>
         </div>
 
         <div class="block-treatments__content">
             <ul class="accordion">
                 <?php foreach ($rows as $row) : ?>
                     <li class="accordion__item">
-                        <h2 class="accordion__heading">
+                        <h3 class="accordion__heading">
                             <button
                                 class="accordion__trigger"
                                 type="button"
@@ -71,7 +71,7 @@ if ($rows === []) {
                                     <?php get_template_part('components/icon-plus'); ?>
                                 </span>
                             </button>
-                        </h2>
+                        </h3>
 
                         <div class="accordion__panel" id="<?php echo esc_attr($row['id']); ?>" <?php echo $row['open'] ? '' : 'hidden'; ?>>
                             <?php echo wp_kses_post($row['text']); ?>

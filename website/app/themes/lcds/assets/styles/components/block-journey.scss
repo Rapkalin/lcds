@@ -88,6 +88,12 @@
     grid-column: 3;
   }
 
+  // Le niveau dit la hiérarchie, la classe dit l'apparence : l'étape est un
+  // `h3` sous le `h2` de la section, et garde la taille relevée sur la maquette.
+  &__title {
+    font-size: var.$fs-h2;
+  }
+
   // Le rythme de la maquette : 24px entre un titre et son texte, 48px entre
   // deux blocs.
   &__text {

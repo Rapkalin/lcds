@@ -120,7 +120,16 @@ fi
 #    l'activation d'un plugin déjà présent sur le disque.
 #    ACF Pro n'est pas géré par Composer (licence) : activé s'il est là, ignoré
 #    sinon — voir readme/installation.md.
+#
+#    Les traductions des plugins sont installées AVANT l'activation, et cet
+#    ordre compte : Yoast écrit ses gabarits de titre par défaut au moment où
+#    il s'active. Activé sans son paquet de langue, il y range les chaînes
+#    anglaises, et installer la traduction ensuite ne réécrit rien.
 # -----------------------------------------------------------------------------
+wp language plugin install --all fr_FR --allow-root >/dev/null 2>&1 \
+    && echo "==> [init] Traductions des plugins installées." \
+    || echo "==> [init] Traductions des plugins : rien à installer."
+
 for PLUGIN in wordpress-seo advanced-custom-fields-pro; do
     if wp plugin is-installed "$PLUGIN" --allow-root 2>/dev/null; then
         wp plugin activate "$PLUGIN" --allow-root >/dev/null 2>&1 \
@@ -130,6 +139,14 @@ for PLUGIN in wordpress-seo advanced-custom-fields-pro; do
         echo "==> [init] Plugin '${PLUGIN}' absent (ignoré)."
     fi
 done
+
+# Rattrapage pour les environnements déjà installés, où l'ordre ci-dessus n'a
+# pas pu jouer : seules les valeurs identiques au défaut ANGLAIS de Yoast sont
+# retirées, un gabarit saisi par un contributeur ne peut pas être touché — voir
+# readme/seo.md.
+wp eval 'lcds_reset_seo_titles();' --allow-root >/dev/null 2>&1 \
+    && echo "==> [init] Gabarits de titre Yoast vérifiés." \
+    || echo "!!! [init] Correction des gabarits de titre échouée (ignoré)."
 
 # -----------------------------------------------------------------------------
 # 6) Navigation : les menus, leur rattachement aux emplacements, et leurs

@@ -54,7 +54,6 @@ foreach ($steps as $index => $step) {
             'width' => isset($frame['width']) ? (float) $frame['width'] : 0.0,
             'html' => $attachment === 0 ? '' : lcds_render_image($attachment, [
                 'class' => 'journey__image',
-                'alt' => '',
             ], 'large'),
         ];
     }
@@ -80,7 +79,7 @@ $total = count($rows);
     <div class="journey__viewport">
         <div class="journey__head">
             <div class="journey__label">
-                <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot]); ?>
+                <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2']); ?>
             </div>
 
             <div class="journey__progress">
@@ -95,7 +94,7 @@ $total = count($rows);
                         <p class="journey__number"><?php echo esc_html($row['number']); ?></p>
 
                         <div class="journey__body">
-                            <h2 class="journey__title"><?php echo esc_html($row['title']); ?></h2>
+                            <h3 class="journey__title"><?php echo esc_html($row['title']); ?></h3>
 
                             <div class="journey__text">
                                 <?php echo wp_kses_post($row['text']); ?>

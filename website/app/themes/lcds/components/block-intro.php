@@ -30,7 +30,7 @@ $gallery = isset($args['gallery']) && is_array($args['gallery']) ? $args['galler
 <section class="block-intro">
     <div class="block-intro__header">
         <div class="block-intro__label">
-            <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot]); ?>
+            <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2']); ?>
         </div>
 
         <div class="block-intro__content">

@@ -5,16 +5,27 @@
     <title>QA front LCDS</title>
     <style>
         html, body { margin: 0; }
-        iframe { display: block; width: 100%; height: 100vh; border: 0; }
+        iframe { display: block; width: var(--largeur, 100%); height: 100vh; border: 0; }
     </style>
 </head>
 <body>
 <!--
     Le site réel est chargé dans un iframe : les assertions portent sur la page
-    servie et sur son propre JavaScript. La largeur de la fenêtre du navigateur
-    devient celle de l'iframe, donc les media queries répondent normalement.
+    servie et sur son propre JavaScript.
+
+    La largeur vient du paramètre `w` et non de la fenêtre, et ce détour est
+    indispensable : sur macOS, Chrome PLAFONNE la fenêtre à ~500px. Un
+    `--window-size=320,900` produisait une vue de 500px, et le palier 320 de
+    WCAG 1.4.10 n'était donc jamais éprouvé — mesuré : `clientWidth 500` pour
+    une fenêtre demandée à 320.
 -->
 <iframe id="qa-target" src="/"></iframe>
+<script>
+    document.documentElement.style.setProperty(
+        "--largeur",
+        new URLSearchParams(location.search).get("w") || "100%",
+    );
+</script>
 <script src="front.qa.js"></script>
 <script>
     window.addEventListener("load", async () => {

@@ -28,14 +28,12 @@ $url = isset($args['url']) ? (string) $args['url'] : '';
 
 $background = $image === 0 ? '' : lcds_render_image($image, [
     'class' => 'hero__image',
-    'alt' => '',
     'loading' => 'eager',
     'fetchpriority' => 'high',
 ], 'full');
 
 $vignette = $thumbnail === 0 ? '' : lcds_render_image($thumbnail, [
     'class' => 'hero__thumbnail-image',
-    'alt' => '',
 ], 'medium');
 
 $card_tag = $url === '' ? 'div' : 'a';

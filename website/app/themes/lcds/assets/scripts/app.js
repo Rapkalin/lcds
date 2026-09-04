@@ -8,6 +8,13 @@ import css from "../styles/app.scss"
  *
  * The open state lives in a single place — the `is-menu-open` class on <body> —
  * which both the scroll lock and the panel visibility read from.
+ *
+ * The panel covers the page, so everything behind it is made `inert` while it
+ * is open. Without that, tabbing out of the panel walked straight into hidden
+ * content: measured at 320px, eleven controls behind the overlay were still in
+ * the tab order — the logo, the hero card, the carousel and all five accordion
+ * triggers. `inert` removes them from the tab order AND from the accessibility
+ * tree in one attribute, which is exactly the pair of effects wanted here.
  */
 const initHeaderMenu = () => {
     const toggle = document.querySelector(".site-header__toggle");
@@ -17,9 +24,31 @@ const initHeaderMenu = () => {
         return;
     }
 
+    // On remonte du panneau jusqu'à <body> en neutralisant, à chaque étage, les
+    // FRÈRES de la branche. Filtrer sur les enfants de <body> ne suffirait pas :
+    // le logo est dans le même <header> que le panneau, il resterait tabulable.
+    // Le bouton est épargné puisque c'est lui qui referme.
+    const aNeutraliser = () => {
+        const cibles = [];
+        let noeud = panel;
+
+        while (noeud !== null && noeud !== document.body && noeud.parentElement !== null) {
+            for (const frere of noeud.parentElement.children) {
+                if (frere !== noeud && !frere.contains(toggle) && frere !== toggle) {
+                    cibles.push(frere);
+                }
+            }
+
+            noeud = noeud.parentElement;
+        }
+
+        return cibles;
+    };
+
     const setOpen = (isOpen) => {
         toggle.setAttribute("aria-expanded", String(isOpen));
         document.body.classList.toggle("is-menu-open", isOpen);
+        aNeutraliser().forEach((el) => { el.inert = isOpen; });
     };
 
     const isOpen = () => toggle.getAttribute("aria-expanded") === "true";

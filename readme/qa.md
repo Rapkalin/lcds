@@ -44,6 +44,22 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   fabriquer un cookie d'authentification, hors de proportion pour ce que ça
   prouve.
 
+- **Accessibilité, à chaque largeur** : contraste du texte calculé sur les
+  styles réels ; `:focus-visible` apparié sur chaque contrôle affiché ;
+  attribut `alt` présent sur chaque image ; un seul `h1` et aucun saut de niveau
+  de titre ; aucune étiquette de section restée hors du plan de titres ; et rien
+  de la page derrière le panneau mobile qui reste tabulable.
+- **Accessibilité côté serveur** : aucun composant ne force `'alt' => ''`, et
+  aucun gabarit de titre Yoast n'est resté en anglais.
+
+### Trois largeurs, dont un vrai 320px
+
+`1440`, `500` et `320`. La largeur est passée à l'**iframe** et non à la
+fenêtre, et ce détour n'est pas un caprice : sur macOS, **Chrome plafonne la
+fenêtre à ~500px**. Un `--window-size=320,900` produisait une vue de 500 —
+mesuré, `clientWidth 500` pour 320 demandés — et le palier 320 de WCAG 1.4.10
+n'était donc jamais éprouvé.
+
 ### Pourquoi un iframe
 
 `bin/qa/harness.html` charge **le site réel** dans un iframe et pilote son
@@ -112,6 +128,11 @@ volontairement le code qu'il surveille et vérifier qu'il passe au rouge.
   pixels — c'est attendu, pas un défaut.
 - **Les vrais appareils.** Aucune maquette mobile n'existe : le comportement
   mobile est une proposition.
+- **La restitution par un lecteur d'écran.** La campagne prouve le balisage et
+  les mesures, pas ce qu'annonce VoiceOver, NVDA ou JAWS. Le RGAA exige une
+  vérification avec les technologies d'assistance : elle reste à faire.
+- **La prise de focus au clavier réel.** `:focus-visible` est apparié par focus
+  **programmatique** ; ça ne remplace pas une passe à la main.
 - **L'écran de contribution lui-même.** La campagne prouve que les styles y
   arrivent et que les blocs y produisent leur balisage complet ; elle ne prouve
   pas à quoi ça ressemble. L'éditeur n'exécute pas le JavaScript du thème, donc
