@@ -339,13 +339,42 @@ jobs:
           # que si WATCHA_BASIC existe, pour qu'une prod sans htpasswd
           # fonctionne sans changement.
           if [ -n "$WATCHA_BASIC" ]; then set -- -u "$WATCHA_BASIC"; else set --; fi
-          # Le jeton passe par X-Watcha-Token et NON par « Authorization:
-          # Bearer » : il n'existe qu'un seul en-tête Authorization, et curl
-          # abandonne silencieusement les identifiants Basic dès qu'on en
-          # fournit un explicitement. Les deux voyagent ainsi ensemble, et le
-          # même appel fonctionne que l'instance soit protégée ou non.
-          # -f : un jeton révoqué renvoie 401 ; sans lui, curl sortirait en 0 et
-          # l'inventaire vieillirait en silence tout en paraissant à jour.
-          curl -sSf "$@" -X POST "$WATCHA_URL/api/inventory" \
+
+          # Le jeton passe par X-Watcha-Token et NON par un en-tête
+          # Authorization : il n'en existe qu'un seul, et curl abandonne
+          # silencieusement les identifiants Basic dès qu'on en fournit un
+          # explicitement. Les deux voyagent ainsi ensemble, et le même appel
+          # fonctionne que l'instance soit protégée ou non.
+          #
+          # On récupère le corps et le code plutôt que d'utiliser -f : un 401 nu
+          # ne dit pas QUI refuse. Le serveur web répond en HTML, Watcha en
+          # JSON — c'est ce qui permet de nommer la cause au lieu de laisser
+          # chercher.
+          body=$(mktemp)
+          code=$(curl -sS "$@" -o "$body" -w '%{http_code}' \
+            -X POST "$WATCHA_URL/api/inventory" \
             -H "X-Watcha-Token: $WATCHA_TOKEN" \
-            -F "lock=@composer.lock"
+            -F "lock=@composer.lock") || code=000
+
+          if [ "$code" = "200" ]; then
+            cat "$body"; echo
+          else
+            echo "Envoi de l'inventaire refusé (HTTP $code)."
+            case "$code" in
+              401)
+                if head -c 200 "$body" | grep -qi '<html\|<!doctype'; then
+                  echo "→ Refus du SERVEUR WEB, pas de Watcha : vérifiez WATCHA_BASIC"
+                  echo "  (format attendu : identifiant:motdepasse)."
+                else
+                  echo "→ Refus de WATCHA : jeton inconnu ou révoqué. Régénérez-le sur la"
+                  echo "  page « Modifier » du site et mettez à jour WATCHA_TOKEN."
+                fi ;;
+              404) echo "→ Endpoint introuvable : vérifiez WATCHA_URL (sans / final)." ;;
+              413) echo "→ composer.lock trop volumineux (max 8 Mo)." ;;
+              422) echo "→ Fichier refusé : est-ce bien un composer.lock ?" ;;
+              429) echo "→ Trop d'envois pour ce site (60/heure)." ;;
+              000) echo "→ Instance injoignable : vérifiez WATCHA_URL et le réseau." ;;
+            esac
+            head -c 400 "$body"; echo
+          fi
+          rm -f "$body"
