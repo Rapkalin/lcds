@@ -48,7 +48,14 @@ window.runFrontQa = async (win) => {
         const cardBox = card.getBoundingClientRect();
         const round = (value) => Math.round(value);
 
-        assert(`hauteur du hero = 900 (${round(heroBox.height)})`, round(heroBox.height) === 900);
+        // Le hero vaut la hauteur dessinée OU celle de la vue, la plus petite :
+        // sans ce second plafond la carte d'appel passait sous la ligne de
+        // flottaison sur tout écran de moins de 900px de haut.
+        const heroAttendu = Math.min(900, win.innerHeight);
+        assert(
+            `hauteur du hero = min(900, vue) = ${heroAttendu} (${round(heroBox.height)})`,
+            round(heroBox.height) === heroAttendu
+        );
         assert(`largeur de la carte = 327 (${round(cardBox.width)})`, round(cardBox.width) === 327);
         assert(
             `carte à 48px du bord droit (${round(win.innerWidth - cardBox.right)})`,
@@ -115,9 +122,17 @@ window.runFrontQa = async (win) => {
         assert(`colonne : 666 de large (${round(first.width)})`, round(first.width) === 666);
         assert(`bouton : 52 et calé à droite (${round(icon.left)})`,
             round(icon.width) === 52 && round(icon.left) === 1227);
-        // La bordure entre dans la boîte : le filet est AU sommet de l'élément.
-        assert(`filets aux bons y (${offsetTop(items[1])}, ${offsetTop(items[4])})`,
-            offsetTop(items[1]) === 2462 && offsetTop(items[4]) === 3133);
+        // Mesurés depuis le haut de la section, et non depuis celui du document :
+        // la hauteur du hero dépend de la vue, donc les positions absolues de
+        // tout ce qui suit aussi. La bordure entre dans la boîte, le filet est
+        // donc AU sommet de l'élément.
+        const section = doc.querySelector(".block-treatments");
+        const depuisSection = (node) => offsetTop(node) - offsetTop(section);
+
+        assert(
+            `filets à 234 et 905 de la section (${depuisSection(items[1])}, ${depuisSection(items[4])})`,
+            depuisSection(items[1]) === 234 && depuisSection(items[4]) === 905
+        );
 
         const closed = [...doc.querySelectorAll(".accordion__trigger")]
             .find((node) => node.getAttribute("aria-expanded") === "false");

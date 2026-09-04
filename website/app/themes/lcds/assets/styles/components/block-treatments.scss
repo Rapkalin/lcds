@@ -12,7 +12,7 @@
     // 1118 = 440 + 12 + 666. Les parts en `fr` redonnent ces largeurs exactes
     // sans les écrire, et se répartissent proportionnellement ailleurs.
     display: grid;
-    grid-template-columns: 440fr 666fr;
+    grid-template-columns: minmax(0, 440fr) minmax(0, 666fr);
     gap: var.$gutter;
     max-width: var.$content-outer;
     margin: 0 auto;
@@ -106,11 +106,15 @@
 /* ------------------------------------------------------------------------- *
  * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
  * ------------------------------------------------------------------------- */
-@media (max-width: var.$bp-mobile) {
+// Voir block-intro : le repli intervient à 1024, avant le bloc mobile.
+@media (max-width: var.$bp-tablet) {
   .block-treatments__inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: fn.toRem(32);
   }
+}
+
+@media (max-width: var.$bp-mobile) {
 
   .accordion__item {
     padding: fn.toRem(24) 0;

@@ -4,13 +4,19 @@
 // Maquette : 1440 × 900. Le ratio fait la hauteur sur les écrans plus étroits ;
 // au-delà de 1440 la hauteur dessinée sert de plafond, sinon le hero occuperait
 // 1200px de haut sur un écran large. `object-fit` absorbe l'écart de cadrage.
+//
+// La hauteur de la VUE est le second plafond, et il est indispensable : sans lui
+// le hero gardait ses 900px sur un écran plus bas, et la carte « Prendre RDV »
+// passait sous la ligne de flottaison — mesuré à 63px de coupe sur une vue de
+// 813px, 163px sur une vue de 713px. `svh` et non `vh` : sur mobile, la barre
+// d'adresse ne doit pas rogner la carte.
 .hero {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   aspect-ratio: 16 / 10;
-  max-height: fn.toRem(900);
+  max-height: min(#{fn.toRem(900)}, 100svh);
   padding: 0 var.$header-padding fn.toRem(24);
   overflow: hidden;
 

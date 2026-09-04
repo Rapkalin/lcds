@@ -32,8 +32,19 @@ $font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
 /* FONT SIZES */
 // Toute la maquette tient sur ces quatre styles.
-$fs-h2: fn.toRem(48);
-$fs-h3: fn.toRem(24);
+//
+// Les titres sont fluides : `clamp` restitue EXACTEMENT la valeur dessinée à
+// 1440 de large, et se resserre en dessous. Sans cela un H2 gardait ses 48px
+// jusqu'à 500px de large, où un titre de trois lignes occupait presque tout
+// l'écran. Les paliers bas sont une PROPOSITION — aucune maquette mobile
+// n'existe, et la bibliothèque Figma laisse entendre qu'un style `H2/mobile`
+// est prévu : à remplacer par ses valeurs dès qu'il sera fourni.
+//
+//   48px à 1440 → 32px à 480 :  1.667vw + 1.5rem
+//   24px à 1440 → 20px à 480 : 0.4167vw + 1.125rem
+$fs-h2: clamp(#{fn.toRem(32)}, 1.667vw + #{fn.toRem(24)}, #{fn.toRem(48)});
+$fs-h3: clamp(#{fn.toRem(20)}, 0.4167vw + #{fn.toRem(18)}, #{fn.toRem(24)});
+// 16px est déjà le plancher de lisibilité : le corps de texte ne bouge pas.
 $fs-p: fn.toRem(16);
 $fs-cta: fn.toRem(13);
 
@@ -79,7 +90,12 @@ $logo-size-mobile: fn.toRem(56);
 // Boutons ronds, pastilles et piste de progression des carrousels.
 $module: fn.toRem(52);
 // Retrait vertical d'une section, et rythme interne entre ses blocs.
-$section-padding: fn.toRem(128);
+//
+// Fluide, pour la même raison que les titres : deux sections voisines cumulaient
+// 256px de vide, ce qui est disproportionné sur un écran étroit. Le plafond est
+// atteint dès 1440, où la valeur vaut EXACTEMENT les 128px dessinés — les cotes
+// relevées sur la maquette restent donc justes. Plancher à 64px sous 720.
+$section-padding: clamp(#{fn.toRem(64)}, 8.889vw, #{fn.toRem(128)});
 $block-gap: fn.toRem(80);
 $radius: fn.toRem(8);
 // Pastilles pleinement arrondies (étiquettes, badges de durée) : une valeur

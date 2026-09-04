@@ -19,7 +19,7 @@
 
   &__header {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var.$gutter;
     max-width: var.$content-width;
   }
@@ -40,13 +40,22 @@
   }
 }
 
+// Le repli en une colonne intervient à 1024 et non à 680 : entre les deux, la
+// colonne de l'étiquette reste vide pendant que le texte s'étrangle. Ce bloc
+// doit précéder celui de $bp-mobile, qui le surcharge à son tour.
+@media (max-width: var.$bp-tablet) {
+  .block-intro__header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: fn.toRem(32);
+  }
+}
+
 @media (max-width: var.$bp-mobile) {
   .block-intro {
     padding-right: fn.toRem(20);
 
     &__header {
-      grid-template-columns: 1fr;
-      gap: fn.toRem(32);
+      gap: fn.toRem(24);
     }
 
     &__content {

@@ -74,10 +74,56 @@ qui respire moins (**48px**). Les blocs de **666px** se décomposent en
 Le module de **52px** revient partout : boutons ronds, pastilles, piste de
 progression des carrousels.
 
-> **Points de rupture provisoires.** `1024px` pour l'en-tête (la navigation
-> mesure 620px et déborderait bien avant 680), `680px` pour le reste. Aucune
-> maquette mobile n'existe à ce jour : tout le comportement mobile est une
-> proposition, à revalider.
+> **Points de rupture.** `1024px` replie l'en-tête en menu burger **et** met les
+> sections en une seule colonne ; `680px` porte les derniers ajustements
+> (visuels pleine largeur, écarts resserrés). Aucune maquette mobile n'existe :
+> tout ce qui suit est une proposition, à revalider quand elles arriveront.
+
+## Ce qui s'adapte, et pourquoi
+
+Trois grandeurs sont fluides. Toutes valent **exactement la valeur dessinée à
+1440 de large** : les cotes relevées sur la maquette restent donc justes, et les
+assertions de [`qa.md`](qa.md) qui les vérifient au pixel n'ont pas bougé.
+
+| Grandeur | À 1440 | Au plancher |
+| --- | --- | --- |
+| `$fs-h2` | 48px | 32px (≤ 480) |
+| `$fs-h3` | 24px | 20px (≤ 480) |
+| `$section-padding` | 128px | 64px (≤ 720) |
+
+**Pourquoi les titres.** Un H2 figé à 48px occupait trois lignes et presque tout
+l'écran à 500px de large. La bibliothèque Figma laisse entendre qu'un style
+`H2/mobile` est prévu : **remplacer ces paliers par ses valeurs** dès qu'il sera
+fourni.
+
+**Pourquoi le retrait de section.** Deux sections voisines cumulaient 256px de
+vide, disproportionné sur un écran étroit.
+
+Le corps de texte, lui, reste à **16px partout** : c'est déjà le plancher de
+lisibilité.
+
+## Le hero est borné par la hauteur de la vue
+
+`max-height: min(900px, 100svh)`. Le second plafond n'est pas cosmétique : sans
+lui le hero gardait ses 900px sur un écran plus bas, et **la carte « Prendre
+RDV » passait sous la ligne de flottaison** — mesuré à 63px de coupe sur une vue
+de 813px, 163px sur une vue de 713px, sur toutes les tailles d'écran portable
+courantes.
+
+`svh` et non `vh` : sur mobile, la barre d'adresse ne doit pas rogner la carte.
+
+> Corollaire pour les assertions : la hauteur du hero dépend de la vue, donc les
+> positions **absolues** de tout ce qui suit aussi. Mesurer depuis le haut de la
+> section concernée, jamais depuis celui du document.
+
+## Grilles : toujours `minmax(0, Nfr)`
+
+Une piste `fr` ne descend jamais sous la largeur minimale de son contenu. Avec
+des enfants à largeur fixe — les visuels du parcours, par exemple — la colonne
+refuse de se réduire et **les colonnes voisines se compriment à sa place**, en
+silence. `minmax(0, …)` rend le comportement explicite.
+
+
 
 ## Polices — pas encore auto-hébergées
 

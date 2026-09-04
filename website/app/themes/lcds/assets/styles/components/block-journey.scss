@@ -7,7 +7,7 @@
 // progression est donc alignée sur le texte, pas sur l'étiquette.
 @mixin journey-grid {
   display: grid;
-  grid-template-columns: 440fr 101fr 553fr;
+  grid-template-columns: minmax(0, 440fr) minmax(0, 101fr) minmax(0, 553fr);
   gap: var.$gutter;
   max-width: var.$content-outer;
   margin: 0 auto;
@@ -179,11 +179,12 @@
 /* ------------------------------------------------------------------------- *
  * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
  * ------------------------------------------------------------------------- */
-@media (max-width: var.$bp-mobile) {
+// Voir block-intro : le repli intervient à 1024, avant le bloc mobile.
+@media (max-width: var.$bp-tablet) {
   .journey {
     &__head,
     &__step-inner {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: fn.toRem(24);
     }
 
@@ -193,6 +194,17 @@
       grid-column: 1;
     }
 
+    // L'étiquette revient dans le flux : en une seule colonne, elle se
+    // superposerait à la barre de progression si elle restait détachée.
+    &__label {
+      position: static;
+      margin-bottom: fn.toRem(24);
+    }
+  }
+}
+
+@media (max-width: var.$bp-mobile) {
+  .journey {
     &__medias {
       flex-wrap: wrap;
     }
