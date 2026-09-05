@@ -318,6 +318,12 @@ jobs:
       #   Secret   WATCHA_BASIC   « identifiant:motdepasse » — UNIQUEMENT si
       #                           l'instance Watcha visée est protégée par
       #                           htpasswd (c'est le cas de la préprod).
+      #
+      # ⚠️ TEMPORAIRE — WATCHA_BASIC n'existe que le temps de viser la préprod,
+      # qui est protégée par htpasswd. Dès que Watcha est en production (sans
+      # htpasswd) : basculer WATCHA_URL sur l'URL de prod et SUPPRIMER le secret
+      # WATCHA_BASIC. Le bloc qui l'utilise devient alors inerte de lui-même.
+      # Le jeton, lui, ne bouge pas : X-Watcha-Token fonctionne dans les deux cas.
       # Tant que WATCHA_TOKEN et WATCHA_URL ne sont pas définis, l'étape ne fait
       # rien.
       #
