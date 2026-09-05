@@ -137,98 +137,94 @@ report() {
     return 0
 }
 
-# L'aperçu de l'éditeur est le SEUL rendu que voit un contributeur. Deux choses
-# le conditionnent, et aucune n'est visible depuis le front : la feuille du thème
-# doit être servie à l'administration, et les blocs doivent produire quelque
-# chose en mode `preview`. Vérifié par WP-CLI, faute d'accès authentifié à
-# wp-admin depuis un navigateur sans interface.
-check_editor_preview() {
+# La contribution de la page d'accueil passe par UN champ de contenu flexible,
+# et l'éditeur de blocs y est coupé. Rien de tout ça ne se voit depuis le front.
+#
+# Les assertions précédentes bouclaient sur `parse_blocks(post_content)` : après
+# la bascule, ce contenu est vide, la boucle ne tournait plus et le bloc
+# n'émettait PLUS AUCUNE assertion — sans échouer. D'où la vérification
+# explicite du nombre attendu ci-dessous.
+check_contribution() {
     local out
 
     out="$(cd "$ROOT" && docker compose exec -T php wp eval '
-require_once ABSPATH . "wp-admin/includes/admin.php";
+$theme = get_template_directory();
+$fields = function_exists("acf_get_fields") ? (array) acf_get_fields("group_lcds_homepage") : array();
+$flexible = null;
 
-$page_id = (int) get_option("page_on_front");
-$post = get_post($page_id);
+foreach ($fields as $field) {
+    if (($field["name"] ?? "") === "sections") {
+        $flexible = $field;
+    }
+}
 
-if (! $post instanceof WP_Post) {
-    echo "FAIL|aucune page d\x27accueil|\n";
+if ($flexible === null) {
+    echo "FAIL|groupe de champs de la page d accueil|introuvable\n";
 
     return;
 }
 
-$context = new WP_Block_Editor_Context(["name" => "core/edit-post", "post" => $post]);
-$settings = get_block_editor_settings(get_default_block_editor_settings(), $context);
-$octets = 0;
+$declares = array_values(array_map(static fn($l) => (string) $l["name"], (array) $flexible["layouts"]));
+$gabarits = array_map(static fn($p) => basename((string) $p, ".php"), (array) glob($theme . "/layouts/*.php"));
 
-foreach ($settings["styles"] ?? [] as $style) {
-    $css = (string) ($style["css"] ?? "");
-
-    if (str_contains($css, ".hero") && str_contains($css, ".journey")) {
-        $octets = strlen($css);
-    }
-}
+sort($declares);
+sort($gabarits);
 
 printf(
-    "%s|feuille du theme servie a l editeur|%d octets\n",
-    $octets > 0 ? "PASS" : "FAIL",
-    $octets,
+    "%s|un gabarit par layout declare|%d layouts, %d gabarits%s\n",
+    $declares === $gabarits ? "PASS" : "FAIL",
+    count($declares),
+    count($gabarits),
+    $declares === $gabarits ? "" : " — ecart : " . implode(", ", array_merge(
+        array_diff($declares, $gabarits),
+        array_diff($gabarits, $declares),
+    )),
 );
 
-$fuite = 0;
+// Un catalogue vide passerait la comparaison ci-dessus : on exige le compte.
+printf(
+    "%s|le catalogue porte les six sections|%s\n",
+    count($declares) === 6 ? "PASS" : "FAIL",
+    implode(", ", $declares),
+);
 
-foreach (parse_blocks($post->post_content) as $block) {
-    if (empty($block["blockName"])) {
-        continue;
-    }
-
-    $nom = str_replace("acf/lcds-", "", (string) $block["blockName"]);
-    $type = WP_Block_Type_Registry::get_instance()->get_registered((string) $block["blockName"]);
-    $mode = $type->mode ?? null;
-
-    // Bloc non sélectionné : l aperçu. C est ce que voit le contributeur qui
-    // parcourt la page.
-    $apercu = trim(acf_rendered_block($block["attrs"], "", true, $page_id));
-    $indices = substr_count($apercu, "lcds-block-hint");
-    $formulaire_en_apercu = str_contains($apercu, "acf-block-fields");
-
-    // Bloc sélectionné : le mode `auto` bascule sur `edit`, et ACF rend son
-    // formulaire DANS le canevas plutôt que dans la colonne de droite. C est le
-    // seul emplacement qu il sait servir hors de l inspecteur — vérifié dans
-    // son JS livré.
-    $attrs = $block["attrs"];
-    $attrs["mode"] = "edit";
-    $forme = acf_rendered_block($attrs, "", true, $page_id);
-    $champs = substr_count($forme, "class=\"acf-field ");
-
-    printf(
-        "%s|apercu du bloc %s|%d octets, %d indice(s) de bloc vide\n",
-        $apercu !== "" && $indices === 0 && ! $formulaire_en_apercu ? "PASS" : "FAIL",
-        $nom,
-        strlen($apercu),
-        $indices,
-    );
-
-    printf(
-        "%s|formulaire du bloc %s dans le canevas|mode %s, %d champs\n",
-        $mode === "auto" && str_contains($forme, "acf-block-fields") && $champs > 0 ? "PASS" : "FAIL",
-        $nom,
-        var_export($mode, true),
-        $champs,
-    );
-
-    $fuite += substr_count(apply_filters("the_content", $post->post_content), "acf-block-fields");
-}
+$page_id = (int) get_option("page_on_front");
+$rangees = get_post_meta($page_id, "sections", true);
+$rangees = is_array($rangees) ? $rangees : array();
 
 printf(
-    "%s|aucun formulaire ACF en front|%d occurrence(s)\n",
-    $fuite === 0 ? "PASS" : "FAIL",
-    $fuite,
+    "%s|la page d accueil porte des sections|%d rangee(s) : %s\n",
+    $rangees !== array() ? "PASS" : "FAIL",
+    count($rangees),
+    implode(" > ", $rangees),
+);
+
+printf(
+    "%s|aucun balisage de bloc residuel dans post_content|%d octets\n",
+    strlen((string) get_post($page_id)->post_content) === 0 ? "PASS" : "FAIL",
+    strlen((string) get_post($page_id)->post_content),
+);
+
+// Coupé sur la page contribuée par ACF, actif ailleurs : élargir le filtre à
+// tout le site doit rester une décision, pas un effet de bord.
+$autre = get_posts(array("post_type" => "page", "exclude" => array($page_id), "numberposts" => 1, "post_status" => "any"));
+printf(
+    "%s|editeur de blocs coupe sur la page d accueil, actif ailleurs|%s / %s\n",
+    ! use_block_editor_for_post(get_post($page_id)) && ($autre === array() || use_block_editor_for_post($autre[0])) ? "PASS" : "FAIL",
+    use_block_editor_for_post(get_post($page_id)) ? "actif" : "coupe",
+    $autre === array() ? "aucune autre page" : (use_block_editor_for_post($autre[0]) ? "actif" : "coupe"),
 );
 ' --allow-root 2>/dev/null | tr -d '\r')"
 
-    if [ -z "$out" ]; then
-        printf '  FAIL :: aperçu de l\x27éditeur (WP-CLI muet)\n'
+    local attendues=5
+    local obtenues
+
+    obtenues="$(printf '%s\n' "$out" | grep -cE '^(PASS|FAIL)\|')"
+
+    if [ "$obtenues" != "$attendues" ]; then
+        printf '  FAIL :: contribution (%s assertion(s) sur %s — le bloc ne teste plus ce qu%s il prétend)\n' \
+            "$obtenues" "$attendues" "'"
+        printf '%s\n' "$out" | sed 's/^/    /'
         return 1
     fi
 
@@ -381,14 +377,14 @@ check_version() {
 echo "== Version du site =="
 check_version || FAILURES=$((FAILURES + 1))
 
+echo "== Contribution de la page d'accueil =="
+check_contribution || FAILURES=$((FAILURES + 1))
+
 echo "== Accessibilité côté serveur =="
 check_a11y_serveur || FAILURES=$((FAILURES + 1))
 
 echo "== Navigation amorcée =="
 check_menus || FAILURES=$((FAILURES + 1))
-
-echo "== Aperçu dans l'éditeur =="
-check_editor_preview || FAILURES=$((FAILURES + 1))
 
 for width in 1440 500 320; do
     echo "== Front à ${width}px =="

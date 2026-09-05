@@ -16,6 +16,6 @@ require_once __DIR__ . '/inc/navigation.php';
 require_once __DIR__ . '/inc/template.php';
 require_once __DIR__ . '/inc/images.php';
 require_once __DIR__ . '/inc/acf.php';
-require_once __DIR__ . '/inc/blocks.php';
+require_once __DIR__ . '/inc/editor.php';
 require_once __DIR__ . '/inc/seo.php';
 require_once __DIR__ . '/inc/contacts.php';

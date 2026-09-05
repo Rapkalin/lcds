@@ -35,11 +35,15 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   en mobile, ouverture au clic, fermeture par Échap et au clic sur un lien,
   défilement bloqué, et bascule de `visibility` au bon moment.
 
-- **Aperçu dans l'éditeur** : la feuille du thème est bien servie à
-  l'administration ; chacun des quatre blocs produit un aperçu sans indice de
-  bloc vide ; chacun est en `"mode": "auto"` et rend son **formulaire dans le
-  canevas** quand il est sélectionné ; et ce formulaire ne fuit **jamais** en
-  front. Ce bloc passe par
+- **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
+  déclaré et réciproquement, le catalogue porte bien ses six sections, la page
+  porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé
+  sur la page d'accueil **mais actif ailleurs**.
+
+> Le bloc précédent bouclait sur `parse_blocks(post_content)`. Après la bascule
+> en contenu flexible ce contenu est vide : la boucle ne tournait plus et le
+> bloc n'émettait **plus aucune assertion, sans échouer**. Le remplaçant compte
+> ses assertions et échoue si le total n'est pas celui attendu. Ce bloc passe par
   WP-CLI et non par le navigateur : ouvrir wp-admin sans interface demanderait de
   fabriquer un cookie d'authentification, hors de proportion pour ce que ça
   prouve.

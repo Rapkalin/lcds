@@ -32,8 +32,8 @@ de `<body>` ne suffit pas : le logo est dans le même `<header>` que le panneau,
 il restait tabulable. Mesuré à 320px : **onze contrôles** derrière l'overlay
 étaient encore dans le parcours de tabulation.
 
-**Les cartes de technologie sont des panneaux à révéler, pas des blocs de
-texte masqués en CSS.** Même contrat que l'accordéon — `aria-expanded`,
+**Les cartes de technologie sont des panneaux à révéler, pas des sections de
+texte masquées en CSS.** Même contrat que l'accordéon — `aria-expanded`,
 `aria-controls`, panneau réellement `hidden` — et le **même code**, sélectionné
 par `data-disclosure` plutôt que par une classe de composant. Deux copies de
 cette boucle auraient divergé.

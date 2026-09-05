@@ -50,6 +50,34 @@ function lcds_field_text(string $selector): string
 }
 
 /**
+ * Enveloppe de get_sub_field(), pour les champs d'une rangée de contenu
+ * flexible.
+ *
+ * Les sections de la page d'accueil sont les layouts d'un champ
+ * `flexible_content` : dans la boucle `have_rows()`, leurs valeurs se lisent
+ * par `get_sub_field()` et non par `get_field()`, qui remonterait au niveau de
+ * la page et ne trouverait rien.
+ *
+ * @param string $selector Nom ou clé du sous-champ.
+ */
+function lcds_sub_field(string $selector): mixed
+{
+    return function_exists('get_sub_field') ? get_sub_field($selector) : null;
+}
+
+/**
+ * Valeur d'un sous-champ, ramenée à une chaîne propre.
+ *
+ * @param string $selector Nom ou clé du sous-champ.
+ */
+function lcds_sub_field_text(string $selector): string
+{
+    $value = lcds_sub_field($selector);
+
+    return is_scalar($value) ? trim((string) $value) : '';
+}
+
+/**
  * Identifiant d'attachement d'un champ image, quel que soit son format de retour.
  *
  * ACF rend un entier, un tableau ou une URL selon le réglage du champ. On ne

@@ -1,46 +1,73 @@
 # Contribution du contenu
 
-Chaque section du site est un **bloc de l'éditeur**. Un contributeur assemble une
-page en insérant des blocs et en remplissant leurs champs — aucun contenu ne vit
-dans le code.
+La page d'accueil se contribue depuis **un seul formulaire**, sous l'éditeur.
+Ses sections sont les **layouts d'un champ de contenu flexible** ACF : un
+contributeur les ajoute, les réordonne et les supprime au glisser-déposer.
+
+C'est le modèle éprouvé sur 2bdm, avec une différence assumée : **les champs
+restent versionnés en JSON local** dans `acf-json/`. Sur 2bdm ils ne vivent
+qu'en base — un champ ajouté en préprod ne part pas en production et aucun diff
+ne montre qui a changé quoi.
 
 ## Où modifier la page d'accueil
 
-**Pages → Accueil → Modifier.** Les quatre sections y sont déjà en place ; les
-sélectionner ouvre leurs champs dans le panneau de droite.
+**Pages → Accueil → Modifier.** L'éditeur de blocs y est **coupé**, et son
+contenu masqué : deux surfaces de saisie concurrentes sur la même page, c'est la
+garantie qu'un contributeur remplira la mauvaise.
 
-La page est créée par `bin/init.sh` au premier démarrage d'un environnement, puis
-**désignée comme page d'accueil du site** (Réglages → Lecture). Tous les champs
-sont garnis, y compris les images là où des visuels de démonstration existent :
-sélectionner un bloc doit montrer la section, pas un cadre vide.
+Coupé **page par page**, pas globalement : `inc/editor.php` ne neutralise que
+les contenus listés par `lcds_acf_contributed_posts()`. Tout ce qui est du texte
+libre — mentions légales, un futur article — s'écrit mieux en blocs qu'en
+contenu flexible.
+
+La page est créée par `bin/init.sh` au premier démarrage, garnie de la copie
+relevée sur les maquettes, puis **désignée comme page d'accueil du site**
+(Réglages → Lecture).
 
 > L'amorçage est idempotent : une page déjà en place n'est **jamais** réécrite.
-> Le contenu saisi ne peut donc pas disparaître au redémarrage d'un conteneur.
 > Pour la recréer volontairement :
 > `dwp eval-file bin/seed-homepage.php force`.
 
-## Les blocs
+## Le catalogue de sections
 
-Tous sont regroupés dans la catégorie **LCDS** de l'insérateur.
-
-| Bloc | Ce qu'il porte |
+| Section | Ce qu'elle porte |
 | --- | --- |
-| **LCDS — Hero** | Visuel pleine largeur, carte d'appel, et le **titre `h1`** de la page |
-| **LCDS — Texte et galerie** | Étiquette, texte, bouton, rail de visuels défilable |
-| **LCDS — Accordéon** | Étiquette, entrées dépliables, bouton |
-| **LCDS — Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
-| **LCDS — Carrousel de cartes** | Étiquette, bouton, cartes inclinées dont chacune révèle son texte |
-| **LCDS — Informations pratiques** | Étiquette, visuel, entrées à icône : adresse, transports, horaires… |
+| **Hero** | Visuel pleine largeur, carte d'appel |
+| **Texte et galerie** | Étiquette, texte, bouton, rail de visuels défilable |
+| **Accordéon** | Étiquette, entrées dépliables, bouton |
+| **Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
+| **Carrousel de cartes** | Étiquette, bouton, cartes inclinées révélant leur texte |
+| **Informations pratiques** | Étiquette, visuel, entrées à icône |
+
+**Le catalogue est celui de la page d'accueil et de personne d'autre.** Le
+groupe est localisé par `page_type == front_page` : aucune de ces sections ne
+peut atterrir sur une autre page. C'était le principal défaut du modèle
+précédent en blocs, où les six sections étaient insérables partout.
+
+### Ajouter une section
+
+1. Créer `layouts/<nom>.php`. Il ne doit que **lire les sous-champs et déléguer
+   à un composant** de `components/` : réécrire le balisage le laisserait
+   divorcer du composant, qui est mesuré au pixel contre la maquette et couvert
+   par la campagne de QA.
+2. Ajouter le layout au champ `sections` de `acf-json/group_lcds_homepage.json`,
+   avec `"name"` **égal au nom du fichier**.
+
+`front-page.php` reste déclaratif : `get_row_layout()` donne le nom du gabarit,
+il n'y a aucun `switch` à tenir à jour. Le nom passe par une allow-list bâtie
+sur les fichiers présents — il vient de la base, il ne peut pas entrer tel quel
+dans un chemin.
+
+`tests/Unit/HomepageLayoutsTest.php` fait échouer la CI dans les deux sens : un
+layout déclaré sans gabarit (section muette, sans erreur) et un gabarit sans
+layout déclaré (code mort).
 
 ### Le titre h1
 
-Les maquettes ne prévoient **aucun titre visible** dans le hero. Le champ
-« Titre principal (h1) » est donc rendu **masqué visuellement** : invisible à
-l'écran, mais lu par les moteurs de recherche et les lecteurs d'écran.
-
-Sans lui, la page n'a aucun `h1` — les titres de l'accordéon et des étapes sont
-des `h2`. Y placer l'expression clé du référencement, par exemple
-« Cabinet d'orthodontie à Vienne ».
+C'est un champ de la **page**, pas de sa première section. Les maquettes ne
+prévoient aucun titre visible dans le hero : il est rendu **masqué
+visuellement** — invisible à l'écran, lu par les moteurs et les lecteurs
+d'écran. Sans lui, la page n'a aucun `h1`.
 
 ### Les formes de cadre
 
@@ -106,51 +133,6 @@ glyphe, sans erreur.
 - **Informations pratiques** : les filets se posent entre les entrées, jamais
   avant la première ni après la dernière.
 
-## Où l'on saisit : dans l'éditeur, pas dans la colonne de droite
-
-Les quatre blocs sont en **`"mode": "auto"`** (clé `acf` de leur `block.json`) :
-
-- **bloc non sélectionné** → son aperçu, à la place qu'il occupe dans la page ;
-- **bloc sélectionné** → ACF remplace l'aperçu par son **formulaire, dans le
-  canevas**, sur toute la largeur de l'éditeur.
-
-C'est le seul emplacement hors inspecteur qu'ACF sache servir. En mode
-`preview`, ses champs sont rendus dans `InspectorControls` — la colonne de
-droite — et ça n'est pas configurable : c'est câblé dans le JavaScript livré du
-plugin. Un vrai panneau *sous* l'éditeur voudrait dire une metabox, donc un
-groupe de champs rattaché à la **page** et non au bloc : plus de réordonnancement,
-plus de section répétable, l'architecture en composants tombe.
-
-Contrepartie du mode `auto` : le bouton « Passer en édition » de la barre
-d'outils disparaît, ACF le masque quand le mode est automatique. Repasser les
-quatre `block.json` en `"mode": "preview"` rétablit ce bouton et renvoie les
-champs à droite — un `sed` suffit.
-
-## L'aperçu dans l'éditeur
-
-L'aperçu est produit par le **même code** que le rendu public, appelé par ACF
-avec `$is_preview = true`. Ce que voit le contributeur est donc ce que verra le
-visiteur.
-
-Deux conditions pour que ça tienne :
-
-- **La feuille du thème est servie à l'éditeur** (`add_editor_style` dans
-  `inc/blocks.php`). Sans elle les blocs s'affichent, mais nus : personne ne
-  reconnaît la section qu'il modifie.
-- **Les champs sont remplis.** Un bloc vide n'a rien à dessiner ; c'est
-  précisément pourquoi l'amorçage garnit tout.
-
-Deux écarts assumés avec le rendu public, tous deux dus à l'absence de
-JavaScript dans l'éditeur : le rail de la section Histoire ne défile pas, et les
-étapes du parcours **s'empilent verticalement** au lieu de se dérouler
-horizontalement. C'est le rendu de repli du site, celui que voient déjà les
-visiteurs sans JavaScript ou ayant demandé à réduire les animations.
-
-> Servir la feuille du thème à l'éditeur la fait aussi porter sur le formulaire
-> d'ACF, qui vit désormais dans le canevas : le thème pose des règles sur `p` et
-> `a`, les libellés et liens du formulaire les subissent. Cosmétique, et à
-> surveiller si une règle d'élément est ajoutée à `basics/general.scss`.
-
 ## D'où viennent les visuels de démonstration
 
 L'amorçage ne fabrique aucune image : il lit la correspondance
@@ -186,38 +168,29 @@ Conséquence pratique : **un champ ajusté dans l'interface d'ACF modifie un
 fichier du dépôt.** Il faut le committer, sinon l'ajustement ne suivra pas au
 déploiement. C'est le prix de champs relisibles en diff.
 
-## Ajouter une section
-
-1. Créer `blocks/lcds-<section>/block.json` — nom `acf/lcds-<section>`, titre
-   « LCDS — … », catégorie `lcds`, et une clé `acf` avec
-   `"renderTemplate": "render.php"`.
-2. Créer `blocks/lcds-<section>/render.php`. **Il ne doit que lire les champs et
-   déléguer à un composant** de `components/` : réécrire le balisage le
-   laisserait divorcer du composant, qui est mesuré au pixel contre la maquette
-   et couvert par la campagne de QA.
-3. Créer `acf-json/group_lcds_<section>.json`, avec pour localisation
-   `[[{"param": "block", "operator": "==", "value": "acf/lcds-<section>"}]]`.
-
-Rien à déclarer ailleurs : `inc/blocks.php` enregistre tout `block.json` trouvé
-sous `blocks/`.
-
-> Prévoir un indice pour l'éditeur quand le bloc est vide — les autres blocs
-> émettent un `<p class="lcds-block-hint">` en mode aperçu. Sans lui, un bloc non
-> rempli est invisible dans l'éditeur et le contributeur ne sait pas quoi faire.
-
 ## Deux pièges rencontrés
-
-**`wp_insert_post()` attend des données échappées** et leur applique
-`wp_unslash()` en interne. Sans `wp_slash()`, l'antislash des séquences
-d'échappement du JSON de bloc est mangé — le `\n` séparant deux paragraphes
-devenait un paragraphe contenant la lettre « n ».
 
 **ACF exige, à côté de chaque valeur, une clé préfixée d'un `_`** portant la clé
 du champ. Sans elle il ne sait pas à quel champ la valeur appartient, et les
 répéteurs remontent vides. `bin/seed-homepage.php` résout ces clés depuis le
 groupe de champs plutôt que de les écrire en dur.
 
-## L'éditeur de blocs a été rétabli
+**Le champ de contenu flexible range la LISTE de ses layouts** dans la clé
+`sections`, puis chaque sous-valeur sous `sections_<index>_<nom>`. Sans cette
+liste, ACF ne sait pas combien de rangées lire et le champ remonte vide.
 
-Le thème le désactivait (`use_block_editor_for_post`). Le filtre a été retiré le
-04/09/2026 : toute la contribution repose désormais sur des blocs.
+L'amorçage fait aussi **table rase** des métadonnées `sections*` avant de
+réécrire : un réamorçage après suppression d'une section laisserait sinon ses
+valeurs orphelines en base, et ACF les remonterait sur la section qui a pris sa
+place.
+
+## L'éditeur de blocs, page par page
+
+Le thème le coupait globalement, puis l'avait rétabli pour la contribution en
+blocs. Depuis la bascule en contenu flexible du 04/09/2026, il est coupé
+**uniquement** sur les contenus listés par `lcds_acf_contributed_posts()`
+(`inc/editor.php`) — la page d'accueil pour l'instant.
+
+Une assertion de `bin/qa-front.sh` vérifie les deux sens : coupé sur la page
+d'accueil, **actif ailleurs**. Élargir le filtre à tout le site doit rester une
+décision, pas un effet de bord.

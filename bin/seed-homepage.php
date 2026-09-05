@@ -3,15 +3,20 @@
 /**
  * Amorçage de la page d'accueil — joué par bin/init.sh via `wp eval-file`.
  *
- * Crée la page, la désigne comme page d'accueil du site, et y insère les quatre
- * blocs de section garnis. Tous les champs sont remplis, y compris les images
- * quand les visuels de démonstration sont en place : un contributeur doit voir
- * l'aperçu de la section qu'il modifie, pas un bloc vide.
+ * Crée la page, la désigne comme page d'accueil du site, et garnit son champ de
+ * contenu flexible : une rangée par section, dans l'ordre de la maquette.
+ * Toutes les valeurs sont remplies, images comprises quand les visuels de
+ * démonstration sont en place — un contributeur doit voir la page, pas des
+ * champs vides.
+ *
+ * Le contenu ne vit PLUS dans `post_content` mais en POST META : c'est là que
+ * le contenu flexible d'ACF range ses valeurs. Plus de JSON de bloc à
+ * échapper, donc plus de `wp_slash()` non plus.
  *
  * La copie vient des maquettes, sauf là où elles portent du lorem ipsum (texte
- * de la carte du hero, panneaux de l'accordéon) : ces passages sont une
- * rédaction de démonstration, à remplacer par le client — voir
- * readme/contribution.md.
+ * de la carte du hero, panneaux de l'accordéon, cartes de technologie) : ces
+ * passages sont une rédaction de démonstration, à remplacer par le client —
+ * voir readme/contribution.md.
  *
  * IDEMPOTENT. Une page d'accueil déjà en place n'est jamais réécrite : le
  * contenu saisi par un contributeur ne doit pas être écrasé au redémarrage d'un
@@ -35,13 +40,40 @@ if (! $force && $existing > 0 && get_post_status($existing) === 'publish') {
     return;
 }
 
+if (! function_exists('acf_get_fields')) {
+    WP_CLI::warning('ACF est absent : amorçage impossible, les clés de champ sont introuvables.');
+
+    return;
+}
+
+$definition = (array) acf_get_fields('group_lcds_homepage');
+
+if ($definition === []) {
+    WP_CLI::warning('Groupe group_lcds_homepage introuvable : ACF est-il actif ?');
+
+    return;
+}
+
+/**
+ * Retrouve un champ par son nom dans une liste de définitions.
+ */
+$find = static function (array $fields, string $name): ?array {
+    foreach ($fields as $field) {
+        if (($field['name'] ?? '') === $name) {
+            return $field;
+        }
+    }
+
+    return null;
+};
+
 /**
  * Traduit un tableau de valeurs imbriqué en métadonnées ACF.
  *
  * ACF n'attend pas seulement `galerie_0_forme` : il exige, à côté de chaque
  * valeur, une clé préfixée d'un `_` portant la CLÉ du champ. Sans elle il ne
  * sait pas à quel champ la valeur appartient, et les répéteurs remontent vides
- * — constaté : le hero fonctionnait, les trois blocs à répéteur rendaient rien.
+ * — constaté.
  *
  * Les clés sont résolues depuis le groupe de champs, jamais écrites en dur :
  * renommer une clé dans le JSON ne doit pas casser cet amorçage.
@@ -81,20 +113,27 @@ $to_meta = static function (array $fields, array $values, string $prefix = '') u
     return $meta;
 };
 
-$block = static function (string $name, string $group, array $fields) use ($to_meta): string {
-    $definition = function_exists('acf_get_fields') ? acf_get_fields($group) : [];
+/**
+ * Une rangée du champ de contenu flexible : son layout et ses valeurs.
+ *
+ * Le layout est vérifié contre ceux que le groupe déclare. Une faute de frappe
+ * produirait sinon une rangée qu'ACF ignore, et une section muette sans erreur.
+ */
+$section = static function (string $layout, array $values) use ($definition, $find): array {
+    $flexible = $find($definition, 'sections');
+    $layouts = (array) ($flexible['layouts'] ?? []);
+    $names = array_column($layouts, 'name');
 
-    return '<!-- wp:acf/' . $name . ' ' . wp_json_encode([
-        'name' => 'acf/' . $name,
-        'data' => $to_meta((array) $definition, $fields),
-        'mode' => 'auto',
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ' /-->';
+    if (! in_array($layout, $names, true)) {
+        WP_CLI::error(sprintf(
+            'Layout « %s » inconnu. Déclarés : %s.',
+            $layout,
+            implode(', ', $names),
+        ));
+    }
+
+    return ['layout' => $layout, 'values' => $values];
 };
-
-$p = static fn(string ...$paragraphs): string => implode(
-    "\n",
-    array_map(static fn(string $text): string => '<p>' . $text . '</p>', $paragraphs),
-);
 
 /**
  * Identifiant du visuel de démonstration occupant un emplacement, ou '' si les
@@ -103,9 +142,8 @@ $p = static fn(string ...$paragraphs): string => implode(
  * `bin/seed-demo.sh` extrait les photos des PDF de maquette et enregistre la
  * correspondance emplacement → identifiant dans l'option `lcds_demo_media`.
  * Ce script est hors du dépôt car il dépend de maquettes qui n'y sont pas : sur
- * un environnement où il n'a pas tourné, les champs image restent vides et les
- * blocs affichent leur indice de contribution. Le rendu se dégrade, l'amorçage
- * ne casse pas.
+ * un environnement où il n'a pas tourné, les champs image restent vides. Le
+ * rendu se dégrade, l'amorçage ne casse pas.
  */
 $media_map = get_option('lcds_demo_media');
 $media_map = is_array($media_map) ? $media_map : [];
@@ -114,20 +152,24 @@ $media = static fn(string $slot): int|string => isset($media_map[$slot])
     : '';
 
 // Les maquettes ne portent aucune destination : les pages cibles n'existent pas
-// encore. Un `#` rend le bouton visible dans l'aperçu — un lien VIDE fait
-// disparaître le composant CTA, qui refuse de produire un lien mort.
+// encore. Un `#` rend le bouton visible — un lien VIDE fait disparaître le
+// composant CTA, qui refuse de produire un lien mort.
 $stub = '#';
 
-$content = implode("\n\n", [
-    $block('lcds-hero', 'group_lcds_hero', [
-        'titre_h1' => 'Cabinet d’orthodontie à Vienne',
+$p = static fn(string ...$paragraphs): string => implode(
+    "\n",
+    array_map(static fn(string $text): string => '<p>' . $text . '</p>', $paragraphs),
+);
+
+$sections = [
+    $section('hero', [
         'visuel' => $media('hero'),
         'carte_vignette' => $media('hero-thumbnail'),
         'carte_lien' => ['title' => 'Prendre RDV', 'url' => $stub, 'target' => ''],
         'carte_texte' => 'Du lundi au vendredi, de 9h à 18h.',
     ]),
 
-    $block('lcds-histoire', 'group_lcds_histoire', [
+    $section('histoire', [
         'etiquette' => 'l’histoire',
         'puce' => 'turquoise',
         'texte' => $p(
@@ -144,7 +186,7 @@ $content = implode("\n\n", [
         ],
     ]),
 
-    $block('lcds-traitements', 'group_lcds_traitements', [
+    $section('traitements', [
         'etiquette' => 'Les différents traitements',
         'puce' => 'turquoise',
         'entrees' => [
@@ -179,7 +221,7 @@ $content = implode("\n\n", [
         'cta' => ['title' => 'voir tous les traitements', 'url' => $stub, 'target' => ''],
     ]),
 
-    $block('lcds-parcours', 'group_lcds_parcours', [
+    $section('parcours', [
         'etiquette' => 'le parcours de soin',
         'puce' => 'orange',
         'etapes' => [
@@ -248,7 +290,7 @@ $content = implode("\n\n", [
         ],
     ]),
 
-    $block('lcds-technologies', 'group_lcds_technologies', [
+    $section('technologies', [
         'etiquette' => 'les technologies',
         'puce' => 'orange',
         'cta' => ['title' => 'voir toutes les technologies', 'url' => $stub, 'target' => ''],
@@ -286,7 +328,7 @@ $content = implode("\n\n", [
         ],
     ]),
 
-    $block('lcds-infos', 'group_lcds_infos', [
+    $section('infos', [
         'etiquette' => 'informations pratiques',
         'puce' => 'orange',
         'visuel' => $media('gallery-2a'),
@@ -332,22 +374,21 @@ $content = implode("\n\n", [
             ],
         ],
     ]),
-]);
-
-// wp_slash() est indispensable : wp_insert_post() attend des données ÉCHAPPÉES
-// et leur applique wp_unslash() en interne. Sans cela l'antislash des séquences
-// d'échappement du JSON est mangé — constaté : le « \n » séparant deux
-// paragraphes devenait un paragraphe contenant la lettre « n ».
-$content = wp_slash($content);
+];
 
 $page_id = $existing > 0 && get_post_status($existing) !== false
-    ? wp_update_post(['ID' => $existing, 'post_content' => $content, 'post_status' => 'publish'], true)
+    // `post_content` est remis à vide, y compris sur une page existante : une
+    // page amorcée avant la bascule en contenu flexible garde sinon 17 Ko de
+    // balisage de bloc inerte, qui resurgirait si l'éditeur était rétabli.
+    ? wp_update_post(['ID' => $existing, 'post_status' => 'publish', 'post_content' => ''], true)
     : wp_insert_post([
         'post_type' => 'page',
         'post_title' => 'Accueil',
         'post_name' => 'accueil',
         'post_status' => 'publish',
-        'post_content' => $content,
+        // Vide et masqué par le `hide_on_screen` du groupe : la contribution
+        // passe entièrement par les champs.
+        'post_content' => '',
     ], true);
 
 if (is_wp_error($page_id)) {
@@ -356,11 +397,59 @@ if (is_wp_error($page_id)) {
     return;
 }
 
+$page_id = (int) $page_id;
+
+// Le champ de contenu flexible range la LISTE DE SES LAYOUTS dans la clé du
+// champ, puis chaque sous-valeur sous `sections_<index>_<nom>`. Sans la liste,
+// ACF ne sait pas combien de rangées lire et le champ remonte vide.
+$flexible = $find($definition, 'sections');
+$meta = [
+    'sections' => array_column($sections, 'layout'),
+    '_sections' => $flexible['key'],
+];
+
+foreach ($sections as $index => $row) {
+    $layout = null;
+
+    foreach ((array) ($flexible['layouts'] ?? []) as $candidate) {
+        if (($candidate['name'] ?? '') === $row['layout']) {
+            $layout = $candidate;
+
+            break;
+        }
+    }
+
+    $meta = array_merge($meta, $to_meta(
+        (array) ($layout['sub_fields'] ?? []),
+        $row['values'],
+        'sections_' . $index . '_',
+    ));
+}
+
+$heading = $find($definition, 'titre_h1');
+$meta['titre_h1'] = 'Cabinet d’orthodontie à Vienne';
+$meta['_titre_h1'] = $heading['key'];
+
+// Table rase avant réécriture : un réamorçage forcé après suppression d'une
+// section laisserait sinon ses valeurs orphelines en base, et ACF les
+// remonterait sur la section qui a pris sa place.
+foreach (get_post_meta($page_id) as $key => $ignored) {
+    if ($key === 'titre_h1' || $key === '_titre_h1' || str_starts_with((string) $key, 'sections')
+        || str_starts_with((string) $key, '_sections')) {
+        delete_post_meta($page_id, (string) $key);
+    }
+}
+
+foreach ($meta as $key => $value) {
+    update_post_meta($page_id, $key, $value);
+}
+
 update_option('show_on_front', 'page');
-update_option('page_on_front', (int) $page_id);
+update_option('page_on_front', $page_id);
 
 WP_CLI::log(sprintf(
-    '==> [init] Page d\'accueil amorcée (ID %d, %d blocs).',
-    (int) $page_id,
-    substr_count($content, '<!-- wp:acf/'),
+    '==> [init] Page d\'accueil amorcée (ID %d, %d sections, %d métadonnées).',
+    $page_id,
+    count($sections),
+    count($meta),
 ));

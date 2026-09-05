@@ -171,9 +171,10 @@ par elle.
 
 ## Contenu de démonstration
 
-Le contenu de la page d'accueil est désormais **contribuable dans l'éditeur** —
-voir [`contribution.md`](contribution.md). Les gabarits ne portent plus aucune
-donnée, et le mu-plugin de démonstration qui les surchargeait a été retiré.
+Le contenu de la page d'accueil est **contribuable** par un champ de contenu
+flexible — voir [`contribution.md`](contribution.md). Les gabarits ne portent
+plus aucune donnée : `front-page.php` boucle sur les rangées et délègue à
+`layouts/<nom>.php`, qui délègue au composant.
 
 `bin/seed-demo.sh` reste utile en local : il importe dans la médiathèque les
 photos **extraites des PDF de maquette**, puis réamorce la page d'accueil pour

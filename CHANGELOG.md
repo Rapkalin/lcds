@@ -7,6 +7,35 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.0.0
+
+**Rupture de contribution.** La page d'accueil ne se contribue plus en blocs de
+l'éditeur mais par un **champ de contenu flexible**, sur le modèle de 2bdm. Un
+contenu saisi avant cette version doit être ressaisi : il vivait dans
+`post_content`, il vit désormais en post meta.
+
+### Changé
+
+- **Les six sections de la page d'accueil sont les layouts d'un unique champ**
+  `sections`, dans un seul formulaire sous l'éditeur. Elles s'ajoutent, se
+  réordonnent et se suppriment au glisser-déposer.
+- **Le catalogue est scellé à la page d'accueil** (`page_type == front_page`).
+  Aucune de ces sections ne peut atterrir sur une autre page — c'était le
+  principal défaut du modèle en blocs.
+- **L'éditeur de blocs est coupé page par page**, pas globalement : seuls les
+  contenus listés par `lcds_acf_contributed_posts()` le perdent. Le texte libre
+  continue de s'écrire en blocs.
+- Le titre `h1` est devenu un champ de la **page** et non de sa première
+  section.
+- Les champs restent **versionnés en JSON local**, contrairement à 2bdm où ils
+  ne vivent qu'en base.
+
+### Retiré
+
+- Les six blocs `acf/lcds-*`, `inc/blocks.php`, la catégorie d'insérateur, et
+  l'aperçu dans le canevas — avec les `add_editor_style` et les assertions de QA
+  qui allaient avec.
+
 ## 1.1.0
 
 Première version qui expose sa propre version.
