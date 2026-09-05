@@ -70,4 +70,6 @@ if (isset($media_map['gallery-5'])) {
     update_field('visuel', (int) $media_map['gallery-5'], 'option');
 }
 
+update_field('cadrage', LcdsFocalPoint::Center->value, 'option');
+
 WP_CLI::log('==> [init] Réglages du pied de page amorcés (3 blocs d’appel).');

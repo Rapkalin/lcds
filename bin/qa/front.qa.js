@@ -410,6 +410,92 @@ window.runFrontQa = async (win) => {
             Math.abs(decouvert - hauteur) < 4
         );
 
+        // Le cadrage est du CONTENU : les trois valeurs proposées au
+        // contributeur doivent produire trois `object-position` distinctes,
+        // sinon le choix ne sert à rien.
+        const rayonImage = (style) => parseFloat(style.borderBottomLeftRadius);
+        const image = media.querySelector(".footer-reveal__image");
+
+        if (image !== null) {
+            const classeInitiale = image.className;
+            const positions = ["top", "center", "bottom"].map((point) => {
+                image.className = `footer-reveal__image is-focus-${point}`;
+
+                return styleOf(image).objectPosition;
+            });
+            image.className = classeInitiale;
+
+            // Le navigateur NORMALISE les mots-clés — `center top` devient
+            // `50% 0%` — et conserve les `calc()`. On raisonne donc sur le
+            // décalage RÉSOLU en pixels, pas sur la syntaxe écrite.
+            // `cover` prend la PLUS GRANDE des deux échelles : la calculer sur
+            // la largeur seule donnait une hauteur fausse dès que la vue
+            // devenait étroite, et trois assertions rougissaient à tort.
+            const boiteLargeur = image.getBoundingClientRect().width;
+            const boite = image.getBoundingClientRect().height;
+            const echelle = Math.max(boiteLargeur / image.naturalWidth, boite / image.naturalHeight);
+            const hauteurAffichee = image.naturalHeight * echelle;
+            // Évaluateur minimal d'`object-position` : Chrome sérialise
+            // `min(0px, calc(50% + 32px))` en `min(0px, 50% + 32px)`, et un
+            // pourcentage s'y résout contre (boîte - image). Trois assertions
+            // rendaient NaN faute de savoir lire cette forme.
+            const surplus = boite - hauteurAffichee;
+            const terme = (texte) => texte
+                .split("+")
+                .map((part) => part.trim())
+                .reduce((total, part) => total
+                    + (part.endsWith("%") ? surplus * (parseFloat(part) / 100) : parseFloat(part)), 0);
+            const decalage = (valeur) => {
+                const morceau = valeur.split(" ").slice(1).join(" ").trim();
+                const enveloppe = /^(min|max)\((.*)\)$/.exec(morceau);
+
+                if (enveloppe !== null) {
+                    const valeurs = enveloppe[2].split(",").map(terme);
+
+                    return enveloppe[1] === "min" ? Math.min(...valeurs) : Math.max(...valeurs);
+                }
+
+                return terme(morceau.replace(/^calc\((.*)\)$/, "$1"));
+            };
+
+            assert(
+                `les trois cadrages donnent trois positions distinctes (${positions.join(" | ")})`,
+                new Set(positions).size === 3
+            );
+
+            const hauts = positions.map(decalage);
+            // Aucun cadrage ne doit découvrir l'encoche : le haut de l'image
+            // reste au-dessus du haut de la boîte.
+            assert(
+                `aucun cadrage ne découvre l'encoche (${hauts.map((h) => h.toFixed(0)).join(" | ")})`,
+                hauts.every((haut) => haut <= 0.5)
+            );
+
+            // La boîte du visuel dépasse d'un rayon ce qu'on découvre : sans
+            // compensation, « centre » laissait l'image 32px trop haut par
+            // rapport à ce que le visiteur voit — mesuré.
+            const rayon = rayonImage(styleOf(footer));
+            const debord = hauteurAffichee - boite;
+            const centreVu = rayon + (boite - rayon) / 2;
+            const ecart = (hauts[1] + hauteurAffichee / 2) - centreVu;
+
+            if (debord >= rayon) {
+                assert(
+                    `cadrage « centre » : centré sur la PARTIE VUE (écart ${ecart.toFixed(1)}px)`,
+                    Math.abs(ecart) < 2
+                );
+                assert(`cadrage « haut » montre plus haut que « centre » (${hauts[0].toFixed(0)} > ${hauts[1].toFixed(0)})`, hauts[0] > hauts[1]);
+                assert(`cadrage « bas » montre plus bas que « centre » (${hauts[2].toFixed(0)} < ${hauts[1].toFixed(0)})`, hauts[2] < hauts[1]);
+            } else {
+                // Sans débord suffisant, il n'y a rien à recadrer : la seule
+                // exigence est de ne pas découvrir l'encoche.
+                assert(
+                    `débord de ${debord.toFixed(0)}px < rayon : le recadrage est borné à 0 (${hauts[1].toFixed(1)})`,
+                    Math.abs(hauts[1]) < 1
+                );
+            }
+        }
+
         // Le visuel doit remonter SOUS le panneau d'exactement un rayon : les
         // encoches des coins arrondis laissaient sinon voir le fond du bloc.
         // L'arc occupe la bande des `rayon` derniers pixels du panneau — le

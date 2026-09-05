@@ -159,12 +159,12 @@ Les boutons pointent vers `#` : les pages cibles n'existent pas encore. Un lien
 **vide** ferait disparaître le bouton — le composant CTA refuse de produire un
 lien mort — d'où ce jalon plutôt que rien.
 
-## Le pied de page : « Réglages du site »
+## Le pied de page : « Réglages → Configuration »
 
 Le pied de page est commun à toutes les pages : son contenu n'appartient à
-aucune d'elles. Il vit donc dans une **page d'options** ACF, sous
-*Réglages du site* — trois blocs d'appel, le sur-titre et l'adresse, la mention
-de copyright, et le **visuel révélé**.
+aucune d'elles. Il vit donc dans une **page d'options** ACF, en sous-menu de
+*Réglages* — trois blocs d'appel, le sur-titre et l'adresse, la mention de
+copyright, le **visuel révélé** et son **cadrage**.
 
 Sa navigation vient de deux emplacements de menu distincts, `footer-menu` et
 `legal-menu` : un contributeur ne peut pas glisser « Mentions légales » au
@@ -176,6 +176,22 @@ les **valeurs** vivent en base, ce qui est leur place.
 > **Le visuel révélé n'est pas décoratif.** C'est lui qu'on découvre en bas de
 > page : sans lui, le pied de page reste simplement posé, sans animation. Son
 > texte alternatif se saisit dans la médiathèque.
+
+### Le cadrage du visuel révélé
+
+Le visuel est rogné pour remplir toute la largeur : il ne montre qu'une bande de
+la photo. **Laquelle relève du contenu, pas du gabarit** — une bouche en bas de
+cadre et un visage en haut ne se cadrent pas pareil. Le contributeur choisit donc
+« Haut de l'image », « Centre » ou « Bas de l'image ».
+
+Les valeurs vivent dans `inc/enums/LcdsFocalPoint.php`, **source unique** du
+libellé et du suffixe de classe (`is-focus-<valeur>`). La liste de
+l'administration en est alimentée par un filtre `acf/load_field`.
+
+L'`object-position` correspondante vit, elle, dans `partials/footer.scss` : ce
+n'est pas une constante, elle compense le débord du visuel sous les coins
+arrondis — voir
+[`../design/figma/nodes/276-1063-footer.md`](../design/figma/nodes/276-1063-footer.md).
 
 ## Les champs sont versionnés, pas en base
 

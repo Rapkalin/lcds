@@ -15,27 +15,29 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Déclare l'écran « Réglages du site ».
+ * Déclare l'écran « Réglages → Configuration ».
  *
  * Gardée : la page d'options est une fonctionnalité d'ACF Pro, un plugin sous
  * licence hors du dépôt. Le thème doit se dégrader proprement sans lui.
  */
 function lcds_register_options_page(): void
 {
-    if (! function_exists('acf_add_options_page')) {
+    if (! function_exists('acf_add_options_sub_page')) {
         return;
     }
 
-    acf_add_options_page([
-        'page_title' => __('Réglages du site', 'lcds'),
-        'menu_title' => __('Réglages du site', 'lcds'),
+    // Sous-page de « Réglages » et non entrée de premier niveau : c'est là
+    // qu'un contributeur cherche la configuration du site, et le menu
+    // d'administration n'a pas besoin d'une ligne de plus.
+    acf_add_options_sub_page([
+        'page_title' => __('Configuration du site', 'lcds'),
+        'menu_title' => __('Configuration', 'lcds'),
         'menu_slug' => 'lcds-settings',
+        'parent_slug' => 'options-general.php',
         'capability' => 'edit_theme_options',
-        'position' => 60,
-        'icon_url' => 'dashicons-admin-settings',
         'redirect' => false,
         'update_button' => __('Enregistrer', 'lcds'),
-        'updated_message' => __('Réglages enregistrés.', 'lcds'),
+        'updated_message' => __('Configuration enregistrée.', 'lcds'),
     ]);
 }
 add_action('acf/init', 'lcds_register_options_page');

@@ -150,6 +150,25 @@
             "max_height": "",
             "max_size": "",
             "mime_types": ""
+        },
+        {
+            "key": "field_lcds_footer_cadrage",
+            "label": "Cadrage du visuel",
+            "name": "cadrage",
+            "type": "button_group",
+            "instructions": "Le visuel est rogné pour remplir toute la largeur : ce réglage dit quelle partie garder. Les choix viennent de inc/enums/LcdsFocalPoint.php.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {},
+            "default_value": "center",
+            "allow_null": 0,
+            "other_choice": 0,
+            "layout": "horizontal",
+            "return_format": "value"
         }
     ],
     "location": [
@@ -170,5 +189,5 @@
     "active": true,
     "description": "Contenu du pied de page, commun à toutes les pages.",
     "show_in_rest": 0,
-    "modified": 1788790000
+    "modified": 1788880000
 }

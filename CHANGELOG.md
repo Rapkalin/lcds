@@ -7,6 +7,29 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.2.1
+
+### Corrigé
+
+- **Le visuel révélé était 32px trop haut.** Sa boîte fait un rayon de plus que
+  ce qu'on découvre — le débord passe sous le panneau — et il était donc centré
+  sur la boîte plutôt que sur la partie réellement vue. Le décalage est borné :
+  sur une vue étroite la photo n'a plus de débord vertical, et le compenser
+  quand même redécouvrait l'encoche.
+
+## 2.2.0
+
+### Ajouté
+
+- **Le cadrage du visuel révélé est contribuable** : haut, centre ou bas. Le
+  visuel étant rogné pour remplir la largeur, la bande qu'il montre relève du
+  contenu et non du gabarit.
+
+### Changé
+
+- **L'écran de configuration passe sous *Réglages → Configuration***, au lieu
+  d'une entrée de premier niveau dans le menu d'administration.
+
 ## 2.1.1
 
 ### Corrigé

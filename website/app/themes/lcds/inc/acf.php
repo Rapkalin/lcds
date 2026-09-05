@@ -17,6 +17,7 @@
 require_once __DIR__ . '/enums/LcdsMediaShape.php';
 require_once __DIR__ . '/enums/LcdsDotColor.php';
 require_once __DIR__ . '/enums/LcdsInfoIcon.php';
+require_once __DIR__ . '/enums/LcdsFocalPoint.php';
 
 if (! defined('ABSPATH')) {
     exit;
@@ -238,3 +239,16 @@ function lcds_load_info_icons(array $field): array
     return $field;
 }
 add_filter('acf/load_field/key=field_lcds_infos_icone', 'lcds_load_info_icons');
+
+/**
+ * Alimente la liste des cadrages depuis LcdsFocalPoint.
+ *
+ * @param array $field Définition du champ, telle qu'ACF la charge.
+ */
+function lcds_load_focal_points(array $field): array
+{
+    $field['choices'] = LcdsFocalPoint::choices();
+
+    return $field;
+}
+add_filter('acf/load_field/key=field_lcds_footer_cadrage', 'lcds_load_focal_points');

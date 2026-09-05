@@ -28,7 +28,10 @@ $address = (string) lcds_option('adresse');
 $copyright = lcds_option_text('copyright');
 $reveal = lcds_attachment_id(lcds_option('visuel'));
 
-$visual = $reveal === 0 ? '' : lcds_render_image($reveal, ['class' => 'footer-reveal__image'], 'full');
+$focus = LcdsFocalPoint::fromValue(lcds_option('cadrage'), LcdsFocalPoint::Center);
+$visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
+    'class' => 'footer-reveal__image is-focus-' . $focus->value,
+], 'full');
 ?>
 
 <div class="footer-reveal"<?php echo $visual === '' ? '' : ' data-footer-reveal'; ?>>

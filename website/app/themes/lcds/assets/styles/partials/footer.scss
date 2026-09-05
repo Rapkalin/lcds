@@ -43,10 +43,37 @@
   height: calc(var(--reveal-height) + var(--footer-radius));
 }
 
+// Le visuel est rogné pour remplir la largeur : le cadrage dit quelle bande
+// garder. C'est du CONTENU — une bouche en bas de cadre et un visage en haut ne
+// se cadrent pas pareil — donc le contributeur le choisit, et les valeurs
+// vivent dans inc/enums/LcdsFocalPoint.php.
 .footer-reveal__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  // CENTRÉ SUR LA PARTIE VUE, pas sur la boîte. La boîte fait un rayon de plus
+  // que ce qu'on découvre — ce débord passe sous le panneau — donc un simple
+  // `center` laissait l'image 32px trop haut, mesuré. La compensation vaut la
+  // moitié du rayon.
+  //
+  // `min(0px, …)` la BORNE : sur une vue étroite, la photo n'a plus de débord
+  // vertical du tout — `cover` y rogne en largeur — et décaler de 32px
+  // découvrait l'encoche, ramenant le liseré blanc. Mesuré à 500 et à 320px.
+  // Le décalage ne s'applique donc que s'il reste de la matière au-dessus.
+  object-position: center min(0px, calc(50% + var(--footer-radius) / 2));
+
+  // Le haut aligné sur la boîte et non sur la partie vue : sinon le visuel ne
+  // couvrirait plus la bande passant sous le panneau, et le fond du bloc
+  // réapparaîtrait dans les encoches. L'écart avec le vrai haut de la photo
+  // vaut un rayon, invisible sur les centaines de pixels de débord.
+  &.is-focus-top {
+    object-position: center 0%;
+  }
+
+  // Le bas de la partie vue EST le bas de la boîte : aucune compensation.
+  &.is-focus-bottom {
+    object-position: center 100%;
+  }
 }
 
 // Avancement 0 : le panneau est descendu d'une hauteur de visuel, son bas
