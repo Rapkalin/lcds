@@ -7,6 +7,24 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.4.0
+
+### Ajouté
+
+- **Rôle « Contributeur LCDS »** : pages, médias, menus, personnalisateur,
+  configuration du site et son propre profil. Tout le reste est retiré du menu
+  **et refusé à l'accès** — masquer une entrée ne protège rien, l'URL reste
+  tapable. Voir [`readme/roles.md`](readme/roles.md).
+- **Écran *Réglages → Configuration* ouvert par une capacité dédiée**, pas par
+  `manage_options` — qui aurait ouvert les sept écrans de Réglages du cœur et
+  l'éditeur brut des options en base.
+
+### Changé
+
+- **La boîte SEO passe sous les blocs de contribution.** Yoast s'enregistrait en
+  priorité haute : le référencement s'affichait avant le contenu de la page.
+- **Le tableau de bord se limite à « D'un coup d'œil ».**
+
 ## 2.3.1
 
 ### Corrigé

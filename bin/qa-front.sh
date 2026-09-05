@@ -398,6 +398,82 @@ check_version() {
 echo "== Version du site =="
 check_version || FAILURES=$((FAILURES + 1))
 
+# Le rôle de contribution : ce qu'il PEUT et surtout ce qu'il ne peut pas. Les
+# capacités absentes comptent plus que les présentes — `manage_options` ouvre
+# les sept écrans de Réglages du cœur et l'éditeur brut des options en base.
+check_role() {
+    local out
+
+    out="$(cd "$ROOT" && docker compose exec -T php wp eval '
+$role = get_role("lcds_contributeur");
+
+if (! $role instanceof WP_Role) {
+    echo "FAIL|role de contribution|absent\n";
+
+    return;
+}
+
+$attendues = array("edit_pages", "publish_pages", "upload_files", "edit_theme_options", "lcds_manage_settings", "read");
+$interdites = array("manage_options", "activate_plugins", "install_plugins", "switch_themes", "edit_themes", "list_users", "edit_users", "delete_users", "update_core", "export", "import");
+
+$manquantes = array();
+$deTrop = array();
+
+foreach ($attendues as $cap) {
+    if (empty($role->capabilities[$cap])) {
+        $manquantes[] = $cap;
+    }
+}
+
+foreach ($interdites as $cap) {
+    if (! empty($role->capabilities[$cap])) {
+        $deTrop[] = $cap;
+    }
+}
+
+printf(
+    "%s|le role porte ce qu il lui faut|%d capacites%s\n",
+    $manquantes === array() ? "PASS" : "FAIL",
+    count(array_filter($role->capabilities)),
+    $manquantes === array() ? "" : " — manque " . implode(", ", $manquantes),
+);
+
+printf(
+    "%s|le role ne porte AUCUNE capacite d administration|%s\n",
+    $deTrop === array() ? "PASS" : "FAIL",
+    $deTrop === array() ? "verifie sur " . count($interdites) . " capacites" : "DE TROP : " . implode(", ", $deTrop),
+);
+
+printf(
+    "%s|l administrateur garde l acces a la configuration|%s\n",
+    ! empty(get_role("administrator")->capabilities["lcds_manage_settings"]) ? "PASS" : "FAIL",
+    ! empty(get_role("administrator")->capabilities["lcds_manage_settings"]) ? "oui" : "non",
+);
+
+// La boite de Yoast doit passer APRES celles de la contribution.
+printf(
+    "%s|boite SEO sous les blocs de contribution|priorite %s\n",
+    apply_filters("wpseo_metabox_prio", "high") === "low" ? "PASS" : "FAIL",
+    apply_filters("wpseo_metabox_prio", "high"),
+);
+' --allow-root 2>/dev/null | tr -d '\r')"
+
+    if [ -z "$out" ]; then
+        printf '  FAIL :: rôle de contribution (WP-CLI muet)\n'
+        return 1
+    fi
+
+    printf '%s\n' "$out" | while IFS='|' read -r verdict label detail; do
+        printf '  %s :: %s (%s)\n' "$verdict" "$label" "$detail"
+    done
+
+    printf '%s' "$out" | grep -q '^FAIL' && return 1
+    return 0
+}
+
+echo "== Rôle de contribution =="
+check_role || FAILURES=$((FAILURES + 1))
+
 echo "== Contribution de la page d'accueil =="
 check_contribution || FAILURES=$((FAILURES + 1))
 

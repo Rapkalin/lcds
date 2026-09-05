@@ -48,6 +48,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Relevés Figma : protocole et cache des maquettes | [`design/figma/README.md`](design/figma/README.md) |
 | Contribution : blocs, champs, page d'accueil | [`readme/contribution.md`](readme/contribution.md) |
 | Menus : emplacements et création automatique | [`readme/menus.md`](readme/menus.md) |
+| Rôles et périmètre de l'administration | [`readme/roles.md`](readme/roles.md) |
 | Yoast, indexation, SEO technique | [`readme/seo.md`](readme/seo.md) |
 | Pint, PHPCS, PHPStan, Pest | [`readme/qualite-code.md`](readme/qualite-code.md) |
 | Accessibilité : RGAA, contrastes, décisions | [`readme/accessibilite.md`](readme/accessibilite.md) |

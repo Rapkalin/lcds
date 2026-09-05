@@ -34,7 +34,7 @@ function lcds_register_options_page(): void
         'menu_title' => __('Configuration', 'lcds'),
         'menu_slug' => 'lcds-settings',
         'parent_slug' => 'options-general.php',
-        'capability' => 'edit_theme_options',
+        'capability' => LCDS_SETTINGS_CAP,
         'redirect' => false,
         'update_button' => __('Enregistrer', 'lcds'),
         'updated_message' => __('Configuration enregistrée.', 'lcds'),

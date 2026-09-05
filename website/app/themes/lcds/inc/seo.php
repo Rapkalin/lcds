@@ -84,3 +84,17 @@ function lcds_reset_seo_titles(): array
 
     return $removed;
 }
+
+/**
+ * Place la boîte de Yoast SOUS celles de la contribution.
+ *
+ * Yoast s'enregistre en priorité `high` : sa boîte passait donc avant le champ
+ * de contenu flexible, et un contributeur tombait sur le référencement avant
+ * d'avoir vu la page. `low` la range après toutes les boîtes de priorité
+ * normale — filtre fourni par le plugin, `admin/metabox/class-metabox.php`.
+ */
+function lcds_seo_metabox_below_content(): string
+{
+    return 'low';
+}
+add_filter('wpseo_metabox_prio', 'lcds_seo_metabox_below_content');
