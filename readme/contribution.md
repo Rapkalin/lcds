@@ -159,14 +159,57 @@ Les boutons pointent vers `#` : les pages cibles n'existent pas encore. Un lien
 **vide** ferait disparaître le bouton — le composant CTA refuse de produire un
 lien mort — d'où ce jalon plutôt que rien.
 
-## Les champs sont versionnés
+## Les champs sont versionnés, pas en base
 
-Les groupes de champs vivent en **JSON local** dans `acf-json/` du thème. ACF y
-écrit et y lit tout seul dès que le dossier existe — aucun hook à poser.
+C'est la différence assumée avec 2bdm, dont les neuf groupes et 165 champs
+n'existent **que** comme lignes de base : là-bas, livrer un champ demande une
+migration de base ; ici, il part avec le code.
 
-Conséquence pratique : **un champ ajusté dans l'interface d'ACF modifie un
-fichier du dépôt.** Il faut le committer, sinon l'ajustement ne suivra pas au
-déploiement. C'est le prix de champs relisibles en diff.
+Les groupes vivent en **JSON local** dans `acf-json/` du thème. ACF y écrit et y
+lit tout seul dès que le dossier existe — aucun hook à poser. Le dossier est
+dans `website/`, donc embarqué par l'artefact de déploiement.
+
+Mesuré sur cet environnement :
+
+```
+load_json  : …/themes/lcds/acf-json   save_json : le même dossier
+groupes en base : 0        champs en base : 0
+groupe servi    : ID = 0, local = 'json'
+```
+
+`ID = 0` est le point qui compte : le groupe rendu ne vient d'aucune ligne de
+base. Une assertion de `bin/qa-front.sh` le vérifie à chaque campagne.
+
+### Ce qui peut quand même diverger
+
+**Enregistrer un groupe depuis l'interface d'ACF crée une copie en base** — et
+réécrit le JSON. Vérifié : tant que le fichier est là et pas plus ancien, ACF
+continue de servir le fichier, la copie ne prend pas la main. Elle ne devient
+dangereuse que si le JSON n'arrive pas, ou arrive périmé.
+
+Deux garde-fous :
+
+1. **L'interface de gestion des groupes est masquée hors développement**
+   (`acf/settings/show_admin`, `inc/acf.php`). Vérifié : visible en
+   `development`, masquée en `staging` et en `production`. La saisie des valeurs
+   par les contributeurs n'est pas touchée — seule la modification de la
+   structure l'est.
+2. **Les clés propres à la machine sont retirées du fichier après écriture.**
+   ACF pose `local_file`, un **chemin absolu**, quand il charge un groupe, et le
+   réécrit à l'enregistrement. Rien ne casse — ACF l'écrase à chaque
+   chargement — mais le fichier devient différent d'une machine à l'autre sans
+   qu'aucun champ n'ait bougé, ce qui ruine la relecture en diff.
+   `tests/Unit/FieldConfigTest.php` fait échouer la CI si un tel chemin est
+   committé.
+
+> Le filtre documenté `acf/pre_save_json_file` **ne convient pas** : il ne
+> concerne que les types de contenu ACF. Pour un groupe de champs,
+> `update_field_group()` appelle `save_file()` en direct et le court-circuite —
+> vérifié, la clé survivait. Le nettoyage est donc accroché **après** l'écriture.
+
+**Un champ ajusté dans l'interface modifie un fichier du dépôt.** Il faut le
+committer, sinon l'ajustement ne suivra pas au déploiement. C'est le prix de
+champs relisibles en diff.
 
 ## Deux pièges rencontrés
 

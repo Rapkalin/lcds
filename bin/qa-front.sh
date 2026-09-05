@@ -188,6 +188,27 @@ printf(
     implode(", ", $declares),
 );
 
+// La configuration des champs doit venir du FICHIER, pas de la base : c est
+// tout l interet de la bascule. Enregistrer un groupe depuis l interface d ACF
+// cree une copie en base, et cette copie prend la main si le JSON manque ou
+// arrive perime — le deploiement rejouerait alors une configuration fantome
+// que personne ne peut relire en diff.
+$servi = acf_get_field_group("group_lcds_homepage");
+$fichiers = function_exists("acf_get_local_json_files") ? acf_get_local_json_files() : array();
+
+printf(
+    "%s|configuration des champs servie depuis un fichier|ID=%s local=%s\n",
+    (int) ($servi["ID"] ?? -1) === 0 && ($servi["local"] ?? "") === "json" ? "PASS" : "FAIL",
+    var_export($servi["ID"] ?? null, true),
+    var_export($servi["local"] ?? null, true),
+);
+
+printf(
+    "%s|le JSON du groupe est bien present|%s\n",
+    isset($fichiers["group_lcds_homepage"]) ? "PASS" : "FAIL",
+    $fichiers["group_lcds_homepage"] ?? "ABSENT",
+);
+
 $page_id = (int) get_option("page_on_front");
 $rangees = get_post_meta($page_id, "sections", true);
 $rangees = is_array($rangees) ? $rangees : array();
@@ -216,7 +237,7 @@ printf(
 );
 ' --allow-root 2>/dev/null | tr -d '\r')"
 
-    local attendues=5
+    local attendues=7
     local obtenues
 
     obtenues="$(printf '%s\n' "$out" | grep -cE '^(PASS|FAIL)\|')"

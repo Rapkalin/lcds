@@ -23,6 +23,76 @@ if (! defined('ABSPATH')) {
 }
 
 /**
+ * Retire l'interface de gestion des groupes de champs hors développement.
+ *
+ * La configuration des champs vit dans `acf-json/`, versionnée et déployée avec
+ * le thème : elle se modifie en local, se relit en diff et se committe. Laisser
+ * l'écran « Custom Fields » ouvert en préprod ou en production, c'est ouvrir la
+ * seule porte par laquelle une configuration peut diverger du dépôt.
+ *
+ * Ce qui est mesuré, et qui explique le périmètre exact de ce garde-fou :
+ * enregistrer un groupe depuis l'interface crée bien une copie EN BASE, mais
+ * ACF continue de servir le JSON tant que celui-ci n'est pas plus ancien —
+ * vérifié, le groupe reste rendu avec `ID = 0` et `local = 'json'`. La copie en
+ * base n'est donc dangereuse que si le JSON n'arrive pas, ou arrive périmé.
+ *
+ * Ceci ne masque QUE la gestion des groupes. La saisie des valeurs par les
+ * contributeurs n'est pas touchée.
+ */
+function lcds_hide_acf_admin(): bool
+{
+    return in_array(wp_get_environment_type(), ['local', 'development'], true);
+}
+add_filter('acf/settings/show_admin', 'lcds_hide_acf_admin');
+
+/**
+ * Retire du JSON écrit les clés propres à la machine.
+ *
+ * ACF pose `local` et `local_file` sur un groupe au moment où il le CHARGE
+ * (`includes/local-json.php`), et les réécrit telles quelles quand on
+ * l'enregistre depuis l'interface. `local_file` est un **chemin absolu** —
+ * `/var/www/html/…` chez nous, autre chose ailleurs.
+ *
+ * Le dommage est limité : ACF réécrase la valeur à chaque chargement, donc rien
+ * ne casse. Ce qu'elle abîme, c'est la RELECTURE EN DIFF — le fichier change
+ * d'une machine à l'autre sans qu'aucun champ n'ait bougé, ce qui est
+ * exactement ce qu'on cherche à éviter en versionnant la configuration.
+ *
+ * Accroché APRÈS l'écriture, et pas avant : `acf/pre_save_json_file` ne
+ * concerne que les types de contenu ACF. Pour un groupe de champs,
+ * `update_field_group()` appelle `save_file()` en direct et court-circuite ce
+ * filtre — vérifié, la clé survivait.
+ *
+ * @param array $field_group Groupe qui vient d'être enregistré.
+ */
+function lcds_strip_local_json_paths(array $field_group): void
+{
+    if (! function_exists('acf_get_local_json_files')) {
+        return;
+    }
+
+    $file = acf_get_local_json_files()[$field_group['key'] ?? ''] ?? null;
+
+    if (! is_string($file) || ! is_writable($file)) {
+        return;
+    }
+
+    $json = json_decode((string) file_get_contents($file), true);
+
+    if (! is_array($json) || (! isset($json['local']) && ! isset($json['local_file']))) {
+        return;
+    }
+
+    unset($json['local'], $json['local_file']);
+
+    file_put_contents(
+        $file,
+        wp_json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL,
+    );
+}
+add_action('acf/update_field_group', 'lcds_strip_local_json_paths', 20);
+
+/**
  * Enveloppe de get_field() qui rend `null` quand ACF n'est pas là.
  *
  * Nommée `lcds_field` et non `get_field` pour ne pas masquer la fonction d'ACF.

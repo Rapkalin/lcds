@@ -6,9 +6,11 @@
             "key": "field_lcds_home_titre_h1",
             "label": "Titre principal (h1)",
             "name": "titre_h1",
+            "aria-label": "",
             "type": "text",
             "instructions": "Titre principal de la page. Invisible à l'écran — la maquette n'en prévoit aucun dans le hero — mais lu par les moteurs de recherche et les lecteurs d'écran. Y placer l'expression clé, par exemple « Cabinet d'orthodontie à Vienne ».",
             "required": 0,
+            "conditional_logic": false,
             "wrapper": {
                 "width": "",
                 "class": "",
@@ -24,9 +26,11 @@
             "key": "field_lcds_home_sections",
             "label": "Sections",
             "name": "sections",
+            "aria-label": "",
             "type": "flexible_content",
             "instructions": "Ajoutez, réordonnez ou supprimez les sections de la page. Le catalogue est celui de la page d'accueil : aucune autre section ne peut y être insérée.",
             "required": 0,
+            "conditional_logic": false,
             "wrapper": {
                 "width": "",
                 "class": "",
@@ -43,9 +47,11 @@
                             "key": "field_lcds_hero_visuel",
                             "label": "Visuel de fond",
                             "name": "visuel",
+                            "aria-label": "",
                             "type": "image",
                             "instructions": "Photographie pleine largeur. Cadrée automatiquement : prévoir un sujet centré.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -56,15 +62,21 @@
                             "preview_size": "medium",
                             "min_width": 1440,
                             "min_height": "",
-                            "mime_types": "jpg,jpeg,png,webp"
+                            "mime_types": "jpg,jpeg,png,webp",
+                            "min_size": 0,
+                            "max_width": 0,
+                            "max_height": 0,
+                            "max_size": 0
                         },
                         {
                             "key": "field_lcds_hero_vignette",
                             "label": "Vignette de la carte",
                             "name": "carte_vignette",
+                            "aria-label": "",
                             "type": "image",
                             "instructions": "Petite image carrée affichée dans la carte d'appel.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -73,15 +85,23 @@
                             "return_format": "id",
                             "library": "all",
                             "preview_size": "thumbnail",
-                            "mime_types": "jpg,jpeg,png,webp"
+                            "mime_types": "jpg,jpeg,png,webp",
+                            "min_width": 0,
+                            "min_height": 0,
+                            "min_size": 0,
+                            "max_width": 0,
+                            "max_height": 0,
+                            "max_size": 0
                         },
                         {
                             "key": "field_lcds_hero_lien",
                             "label": "Lien de la carte",
                             "name": "carte_lien",
+                            "aria-label": "",
                             "type": "link",
                             "instructions": "Le TEXTE du lien sert de libellé à la carte (« Prendre RDV »), son URL de destination.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -93,9 +113,11 @@
                             "key": "field_lcds_hero_texte",
                             "label": "Phrase de la carte",
                             "name": "carte_texte",
+                            "aria-label": "",
                             "type": "textarea",
                             "instructions": "Deux lignes au maximum : au-delà, la carte s'allonge et déséquilibre le visuel.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -104,7 +126,8 @@
                             "default_value": "",
                             "maxlength": 120,
                             "rows": 3,
-                            "new_lines": ""
+                            "new_lines": "",
+                            "placeholder": ""
                         }
                     ],
                     "min": "",
@@ -120,9 +143,11 @@
                             "key": "field_lcds_histoire_etiquette",
                             "label": "Étiquette de section",
                             "name": "etiquette",
+                            "aria-label": "",
                             "type": "text",
                             "instructions": "Libellé court, affiché en capitales. Exemple : « l'histoire ».",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -138,15 +163,20 @@
                             "key": "field_lcds_histoire_puce",
                             "label": "Couleur de la puce",
                             "name": "puce",
+                            "aria-label": "",
                             "type": "button_group",
                             "instructions": "Le petit point coloré de l'étiquette.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
                                 "id": ""
                             },
-                            "choices": {},
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
                             "default_value": "turquoise",
                             "return_format": "value",
                             "allow_null": 0,
@@ -156,9 +186,11 @@
                             "key": "field_lcds_histoire_texte",
                             "label": "Texte",
                             "name": "texte",
+                            "aria-label": "",
                             "type": "wysiwyg",
                             "instructions": "Paragraphes de présentation. Une ligne vide entre deux paragraphes suffit.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -174,9 +206,11 @@
                             "key": "field_lcds_histoire_cta",
                             "label": "Bouton d'action",
                             "name": "cta",
+                            "aria-label": "",
                             "type": "link",
                             "instructions": "Le TEXTE du lien sert de libellé au bouton, son URL de destination. Vide : aucun bouton.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -188,9 +222,11 @@
                             "key": "field_lcds_histoire_galerie_libelle",
                             "label": "Libellé du rail",
                             "name": "galerie_libelle",
+                            "aria-label": "",
                             "type": "text",
                             "instructions": "Description du rail, lue par les lecteurs d'écran. Exemple : « Le cabinet en images ».",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -206,9 +242,11 @@
                             "key": "field_lcds_histoire_galerie",
                             "label": "Visuels du rail",
                             "name": "galerie",
+                            "aria-label": "",
                             "type": "repeater",
                             "instructions": "Ajoutez autant de visuels que voulu : plus il y en a, plus le rail défile.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -224,30 +262,42 @@
                                     "key": "field_lcds_histoire_forme",
                                     "label": "Forme du cadre",
                                     "name": "forme",
+                                    "aria-label": "",
                                     "type": "select",
                                     "instructions": "La largeur du cadre. « Deux visuels empilés » attend deux images.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
                                         "id": ""
                                     },
-                                    "choices": {},
+                                    "choices": {
+                                        "large": "Grand (892 px)",
+                                        "pair": "Deux visuels empilés (553 px)",
+                                        "medium": "Moyen (666 px)",
+                                        "small": "Petit (503 px)"
+                                    },
                                     "default_value": "large",
                                     "allow_null": 0,
                                     "multiple": 0,
                                     "ui": 0,
                                     "ajax": 0,
                                     "return_format": "value",
-                                    "placeholder": ""
+                                    "placeholder": "",
+                                    "create_options": 0,
+                                    "save_options": 0,
+                                    "parent_repeater": "field_lcds_histoire_galerie"
                                 },
                                 {
                                     "key": "field_lcds_histoire_image",
                                     "label": "Visuel",
                                     "name": "image",
+                                    "aria-label": "",
                                     "type": "image",
                                     "instructions": "Cadré automatiquement.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -256,15 +306,32 @@
                                     "return_format": "id",
                                     "library": "all",
                                     "preview_size": "medium",
-                                    "mime_types": "jpg,jpeg,png,webp"
+                                    "mime_types": "jpg,jpeg,png,webp",
+                                    "min_width": 0,
+                                    "min_height": 0,
+                                    "min_size": 0,
+                                    "max_width": 0,
+                                    "max_height": 0,
+                                    "max_size": 0,
+                                    "parent_repeater": "field_lcds_histoire_galerie"
                                 },
                                 {
                                     "key": "field_lcds_histoire_image_2",
                                     "label": "Second visuel (empilé)",
                                     "name": "image_2",
+                                    "aria-label": "",
                                     "type": "image",
                                     "instructions": "Uniquement pour la forme « Deux visuels empilés ».",
                                     "required": 0,
+                                    "conditional_logic": [
+                                        [
+                                            {
+                                                "field": "field_lcds_histoire_forme",
+                                                "operator": "==",
+                                                "value": "pair"
+                                            }
+                                        ]
+                                    ],
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -274,17 +341,16 @@
                                     "library": "all",
                                     "preview_size": "thumbnail",
                                     "mime_types": "jpg,jpeg,png,webp",
-                                    "conditional_logic": [
-                                        [
-                                            {
-                                                "field": "field_lcds_histoire_forme",
-                                                "operator": "==",
-                                                "value": "pair"
-                                            }
-                                        ]
-                                    ]
+                                    "min_width": 0,
+                                    "min_height": 0,
+                                    "min_size": 0,
+                                    "max_width": 0,
+                                    "max_height": 0,
+                                    "max_size": 0,
+                                    "parent_repeater": "field_lcds_histoire_galerie"
                                 }
-                            ]
+                            ],
+                            "rows_per_page": 20
                         }
                     ],
                     "min": "",
@@ -300,9 +366,11 @@
                             "key": "field_lcds_traitements_etiquette",
                             "label": "Étiquette de section",
                             "name": "etiquette",
+                            "aria-label": "",
                             "type": "text",
                             "instructions": "Libellé court, affiché en capitales. Exemple : « Les différents traitements ».",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -318,15 +386,20 @@
                             "key": "field_lcds_traitements_puce",
                             "label": "Couleur de la puce",
                             "name": "puce",
+                            "aria-label": "",
                             "type": "button_group",
                             "instructions": "Le petit point coloré de l'étiquette.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
                                 "id": ""
                             },
-                            "choices": {},
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
                             "default_value": "turquoise",
                             "return_format": "value",
                             "allow_null": 0,
@@ -336,9 +409,11 @@
                             "key": "field_lcds_traitements_entrees",
                             "label": "Entrées",
                             "name": "entrees",
+                            "aria-label": "",
                             "type": "repeater",
                             "instructions": "Chaque entrée se déplie au clic.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -354,9 +429,11 @@
                                     "key": "field_lcds_traitements_titre",
                                     "label": "Titre",
                                     "name": "titre",
+                                    "aria-label": "",
                                     "type": "text",
                                     "instructions": "",
                                     "required": 1,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -366,15 +443,18 @@
                                     "maxlength": "",
                                     "placeholder": "",
                                     "prepend": "",
-                                    "append": ""
+                                    "append": "",
+                                    "parent_repeater": "field_lcds_traitements_entrees"
                                 },
                                 {
                                     "key": "field_lcds_traitements_texte",
                                     "label": "Réponse",
                                     "name": "texte",
+                                    "aria-label": "",
                                     "type": "wysiwyg",
                                     "instructions": "Contenu affiché quand l'entrée est dépliée.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -384,15 +464,18 @@
                                     "tabs": "all",
                                     "toolbar": "basic",
                                     "media_upload": 0,
-                                    "delay": 0
+                                    "delay": 0,
+                                    "parent_repeater": "field_lcds_traitements_entrees"
                                 },
                                 {
                                     "key": "field_lcds_traitements_ouvert",
                                     "label": "Dépliée au chargement",
                                     "name": "ouvert",
+                                    "aria-label": "",
                                     "type": "true_false",
                                     "instructions": "À réserver à une seule entrée : plusieurs dépliées allongent beaucoup la page.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -402,17 +485,21 @@
                                     "default_value": 0,
                                     "ui": 1,
                                     "ui_on_text": "Oui",
-                                    "ui_off_text": "Non"
+                                    "ui_off_text": "Non",
+                                    "parent_repeater": "field_lcds_traitements_entrees"
                                 }
-                            ]
+                            ],
+                            "rows_per_page": 20
                         },
                         {
                             "key": "field_lcds_traitements_cta",
                             "label": "Bouton d'action",
                             "name": "cta",
+                            "aria-label": "",
                             "type": "link",
                             "instructions": "Le TEXTE du lien sert de libellé au bouton, son URL de destination. Vide : aucun bouton.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -434,9 +521,11 @@
                             "key": "field_lcds_parcours_etiquette",
                             "label": "Étiquette de section",
                             "name": "etiquette",
+                            "aria-label": "",
                             "type": "text",
                             "instructions": "Libellé court, affiché en capitales. Exemple : « le parcours de soin ».",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -452,15 +541,20 @@
                             "key": "field_lcds_parcours_puce",
                             "label": "Couleur de la puce",
                             "name": "puce",
+                            "aria-label": "",
                             "type": "button_group",
                             "instructions": "Le petit point coloré de l'étiquette.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
                                 "id": ""
                             },
-                            "choices": {},
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
                             "default_value": "orange",
                             "return_format": "value",
                             "allow_null": 0,
@@ -470,9 +564,11 @@
                             "key": "field_lcds_parcours_etapes",
                             "label": "Étapes",
                             "name": "etapes",
+                            "aria-label": "",
                             "type": "repeater",
                             "instructions": "La numérotation et la barre de progression suivent le nombre d'étapes : en ajouter une renumérote tout.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -488,9 +584,11 @@
                                     "key": "field_lcds_parcours_titre",
                                     "label": "Titre de l'étape",
                                     "name": "titre",
+                                    "aria-label": "",
                                     "type": "text",
                                     "instructions": "",
                                     "required": 1,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -500,15 +598,18 @@
                                     "maxlength": "",
                                     "placeholder": "",
                                     "prepend": "",
-                                    "append": ""
+                                    "append": "",
+                                    "parent_repeater": "field_lcds_parcours_etapes"
                                 },
                                 {
                                     "key": "field_lcds_parcours_texte",
                                     "label": "Texte",
                                     "name": "texte",
+                                    "aria-label": "",
                                     "type": "wysiwyg",
                                     "instructions": "Paragraphes et listes à puces.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -518,15 +619,18 @@
                                     "tabs": "all",
                                     "toolbar": "basic",
                                     "media_upload": 0,
-                                    "delay": 0
+                                    "delay": 0,
+                                    "parent_repeater": "field_lcds_parcours_etapes"
                                 },
                                 {
                                     "key": "field_lcds_parcours_duree",
                                     "label": "Durée indicative",
                                     "name": "duree",
+                                    "aria-label": "",
                                     "type": "text",
                                     "instructions": "Facultatif. Exemple : « 30 min ». Vide : aucun badge.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -536,15 +640,18 @@
                                     "maxlength": 20,
                                     "placeholder": "",
                                     "prepend": "",
-                                    "append": ""
+                                    "append": "",
+                                    "parent_repeater": "field_lcds_parcours_etapes"
                                 },
                                 {
                                     "key": "field_lcds_parcours_visuels",
                                     "label": "Visuels",
                                     "name": "visuels",
+                                    "aria-label": "",
                                     "type": "repeater",
                                     "instructions": "Deux au maximum sur la maquette : un large et un étroit.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -560,30 +667,40 @@
                                             "key": "field_lcds_parcours_forme",
                                             "label": "Forme",
                                             "name": "forme",
+                                            "aria-label": "",
                                             "type": "select",
                                             "instructions": "",
                                             "required": 0,
+                                            "conditional_logic": false,
                                             "wrapper": {
                                                 "width": "",
                                                 "class": "",
                                                 "id": ""
                                             },
-                                            "choices": {},
+                                            "choices": {
+                                                "step-wide": "Large (327 px)",
+                                                "step-narrow": "Étroit (214 px)"
+                                            },
                                             "default_value": "step-wide",
                                             "allow_null": 0,
                                             "multiple": 0,
                                             "ui": 0,
                                             "ajax": 0,
                                             "return_format": "value",
-                                            "placeholder": ""
+                                            "placeholder": "",
+                                            "create_options": 0,
+                                            "save_options": 0,
+                                            "parent_repeater": "field_lcds_parcours_visuels"
                                         },
                                         {
                                             "key": "field_lcds_parcours_image",
                                             "label": "Visuel",
                                             "name": "image",
+                                            "aria-label": "",
                                             "type": "image",
                                             "instructions": "",
                                             "required": 0,
+                                            "conditional_logic": false,
                                             "wrapper": {
                                                 "width": "",
                                                 "class": "",
@@ -592,11 +709,21 @@
                                             "return_format": "id",
                                             "library": "all",
                                             "preview_size": "thumbnail",
-                                            "mime_types": "jpg,jpeg,png,webp"
+                                            "mime_types": "jpg,jpeg,png,webp",
+                                            "min_width": 0,
+                                            "min_height": 0,
+                                            "min_size": 0,
+                                            "max_width": 0,
+                                            "max_height": 0,
+                                            "max_size": 0,
+                                            "parent_repeater": "field_lcds_parcours_visuels"
                                         }
-                                    ]
+                                    ],
+                                    "rows_per_page": 20,
+                                    "parent_repeater": "field_lcds_parcours_etapes"
                                 }
-                            ]
+                            ],
+                            "rows_per_page": 20
                         }
                     ],
                     "min": "",
@@ -612,9 +739,11 @@
                             "key": "field_lcds_technologies_etiquette",
                             "label": "Étiquette de section",
                             "name": "etiquette",
+                            "aria-label": "",
                             "type": "text",
                             "instructions": "Libellé court, affiché en capitales. Exemple : « Les technologies ». C'est aussi le TITRE de la section dans le plan de la page.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -630,15 +759,20 @@
                             "key": "field_lcds_technologies_puce",
                             "label": "Couleur de la puce",
                             "name": "puce",
+                            "aria-label": "",
                             "type": "button_group",
                             "instructions": "Le libellé affiché est celui du client ; la valeur enregistrée reste celle du système de design.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
                                 "id": ""
                             },
-                            "choices": {},
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
                             "default_value": "orange",
                             "allow_null": 0,
                             "other_choice": 0,
@@ -649,9 +783,11 @@
                             "key": "field_lcds_technologies_cta",
                             "label": "Bouton d'action",
                             "name": "cta",
+                            "aria-label": "",
                             "type": "link",
                             "instructions": "Laissé vide, le bouton n'est pas rendu — plutôt qu'un lien mort.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -663,9 +799,11 @@
                             "key": "field_lcds_technologies_cartes",
                             "label": "Cartes",
                             "name": "cartes",
+                            "aria-label": "",
                             "type": "repeater",
                             "instructions": "Les cartes s'inclinent par cycle de trois (+2,88° / 0 / -2,88°), comme sur la maquette. Plus il y en a, plus le rail défile : rien ne plafonne leur nombre.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -681,9 +819,11 @@
                                     "key": "field_lcds_technologies_titre",
                                     "label": "Titre",
                                     "name": "titre",
+                                    "aria-label": "",
                                     "type": "text",
                                     "instructions": "Affiché sur le visuel, et masqué quand le texte est révélé.",
                                     "required": 1,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -693,15 +833,18 @@
                                     "maxlength": "",
                                     "placeholder": "",
                                     "prepend": "",
-                                    "append": ""
+                                    "append": "",
+                                    "parent_repeater": "field_lcds_technologies_cartes"
                                 },
                                 {
                                     "key": "field_lcds_technologies_texte",
                                     "label": "Texte révélé",
                                     "name": "texte",
+                                    "aria-label": "",
                                     "type": "wysiwyg",
                                     "instructions": "Contenu affiché par-dessus le visuel au clic sur le bouton. Sans texte, la carte n'a pas de bouton.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -711,15 +854,18 @@
                                     "tabs": "all",
                                     "toolbar": "basic",
                                     "media_upload": 0,
-                                    "delay": 0
+                                    "delay": 0,
+                                    "parent_repeater": "field_lcds_technologies_cartes"
                                 },
                                 {
                                     "key": "field_lcds_technologies_image",
                                     "label": "Visuel",
                                     "name": "image",
+                                    "aria-label": "",
                                     "type": "image",
                                     "instructions": "Le texte alternatif se saisit dans la médiathèque, pas ici.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -734,15 +880,18 @@
                                     "max_width": "",
                                     "max_height": "",
                                     "max_size": "",
-                                    "mime_types": ""
+                                    "mime_types": "",
+                                    "parent_repeater": "field_lcds_technologies_cartes"
                                 },
                                 {
                                     "key": "field_lcds_technologies_ouvert",
                                     "label": "Texte révélé au chargement",
                                     "name": "ouvert",
+                                    "aria-label": "",
                                     "type": "true_false",
                                     "instructions": "La maquette montre la première carte ouverte. À réserver à une seule carte.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -752,9 +901,11 @@
                                     "default_value": 0,
                                     "ui": 1,
                                     "ui_on_text": "Oui",
-                                    "ui_off_text": "Non"
+                                    "ui_off_text": "Non",
+                                    "parent_repeater": "field_lcds_technologies_cartes"
                                 }
-                            ]
+                            ],
+                            "rows_per_page": 20
                         }
                     ],
                     "min": "",
@@ -770,9 +921,11 @@
                             "key": "field_lcds_infos_etiquette",
                             "label": "Étiquette de section",
                             "name": "etiquette",
+                            "aria-label": "",
                             "type": "text",
                             "instructions": "Libellé court, affiché en capitales. Exemple : « Informations pratiques ». C'est aussi le TITRE de la section dans le plan de la page.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -788,15 +941,20 @@
                             "key": "field_lcds_infos_puce",
                             "label": "Couleur de la puce",
                             "name": "puce",
+                            "aria-label": "",
                             "type": "button_group",
                             "instructions": "Le libellé affiché est celui du client ; la valeur enregistrée reste celle du système de design.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
                                 "id": ""
                             },
-                            "choices": {},
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
                             "default_value": "orange",
                             "allow_null": 0,
                             "other_choice": 0,
@@ -807,9 +965,11 @@
                             "key": "field_lcds_infos_visuel",
                             "label": "Visuel de gauche",
                             "name": "visuel",
+                            "aria-label": "",
                             "type": "image",
                             "instructions": "Cadre de 440 × 549 sur la maquette. Vide, il reste un aplat.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -830,9 +990,11 @@
                             "key": "field_lcds_infos_entrees",
                             "label": "Entrées",
                             "name": "entrees",
+                            "aria-label": "",
                             "type": "repeater",
                             "instructions": "Une entrée par information. Elles sont séparées par un filet, et chaque titre entre dans le plan de la page.",
                             "required": 0,
+                            "conditional_logic": false,
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -848,30 +1010,43 @@
                                     "key": "field_lcds_infos_icone",
                                     "label": "Icône",
                                     "name": "icone",
+                                    "aria-label": "",
                                     "type": "select",
                                     "instructions": "Les choix viennent de inc/enums/LcdsInfoIcon.php : ils ne sont pas modifiables ici.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
                                         "id": ""
                                     },
-                                    "choices": {},
+                                    "choices": {
+                                        "pin": "Adresse",
+                                        "bus": "Transports",
+                                        "info": "Information",
+                                        "clock": "Horaires",
+                                        "user": "Contact"
+                                    },
                                     "default_value": "info",
                                     "allow_null": 0,
                                     "multiple": 0,
                                     "ui": 0,
                                     "return_format": "value",
                                     "ajax": 0,
-                                    "placeholder": ""
+                                    "placeholder": "",
+                                    "create_options": 0,
+                                    "save_options": 0,
+                                    "parent_repeater": "field_lcds_infos_entrees"
                                 },
                                 {
                                     "key": "field_lcds_infos_titre",
                                     "label": "Titre",
                                     "name": "titre",
+                                    "aria-label": "",
                                     "type": "text",
                                     "instructions": "",
                                     "required": 1,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -881,15 +1056,18 @@
                                     "maxlength": "",
                                     "placeholder": "",
                                     "prepend": "",
-                                    "append": ""
+                                    "append": "",
+                                    "parent_repeater": "field_lcds_infos_entrees"
                                 },
                                 {
                                     "key": "field_lcds_infos_surtitre",
                                     "label": "Sur-titre",
                                     "name": "surtitre",
+                                    "aria-label": "",
                                     "type": "text",
                                     "instructions": "Ligne courte en capitales espacées, au-dessus du contenu. Exemple : « BUS ».",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -899,15 +1077,18 @@
                                     "maxlength": 60,
                                     "placeholder": "",
                                     "prepend": "",
-                                    "append": ""
+                                    "append": "",
+                                    "parent_repeater": "field_lcds_infos_entrees"
                                 },
                                 {
                                     "key": "field_lcds_infos_texte",
                                     "label": "Contenu",
                                     "name": "texte",
+                                    "aria-label": "",
                                     "type": "wysiwyg",
                                     "instructions": "Adresse, lignes de bus, horaires… Un paragraphe par ligne.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
@@ -917,23 +1098,28 @@
                                     "tabs": "all",
                                     "toolbar": "basic",
                                     "media_upload": 0,
-                                    "delay": 0
+                                    "delay": 0,
+                                    "parent_repeater": "field_lcds_infos_entrees"
                                 },
                                 {
                                     "key": "field_lcds_infos_lien",
                                     "label": "Bouton d'action",
                                     "name": "lien",
+                                    "aria-label": "",
                                     "type": "link",
                                     "instructions": "Bouton contourné aligné à droite du titre. Vide, il n'est pas rendu.",
                                     "required": 0,
+                                    "conditional_logic": false,
                                     "wrapper": {
                                         "width": "",
                                         "class": "",
                                         "id": ""
                                     },
-                                    "return_format": "array"
+                                    "return_format": "array",
+                                    "parent_repeater": "field_lcds_infos_entrees"
                                 }
-                            ]
+                            ],
+                            "rows_per_page": 20
                         }
                     ],
                     "min": "",
@@ -974,5 +1160,8 @@
     "active": true,
     "description": "Sections de la page d'accueil. Le contenu de l'éditeur est masqué : tout se saisit ici.",
     "show_in_rest": 0,
-    "modified": 1788700000
+    "display_title": "",
+    "allow_ai_access": false,
+    "ai_description": "",
+    "modified": 1788618509
 }

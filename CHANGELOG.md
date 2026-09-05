@@ -7,6 +7,16 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.0.1
+
+### Corrigé
+
+- **La configuration des champs ne peut plus diverger du dépôt.** L'interface de
+  gestion des groupes ACF est masquée hors développement, et les clés propres à
+  la machine — dont `local_file`, un chemin absolu — sont retirées du JSON après
+  chaque écriture. Sans ça le fichier différait d'une machine à l'autre sans
+  qu'aucun champ n'ait bougé.
+
 ## 2.0.0
 
 **Rupture de contribution.** La page d'accueil ne se contribue plus en blocs de
