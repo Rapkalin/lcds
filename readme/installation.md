@@ -1,5 +1,16 @@
 # Installation
 
+> **ACF Pro est une dépendance de CONTENU, pas de code.** Sous licence, il ne
+> peut pas vivre dans le dépôt : il s'installe à la main sur chaque
+> environnement, depuis `shared/`. Le thème se dégrade proprement sans lui — la
+> page d'accueil rend son en-tête et son pied de page, sans les sections — et
+> `tests/Unit/AcfGuardTest.php` fait échouer la CI si un gabarit appelle une
+> fonction d'ACF sans garde.
+>
+> Ça n'a pas toujours été vrai : le 05/09/2026, `front-page.php` appelait
+> `have_rows()` à nu et la préproduction est tombée en **500 muet** —
+> `display_errors` vaut 0 hors développement.
+
 Le projet tourne sur **Docker**. Un seul prérequis sur la machine : Docker
 Desktop (ou Docker Engine + Compose v2). PHP, Composer, MySQL, WP-CLI et Node
 vivent dans les conteneurs.

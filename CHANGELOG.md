@@ -7,6 +7,18 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.4.1
+
+### Corrigé
+
+- **La page d'accueil tombait en 500 quand ACF n'était pas actif.**
+  `front-page.php` appelait `have_rows()` sans garde ; ACF Pro étant sous
+  licence et hors du dépôt, tout environnement où il n'est pas installé rendait
+  une page blanche. Le site se dégrade désormais : en-tête et pied de page
+  rendus, sections absentes.
+- **Seconde fatale latente** au même titre dans `inc/contacts.php`, qui aurait
+  tué la soumission du formulaire au lieu de retomber sur l'adresse du `.env`.
+
 ## 2.4.0
 
 ### Ajouté

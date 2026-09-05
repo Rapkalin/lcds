@@ -139,7 +139,9 @@ function lcds_contact_form_hidden_fields(int $page_id): void
  */
 function lcds_contact_recipient(int $page_id): string
 {
-    $configured = $page_id > 0 ? (string) get_field('mail_choice', $page_id) : '';
+    // `lcds_field()` et non `get_field()` : sans ACF, l'appel direct tue la
+    // soumission du formulaire au lieu de retomber sur l'adresse du `.env`.
+    $configured = $page_id > 0 ? (string) lcds_field('mail_choice', $page_id) : '';
 
     if (is_email($configured)) {
         return $configured;

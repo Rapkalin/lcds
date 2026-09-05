@@ -94,6 +94,23 @@ function lcds_strip_local_json_paths(array $field_group): void
 add_action('acf/update_field_group', 'lcds_strip_local_json_paths', 20);
 
 /**
+ * ACF est-il disponible ?
+ *
+ * Le thème doit se dégrader proprement sans lui : c'est un plugin sous licence,
+ * hors du dépôt, installé à la main sur chaque environnement. Un gabarit qui
+ * appelle `have_rows()` sans cette garde tue la page — constaté en préproduction
+ * le 05/09/2026, `Call to undefined function have_rows()` dans front-page.php,
+ * page blanche en 500 puisque `display_errors` vaut 0 hors développement.
+ *
+ * `have_rows` et non `get_field` : c'est la fonction qu'un gabarit de contenu
+ * flexible appelle en premier, donc celle qui tombe en premier.
+ */
+function lcds_has_acf(): bool
+{
+    return function_exists('have_rows') && function_exists('the_row');
+}
+
+/**
  * Enveloppe de get_field() qui rend `null` quand ACF n'est pas là.
  *
  * Nommée `lcds_field` et non `get_field` pour ne pas masquer la fonction d'ACF.

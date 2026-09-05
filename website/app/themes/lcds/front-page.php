@@ -15,6 +15,10 @@
  * Le titre `h1` est un champ de la PAGE et non d'une section : les maquettes ne
  * prévoient aucun titre visible, il est donc rendu masqué visuellement.
  *
+ * `lcds_has_acf()` garde la boucle : ACF est un plugin sous licence, absent du
+ * dépôt et installé à la main. Sans cette garde, un environnement où il n'est
+ * pas actif renvoie une page blanche en 500 au lieu d'une page sans sections.
+ *
  * @package lcds
  */
 
@@ -33,7 +37,7 @@ $heading = lcds_field_text('titre_h1');
         <h1 class="screen-reader-text"><?php echo esc_html($heading); ?></h1>
     <?php endif; ?>
 
-    <?php if (have_rows('sections', $page_id)) : ?>
+    <?php if (lcds_has_acf() && have_rows('sections', $page_id)) : ?>
         <?php while (have_rows('sections', $page_id)) : ?>
             <?php the_row(); ?>
             <?php get_template_part('layouts/' . lcds_layout_template()); ?>
