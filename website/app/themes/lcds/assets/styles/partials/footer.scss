@@ -100,9 +100,15 @@
 
   // Colonne de droite de 440 : à 1440 elle commence donc à 952, comme sur le
   // PDF. Un `auto` la laissait glisser à 1064 selon la longueur des libellés.
+  //
+  // `auto-fit` et non deux colonnes figées : à 200 % de taille de texte, la
+  // colonne de gauche était écrasée à 272px pour un contenu qui en demandait
+  // 487 — RGAA 10.4, mesuré. Les deux colonnes se replient alors l'une sous
+  // l'autre au lieu de déborder, et la mise en page de la maquette est
+  // inchangée tant que la place existe.
   &__inner {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) #{fn.toRem(440)};
+    grid-template-columns: minmax(min(100%, #{fn.toRem(480)}), 1fr) #{fn.toRem(440)};
     gap: fn.toRem(48);
     padding: fn.toRem(48) var.$header-padding fn.toRem(64);
   }

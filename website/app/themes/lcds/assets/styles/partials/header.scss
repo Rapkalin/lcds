@@ -28,6 +28,12 @@
   // La maquette cale la navigation en haut, pas au centre du logo.
   align-items: flex-start;
   justify-content: space-between;
+  // `wrap` ne change RIEN tant que la ligne tient : il n'agit qu'au moment où
+  // elle déborderait. Fait partie du lot posé pour le critère RGAA 10.4 — à
+  // 200 % de taille de texte la page était poussée à 1519px pour une vue de
+  // 1440. Voir readme/accessibilite.md : le lot corrige, la part de chaque
+  // règle n'a pas pu être isolée.
+  flex-wrap: wrap;
   gap: fn.toRem(24);
   padding: fn.toRem(24) var.$header-padding;
 
@@ -86,7 +92,10 @@ body:has(.hero) .site-header {
   line-height: var.$lh-cta;
   letter-spacing: var.$ls-cta;
   text-transform: uppercase;
-  white-space: nowrap;
+  // `nowrap` tient aux tailles de la maquette. À 200 % de taille de texte,
+  // « LES TRAITEMENTS » mesure plus de 400px : les pastilles peuvent donc
+  // revenir à la ligne. Même lot RGAA 10.4 que ci-dessus.
+  overflow-wrap: break-word;
   transition: background-color 0.2s ease;
 }
 

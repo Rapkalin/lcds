@@ -6,9 +6,11 @@
 // relevées au pixel sur les maquettes.
 .tag {
   display: inline-flex;
+  // Sans plafond, une étiquette agrandie dépasse sa colonne au lieu de revenir
+  // à la ligne — RGAA 10.4, mesuré à 299px pour une vue de 320.
+  max-width: 100%;
   align-items: center;
   gap: var.$gutter;
-  height: fn.toRem(29);
   padding: 0 fn.toRem(16) 0 fn.toRem(10);
   border: 1px solid var.$blue-light;
   border-radius: var.$radius-pill;
@@ -22,7 +24,15 @@
   line-height: var.$lh-cta;
   letter-spacing: var.$ls-cta;
   text-transform: uppercase;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  // `nowrap` tient à la taille de la maquette, où l'étiquette est courte. Il la
+  // faisait déborder de sa colonne dès que la taille du texte augmentait :
+  // RGAA 10.4, mesuré à 536px pour une colonne de 532. Elle peut donc revenir à
+  // la ligne, ce qui impose une hauteur libre.
+  min-height: fn.toRem(29);
+  height: auto;
+  padding-top: fn.toRem(4);
+  padding-bottom: fn.toRem(4);
 
   &__dot {
     flex-shrink: 0;

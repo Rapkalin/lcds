@@ -41,6 +41,12 @@ h1, h2, h3 {
   font-family: var.$font-title;
   font-weight: var.$fw-title;
   line-height: var.$lh-title;
+  // Un titre est un mot long dans une police large : à 200 % de taille de
+  // texte sur une vue de 320px, « Interceptif » mesurait 308px pour 280
+  // disponibles et poussait la page. RGAA 10.4, mesuré. `break-word` et non
+  // `anywhere` : il ne coupe qu'en dernier recours et ne change pas la largeur
+  // intrinsèque, donc aucune cote de la maquette ne bouge.
+  overflow-wrap: break-word;
 }
 
 h2 {

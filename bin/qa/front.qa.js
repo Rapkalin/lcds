@@ -552,6 +552,51 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * RGAA 10.4 — le texte doit rester lisible à 200 %.
+     *
+     * Éprouvé à la largeur de référence, qui est ce que demande le critère :
+     * il porte sur la taille du texte, pas sur une vue étroite — le palier
+     * 320px relève de 10.11, testé séparément à taille de texte normale.
+     *
+     * Tout est dimensionné en `rem` ici : à 200 %, la mise en page tout entière
+     * double. L'en-tête poussait alors la page à 1519px pour une vue de 1440 —
+     * mesuré — parce qu'il ne savait pas passer à la ligne.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        const racine = doc.documentElement;
+        const tailleInitiale = racine.style.fontSize;
+        racine.style.fontSize = "200%";
+
+        const debordement = racine.scrollWidth > racine.clientWidth + 1;
+        const tronques = Array.from(doc.querySelectorAll("body *")).filter((node) => {
+            const cs = styleOf(node);
+
+            if (cs.overflow !== "hidden" && cs.overflowY !== "hidden") {
+                return false;
+            }
+
+            if (node.closest(".screen-reader-text") !== null) {
+                return false;
+            }
+
+            const texte = Array.from(node.childNodes)
+                .filter((enfant) => enfant.nodeType === 3)
+                .map((enfant) => enfant.textContent.trim())
+                .join("");
+
+            return texte !== "" && node.scrollHeight > node.clientHeight + 2;
+        }).length;
+
+        assert(
+            `texte à 200 % : pas de défilement horizontal (${racine.scrollWidth} <= ${racine.clientWidth})`,
+            !debordement
+        );
+        assert(`texte à 200 % : aucun texte tronqué (${tronques})`, tronques === 0);
+
+        racine.style.fontSize = tailleInitiale;
+    }
+
+    /* --------------------------------------------------------------------- *
      * Accessibilité. Ces assertions verrouillent des défauts CONSTATÉS, pas
      * des précautions : chacune a échoué avant son correctif.
      * --------------------------------------------------------------------- */

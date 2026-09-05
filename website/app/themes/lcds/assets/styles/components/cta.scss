@@ -6,6 +6,7 @@
 // c'est ce liseré de fond qui creuse l'encoche visible sur la maquette.
 .cta {
   display: inline-flex;
+  max-width: 100%;
   align-items: stretch;
   gap: fn.toRem(2);
   height: fn.toRem(29);
@@ -16,6 +17,7 @@
   letter-spacing: var.$ls-cta;
   text-transform: uppercase;
   white-space: nowrap;
+  overflow-wrap: break-word;
 
   &__icon,
   &__label {
@@ -34,6 +36,7 @@
   }
 
   &__label {
+    min-width: 0;
     padding: 0 fn.toRem(16);
   }
 
@@ -54,12 +57,20 @@
   border: 1px solid var.$blue-light;
   background: var.$white;
   color: var.$blue;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
+// Le survol INVERSE la pastille : fond bleu, texte blanc. Aucune maquette ne
+// couvre cet état — c'est une proposition, à revalider.
+//
+// Les deux états sont mesurés : bleu sur blanc et blanc sur bleu valent
+// 11,37:1, très au-dessus du seuil de 4,5. Le sens de lecture change, pas la
+// lisibilité.
 .cta--outline:hover .cta__label,
 .cta--outline:focus-visible .cta__label {
   border-color: var.$blue;
+  background: var.$blue;
+  color: var.$white;
 }
 
 /* ------------------------------------------------------------------------- *

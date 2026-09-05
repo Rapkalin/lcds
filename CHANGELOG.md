@@ -7,6 +7,24 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.3.0
+
+### Corrigé
+
+- **RGAA 10.4 — le texte à 200 % rendait la page illisible sans défilement
+  horizontal.** Toutes les cotes du thème étant en `rem`, la mise en page
+  doublait avec le texte : la page passait à 1519px pour une vue de 1440. Elle
+  tient désormais à 1440, et une assertion de la campagne le vérifie.
+- **Les boutons contournés s'inversent au survol** : fond bleu, texte blanc.
+  Ils restaient bleus sur blanc.
+
+### Ajouté
+
+- **Audit RGAA 4.1 complet** dans `readme/accessibilite.md`, mené sur la grille
+  officielle : 36 critères non applicables sur preuve structurelle, 28 vérifiés
+  conformes, 1 non conforme (12.1 — un seul système de navigation), 6 hors de
+  portée d'une vérification automatique.
+
 ## 2.2.1
 
 ### Corrigé

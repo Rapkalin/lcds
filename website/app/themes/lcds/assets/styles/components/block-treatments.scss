@@ -127,3 +127,11 @@
     gap: fn.toRem(16);
   }
 }
+
+// Un élément flex ne descend pas sous sa largeur de mot le plus long
+// (`min-width: auto`), et `overflow-wrap` ne change pas cette largeur minimale
+// — vérifié : le titre restait à 424px pour 280 disponibles à 200 % de taille
+// de texte, RGAA 10.4. C'est `min-width: 0` qui débloque la coupure.
+.accordion__title {
+  min-width: 0;
+}
