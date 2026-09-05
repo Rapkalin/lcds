@@ -247,9 +247,78 @@ const initJourneys = () => {
     });
 };
 
+/**
+ * Footer reveal.
+ *
+ * The panel covers a full-bleed visual; as the page bottoms out, it lifts and
+ * uncovers it. Same discipline as the journey section: this file computes ONE
+ * number — how far through the reveal we are — and hands it to CSS, which owns
+ * every pixel.
+ *
+ * Opt-in, exactly like `journey--pinned`: without JavaScript, or when the
+ * visitor asks for reduced motion, the panel stays put and the visual is simply
+ * visible beneath it. That is the mockup, and nothing becomes unreachable.
+ */
+const initFooterReveal = () => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    document.querySelectorAll("[data-footer-reveal]").forEach((wrapper) => {
+        let frame = null;
+
+        const update = () => {
+            frame = null;
+
+            if (!wrapper.classList.contains("footer-reveal--animated")) {
+                return;
+            }
+
+            // La hauteur découverte se lit sur la RÉSERVE du bloc, et non sur
+            // la variable CSS ni sur le visuel : une propriété personnalisée
+            // n'est pas résolue en pixels — `32.0625rem` donnait 32 après
+            // parseFloat — et le visuel est volontairement plus haut, puisqu'il
+            // remonte sous les coins arrondis du panneau.
+            const reveal = parseFloat(window.getComputedStyle(wrapper).paddingBottom);
+
+            if (!(reveal > 0)) {
+                return;
+            }
+
+            // 0 quand le bas du bloc est encore à une hauteur de visuel sous la
+            // vue, 1 quand il l'atteint.
+            const remaining = wrapper.getBoundingClientRect().bottom - window.innerHeight;
+            const progress = Math.min(1, Math.max(0, 1 - remaining / reveal));
+            wrapper.style.setProperty("--reveal-progress", String(progress));
+        };
+
+        const schedule = () => {
+            if (frame === null) {
+                frame = window.requestAnimationFrame(update);
+            }
+        };
+
+        const apply = () => {
+            if (reduceMotion.matches) {
+                wrapper.classList.remove("footer-reveal--animated");
+                wrapper.style.removeProperty("--reveal-progress");
+
+                return;
+            }
+
+            wrapper.classList.add("footer-reveal--animated");
+            update();
+        };
+
+        apply();
+        reduceMotion.addEventListener("change", apply);
+        window.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule);
+    });
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initCarousels();
     initAccordions();
     initJourneys();
+    initFooterReveal();
 });

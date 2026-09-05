@@ -52,3 +52,41 @@ function lcds_header_cta(): void
         'fallback_cb' => false,
     ]);
 }
+
+/**
+ * Navigation du pied de page.
+ *
+ * `depth` vaut 1 : la maquette ne prévoit aucun déroulant.
+ */
+function lcds_footer_nav(): void
+{
+    wp_nav_menu([
+        'theme_location' => LcdsMenuLocation::Footer->value,
+        'container' => 'nav',
+        'container_class' => 'site-footer__nav',
+        'container_aria_label' => __('Navigation du pied de page', 'lcds'),
+        'menu_class' => 'site-footer__list',
+        'depth' => 1,
+        'fallback_cb' => false,
+    ]);
+}
+
+/**
+ * Liens légaux du pied de page.
+ *
+ * Emplacement distinct de la navigation : la maquette les sépare visuellement,
+ * et un contributeur ne doit pas pouvoir glisser « Mentions légales » au milieu
+ * des pages du site.
+ */
+function lcds_footer_legal(): void
+{
+    wp_nav_menu([
+        'theme_location' => LcdsMenuLocation::Legal->value,
+        'container' => 'nav',
+        'container_class' => 'site-footer__legal',
+        'container_aria_label' => __('Informations légales', 'lcds'),
+        'menu_class' => 'site-footer__list',
+        'depth' => 1,
+        'fallback_cb' => false,
+    ]);
+}

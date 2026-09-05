@@ -159,6 +159,24 @@ Les boutons pointent vers `#` : les pages cibles n'existent pas encore. Un lien
 **vide** ferait disparaître le bouton — le composant CTA refuse de produire un
 lien mort — d'où ce jalon plutôt que rien.
 
+## Le pied de page : « Réglages du site »
+
+Le pied de page est commun à toutes les pages : son contenu n'appartient à
+aucune d'elles. Il vit donc dans une **page d'options** ACF, sous
+*Réglages du site* — trois blocs d'appel, le sur-titre et l'adresse, la mention
+de copyright, et le **visuel révélé**.
+
+Sa navigation vient de deux emplacements de menu distincts, `footer-menu` et
+`legal-menu` : un contributeur ne peut pas glisser « Mentions légales » au
+milieu des pages du site — voir [`menus.md`](menus.md).
+
+La structure du groupe est versionnée dans `acf-json/` comme le reste ; seules
+les **valeurs** vivent en base, ce qui est leur place.
+
+> **Le visuel révélé n'est pas décoratif.** C'est lui qu'on découvre en bas de
+> page : sans lui, le pied de page reste simplement posé, sans animation. Son
+> texte alternatif se saisit dans la médiathèque.
+
 ## Les champs sont versionnés, pas en base
 
 C'est la différence assumée avec 2bdm, dont les neuf groupes et 165 champs

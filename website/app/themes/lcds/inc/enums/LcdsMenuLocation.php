@@ -52,9 +52,9 @@ enum LcdsMenuLocation: string
      * au clavier. Le contributeur remplace la destination sans avoir à recréer
      * la navigation.
      *
-     * Les trois emplacements du pied de page rendent un tableau VIDE : aucune
-     * maquette ne les dessine à ce jour. Y mettre des entrées inventées ferait
-     * apparaître en production une navigation que personne n'a validée.
+     * Les réseaux sociaux rendent un tableau VIDE : aucune maquette ne les
+     * dessine. Y mettre des entrées inventées ferait apparaître en production
+     * une navigation que personne n'a validée.
      *
      * Pas de `default` dans le match : un emplacement ajouté sans décision
      * explicite lève UnhandledMatchError plutôt que de partir vide en silence.
@@ -73,7 +73,20 @@ enum LcdsMenuLocation: string
             self::HeaderCta => [
                 ['title' => __('Prendre RDV', 'lcds'), 'url' => '#'],
             ],
-            self::Footer, self::Social, self::Legal => [],
+            self::Footer => [
+                ['title' => __('Le cabinet', 'lcds'), 'url' => '#'],
+                ['title' => __('L’équipe', 'lcds'), 'url' => '#'],
+                ['title' => __('Les traitements', 'lcds'), 'url' => '#'],
+                ['title' => __('Conseils', 'lcds'), 'url' => '#'],
+                ['title' => __('Contact', 'lcds'), 'url' => '#'],
+            ],
+            self::Legal => [
+                ['title' => __('Mentions légales', 'lcds'), 'url' => '#'],
+                ['title' => __('Politique de confidentialité', 'lcds'), 'url' => '#'],
+                ['title' => __('Cookies', 'lcds'), 'url' => '#'],
+            ],
+            // Aucune maquette ne dessine de liens sociaux : rien d'inventé.
+            self::Social => [],
         };
     }
 

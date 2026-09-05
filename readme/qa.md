@@ -65,6 +65,16 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > qu'aux largeurs mobiles.** Constaté en cherchant pourquoi les cotes des
 > technologies n'apparaissaient pas à 1440. C'est désormais un `if/else`.
 
+- **Pied de page** : cotes du panneau à 1440 ; le repli sous mouvement réduit
+  laisse le visuel **découvert** ; et les maths de la translation sont éprouvées
+  en posant l'avancement à la main — 0 recouvre le visuel, 1 le découvre
+  entièrement.
+
+> La campagne force `prefers-reduced-motion`, donc la révélation y est
+> désactivée. Poser la classe et l'avancement à la main rend le mécanisme
+> mesurable **sans dépendre d'un défilement**, qui n'est pas déterministe sous
+> temps virtuel.
+
 ### Trois largeurs, dont un vrai 320px
 
 `1440`, `500` et `320`. La largeur est passée à l'**iframe** et non à la

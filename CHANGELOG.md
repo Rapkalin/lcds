@@ -7,6 +7,29 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.1.1
+
+### Corrigé
+
+- **Liseré blanc dans les coins du pied de page.** Le visuel démarrait là où le
+  panneau s'arrête ; les encoches de ses coins arrondis laissaient donc voir le
+  fond du bloc. Le visuel remonte désormais d'un rayon sous le panneau, à tout
+  avancement de l'animation.
+
+## 2.1.0
+
+### Ajouté
+
+- **Pied de page**, relevé au pixel sur le PDF de maquette — trois blocs
+  d'appel, adresse, deux menus, logo et mention de copyright.
+- **Sa révélation** : le panneau masque un visuel pleine largeur et se soulève
+  en fin de page pour le découvrir. Désactivée sous `prefers-reduced-motion`,
+  où le visuel reste simplement visible.
+- **Écran « Réglages du site »** (page d'options ACF) : le pied de page est
+  commun à toutes les pages, son contenu n'appartient à aucune d'elles. Sa
+  structure est versionnée en JSON local comme le reste.
+- **Les menus du pied de page sont amorcés** — navigation et liens légaux.
+
 ## 2.0.1
 
 ### Corrigé

@@ -205,6 +205,31 @@ dupliqué le rail, les contrôles et leur câblage JavaScript.
 la sortie et n'offre aucun moyen de récupérer le résultat, or le rail a besoin du
 balisage de ses cartes sous forme de chaîne.
 
+## La révélation du pied de page
+
+Le panneau masque un visuel pleine largeur, puis se soulève en fin de page et le
+découvre. Le principe vient d'une référence client (`piaget.com`) ; sa règle CSS
+n'étant pas dans les feuilles servies, ce qui est ici suit la description et la
+maquette.
+
+Comme le parcours de soin, le script ne calcule **qu'un seul nombre** —
+l'avancement — et le donne au CSS, qui possède chaque pixel. Et comme lui, il est
+**opt-in** : la classe `footer-reveal--animated` n'est posée que par le script.
+Sans JavaScript, ou sous `prefers-reduced-motion`, le panneau reste posé et le
+visuel est simplement visible en dessous. C'est le rendu de la maquette, et rien
+ne devient inatteignable.
+
+Deux pièges rencontrés, tous deux mesurés :
+
+- **Une marge négative sur le panneau supprimait l'espace réservé au visuel** :
+  il n'y avait alors plus rien à découvrir, et l'avancement restait à 0 en bas de
+  page. C'est un `padding-bottom` sur le bloc, pas une marge sur le panneau.
+- **La hauteur découverte se lit sur la réserve du bloc**, ni sur la variable
+  CSS — une propriété personnalisée n'est pas résolue en pixels, `32.0625rem`
+  donnait 32 après `parseFloat` — ni sur le visuel, qui est volontairement plus
+  haut : il **remonte d'un rayon sous le panneau**, sans quoi les encoches des
+  coins arrondis laissent voir le fond du bloc.
+
 ## Compilation
 
 Webpack, via le conteneur jetable `node` (profil `tools`) :

@@ -170,6 +170,10 @@ wp eval 'lcds_seed_default_menus();' --allow-root \
 #    actif. Joué trop tôt, il créait les quatre blocs SANS AUCUNE DONNÉE, et son
 #    idempotence interdisait toute correction au démarrage suivant.
 # -----------------------------------------------------------------------------
+echo "==> [init] Réglages du site"
+wp eval-file "$APP_DIR/bin/seed-settings.php" --allow-root || \
+    echo "!!! [init] Amorçage des réglages échoué (ignoré)."
+
 echo "==> [init] Page d'accueil"
 wp eval-file "$APP_DIR/bin/seed-homepage.php" --allow-root || \
     echo "!!! [init] Amorçage de la page d'accueil échoué (ignoré)."

@@ -363,6 +363,86 @@ window.runFrontQa = async (win) => {
         );
     }
 
+    /* --------------------------------------------------------------------- *
+     * Pied de page et sa révélation.
+     *
+     * La campagne tourne avec `prefers-reduced-motion` forcé : la révélation y
+     * est donc DÉSACTIVÉE, et c'est ce qu'on vérifie d'abord — le visuel doit
+     * rester visible, sinon il serait inatteignable pour qui refuse les
+     * animations. Les maths de la translation sont ensuite éprouvées en posant
+     * la classe et l'avancement à la main, ce qui les rend déterministes sans
+     * dépendre d'un défilement.
+     * --------------------------------------------------------------------- */
+    const revele = doc.querySelector("[data-footer-reveal]");
+
+    if (revele !== null) {
+        const media = revele.querySelector(".footer-reveal__media");
+        const footer = doc.querySelector(".site-footer");
+        // La hauteur DÉCOUVERTE est la réserve du bloc, pas la hauteur du
+        // visuel : celui-ci est volontairement plus haut, puisqu'il remonte
+        // sous les coins arrondis du panneau.
+        const hauteur = parseFloat(styleOf(revele).paddingBottom);
+
+        assert(
+            "mouvement réduit : la révélation reste désactivée",
+            !revele.classList.contains("footer-reveal--animated")
+        );
+        assert(
+            `mouvement réduit : le visuel est découvert (${(media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom).toFixed(0)}px)`,
+            media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom > hauteur - 4
+        );
+        // Un panneau plus court que le visuel ne pourrait pas le masquer : le
+        // mécanisme entier repose sur cet invariant.
+        assert(
+            `le panneau couvre au moins la hauteur du visuel (${footer.getBoundingClientRect().height.toFixed(0)} >= ${hauteur.toFixed(0)})`,
+            footer.getBoundingClientRect().height >= hauteur
+        );
+
+        revele.classList.add("footer-reveal--animated");
+        revele.style.setProperty("--reveal-progress", "0");
+        const couvert = footer.getBoundingClientRect().bottom - media.getBoundingClientRect().bottom;
+        assert(`avancement 0 : le panneau recouvre le visuel (écart ${couvert.toFixed(1)}px)`, Math.abs(couvert) < 2);
+
+        revele.style.setProperty("--reveal-progress", "1");
+        const decouvert = media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom;
+        assert(
+            `avancement 1 : le visuel est découvert sur ${decouvert.toFixed(0)}px (attendu ${hauteur.toFixed(0)})`,
+            Math.abs(decouvert - hauteur) < 4
+        );
+
+        // Le visuel doit remonter SOUS le panneau d'exactement un rayon : les
+        // encoches des coins arrondis laissaient sinon voir le fond du bloc.
+        // L'arc occupe la bande des `rayon` derniers pixels du panneau — le
+        // couvrir entièrement suffit donc, et ça vaut à TOUT avancement,
+        // puisque le bas du panneau reste dans la portée du visuel.
+        const rayon = parseFloat(styleOf(footer).borderBottomLeftRadius);
+        const remonte = footer.getBoundingClientRect().bottom - media.getBoundingClientRect().top;
+        assert(
+            `le visuel remonte d'un rayon sous le panneau (${remonte.toFixed(0)} pour un rayon de ${rayon})`,
+            Math.abs(remonte - rayon) < 2
+        );
+        assert(
+            `le visuel couvre toute la largeur (${media.getBoundingClientRect().width.toFixed(0)} = ${revele.getBoundingClientRect().width.toFixed(0)})`,
+            Math.abs(media.getBoundingClientRect().width - revele.getBoundingClientRect().width) < 1
+        );
+
+        revele.classList.remove("footer-reveal--animated");
+        revele.style.removeProperty("--reveal-progress");
+    }
+
+    if (win.innerWidth === 1440) {
+        const boitePied = (sel) => doc.querySelector(sel)?.getBoundingClientRect() ?? null;
+        const stylePied = styleOf(doc.querySelector(".site-footer"));
+        assert(`pied : bloc d'appel à 48 (${boitePied(".footer-call")?.left.toFixed(1)})`,
+            Math.abs((boitePied(".footer-call")?.left ?? -1) - 48) <= 1);
+        assert(`pied : colonne de droite à 952 (${boitePied(".site-footer__aside")?.left.toFixed(1)})`,
+            Math.abs((boitePied(".site-footer__aside")?.left ?? -1) - 952) <= 2);
+        assert(`pied : coins arrondis en bas seulement (${stylePied.borderTopLeftRadius} / ${stylePied.borderBottomLeftRadius})`,
+            stylePied.borderTopLeftRadius === "0px" && stylePied.borderBottomLeftRadius === "64px");
+        assert(`pied : logo de 80 (${boitePied(".site-footer__logo")?.width.toFixed(0)})`,
+            Math.abs((boitePied(".site-footer__logo")?.width ?? -1) - 80) <= 1);
+    }
+
     // Le panneau de la carte de technologie suit le MÊME contrat que
     // l'accordéon — bouton `aria-expanded`/`aria-controls` et panneau
     // réellement `hidden` — et le même code JavaScript, sélectionné par

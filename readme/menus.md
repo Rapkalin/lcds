@@ -64,9 +64,10 @@ Vérifié dans les deux sens : une navigation remaniée survit à un réamorçag
 forcé, et un menu vidé ou détaché de son emplacement est bien réparé par
 l'amorçage.
 
-Les trois emplacements du pied de page restent **vides** : aucune maquette ne les
-dessine à ce jour, et y mettre des entrées inventées ferait apparaître en
-production une navigation que personne n'a validée.
+Seuls **les réseaux sociaux** restent vides : aucune maquette ne les dessine, et
+y mettre des entrées inventées ferait apparaître en production une navigation
+que personne n'a validée. Le pied de page, lui, a été relevé le 05/09/2026 et
+ses deux menus sont amorcés.
 
 ## Ajouter un emplacement
 
@@ -111,7 +112,9 @@ ajouter ailleurs.
 | --- | --- |
 | `header-menu` | Navigation de l'en-tête, `depth: 1` |
 | `header-cta-menu` | Bouton « Prendre RDV » de l'en-tête |
-| `footer-menu`, `social-menu`, `legal-menu` | Pas encore affichés |
+| `footer-menu` | Navigation du pied de page, `depth: 1` |
+| `legal-menu` | Liens légaux du pied de page |
+| `social-menu` | Pas encore affiché |
 
 ### Pourquoi le bouton d'action a son propre emplacement
 

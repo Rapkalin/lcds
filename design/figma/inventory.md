@@ -13,7 +13,7 @@ URL d'un nœud : `https://www.figma.com/design/kfPEAXr7clNODJUq5rT9GF/LCDS-%7C-U
 | `226:1191` | Desktop - 1 | Intro + galerie horizontale | **relevé par PDF**, implémenté |
 | `17:408` | Desktop - 4 | Accordéon des traitements | [structure](nodes/12-207-accueil.md) — partiel |
 | `243:352` | Frame 54 | Blocs de fin + footer (1440 × 4724) | **relevé par PDF**, technologies et infos pratiques implémentées — [détail](nodes/243-352-fin-de-page.md) |
-| `276:1063` | footer | Pied de page (1440 × 1255) | non relevé |
+| `276:1063` | footer | Pied de page (1440 × 1255) | **relevé par PDF**, implémenté — [détail](nodes/276-1063-footer.md) |
 
 ## Parcours du soin — 6 étapes, un carrousel au scroll
 
@@ -38,8 +38,11 @@ Par ordre de besoin, **un appel `get_design_context` par ligne** :
    contenu ;
 3. ~~`243:352` — blocs de fin, y compris le carrousel Technologies~~ : **fait
    par le PDF `HP_06`**, sans appel Figma ;
-4. `276:1063` — footer. Le PDF `HP_06` le contient aussi (bande y 3469 → 4724) :
-   il n'y a donc **aucun appel Figma à dépenser** pour lui non plus.
+4. ~~`276:1063` — footer~~ : **fait par le PDF `HP_06`** (bande y 3469 → 4724),
+   sans appel Figma.
+
+**Aucun nœud de la page d'accueil ne reste à relever.** Le quota Figma est
+intact depuis le 01/09/2026.
 
 > Les nœuds marqués « partiel » n'ont été relevés qu'avec `get_metadata`, qui
 > **n'est pas exhaustif** : positions et tailles sont fiables, l'absence d'un

@@ -1,0 +1,174 @@
+{
+    "key": "group_lcds_footer",
+    "title": "Pied de page",
+    "fields": [
+        {
+            "key": "field_lcds_footer_blocs",
+            "label": "Blocs d'appel",
+            "name": "blocs",
+            "type": "repeater",
+            "instructions": "Chaque bloc affiche un titre et ses boutons. La maquette en montre trois.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "collapsed": "field_lcds_footer_bloc_titre",
+            "min": 0,
+            "max": 0,
+            "layout": "block",
+            "button_label": "Ajouter un bloc",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_footer_bloc_titre",
+                    "label": "Titre",
+                    "name": "titre",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 1,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_footer_bloc_liens",
+                    "label": "Boutons",
+                    "name": "liens",
+                    "type": "repeater",
+                    "instructions": "Un bouton contourné par ligne. Un lien vide n'est pas rendu.",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "collapsed": "",
+                    "min": 0,
+                    "max": 0,
+                    "layout": "table",
+                    "button_label": "Ajouter un bouton",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_footer_bloc_lien",
+                            "label": "Lien",
+                            "name": "lien",
+                            "type": "link",
+                            "instructions": "",
+                            "required": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "array"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "field_lcds_footer_surtitre",
+            "label": "Sur-titre de l'adresse",
+            "name": "surtitre",
+            "type": "text",
+            "instructions": "Ligne courte en capitales espacées. Exemple : « Cabinet d'orthodontie LCDS ».",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 60,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_footer_adresse",
+            "label": "Adresse",
+            "name": "adresse",
+            "type": "wysiwyg",
+            "instructions": "Un paragraphe par ligne.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "tabs": "all",
+            "toolbar": "basic",
+            "media_upload": 0,
+            "delay": 0
+        },
+        {
+            "key": "field_lcds_footer_copyright",
+            "label": "Mention de copyright",
+            "name": "copyright",
+            "type": "text",
+            "instructions": "L'année est ajoutée automatiquement si vous écrivez %s à sa place.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 120,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_footer_visuel",
+            "label": "Visuel révélé",
+            "name": "visuel",
+            "type": "image",
+            "instructions": "Découvert quand le pied de page se soulève en fin de page. Sans lui, le pied de page reste posé au bas de la page.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "preview_size": "medium",
+            "library": "all",
+            "min_width": "",
+            "min_height": "",
+            "min_size": "",
+            "max_width": "",
+            "max_height": "",
+            "max_size": "",
+            "mime_types": ""
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "lcds-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Contenu du pied de page, commun à toutes les pages.",
+    "show_in_rest": 0,
+    "modified": 1788790000
+}
