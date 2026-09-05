@@ -7,6 +7,14 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.3.1
+
+### Corrigé
+
+- **Les aides des champs ne renvoient plus au code.** Deux d'entre elles
+  nommaient un fichier source — un chemin que personne n'ouvre en éditant le
+  site, et qui devient faux au premier renommage.
+
 ## 2.3.0
 
 ### Corrigé

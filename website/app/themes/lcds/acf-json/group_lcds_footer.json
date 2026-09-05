@@ -156,7 +156,7 @@
             "label": "Cadrage du visuel",
             "name": "cadrage",
             "type": "button_group",
-            "instructions": "Le visuel est rogné pour remplir toute la largeur : ce réglage dit quelle partie garder. Les choix viennent de inc/enums/LcdsFocalPoint.php.",
+            "instructions": "Le visuel est rogné pour remplir toute la largeur : ce réglage dit quelle partie garder.",
             "required": 0,
             "wrapper": {
                 "width": "",

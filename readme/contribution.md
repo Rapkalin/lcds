@@ -193,6 +193,16 @@ n'est pas une constante, elle compense le débord du visuel sous les coins
 arrondis — voir
 [`../design/figma/nodes/276-1063-footer.md`](../design/figma/nodes/276-1063-footer.md).
 
+## Ce que lit un contributeur ne parle jamais du code
+
+Les libellés et les aides des champs décrivent **le contenu**, jamais le fichier
+qui le rend. « Les choix viennent de `inc/enums/LcdsFocalPoint.php` » nomme un
+fichier que personne n'ouvrira en éditant le site, et devient faux le jour où ce
+fichier est renommé.
+
+`tests/Unit/FieldConfigTest.php` fait échouer la CI si un chemin de source,
+une extension `.php` ou un nom de classe réapparaît dans un libellé ou une aide.
+
 ## Les champs sont versionnés, pas en base
 
 C'est la différence assumée avec 2bdm, dont les neuf groupes et 165 champs

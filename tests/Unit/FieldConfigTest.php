@@ -51,3 +51,36 @@ it('gives every field group a key and a location', function (string $file) {
     expect($group['key'] ?? '')->toStartWith('group_');
     expect($group['location'] ?? [])->not->toBeEmpty();
 })->with(lcds_field_group_files());
+
+/**
+ * What a contributor reads must talk about their content, never about the code
+ * that renders it. A field labelled « les choix viennent de
+ * inc/enums/LcdsFocalPoint.php » names a file nobody editing the site will ever
+ * open, and it dates the moment that file is renamed.
+ */
+it('never points a contributor at a source file', function (string $file) {
+    $group = json_decode((string) file_get_contents($file), true);
+    $textes = [];
+
+    $collecte = static function (array $champs) use (&$collecte, &$textes): void {
+        foreach ($champs as $champ) {
+            foreach (['label', 'instructions'] as $cle) {
+                if (isset($champ[$cle]) && is_string($champ[$cle])) {
+                    $textes[] = $champ[$cle];
+                }
+            }
+
+            $collecte((array) ($champ['sub_fields'] ?? []));
+
+            foreach ((array) ($champ['layouts'] ?? []) as $layout) {
+                $collecte((array) ($layout['sub_fields'] ?? []));
+            }
+        }
+    };
+
+    $collecte((array) $group['fields']);
+
+    foreach ($textes as $texte) {
+        expect($texte)->not->toMatch('/\.php|inc\/|acf-json|bin\/|readme\/|Lcds[A-Z]/');
+    }
+})->with(lcds_field_group_files());
