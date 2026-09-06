@@ -7,6 +7,25 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.10.0
+
+### Ajouté
+
+- **Une colonne « Dernière connexion » sur la liste des comptes**, tirée du
+  journal des connexions. Un compte jamais connecté est annoncé comme tel aux
+  lecteurs d'écran, et non signalé par un simple tiret. La colonne n'est pas
+  triable : le journal n'est pas une méta de compte.
+
+## 2.9.0
+
+### Ajouté
+
+- **Un écran « Comptes → Connexions »** qui liste qui s'est connecté et quand,
+  avec le rôle du compte. Réservé aux administrateurs. Aucune adresse IP n'est
+  conservée, et les entrées sont supprimées au-delà de 90 jours ou de 200
+  connexions. L'écran renseigne mais ne fait pas foi : voir la limite décrite
+  dans `readme/roles.md`.
+
 ## 2.8.0
 
 ### Modifié

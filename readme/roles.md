@@ -118,6 +118,52 @@ Deux points de vigilance, tous deux vérifiés par la campagne :
   **échouer la suite de tests** plutôt que de le laisser surgir. C'est
   `LcdsProfileField`, et c'est l'assertion qui porte le tout.
 
+## Le journal des connexions
+
+**Comptes → Connexions** liste qui s'est connecté et quand : date, compte, rôle.
+Il faut `list_users` pour l'ouvrir, capacité qu'un contributeur n'a pas — et
+l'allow-list refuse `users.php`, donc la page l'est aussi. Deux couches, et
+c'est voulu : la capacité seule suffirait, mais elle ne se voit pas dans le
+code de l'écran.
+
+La liste des comptes porte en plus une colonne **« Dernière connexion »**,
+tirée du même journal. Elle n'est **pas triable** : le journal vit dans une
+option et non dans une méta, donc la requête de la liste ne peut pas s'ordonner
+dessus.
+
+Un compte jamais connecté n'affiche pas qu'un tiret — celui-ci se lit
+« tiret » à la synthèse vocale. Le sens est porté par un texte réservé aux
+lecteurs d'écran, le tiret restant `aria-hidden`.
+
+### Ce qu'il conserve, et ce qu'il ne conserve pas
+
+| | |
+| --- | --- |
+| Conservé | identifiant du compte, identifiant de connexion, instant |
+| **Pas** conservé | **adresse IP** — la question posée est « qui, quand », pas « d'où » |
+| Rétention | **90 jours** et **200 entrées**, les deux à la fois |
+
+Une connexion est une donnée personnelle : ce qui sort des bornes est
+**supprimé**, pas masqué. La purge s'applique à chaque écriture et à chaque
+ouverture de l'écran — filtrer à l'affichage aurait laissé la donnée en base.
+
+Les deux bornes sont des constantes de `LcdsLoginLog`, et la purge est une
+fonction **pure** : l'instant lui est passé en argument, ce qui est la seule
+raison pour laquelle la rétention est vérifiable par la suite de tests.
+
+### Une option, pas une table — et ce que ça coûte
+
+Le journal vit dans une option **non autochargée**, bornée à deux cents
+entrées. Le projet n'a pas d'étape de migration au déploiement, et deux cents
+lignes ne justifient pas d'en introduire une.
+
+**La limite est réelle et assumée : deux connexions dans la même seconde
+peuvent en perdre une.** Une option se lit, se modifie et se réécrit sans
+verrou. Sur un cabinet à quelques comptes le cas ne se présente pas, mais il
+faut le savoir : **cet écran renseigne, il ne fait pas foi.** Un journal
+d'audit — qui doit être exhaustif, et couvrir aussi les tentatives échouées —
+demanderait une table et une écriture atomique.
+
 ## Le tableau de bord
 
 Réduit à **« D'un coup d'œil »**. Les autres blocs parlent de WordPress et non

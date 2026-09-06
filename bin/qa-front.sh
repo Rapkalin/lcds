@@ -572,8 +572,133 @@ printf(
     return 0
 }
 
+check_logins() {
+    local out
+
+    out="$(cd "$ROOT" && docker compose exec -T php wp eval '
+require_once ABSPATH . "wp-admin/includes/plugin.php";
+
+// L ecran doit exister pour un administrateur, et sous « Comptes » : la
+// fonction add_users_page() du coeur le rattacherait a profile.php.
+wp_set_current_user(1);
+set_current_screen("dashboard");
+do_action("admin_menu");
+
+global $submenu;
+$declare = "";
+
+foreach ((array) $submenu as $parent => $entrees) {
+    foreach ((array) $entrees as $entree) {
+        if (($entree[2] ?? "") === LCDS_LOGIN_LOG_SCREEN) {
+            $declare = (string) $parent;
+        }
+    }
+}
+
+printf(
+    "%s|l ecran est declare sous Comptes|%s\n",
+    $declare === "users.php" ? "PASS" : "FAIL",
+    $declare === "" ? "ABSENT du menu" : $declare,
+);
+
+// Et il doit rester hors de portee du contributeur : l allow-list refuse
+// users.php, donc toute page qui s y accroche.
+printf(
+    "%s|l ecran est refuse au contributeur|%s\n",
+    LcdsAdminScreen::isAllowed("users.php", array("page" => LCDS_LOGIN_LOG_SCREEN)) ? "FAIL" : "PASS",
+    "allow-list",
+);
+
+// Une connexion doit reellement etre inscrite. On repose le journal ensuite :
+// la campagne ne laisse rien derriere elle.
+$avant = get_option(LCDS_LOGIN_LOG_OPTION, array());
+$compte = get_userdata(1);
+do_action("wp_login", $compte->user_login, $compte);
+$apres = lcds_login_log();
+
+// Lu AVANT la remise en etat : la restauration ecrit elle-meme autoload=off,
+// et l assertion ne verifiait alors que sa propre ligne.
+global $wpdb;
+$autoload = $wpdb->get_var($wpdb->prepare("SELECT autoload FROM {$wpdb->options} WHERE option_name = %s", LCDS_LOGIN_LOG_OPTION));
+
+// La colonne de la liste des comptes, tant que le journal porte l entree :
+// lcds_last_logins() memorise son calcul pour la duree de la requete.
+$colonnes = apply_filters("manage_users_columns", array("username" => "Identifiant"));
+$cellule = apply_filters("manage_users_custom_column", "", LCDS_LOGIN_LOG_SCREEN, 1);
+$jamais = apply_filters("manage_users_custom_column", "", LCDS_LOGIN_LOG_SCREEN, 987654);
+$intacte = apply_filters("manage_users_custom_column", "posts-a-moi", "posts", 1);
+
+update_option(LCDS_LOGIN_LOG_OPTION, $avant, false);
+
+printf(
+    "%s|la liste des comptes porte la colonne|%s\n",
+    isset($colonnes[LCDS_LOGIN_LOG_SCREEN]) ? "PASS" : "FAIL",
+    implode(", ", array_keys($colonnes)),
+);
+
+printf(
+    "%s|la colonne affiche une date pour un compte connecte|%s\n",
+    ($cellule !== "" && ! str_contains($cellule, "mdash")) ? "PASS" : "FAIL",
+    $cellule === "" ? "VIDE" : wp_strip_all_tags($cellule),
+);
+
+// Un tiret seul se lit « tiret » a la synthese vocale : le sens doit etre
+// porte par un texte reserve aux lecteurs d ecran.
+printf(
+    "%s|un compte jamais connecte est annonce, pas seulement tirete|%s\n",
+    (str_contains($jamais, "screen-reader-text") && str_contains($jamais, "aria-hidden")) ? "PASS" : "FAIL",
+    wp_strip_all_tags($jamais),
+);
+
+printf(
+    "%s|la colonne ne touche aucune autre colonne|%s\n",
+    $intacte === "posts-a-moi" ? "PASS" : "FAIL",
+    $intacte,
+);
+
+printf(
+    "%s|une connexion est inscrite en tete|%s\n",
+    (count($apres) === count($avant) + 1 && ($apres[0]["id"] ?? 0) === 1) ? "PASS" : "FAIL",
+    count($avant) . " puis " . count($apres) . " entrees",
+);
+
+// L option ne doit pas etre autochargee : elle serait lue a CHAQUE requete du
+// site, pour un ecran que seul un administrateur ouvre.
+printf(
+    "%s|le journal n est pas autocharge|%s\n",
+    ($autoload === null || ! in_array($autoload, array("yes", "on"), true)) ? "PASS" : "FAIL",
+    $autoload === null ? "option absente" : (string) $autoload,
+);
+
+// Aucune adresse IP : la question posee est « qui, quand », pas « d ou ».
+$champs = $apres === array() ? array() : array_keys($apres[0]);
+sort($champs);
+
+printf(
+    "%s|une entree ne porte que compte et instant|%s\n",
+    $champs === array("id", "login", "time") ? "PASS" : "FAIL",
+    implode(", ", $champs),
+);
+' --allow-root 2>/dev/null | tr -d '\r')"
+
+    if [ -z "$out" ]; then
+        printf '  FAIL :: journal des connexions (WP-CLI muet)\n'
+        return 1
+    fi
+
+    printf '%s\n' "$out" | while IFS='|' read -r verdict label detail; do
+        printf '  %s :: %s (%s)\n' "$verdict" "$label" "$detail"
+    done
+
+    printf '%s' "$out" | grep -q '^FAIL' && return 1
+    return 0
+}
+
 echo "== Rôle de contribution =="
 check_role || FAILURES=$((FAILURES + 1))
+
+echo "== Journal des connexions =="
+check_logins || FAILURES=$((FAILURES + 1))
 
 echo "== Contribution de la page d'accueil =="
 check_contribution || FAILURES=$((FAILURES + 1))
