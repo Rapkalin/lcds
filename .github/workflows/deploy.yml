@@ -402,18 +402,30 @@ jobs:
           # size_upload = ce que curl a REELLEMENT téléversé. Comparé à la taille
           # du fichier, il sépare « la CI n'a rien envoyé » de « le serveur a
           # jeté ce qu'il a reçu » — deux causes que le code HTTP confond.
-          result=$(curl -sS -o "$body" -w '%{http_code} %{size_upload}' \
+          # --http1.1 et « Expect: » vide : deux causes classiques de corps perdu
+          # entre curl et l'application, quand un proxy s'intercale.
+          #   * en HTTP/2 le corps est transporté en trames, et un intermédiaire
+          #     qui retraduit mal vers l'origine peut le laisser tomber ;
+          #   * au-delà de 1 Ko, curl envoie « Expect: 100-continue » et attend
+          #     l'accord du serveur avant d'émettre le corps — un proxy qui ne
+          #     répond pas à cette attente le fait perdre en silence.
+          # Les deux options ne changent rien à un serveur qui fonctionne : la
+          # préprod accepte l'envoi avec ou sans.
+          result=$(curl -sS --http1.1 -H "Expect:" -o "$body" \
+            -w '%{http_code} %{size_upload} %{http_version}' \
             -X POST "$WATCHA_URL/api/inventory" \
             -H "X-Watcha-Token: $WATCHA_TOKEN" \
-            -F "lock=@composer.lock") || result="000 0"
-          code=${result%% *}
-          sent=${result##* }
+            -F "lock=@composer.lock") || result="000 0 0"
+          set -- $result
+          code=$1
+          sent=$2
+          proto=$3
 
           if [ "$code" = "200" ]; then
             cat "$body"; echo
           else
             echo "Envoi de l'inventaire refusé (HTTP $code)."
-            echo "→ composer.lock local : $(wc -c < composer.lock) octets ; téléversés : $sent octets."
+            echo "→ composer.lock local : $(wc -c < composer.lock) octets ; téléversés : $sent octets (HTTP/$proto)."
             case "$code" in
               401)
                 if head -c 200 "$body" | grep -qi '<html\|<!doctype'; then
