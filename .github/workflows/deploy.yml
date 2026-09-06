@@ -411,15 +411,32 @@ jobs:
           #     répond pas à cette attente le fait perdre en silence.
           # Les deux options ne changent rien à un serveur qui fonctionne : la
           # préprod accepte l'envoi avec ou sans.
-          result=$(curl -sS --http1.1 -H "Expect:" -o "$body" \
+          # -v trace le dialogue HTTP sur stderr : ligne de requête, en-têtes
+          # émis et reçus, négociation TLS/ALPN. On le capture dans un fichier
+          # plutôt que de le laisser filer, pour l'afficher filtré et sans le
+          # jeton. Pas de --trace-ascii : il dumperait les 211 Ko du fichier.
+          trace=$(mktemp)
+          result=$(curl -sS --http1.1 -H "Expect:" -v -o "$body" \
             -w '%{http_code} %{size_upload} %{http_version}' \
             -X POST "$WATCHA_URL/api/inventory" \
             -H "X-Watcha-Token: $WATCHA_TOKEN" \
-            -F "lock=@composer.lock") || result="000 0 0"
-          set -- $result
-          code=$1
-          sent=$2
-          proto=$3
+            -F "lock=@composer.lock" 2>"$trace") || result="000 0 0"
+          # Découpage par expansion plutôt que « set -- $result » : ce dernier
+          # dépend du découpage en mots, que tous les shells ne font pas de la
+          # même façon (zsh ne le fait pas sans guillemets).
+          code=${result%% *}
+          rest=${result#* }
+          sent=${rest%% *}
+          proto=${rest##* }
+
+          echo "── Dialogue HTTP vu par curl (jeton masqué) ──"
+          # Le jeton est déjà masqué par GitHub, mais on ne compte pas là-dessus.
+          # On ne garde que les lignes de protocole : « * » diagnostic curl,
+          # « > » ce que la CI envoie, « < » ce que le serveur répond.
+          sed -E 's/(X-Watcha-Token:).*/\1 ***/I' "$trace" \
+            | grep -E '^[*<>]' | grep -vE '^\* (TLSv|SSL|ALPN: offers|Server certificate|  )' | head -45
+          rm -f "$trace"
+          echo "──────────────────────────────────────────────"
 
           if [ "$code" = "200" ]; then
             cat "$body"; echo
