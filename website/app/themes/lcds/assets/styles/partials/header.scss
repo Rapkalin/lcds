@@ -180,18 +180,19 @@ body:has(.hero) .site-header {
 }
 
 /* ------------------------------------------------------------------------- *
- * La DERNIÈRE entrée ne s'écarte pas.
+ * La DERNIÈRE entrée ne s'écarte QUE VERS LA GAUCHE.
  *
- * Elle borde le bouton « Prendre RDV », qui n'appartient pas vraiment au menu :
- * il flotte à côté, sur son propre emplacement, et reste immobile. Écarter la
- * dernière entrée la ferait pousser contre un voisin qui, lui, ne bouge jamais.
+ * De ce côté elle se comporte comme n'importe quelle autre : elle déplace sa
+ * voisine et ouvre son collet. De l'autre elle borde le bouton « Prendre RDV »,
+ * qui n'appartient pas au menu — il flotte à côté, sur son propre emplacement.
+ * Un écart à droite l'aurait décollé du menu, alors qu'il n'en fait pas partie.
  *
- * Elle reste POUSSÉE par ses voisines — c'est l'écartement des autres qui la
- * déplace — mais elle n'écarte personne, et n'ouvre donc aucun chaînon.
+ * Le bouton ne bouge pas pour autant : l'en-tête est en `space-between`, donc
+ * la navigation s'allonge vers la GAUCHE et son bord droit reste où il est.
  * ------------------------------------------------------------------------- */
 .site-nav__list li:last-child a:hover,
 .site-nav__list li:last-child a:focus-visible {
-  margin: 0;
+  margin: 0 0 0 fn.toRem(20);
 }
 
 // La page courante reste écartée en permanence, et ne se réécarte pas au

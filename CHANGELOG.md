@@ -7,6 +7,15 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.10.1
+
+### Corrigé
+
+- **La dernière entrée du menu anime de nouveau ses voisines.** Elle avait été
+  entièrement figée, alors que seul le côté du bouton « Prendre RDV » devait
+  l'être : au survol, elle écarte sa voisine de gauche et ouvre son collet
+  comme les autres, sans rien ouvrir ni déplacer du côté du bouton.
+
 ## 2.10.0
 
 ### Ajouté

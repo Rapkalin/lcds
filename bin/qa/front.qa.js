@@ -857,36 +857,22 @@ window.runFrontQa = async (win) => {
             );
         }
 
-        // La dernière entrée borde le bouton d'action, qui n'appartient pas au
-        // menu et ne bouge jamais : elle ne doit donc écarter personne. Lu dans
-        // la règle, la campagne forçant le mouvement réduit.
-        const regleDerniere = (() => {
-            for (const feuille of Array.from(doc.styleSheets)) {
-                let regles;
+        // La dernière entrée anime ses voisines de gauche comme les autres, mais
+        // n'ouvre RIEN à sa droite : elle y borde le bouton d'action, qui
+        // n'appartient pas au menu. Lu dans la règle, la campagne forçant le
+        // mouvement réduit.
+        const margesDerniere = trouverRegle(doc, "li:last-child a:hover", (regle) => {
+            const gauche = regle.style.marginLeft;
 
-                try {
-                    regles = feuille.cssRules;
-                } catch (erreur) {
-                    continue;
-                }
-
-                for (const regle of Array.from(regles || [])) {
-                    if (typeof regle.selectorText === "string"
-                        && regle.selectorText.includes("li:last-child a:hover")) {
-                        return regle.style.margin;
-                    }
-                }
-            }
-
-            return null;
-        })();
+            return gauche === "" ? null : `${gauche}|${regle.style.marginRight}`;
+        });
 
         assert(
-            `navigation : la dernière entrée ne s'écarte pas (${regleDerniere})`,
-            regleDerniere === "0px" || regleDerniere === "0"
+            `navigation : la dernière entrée s'écarte vers la GAUCHE (${margesDerniere})`,
+            margesDerniere === "1.25rem|0px" || margesDerniere === "20px|0px"
         );
 
-        // Le bouton d'action n'a jamais porté l'animation : il flotte à côté du
+        // Le bouton d'action ne porte pas l'animation : il flotte à côté du
         // menu, sur son propre emplacement.
         const boutonAction = doc.querySelector(".site-header__cta a");
 

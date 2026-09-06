@@ -291,16 +291,24 @@ Sans JavaScript, la classe `site-nav--shaped` n'est jamais posée et les liens
 gardent leur fond blanc : l'en-tête est transparent au-dessus de la photo du
 hero, ils y seraient sinon illisibles.
 
-### La dernière entrée ne s'écarte pas
+### La dernière entrée ne s'écarte que vers la gauche
 
-Elle borde le bouton « Prendre RDV », qui **n'appartient pas au menu** : il vit
-sur son propre emplacement, flotte à côté et ne bouge jamais. Écarter la
-dernière entrée la ferait pousser contre un voisin immobile.
+De ce côté elle se comporte comme n'importe quelle autre : elle déplace sa
+voisine et ouvre son collet. De l'autre elle borde le bouton « Prendre RDV »,
+qui **n'appartient pas au menu** — il vit sur son propre emplacement, flotte à
+côté. Un écart à droite l'aurait décollé du menu alors qu'il n'en fait pas
+partie.
 
-Elle reste **poussée** par ses voisines — c'est leur écartement qui la déplace —
-mais elle n'écarte personne, et n'ouvre donc aucun collet. Mesuré : au survol
-de « Contact » la barre ne bouge pas d'un pixel (482 → 482) ; au survol de
-« Les traitements » elle s'élargit bien de 40 (482 → 522) et pousse « Contact ».
+**Le bouton ne bouge pas pour autant.** L'en-tête est en `space-between` : la
+navigation s'allonge donc vers la GAUCHE, et son bord droit reste où il est.
+Mesuré au survol de « Contact » :
+
+| | |
+| --- | --- |
+| Écart ouvert à sa gauche | **20,0px** |
+| Écart vers « Prendre RDV » | 12,0 → **12,0** — inchangé |
+| Position de « Prendre RDV » | x 1258,2 → **1258,2** |
+| Collet ouvert à sa gauche | **12,6 sur 29,0**, soit 43 % |
 
 ### Deux écarts assumés avec la référence
 
