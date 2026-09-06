@@ -41,10 +41,41 @@ Deux pièges déjà rencontrés :
 
 - **La version de PHP en ligne de commande peut différer de celle du web.** Un
   écart met WP-CLI en échec côté serveur, `platform_check.php` de Composer
-  refusant de charger l'autoloader.
+  refusant de charger l'autoloader. **Rencontré en préproduction IONOS le
+  06/09/2026** : web en 8.4 réglé au panneau, SSH en 8.0.30 — le panneau ne
+  règle que le web.
 - **`AllowOverride` peut être restreint.** Une directive refusée dans un
   `.htaccess` produit une 500 sur *toutes* les requêtes, sans message — voir
   [`securite.md`](securite.md).
+
+### Le PHP que WP-CLI utilise
+
+Le déploiement **choisit lui-même** un binaire PHP ≥ 8.4 parmi `php8.4`,
+`php8.4-cli`, `php84`, `/usr/bin/php8.4`, `/usr/local/bin/php8.4`, puis `php`,
+et invoque WP-CLI avec :
+
+```bash
+"$PHP_BIN" "$(command -v wp)" eval '…'
+```
+
+Et non `WP_CLI_PHP`, que la documentation de WP-CLI donne *« only works for
+non-Phar installation »* — or l'archive phar est l'installation courante.
+
+Si aucun binaire ne convient, l'amorçage des menus et les purges de cache sont
+**sautés**, avec un `::warning::` dans le résumé du run. Ils ne faisaient déjà
+rien auparavant — toutes les commandes `wp` sont en `|| true` — mais l'échec
+était muet, noyé sous une trace de `platform_check.php`.
+
+Pour trouver le bon binaire sur un hébergement inconnu :
+
+```bash
+ls /usr/bin/php* /usr/local/bin/php* 2>/dev/null
+for b in php php8.4 php8.4-cli php84; do
+  command -v "$b" >/dev/null && printf '%-12s %s\n' "$b" "$($b -r 'echo PHP_VERSION;')"
+done
+```
+
+Ajouter le chemin trouvé en tête de la liste de candidats du workflow.
 
 > Sur un mutualisé OVH, le docroot se règle par domaine : *Hébergements >
 > Multisite > Modifier > Dossier racine*. Y mettre `<remote_path>/website`, la

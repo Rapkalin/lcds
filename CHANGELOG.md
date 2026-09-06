@@ -7,6 +7,18 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.7.2
+
+### Corrigé
+
+- **Le déploiement n'échoue plus sur la version de PHP en ligne de commande.**
+  WP-CLI était lancé avec le `php` par défaut du serveur, qui n'est pas celui
+  réglé au panneau de l'hébergeur : l'autoloader de Composer, construit pour
+  PHP 8.4, refusait de se charger. Le déploiement choisit désormais lui-même un
+  binaire ≥ 8.4, et le dit dans le résumé du run s'il n'en trouve aucun — auquel
+  cas l'amorçage des menus et les purges de cache sont sautés au lieu d'échouer
+  en silence.
+
 ## 2.7.1
 
 ### Corrigé

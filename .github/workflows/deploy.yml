@@ -256,7 +256,48 @@ jobs:
           script: |
             ROOT="$HOME/${{ inputs.remote_path }}"
             cd "$ROOT"
-            if command -v wp >/dev/null 2>&1; then
+
+            # WP-CLI charge l'autoloader de Composer, qui EXIGE PHP >= 8.4 : le
+            # `platform_check.php` produit à la construction refuse net en
+            # dessous, et rien ne s'exécute.
+            #
+            # Or sur un mutualisé le PHP de la ligne de commande N'EST PAS celui
+            # du web : le panneau de l'hébergeur ne règle que le second.
+            # Constaté en préproduction IONOS le 06/09/2026 — web en 8.4, SSH en
+            # 8.0.30 — exactement le piège annoncé dans readme/deploiement.md.
+            #
+            # `WP_CLI_PHP` ne servirait à rien ici : la documentation de WP-CLI
+            # le donne « only works for non-Phar installation », or l'archive
+            # phar est l'installation courante. On invoque donc le binaire
+            # choisi AVEC le phar en argument.
+            WP_BIN=$(command -v wp 2>/dev/null || true)
+            PHP_BIN=""
+            for candidat in php8.4 php8.4-cli php84 /usr/bin/php8.4 /usr/local/bin/php8.4 php; do
+              chemin=$(command -v "$candidat" 2>/dev/null) || continue
+              "$chemin" -r 'exit(PHP_VERSION_ID >= 80400 ? 0 : 1);' >/dev/null 2>&1 || continue
+              PHP_BIN="$chemin"
+              break
+            done
+
+            if [ -n "$WP_BIN" ] && [ -n "$PHP_BIN" ]; then
+              # Vérifié plutôt que supposé : si `wp` était une enveloppe shell
+              # et non un phar, le passer à PHP échouerait sans rien dire.
+              if "$PHP_BIN" "$WP_BIN" --version >/dev/null 2>&1; then
+                wp() { "$PHP_BIN" "$WP_BIN" "$@"; }
+                echo "WP-CLI via $PHP_BIN ($("$PHP_BIN" -r 'echo PHP_VERSION;'))."
+              else
+                echo "WP-CLI ne s'exécute pas via $PHP_BIN : on garde le \`wp\` du serveur."
+              fi
+            fi
+
+            if [ -z "$WP_BIN" ]; then
+              echo "WP-CLI absent du serveur : amorçage de la navigation et purge des caches à faire à la main."
+            elif [ -z "$PHP_BIN" ]; then
+              # `::warning::` remonte dans le résumé du run : sans ça le message
+              # se perd dans le log, et une purge sautée passe inaperçue —
+              # toutes les commandes `wp` sont en `|| true`.
+              echo "::warning::Aucun PHP >= 8.4 en ligne de commande sur le serveur (défaut : $(php -v 2>/dev/null | head -1)). Amorçage des menus et purges de cache NON exécutés."
+            else
               # Les menus et leurs entrées par défaut. L'amorçage est accroché à
               # `admin_init` dans le thème : sans cet appel, le site n'aurait pas
               # de navigation avant la première visite d'un administrateur —
@@ -274,8 +315,6 @@ jobs:
               wp cache flush || true
               wp rewrite flush || true
               wp eval 'if (function_exists("wp_cache_clear_cache")) { wp_cache_clear_cache(); }' || true
-            else
-              echo "WP-CLI absent du serveur : amorçage de la navigation et purge des caches à faire à la main."
             fi
             # ⚠️ L'OPcache n'est vidé que par un rechargement de PHP-FPM. À
             # décommenter avec la commande de l'hébergeur, sinon l'ancien code
