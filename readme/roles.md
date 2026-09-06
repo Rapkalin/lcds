@@ -63,6 +63,61 @@ Mesuré sur une session de contributeur :
 > `wpseo_page_academy` — un slug qui porte son compteur de notifications et
 > change d'une version à l'autre — il est donc retiré par **préfixe**.
 
+## Deux rôles attribuables, sur huit déclarés
+
+`editable_roles` ne laisse que **Administrateur** et **Contributeur LCDS**. Les
+six autres — les rôles par défaut de WordPress et les deux qu'ajoute Yoast —
+restent **déclarés** : les retirer casserait un compte qui les porte. Ils ne
+sont simplement plus proposés.
+
+Une exception, et elle est nécessaire : **le rôle du compte en cours d'édition
+reste dans la liste**, même hors des deux. Sans son option, le navigateur en
+sélectionne une autre et l'enregistrement change le rôle sans que personne l'ait
+demandé. Vérifié par la campagne, sur un compte témoin créé puis supprimé.
+
+## « Mon compte », réduit à l'utile
+
+Un contributeur ne voit plus que : couleurs de l'interface, barre d'outils,
+identifiant, prénom, nom, pseudo, adresse e-mail, et la section **Gestion du
+compte** (mot de passe et sessions).
+
+L'écran n'est réduit que sur **son propre profil** : un administrateur qui
+modifie un contributeur garde le formulaire entier.
+
+Trois sections partent **côté serveur**, par de vrais filtres — elles ne sont
+pas rendues du tout :
+
+| Section | Filtre |
+| --- | --- |
+| Capacités supplémentaires | `additional_capabilities_display` |
+| Mots de passe d'application | `wp_is_application_passwords_available_for_user` |
+| Moyens de contact | `user_contactmethods` |
+
+S'y ajoute le retrait des sections posées par les extensions — Yoast en met une
+sur chaque profil — par `remove_all_actions()` sur les trois accroches de
+l'écran.
+
+### Le reste part par une feuille de style, et c'est assumé
+
+Le cœur **n'expose aucun filtre par champ** : la seule prise est la classe qu'il
+pose sur chaque ligne. Les sept lignes hors périmètre sont donc masquées en CSS.
+
+C'est de la **mise en forme, pas une barrière** — un champ masqué reste
+soumettable. Ça n'ouvre rien : ce sont les données du compte lui-même, qu'un
+contributeur a le droit de modifier. Ce qui protège est ailleurs, et c'est
+l'objet de la section « Masquer ne protège pas » ci-dessus.
+
+Deux points de vigilance, tous deux vérifiés par la campagne :
+
+- **Les sélecteurs `:has()` vivent dans leur propre règle.** Un navigateur qui
+  les ignore jette la **liste entière** de sélecteurs — les lignes ordinaires
+  seraient tombées avec eux. Ils servent à désigner la section « À propos de
+  vous », que le cœur ne regroupe dans aucun conteneur.
+- **Toute ligne du cœur est explicitement classée** — gardée, masquée, ou
+  traitée ailleurs. Une mise à jour de WordPress qui ajoute un champ fait
+  **échouer la suite de tests** plutôt que de le laisser surgir. C'est
+  `LcdsProfileField`, et c'est l'assertion qui porte le tout.
+
 ## Le tableau de bord
 
 Réduit à **« D'un coup d'œil »**. Les autres blocs parlent de WordPress et non

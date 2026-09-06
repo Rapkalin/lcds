@@ -12,6 +12,7 @@
  */
 
 require_once __DIR__ . '/enums/LcdsAdminScreen.php';
+require_once __DIR__ . '/enums/LcdsProfileField.php';
 
 if (! defined('ABSPATH')) {
     exit;
@@ -181,3 +182,95 @@ function lcds_trim_dashboard(): void
     }
 }
 add_action('wp_dashboard_setup', 'lcds_trim_dashboard', 999);
+
+/**
+ * Les rôles proposés dans l'administration.
+ *
+ * Deux seulement : administrateur et contributeur LCDS. Les rôles par défaut de
+ * WordPress et ceux qu'ajoutent les extensions restent DÉCLARÉS — les retirer
+ * casserait un compte qui les porte — mais ils ne sont plus attribuables.
+ *
+ * @param array $roles Rôles attribuables, tels que WordPress les propose.
+ */
+function lcds_assignable_roles(array $roles): array
+{
+    $gardes = ['administrator' => true, LCDS_CONTRIBUTOR_ROLE => true];
+
+    // Le rôle du compte ÉDITÉ reste proposé, même hors des deux : sans son
+    // option dans la liste, le navigateur en sélectionne une autre et
+    // l'enregistrement change le rôle sans que personne l'ait demandé.
+    foreach (lcds_edited_user_roles() as $role) {
+        $gardes[$role] = true;
+    }
+
+    return array_intersect_key($roles, $gardes);
+}
+add_filter('editable_roles', 'lcds_assignable_roles');
+
+/**
+ * Rôles du compte que l'écran courant modifie, s'il y en a un.
+ */
+function lcds_edited_user_roles(): array
+{
+    $demande = $_REQUEST['user_id'] ?? null;
+    $user = is_scalar($demande) ? get_userdata(absint($demande)) : false;
+
+    return $user instanceof WP_User ? array_values((array) $user->roles) : [];
+}
+
+/**
+ * Réduit « Mon compte » aux champs dont un contributeur se sert.
+ *
+ * Accroché à `load-profile.php` et non à `user-edit.php` : un administrateur
+ * qui modifie un contributeur garde le formulaire entier.
+ */
+function lcds_trim_profile(): void
+{
+    if (! lcds_is_restricted_user()) {
+        return;
+    }
+
+    add_filter('user_contactmethods', '__return_empty_array');
+    add_filter('additional_capabilities_display', '__return_false');
+    add_filter('wp_is_application_passwords_available_for_user', '__return_false');
+
+    // Les sections posées par les extensions — Yoast en met une sur chaque
+    // profil. Elles sortent du périmètre au même titre que le reste.
+    remove_all_actions('personal_options');
+    remove_all_actions('profile_personal_options');
+    remove_all_actions('show_user_profile');
+
+    add_action('admin_head', 'lcds_profile_styles');
+}
+add_action('load-profile.php', 'lcds_trim_profile');
+
+/**
+ * Masque les lignes hors périmètre.
+ *
+ * Par une feuille de style, faute de mieux : le cœur n'expose aucun filtre par
+ * champ. C'est de la MISE EN FORME, pas une barrière — un champ masqué reste
+ * soumettable. Ça n'ouvre rien : ce sont les données du compte lui-même, qu'un
+ * contributeur a le droit de modifier. Ce qui relève de la sécurité est ailleurs
+ * — capacités du rôle et garde d'écrans.
+ */
+function lcds_profile_styles(): void
+{
+    $lignes = implode(",\n", array_map(
+        static fn(string $classe): string => '#your-profile .' . $classe,
+        LcdsProfileField::hiddenRows(),
+    ));
+
+    // Deux règles et non une : un navigateur qui ignore `:has()` jette la LISTE
+    // ENTIÈRE de sélecteurs, y compris les lignes ordinaires ci-dessus.
+    //
+    // La section « À propos de vous » n'a ni conteneur ni identifiant : elle se
+    // désigne par ce qu'elle contient, son titre par le tableau qui le suit.
+    $sections = "#your-profile h2:has(+ table .user-description-wrap),\n"
+        . "#your-profile table:has(.user-description-wrap)";
+
+    printf(
+        '<style>%s { display: none; } %s { display: none; } #your-profile .application-passwords { display: none; }</style>',
+        $lignes,
+        $sections,
+    );
+}

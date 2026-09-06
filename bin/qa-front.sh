@@ -450,6 +450,107 @@ printf(
     ! empty(get_role("administrator")->capabilities["lcds_manage_settings"]) ? "oui" : "non",
 );
 
+global $wp_roles;
+$attribuables = array_keys(apply_filters("editable_roles", $wp_roles->roles));
+sort($attribuables);
+$attendus = array("administrator", "lcds_contributeur");
+
+printf(
+    "%s|seuls deux roles sont attribuables|%s\n",
+    $attribuables === $attendus ? "PASS" : "FAIL",
+    implode(", ", $attribuables) . " (sur " . count($wp_roles->roles) . " declares)",
+);
+
+// Un compte portant un role hors des deux doit garder le sien : sans son
+// option dans la liste, l enregistrement lui en attribuerait une autre.
+$temoin = wp_insert_user(array("user_login" => "lcds_qa_temoin", "user_pass" => wp_generate_password(), "role" => "editor"));
+
+if (is_wp_error($temoin)) {
+    printf("FAIL|le role d un compte edite survit|creation du temoin impossible\n");
+} else {
+    $_REQUEST["user_id"] = $temoin;
+    $edite = array_keys(apply_filters("editable_roles", $wp_roles->roles));
+    unset($_REQUEST["user_id"]);
+    require_once ABSPATH . "wp-admin/includes/user.php";
+    wp_delete_user($temoin);
+
+    printf(
+        "%s|le role d un compte edite survit dans la liste|%s\n",
+        in_array("editor", $edite, true) ? "PASS" : "FAIL",
+        implode(", ", $edite),
+    );
+}
+
+// La feuille masque bien ce qu il faut, et RIEN de ce qui reste.
+ob_start();
+lcds_profile_styles();
+$css = (string) ob_get_clean();
+$oublies = array();
+$sacrifies = array();
+
+foreach (LcdsProfileField::hiddenRows() as $classe) {
+    if (! str_contains($css, "." . $classe)) {
+        $oublies[] = $classe;
+    }
+}
+
+foreach (LcdsProfileField::keptRows() as $classe) {
+    if (str_contains($css, "." . $classe)) {
+        $sacrifies[] = $classe;
+    }
+}
+
+printf(
+    "%s|la feuille masque les %d lignes hors perimetre|%s\n",
+    $oublies === array() ? "PASS" : "FAIL",
+    count(LcdsProfileField::hiddenRows()),
+    $oublies === array() ? "aucune oubliee" : "OUBLIEES : " . implode(", ", $oublies),
+);
+
+printf(
+    "%s|la feuille ne touche AUCUN champ garde|%s\n",
+    $sacrifies === array() ? "PASS" : "FAIL",
+    $sacrifies === array() ? "verifie sur " . count(LcdsProfileField::keptRows()) . " champs" : "MASQUES : " . implode(", ", $sacrifies),
+);
+
+// Les retraits cote SERVEUR, eux, ne sont pas de la mise en forme : la
+// section n est pas rendue du tout.
+$contrib = wp_insert_user(array("user_login" => "lcds_qa_contrib", "user_pass" => wp_generate_password(), "role" => "lcds_contributeur"));
+
+if (is_wp_error($contrib)) {
+    printf("FAIL|les sections hors perimetre sont retirees cote serveur|creation du temoin impossible\n");
+} else {
+    $avant = get_current_user_id();
+    wp_set_current_user($contrib);
+    lcds_trim_profile();
+    wp_set_current_user($avant);
+    require_once ABSPATH . "wp-admin/includes/user.php";
+    wp_delete_user($contrib);
+
+    $retires = array(
+        "capacites supplementaires" => false === apply_filters("additional_capabilities_display", true, null),
+        "mots de passe d application" => false === apply_filters("wp_is_application_passwords_available_for_user", true, null),
+        "moyens de contact" => array() === apply_filters("user_contactmethods", array("x" => "y")),
+    );
+    $restants = array_keys(array_filter($retires, static fn ($ok) => ! $ok));
+
+    printf(
+        "%s|les 3 sections hors perimetre sont retirees cote serveur|%s\n",
+        $restants === array() ? "PASS" : "FAIL",
+        $restants === array() ? "aucune rendue" : "ENCORE RENDUES : " . implode(", ", $restants),
+    );
+}
+
+// `:has()` doit vivre dans sa PROPRE regle : un navigateur qui l ignore jette
+// la liste entiere de selecteurs, y compris les lignes ordinaires.
+$avant = substr($css, 0, strpos($css, ":has("));
+
+printf(
+    "%s|les selecteurs :has() sont isoles dans leur regle|%s\n",
+    str_contains($avant, "display: none") ? "PASS" : "FAIL",
+    str_contains($avant, "display: none") ? "oui" : "NON : une regle unique tomberait entierement",
+);
+
 // La boite de Yoast doit passer APRES celles de la contribution.
 printf(
     "%s|boite SEO sous les blocs de contribution|priorite %s\n",

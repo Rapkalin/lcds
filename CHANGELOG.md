@@ -7,6 +7,20 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.8.0
+
+### Modifié
+
+- **Seuls deux rôles sont attribuables** : Administrateur et Contributeur LCDS.
+  Les six autres restent déclarés — les retirer casserait un compte qui les
+  porte — mais ne sont plus proposés. Le rôle d'un compte en cours d'édition
+  reste dans la liste, sinon l'enregistrement le changerait en silence.
+- **« Mon compte » est réduit à l'utile pour un contributeur** : couleurs de
+  l'interface, barre d'outils, identifiant, prénom, nom, pseudo, e-mail et la
+  gestion du compte. Le reste est retiré, y compris les sections ajoutées par
+  les extensions. Un administrateur qui modifie un contributeur garde le
+  formulaire entier.
+
 ## 2.7.3
 
 ### Corrigé
