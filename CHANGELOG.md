@@ -7,6 +7,46 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.7.0
+
+### Modifié
+
+- **La barre de navigation est désormais une seule forme.** Les pastilles
+  blanches et les collets qui les relient sont tracés d'un même trait, peint
+  derrière les liens : la silhouette est continue, sans couture ni interstice à
+  la rencontre d'une pastille et de son collet. Le collet s'accroche à
+  l'arrondi et en repart sans angle, comme sur la référence.
+- **Le survol ne repeint plus la pastille** : c'est l'écartement et le collet
+  qui le signalent. Sous `prefers-reduced-motion`, où il n'y a plus
+  d'écartement, le libellé est souligné.
+
+## 2.6.1
+
+### Corrigé
+
+- **La dernière entrée du menu ne s'écarte plus au survol.** Elle borde le
+  bouton « Prendre RDV », qui n'appartient pas au menu et ne bouge jamais : elle
+  poussait donc contre un voisin immobile. Elle reste déplacée par ses voisines,
+  mais n'écarte personne.
+
+## 2.6.0
+
+### Ajouté
+
+- **Chaînon entre deux entrées de menu écartées** : un bloc blanc de la hauteur
+  des pastilles, aux arêtes haute et basse légèrement creusées — l'image du
+  collet d'une dent. Il s'ouvre avec l'écart, sur les mêmes courbes, et n'existe
+  pas aux extrémités de la barre.
+
+## 2.5.0
+
+### Ajouté
+
+- **Animation de la navigation** : l'élément survolé écarte ses voisins de 20px,
+  avec un dépassement à l'entrée et un retour net à la sortie. Reprise de la
+  référence client (floema.com), à deux écarts près : elle joue aussi à la prise
+  de focus clavier, et se suspend sous `prefers-reduced-motion`.
+
 ## 2.4.1
 
 ### Corrigé

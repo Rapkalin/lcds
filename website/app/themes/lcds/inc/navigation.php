@@ -29,6 +29,14 @@ function lcds_header_nav(): void
         'container_class' => 'site-nav',
         'container_aria_label' => __('Navigation principale', 'lcds'),
         'menu_class' => 'site-nav__list',
+        // La forme blanche de la barre, peinte derrière les liens par
+        // `initNavShape`. Elle est posée ici plutôt que par le script pour que
+        // le navigateur n'ait pas à refaire la mise en page en la découvrant.
+        // Vide et décorative : sans JavaScript elle ne peint rien, et ce sont
+        // les fonds des pastilles qui rendent les liens lisibles.
+        'items_wrap' => '<svg class="site-nav__shape" aria-hidden="true" focusable="false">'
+            . '<path d="" /></svg>'
+            . '<ul id="%1$s" class="%2$s">%3$s</ul>',
         'depth' => 1,
         'fallback_cb' => false,
     ]);

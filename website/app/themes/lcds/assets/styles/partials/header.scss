@@ -102,12 +102,144 @@ body:has(.hero) .site-header {
 // Fond blanc au repos, et non au survol : l'en-tête est transparent au-dessus
 // de la photo du hero, ce sont ces pastilles qui rendent les liens lisibles.
 .site-nav__list a {
+  position: relative;
   background: var.$white;
   color: var.$blue;
+  // Deux courbes distinctes selon le sens, relevées sur floema.com : la sortie
+  // se pose vite et net, l'entrée dépasse légèrement avant de revenir. C'est ce
+  // dépassement qui donne le ressort.
+  transition: margin 0.3s cubic-bezier(0.19, 1, 0.22, 1), background-color 0.2s ease;
+
+  // Zone de survol débordant de 20px sur les quatre côtés : l'écartement part
+  // AVANT que le curseur touche la pastille. Sans elle, l'effet se déclenche
+  // trop tard et paraît saccadé.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: #{fn.toRem(-20)};
+  }
 
   &:hover,
   &:focus-visible {
+    // L'élément écarte ses voisins. `:focus-visible` en plus du survol : la
+    // référence ne prévoit que le survol, un utilisateur au clavier ne voyait
+    // donc jamais l'animation.
+    margin: 0 fn.toRem(20);
     background: var.$blue-pale;
+    transition: margin 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * La forme de la barre.
+ *
+ * Le blanc des pastilles ne vient PAS de leur fond : il vient d'un seul `<path>`
+ * peint derrière elles, qui trace d'un trait les pastilles ET les collets qui
+ * les relient. C'est la seule façon d'obtenir une silhouette continue — deux
+ * fonds distincts, si voisins soient-ils, laissent toujours une couture à leur
+ * rencontre.
+ *
+ * Le fond blanc reste posé sur les liens tant que le script n'a pas pris la
+ * main : l'en-tête est transparent au-dessus de la photo du hero, et sans JS
+ * les liens y seraient illisibles.
+ * ------------------------------------------------------------------------- */
+.site-nav {
+  position: relative;
+}
+
+// La forme est POSITIONNÉE, la liste ne l'était pas : sans cette ligne, l'ordre
+// de peinture met la forme au-dessus des libellés et les efface. Elle tenait
+// jusqu'ici au `position: relative` des liens — une dépendance invisible qu'une
+// simplification de leur style aurait suffi à rompre.
+.site-nav__list {
+  position: relative;
+}
+
+.site-nav__shape {
+  position: absolute;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: var.$white;
+}
+
+.site-nav--shaped {
+  .site-nav__shape {
+    display: block;
+  }
+
+  // Le blanc vient de la forme. Le survol ne repeint plus la pastille : c'est
+  // l'écartement et le collet qui le signalent, comme sur la référence.
+  .site-nav__list a,
+  .site-nav__list a:hover,
+  .site-nav__list a:focus-visible {
+    background: none;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * La DERNIÈRE entrée ne s'écarte pas.
+ *
+ * Elle borde le bouton « Prendre RDV », qui n'appartient pas vraiment au menu :
+ * il flotte à côté, sur son propre emplacement, et reste immobile. Écarter la
+ * dernière entrée la ferait pousser contre un voisin qui, lui, ne bouge jamais.
+ *
+ * Elle reste POUSSÉE par ses voisines — c'est l'écartement des autres qui la
+ * déplace — mais elle n'écarte personne, et n'ouvre donc aucun chaînon.
+ * ------------------------------------------------------------------------- */
+.site-nav__list li:last-child a:hover,
+.site-nav__list li:last-child a:focus-visible {
+  margin: 0;
+}
+
+// La page courante reste écartée en permanence, et ne se réécarte pas au
+// survol de sa voisine : sans ces deux règles, l'écart doublait entre elles.
+.site-nav__list .current-menu-item a,
+.site-nav__list .current_page_item a {
+  margin: 0 fn.toRem(20);
+}
+
+.site-nav__list .current-menu-item:first-child a,
+.site-nav__list .current_page_item:first-child a {
+  margin: 0 fn.toRem(20) 0 0;
+}
+
+.site-nav__list .current-menu-item:last-child a,
+.site-nav__list .current_page_item:last-child a {
+  margin: 0 0 0 fn.toRem(20);
+}
+
+.site-nav__list .current-menu-item + li a:hover,
+.site-nav__list .current-menu-item + li a:focus-visible {
+  margin-left: 0;
+}
+
+.site-nav__list li:has(+ .current-menu-item) a:hover,
+.site-nav__list li:has(+ .current-menu-item) a:focus-visible {
+  margin-right: 0;
+}
+
+// L'écartement déplace les voisins : c'est du mouvement, et quelqu'un qui
+// demande à le réduire ne doit pas voir la barre se réorganiser sous son
+// curseur. Le survol est alors signalé par un soulignement.
+@media (prefers-reduced-motion: reduce) {
+  .site-nav__list a,
+  .site-nav__list a:hover,
+  .site-nav__list a:focus-visible,
+  .site-nav__list .current-menu-item a,
+  .site-nav__list .current_page_item a {
+    margin: 0;
+    transition: none;
+  }
+
+  // La forme, elle, RESTE : elle ne bouge pas, elle peint. Ce qui disparaît
+  // c'est l'écartement, donc le seul signal de survol. Un soulignement le
+  // remplace — il ne dépend ni du mouvement ni d'un écart de contraste.
+  .site-nav__list a:hover,
+  .site-nav__list a:focus-visible {
+    text-decoration: underline;
   }
 }
 

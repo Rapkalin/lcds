@@ -315,8 +315,190 @@ const initFooterReveal = () => {
     });
 };
 
+/* ------------------------------------------------------------------------- *
+ * La forme de la barre de navigation.
+ *
+ * Les pastilles blanches et les collets qui les relient sont tracés d'un seul
+ * `<path>` peint derrière les liens. C'est ce qui donne la CONTINUITÉ : un
+ * chaînon posé dans l'écart resterait un second fond, et deux fonds qui se
+ * touchent laissent toujours une couture. Ici il n'y a qu'une silhouette.
+ *
+ * Relevé sur la référence (floema.com), sur une rangée de 36,80 de haut pour un
+ * arrondi de 12,51 : le collet s'accroche à 19,4° sur l'arrondi — donc il en
+ * mange la plus grande part — et ses arêtes repartent tangentiellement, sans
+ * angle. C'est cet angle, et non une largeur de chaînon, qui fixe la taille de
+ * guêpe : elle vaut ici 63 % de la hauteur de la rangée.
+ * ------------------------------------------------------------------------- */
+
+const NAV_ANGLE_ACCROCHE = (19.4 * Math.PI) / 180;
+
+// Longueur des poignées de Bézier, en fraction de l'arrondi. Elle vaut la
+// moitié de l'écart tant que celui-ci est petit — c'est le rapport relevé sur
+// la référence — puis PLAFONNE. Sans ce plafond, un écart de 20px enverrait les
+// poignées si loin que les deux arêtes se croiseraient et fermeraient le collet.
+const NAV_POIGNEE_MAX = 0.5;
+
+const cheminBarre = (boites, rayon, hauteur) => {
+    const dx = rayon * (1 - Math.cos(NAV_ANGLE_ACCROCHE));
+    const dy = rayon * (1 - Math.sin(NAV_ANGLE_ACCROCHE));
+    // Tangente unitaire à l'arrondi au point d'accroche.
+    const tx = Math.sin(NAV_ANGLE_ACCROCHE);
+    const ty = Math.cos(NAV_ANGLE_ACCROCHE);
+    const dernier = boites.length - 1;
+    const arc = (x, y) => `A${rayon} ${rayon} 0 0 1 ${x} ${y}`;
+    const poignee = (ecart) => Math.min(ecart / 2, rayon * NAV_POIGNEE_MAX);
+    const d = [`M${boites[0].gauche + rayon} 0`];
+
+    // Arête supérieure, de gauche à droite.
+    for (let i = 0; i < boites.length; i += 1) {
+        d.push(`L${boites[i].droite - rayon} 0`);
+
+        if (i === dernier) {
+            break;
+        }
+
+        const ax = boites[i].droite - dx;
+        const bx = boites[i + 1].gauche + dx;
+        const lg = poignee(bx - ax);
+
+        d.push(arc(ax, dy));
+        d.push(`C${ax + lg * tx} ${dy + lg * ty}, ${bx - lg * tx} ${dy + lg * ty}, ${bx} ${dy}`);
+        d.push(arc(boites[i + 1].gauche + rayon, 0));
+    }
+
+    d.push(arc(boites[dernier].droite, rayon));
+    d.push(`L${boites[dernier].droite} ${hauteur - rayon}`);
+    d.push(arc(boites[dernier].droite - rayon, hauteur));
+
+    // Arête inférieure, de droite à gauche : les mêmes collets, retournés.
+    for (let i = dernier; i > 0; i -= 1) {
+        const ax = boites[i].gauche + dx;
+        const bx = boites[i - 1].droite - dx;
+        const lg = poignee(ax - bx);
+        const y = hauteur - dy;
+
+        d.push(`L${boites[i].gauche + rayon} ${hauteur}`);
+        d.push(arc(ax, y));
+        d.push(`C${ax - lg * tx} ${y - lg * ty}, ${bx + lg * tx} ${y - lg * ty}, ${bx} ${y}`);
+        d.push(arc(boites[i - 1].droite - rayon, hauteur));
+    }
+
+    d.push(`L${boites[0].gauche + rayon} ${hauteur}`);
+    d.push(arc(boites[0].gauche, hauteur - rayon));
+    d.push(`L${boites[0].gauche} ${rayon}`);
+    d.push(arc(boites[0].gauche + rayon, 0));
+
+    return `${d.join(" ")} Z`;
+};
+
+const initNavShape = () => {
+    const nav = document.querySelector(".site-nav");
+
+    if (nav === null) {
+        return;
+    }
+
+    const svg = nav.querySelector(".site-nav__shape");
+    const trace = svg === null ? null : svg.querySelector("path");
+    const liste = nav.querySelector(".site-nav__list");
+
+    if (trace === null || liste === null) {
+        return;
+    }
+
+    // Sous le point de rupture la navigation devient un panneau vertical : les
+    // pastilles ne forment plus une rangée, il n'y a plus de barre à tracer.
+    const rangee = window.matchMedia("(min-width: 1025px)");
+
+    const update = () => {
+        const liens = Array.from(liste.querySelectorAll("a"));
+
+        if (liens.length === 0 || ! rangee.matches) {
+            nav.classList.remove("site-nav--shaped");
+
+            return;
+        }
+
+        const cadre = nav.getBoundingClientRect();
+        const boites = liens.map((lien) => {
+            const boite = lien.getBoundingClientRect();
+
+            return {
+                gauche: boite.left - cadre.left,
+                droite: boite.right - cadre.left,
+                haut: boite.top - cadre.top,
+                hauteur: boite.height,
+            };
+        });
+
+        // Une rangée, et une seule : à 200 % de taille de texte les pastilles
+        // passent à la ligne, et un tracé qui suppose une bande unique peindrait
+        // alors un bloc plein en travers du menu.
+        const hauteur = boites[0].hauteur;
+        const alignees = boites.every(
+            (boite) => Math.abs(boite.haut) < 0.5 && Math.abs(boite.hauteur - hauteur) < 0.5,
+        );
+
+        if (! alignees || hauteur <= 0) {
+            nav.classList.remove("site-nav--shaped");
+
+            return;
+        }
+
+        const rayon = parseFloat(window.getComputedStyle(liens[0]).borderTopLeftRadius) || 0;
+
+        svg.setAttribute("viewBox", `0 0 ${cadre.width} ${hauteur}`);
+        trace.setAttribute("d", cheminBarre(boites, rayon, hauteur));
+        nav.classList.add("site-nav--shaped");
+    };
+
+    // L'écartement est une transition de marge : la forme doit la suivre image
+    // par image. Plutôt que de compter les transitions ouvertes — un
+    // `transitionend` manqué laisserait la boucle tourner sans fin — chaque
+    // départ repousse une échéance, et la boucle s'arrête d'elle-même après.
+    let echeance = 0;
+    let enCours = false;
+
+    const boucle = () => {
+        update();
+
+        if (performance.now() < echeance) {
+            window.requestAnimationFrame(boucle);
+
+            return;
+        }
+
+        enCours = false;
+    };
+
+    liste.addEventListener("transitionstart", (event) => {
+        if (! String(event.propertyName).startsWith("margin")) {
+            return;
+        }
+
+        echeance = performance.now() + 900;
+
+        if (! enCours) {
+            enCours = true;
+            window.requestAnimationFrame(boucle);
+        }
+    });
+
+    window.addEventListener("resize", update);
+    rangee.addEventListener("change", update);
+
+    // La largeur des pastilles dépend de la police : tracer avant qu'elle soit
+    // chargée fige la forme sur les métriques de la police de secours.
+    if (document.fonts !== undefined) {
+        document.fonts.ready.then(update);
+    }
+
+    update();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
+    initNavShape();
     initCarousels();
     initAccordions();
     initJourneys();

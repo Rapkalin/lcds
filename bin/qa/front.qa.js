@@ -12,6 +12,58 @@ window.runFrontQa = async (win) => {
     const assert = (name, ok) => out.push(`${ok ? "PASS" : "FAIL"} :: ${name}`);
 
     const doc = win.document;
+    // Lit une DÉCLARATION dans la feuille de styles. Nécessaire dès que la
+    // campagne neutralise l'état qu'on veut vérifier : l'état calculé ne dirait
+    // alors rien, la règle si.
+    const trouverRegle = (doc, selecteur, extraire) => {
+        // Récursif : une règle posée sous `@media` n'apparaît PAS au premier
+        // niveau de la feuille. Vérifié — la déclaration de mouvement réduit
+        // restait introuvable et l'assertion échouait sur du code correct.
+        const fouiller = (liste) => {
+            for (const regle of Array.from(liste || [])) {
+                // Le sélecteur D'ABORD : depuis l'imbrication CSS, une simple
+                // règle de style porte elle aussi un `cssRules` — descendre en
+                // premier revenait à ne jamais tester le sélecteur.
+                if (typeof regle.selectorText === "string"
+                    && regle.selectorText.includes(selecteur)) {
+                    const valeur = extraire(regle);
+
+                    if (valeur !== null && valeur !== undefined) {
+                        return valeur;
+                    }
+                }
+
+                if (regle.cssRules !== undefined) {
+                    const imbrique = fouiller(regle.cssRules);
+
+                    if (imbrique !== null) {
+                        return imbrique;
+                    }
+                }
+            }
+
+            return null;
+        };
+
+        for (const feuille of Array.from(doc.styleSheets)) {
+            let regles;
+
+            try {
+                regles = feuille.cssRules;
+            } catch (erreur) {
+                continue;
+            }
+
+            const trouve = fouiller(regles);
+
+            if (trouve !== null) {
+                return trouve;
+            }
+        }
+
+        return null;
+    };
+
     const styleOf = (node) => win.getComputedStyle(node);
 
     const toggle = doc.querySelector(".site-header__toggle");
@@ -548,6 +600,268 @@ window.runFrontQa = async (win) => {
         assert(
             "carte de technologie : le second clic retire le texte de l'arbre",
             carte.getAttribute("aria-expanded") === "false" && panneauCarte.hasAttribute("hidden")
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Animation de la navigation.
+     *
+     * Reprise de floema.com : l'élément survolé écarte ses voisins de 20px, en
+     * sortant vite (0,3s, easeOutExpo) et en entrant avec un dépassement
+     * (0,5s, easeOutBack). C'est ce dépassement qui donne le ressort.
+     *
+     * Les valeurs sont lues APRÈS neutralisation de la transition :
+     * `getComputedStyle` rend la valeur ANIMÉE en cours, donc 0 tant qu'elle
+     * n'a pas progressé — et son objet est VIVANT, il faut donc le relire après
+     * chaque changement d'état. Les deux pièges ont fait échouer la mesure sur
+     * du code juste.
+     * --------------------------------------------------------------------- */
+    const liensNav = Array.from(doc.querySelectorAll(".site-nav__list a"));
+
+    // `affiche()` est déclaré plus bas dans le fichier : on teste la visibilité
+    // sur place plutôt que d'avancer sa déclaration.
+    const navVisible = liensNav.length >= 3
+        && liensNav[1].getBoundingClientRect().width > 0
+        && styleOf(liensNav[1]).visibility !== "hidden";
+
+    if (navVisible) {
+        const cible = liensNav[1];
+        const reduit = win.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        assert(`navigation : aucun écart au repos (${styleOf(cible).marginLeft})`,
+            styleOf(cible).marginLeft === "0px");
+
+        cible.focus({ preventScroll: true });
+        const dureeEntree = styleOf(cible).transitionDuration;
+        const courbeEntree = styleOf(cible).transitionTimingFunction;
+        cible.blur();
+
+        // La campagne force `prefers-reduced-motion` : l'état animé n'est donc
+        // jamais rendu, et le mesurer ici ne prouverait rien. On lit la RÈGLE
+        // dans la feuille — elle, ne dépend d'aucune préférence.
+        const regleSurvol = (() => {
+            for (const feuille of Array.from(doc.styleSheets)) {
+                let regles;
+
+                try {
+                    regles = feuille.cssRules;
+                } catch (erreur) {
+                    continue;
+                }
+
+                for (const regle of Array.from(regles || [])) {
+                    if (regle.selectorText === ".site-nav__list a:hover, .site-nav__list a:focus-visible") {
+                        return regle.style;
+                    }
+                }
+            }
+
+            return null;
+        })();
+
+        assert("navigation : la règle de survol existe", regleSurvol !== null);
+
+        if (regleSurvol !== null) {
+            assert(
+                `navigation : écart de 20px de part et d'autre (${regleSurvol.margin})`,
+                /^0px?\s+(1\.25rem|20px)$/.test(regleSurvol.margin)
+            );
+            assert(
+                `navigation : entrée en 0,5s à dépassement (${regleSurvol.transition.slice(0, 58)})`,
+                regleSurvol.transition.includes("0.5s")
+                    && regleSurvol.transition.includes("cubic-bezier(0.175, 0.885, 0.32, 1.275)")
+            );
+        }
+
+        const regleRepos = styleOf(cible);
+        assert(
+            `navigation : sortie en 0,3s (${regleRepos.transitionDuration})`,
+            reduit || regleRepos.transitionDuration.includes("0.3s")
+        );
+
+        if (reduit) {
+            cible.focus({ preventScroll: true });
+            assert(
+                `navigation : mouvement réduit, aucun écartement (${styleOf(cible).marginLeft})`,
+                styleOf(cible).marginLeft === "0px"
+            );
+            cible.blur();
+        }
+
+        /* ----------------------------------------------------------------- *
+         * La forme de la barre.
+         *
+         * Pastilles et collets sont tracés d'un seul `<path>` : ce qui se
+         * vérifie n'est donc pas une largeur de chaînon, c'est la SILHOUETTE.
+         * `isPointInFill` répond exactement — peint ou non — là où une lecture
+         * de style ne dirait rien du dessin obtenu.
+         * ----------------------------------------------------------------- */
+        const nav = doc.querySelector(".site-nav");
+        const forme = doc.querySelector(".site-nav__shape");
+        const trace = forme === null ? null : forme.querySelector("path");
+
+        assert("forme : servie par le serveur, décorative", forme !== null
+            && forme.getAttribute("aria-hidden") === "true"
+            && forme.getAttribute("focusable") === "false");
+
+        // Sous le point de rupture la navigation devient un panneau vertical :
+        // il n'y a plus de rangée, donc plus de barre à tracer.
+        const enRangee = win.matchMedia("(min-width: 1025px)").matches;
+
+        if (trace !== null && ! enRangee) {
+            assert(
+                "forme : retirée hors de la rangée horizontale",
+                ! nav.classList.contains("site-nav--shaped")
+            );
+        }
+
+        if (trace !== null && enRangee) {
+            const relayer = () => win.dispatchEvent(new win.Event("resize"));
+            const peint = (x, y) => trace.isPointInFill(new win.DOMPoint(x, y));
+
+            // La forme reste sous mouvement réduit : elle ne bouge pas, elle
+            // peint. Sans elle les liens seraient illisibles sur la photo.
+            relayer();
+            assert("forme : appliquée", nav.classList.contains("site-nav--shaped"));
+
+            const mesurer = () => {
+                relayer();
+
+                const cadre = nav.getBoundingClientRect();
+                const hauteur = liensNav[0].getBoundingClientRect().height;
+                const boites = liensNav.map((lien) => {
+                    const boite = lien.getBoundingClientRect();
+
+                    return { gauche: boite.left - cadre.left, droite: boite.right - cadre.left };
+                });
+                let trous = 0;
+
+                for (let x = boites[0].gauche + 0.5; x < boites[boites.length - 1].droite - 0.5; x += 0.5) {
+                    if (! peint(x, hauteur / 2)) {
+                        trous += 1;
+                    }
+                }
+
+                const jonction = (boites[0].droite + boites[1].gauche) / 2;
+                let haut = 0;
+                let bas = hauteur;
+
+                for (let y = 0; y < hauteur; y += 0.1) {
+                    if (peint(jonction, y)) {
+                        haut = y;
+                        break;
+                    }
+                }
+
+                for (let y = hauteur; y > 0; y -= 0.1) {
+                    if (peint(jonction, y)) {
+                        bas = y;
+                        break;
+                    }
+                }
+
+                return {
+                    trous,
+                    hauteur,
+                    collet: bas - haut,
+                    ecart: boites[1].gauche - boites[0].droite,
+                    peintes: boites.filter((b) => peint((b.gauche + b.droite) / 2, hauteur / 2)).length,
+                };
+            };
+
+            const repos = mesurer();
+
+            assert(`forme : les ${liensNav.length} pastilles sont peintes (${repos.peintes})`,
+                repos.peintes === liensNav.length);
+            assert(`forme : silhouette continue au repos (${repos.trous} trous)`, repos.trous === 0);
+            // Le collet ne se referme pas : c'est lui qui donne la continuité.
+            // 61 % relevé, la référence est à 55 % pour ses propres proportions.
+            assert(
+                `forme : collet à ${(100 * repos.collet / repos.hauteur).toFixed(0)} % de la rangée au repos`,
+                repos.collet > repos.hauteur * 0.5 && repos.collet < repos.hauteur * 0.75
+            );
+
+            // Écart forcé : la campagne neutralise le mouvement, or c'est
+            // justement l'écart ouvert qui met le générateur à l'épreuve.
+            const forcage = doc.createElement("style");
+
+            forcage.textContent = ".site-nav__list li:nth-child(2) a { margin: 0 20px !important; }";
+            doc.head.appendChild(forcage);
+
+            const etire = mesurer();
+
+            assert(`forme : écart ouvert de ${etire.ecart.toFixed(0)}px`, etire.ecart > 19);
+            assert(`forme : silhouette continue une fois étirée (${etire.trous} trous)`,
+                etire.trous === 0);
+            // Le collet s'affine en s'étirant — c'est le filament de la
+            // référence — mais il ne se pince jamais jusqu'à rompre.
+            assert(
+                `forme : collet aminci à ${(100 * etire.collet / etire.hauteur).toFixed(0)} % (${repos.collet.toFixed(1)} → ${etire.collet.toFixed(1)})`,
+                etire.collet < repos.collet && etire.collet > etire.hauteur * 0.3
+            );
+
+            forcage.remove();
+            relayer();
+        }
+
+        if (reduit && enRangee) {
+            // L'écartement disparaît : sans lui, plus aucun signal de survol.
+            const regleSoulignee = trouverRegle(doc, ".site-nav__list a:hover", (regle) =>
+                regle.style.textDecoration !== "" ? regle.style.textDecoration : null);
+
+            assert(
+                `forme : survol souligné sous mouvement réduit (${regleSoulignee})`,
+                typeof regleSoulignee === "string" && regleSoulignee.includes("underline")
+            );
+        }
+
+        // La dernière entrée borde le bouton d'action, qui n'appartient pas au
+        // menu et ne bouge jamais : elle ne doit donc écarter personne. Lu dans
+        // la règle, la campagne forçant le mouvement réduit.
+        const regleDerniere = (() => {
+            for (const feuille of Array.from(doc.styleSheets)) {
+                let regles;
+
+                try {
+                    regles = feuille.cssRules;
+                } catch (erreur) {
+                    continue;
+                }
+
+                for (const regle of Array.from(regles || [])) {
+                    if (typeof regle.selectorText === "string"
+                        && regle.selectorText.includes("li:last-child a:hover")) {
+                        return regle.style.margin;
+                    }
+                }
+            }
+
+            return null;
+        })();
+
+        assert(
+            `navigation : la dernière entrée ne s'écarte pas (${regleDerniere})`,
+            regleDerniere === "0px" || regleDerniere === "0"
+        );
+
+        // Le bouton d'action n'a jamais porté l'animation : il flotte à côté du
+        // menu, sur son propre emplacement.
+        const boutonAction = doc.querySelector(".site-header__cta a");
+
+        if (boutonAction !== null) {
+            boutonAction.focus({ preventScroll: true });
+            assert(
+                `navigation : « Prendre RDV » reste immobile (${styleOf(boutonAction).marginLeft})`,
+                styleOf(boutonAction).marginLeft === "0px"
+            );
+            boutonAction.blur();
+        }
+
+        // Zone de survol débordant la pastille : l'écartement part avant que le
+        // curseur touche le lien.
+        assert(
+            "navigation : zone de survol étendue",
+            win.getComputedStyle(cible, "::before").content !== "none"
         );
     }
 

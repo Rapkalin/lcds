@@ -1,5 +1,15 @@
 # Images (WebP)
 
+## D'où viennent les photos
+
+Les visuels de démonstration sont **extraits des PDF de maquette** et rangés
+hors du dépôt, dans `Documents/Perso/LCDS/_sources/images/` — avec un
+`README.md` qui donne, pour chacun, son PDF d'origine, son index `pdfimages`,
+ses dimensions et son titre en médiathèque.
+
+Ce sont les **originaux embarqués dans les PDF**, pas les WebP recompressés que
+sert le site. Le nom de fichier est l'emplacement attendu par `bin/seed-demo.sh`.
+
 ## Texte alternatif
 
 **Il vit dans la médiathèque, et nulle part ailleurs.** `lcds_render_image()` ne

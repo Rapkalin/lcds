@@ -205,6 +205,111 @@ dupliqué le rail, les contrôles et leur câblage JavaScript.
 la sortie et n'offre aucun moyen de récupérer le résultat, or le rail a besoin du
 balisage de ses cartes sous forme de chaîne.
 
+## L'animation de la navigation
+
+Reprise de **floema.com** (référence client) : l'élément survolé **écarte ses
+voisins**. C'est du CSS pur, aucun JavaScript.
+
+```
+au repos : transition: margin .3s cubic-bezier(.19, 1, .22, 1)      easeOutExpo
+au survol: margin: 0 20px
+           transition: margin .5s cubic-bezier(.175, .885, .32, 1.275)  easeOutBack
+```
+
+Deux courbes distinctes selon le sens : la sortie se pose vite et net, l'entrée
+**dépasse légèrement avant de revenir**. C'est ce dépassement qui donne le
+ressort — une seule courbe pour les deux sens rend l'effet plat.
+
+Une **zone de survol débordant de 20px** sur les quatre côtés (`::before`) fait
+partir l'écartement *avant* que le curseur touche la pastille. Sans elle, l'effet
+se déclenche trop tard et paraît saccadé. Elle agrandit aussi la cible, ce qui
+ne nuit jamais.
+
+La page courante reste écartée en permanence, et deux règles empêchent l'écart
+de **doubler** entre elle et une voisine survolée.
+
+### Le collet entre deux pastilles
+
+Le blanc des pastilles **ne vient pas de leur fond**. Il vient d'un seul `<path>`
+peint derrière les liens, qui trace d'un trait les pastilles ET les collets qui
+les relient.
+
+C'est la seule façon d'obtenir la continuité demandée. Un chaînon posé dans
+l'écart — ce qu'on avait — reste un second fond, et deux fonds qui se touchent
+laissent toujours une couture à leur rencontre. Ici il n'y a qu'une silhouette,
+donc rien à raccorder.
+
+#### La géométrie, relevée sur la référence
+
+Sur une rangée de 36,80 de haut pour un arrondi de 12,51, le pont de floema.com
+mesure **0,96 de large sur 20,23 de haut**, ses arêtes creusées de 0,40. Ce qui
+compte n'est pas ces chiffres mais ce qu'ils impliquent : le collet s'accroche à
+**19,4° sur l'arrondi**, donc il en **mange la plus grande part**, et ses arêtes
+repartent **tangentiellement**, sans angle.
+
+C'est cet angle, et non une largeur de chaînon, qui fixe la taille de guêpe.
+Mesuré chez nous, à `isPointInFill` : **61 % de la hauteur de la rangée au
+repos**, contre 55 % pour la référence — l'écart vient de nos proportions, notre
+arrondi vaut 0,28 de la hauteur là où le leur vaut 0,34.
+
+#### Le plafond des poignées
+
+Les poignées de Bézier valent la **moitié de l'écart** — rapport relevé sur la
+référence — puis **plafonnent** à la moitié de l'arrondi. Sans ce plafond, un
+écart de 20px les enverrait si loin que les deux arêtes se croiseraient et
+**fermeraient le collet** : vérifié en le portant à 3, le collet tombe de 61 % à
+12 % et la campagne passe au rouge.
+
+Avec le plafond, le collet s'affine en s'étirant — 61 % au repos, **43 % à
+20px** d'écart — sans jamais rompre. C'est le filament de la référence.
+
+#### Ce que la campagne vérifie
+
+Pas une largeur : la **silhouette**. `isPointInFill` répond exactement, peint ou
+non, là où une lecture de style ne dirait rien du dessin obtenu. La campagne
+balaie la médiane de la barre et compte les trous — zéro au repos, zéro une fois
+l'écart forcé à 20px.
+
+Elle force cet écart elle-même : la campagne neutralise le mouvement, or c'est
+justement l'écart ouvert qui met le générateur à l'épreuve.
+
+#### Trois pièges rencontrés
+
+- **La forme est positionnée, la liste ne l'était pas.** L'ordre de peinture
+  mettait alors la forme **au-dessus des libellés**. Ça tenait par accident au
+  `position: relative` des liens ; c'est désormais posé sur la liste.
+- **La forme RESTE sous `prefers-reduced-motion`** : elle ne bouge pas, elle
+  peint. La retirer aurait rendu la barre invérifiable par la campagne, qui
+  force ce réglage. Ce qui disparaît, c'est l'écartement — donc le seul signal
+  de survol, remplacé par un **soulignement**.
+- **Sous le point de rupture, aucun tracé** : la navigation devient un panneau
+  vertical, il n'y a plus de rangée. Le tracé est également abandonné si les
+  pastilles ne sont plus alignées — à 200 % de taille de texte elles passent à
+  la ligne, et une barre supposée unique peindrait un bloc en travers du menu.
+
+Sans JavaScript, la classe `site-nav--shaped` n'est jamais posée et les liens
+gardent leur fond blanc : l'en-tête est transparent au-dessus de la photo du
+hero, ils y seraient sinon illisibles.
+
+### La dernière entrée ne s'écarte pas
+
+Elle borde le bouton « Prendre RDV », qui **n'appartient pas au menu** : il vit
+sur son propre emplacement, flotte à côté et ne bouge jamais. Écarter la
+dernière entrée la ferait pousser contre un voisin immobile.
+
+Elle reste **poussée** par ses voisines — c'est leur écartement qui la déplace —
+mais elle n'écarte personne, et n'ouvre donc aucun collet. Mesuré : au survol
+de « Contact » la barre ne bouge pas d'un pixel (482 → 482) ; au survol de
+« Les traitements » elle s'élargit bien de 40 (482 → 522) et pousse « Contact ».
+
+### Deux écarts assumés avec la référence
+
+- **`:focus-visible` en plus du survol.** floema.com ne prévoit que `:hover` —
+  vérifié, zéro règle de focus sur ces boutons — donc un utilisateur au clavier
+  n'y voit jamais l'animation.
+- **Suspendue sous `prefers-reduced-motion`.** L'écartement déplace les voisins :
+  c'est du mouvement. Le survol est alors signalé par un soulignement.
+
 ## La révélation du pied de page
 
 Le panneau masque un visuel pleine largeur, puis se soulève en fin de page et le
