@@ -7,6 +7,14 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.11.0
+
+### Ajouté
+
+- **L'écran des connexions est paginé, 20 par page.** Les liens n'apparaissent
+  que s'il y a plus d'une page, et un numéro de page hors bornes retombe sur la
+  dernière plutôt que d'afficher une page vide.
+
 ## 2.10.1
 
 ### Corrigé

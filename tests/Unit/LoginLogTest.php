@@ -77,3 +77,48 @@ it('reads the last login of each account off the sorted journal', function () {
 it('has no last login to report on an empty journal', function () {
     expect(LcdsLoginLog::latestPerUser([]))->toBe([]);
 });
+
+it('counts at least one page, even with nothing to show', function () {
+    expect(LcdsLoginLog::pages(0))->toBe(1);
+});
+
+it('counts the pages a journal fills', function (int $total, int $pages) {
+    expect(LcdsLoginLog::pages($total))->toBe($pages);
+})->with([
+    [1, 1],
+    [LcdsLoginLog::PER_PAGE, 1],
+    [LcdsLoginLog::PER_PAGE + 1, 2],
+    [LcdsLoginLog::MAX_ENTRIES, (int) ceil(LcdsLoginLog::MAX_ENTRIES / LcdsLoginLog::PER_PAGE)],
+]);
+
+// Le numéro vient de l'URL : il est hostile par principe.
+it('drags an out-of-range page number back into bounds', function (int $demandee, int $attendue) {
+    expect(LcdsLoginLog::page($demandee, 25))->toBe($attendue);
+})->with([
+    'zéro' => [0, 1],
+    'négative' => [-4, 1],
+    'première' => [1, 1],
+    'dernière' => [2, 2],
+    'au-delà' => [99, 2],
+]);
+
+it('cuts the journal into pages', function () {
+    $entrees = [];
+
+    for ($rang = 1; $rang <= 25; $rang++) {
+        $entrees[] = ['id' => $rang, 'login' => 'compte' . $rang, 'time' => NOW - $rang];
+    }
+
+    expect(LcdsLoginLog::slice($entrees, 1))->toHaveCount(LcdsLoginLog::PER_PAGE);
+    expect(LcdsLoginLog::slice($entrees, 2))->toHaveCount(25 - LcdsLoginLog::PER_PAGE);
+    expect(LcdsLoginLog::slice($entrees, 1)[0]['id'])->toBe(1);
+    expect(LcdsLoginLog::slice($entrees, 2)[0]['id'])->toBe(LcdsLoginLog::PER_PAGE + 1);
+});
+
+// Une tranche hors journal rendrait une page vide sans rien signaler.
+it('never slices outside the journal', function () {
+    $entrees = [['id' => 1, 'login' => 'a', 'time' => NOW]];
+
+    expect(LcdsLoginLog::slice($entrees, 99))->toHaveCount(1);
+    expect(LcdsLoginLog::slice($entrees, 0))->toHaveCount(1);
+});

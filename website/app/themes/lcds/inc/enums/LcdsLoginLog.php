@@ -30,6 +30,45 @@ final class LcdsLoginLog
     public const MAX_AGE_DAYS = 90;
 
     /**
+     * Connexions affichées par page.
+     */
+    public const PER_PAGE = 20;
+
+    /**
+     * Nombre de pages, au minimum une.
+     *
+     * Une page même vide : sans elle, un journal vide donnerait zéro page et
+     * `page()` renverrait un numéro hors bornes.
+     */
+    public static function pages(int $total): int
+    {
+        return max(1, (int) ceil($total / self::PER_PAGE));
+    }
+
+    /**
+     * Numéro de page ramené dans les bornes.
+     *
+     * Le numéro vient de l'URL : il est hostile par principe.
+     */
+    public static function page(int $demandee, int $total): int
+    {
+        return min(max(1, $demandee), self::pages($total));
+    }
+
+    /**
+     * La tranche affichée.
+     *
+     * Borne le numéro elle-même plutôt que de compter sur l'appelant : une
+     * tranche hors journal rendrait une page vide sans rien signaler.
+     */
+    public static function slice(array $entries, int $page): array
+    {
+        $sure = self::page($page, count($entries));
+
+        return array_slice($entries, ($sure - 1) * self::PER_PAGE, self::PER_PAGE);
+    }
+
+    /**
      * Ajoute une connexion en tête et ramène le journal dans ses bornes.
      */
     public static function record(array $entries, int $userId, string $login, int $now): array

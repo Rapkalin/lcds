@@ -126,6 +126,16 @@ l'allow-list refuse `users.php`, donc la page l'est aussi. Deux couches, et
 c'est voulu : la capacité seule suffirait, mais elle ne se voit pas dans le
 code de l'écran.
 
+L'écran affiche **20 connexions par page**. Le numéro de page vient de l'URL,
+donc il est hostile par principe : `slice()` le ramène dans les bornes
+elle-même plutôt que de compter sur son appelant, sinon une page hors journal
+s'afficherait vide sans rien signaler. Les liens disparaissent quand tout tient
+sur une page.
+
+Les deux blocs de pagination sont des `<nav>` **nommés** : ils apparaissent
+au-dessus et au-dessous du tableau, et sans nom rien ne les distingue l'un de
+l'autre à la synthèse vocale.
+
 La liste des comptes porte en plus une colonne **« Dernière connexion »**,
 tirée du même journal. Elle n'est **pas triable** : le journal vit dans une
 option et non dans une méta, donc la requête de la liste ne peut pas s'ordonner

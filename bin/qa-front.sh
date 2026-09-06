@@ -662,6 +662,70 @@ printf(
     count($avant) . " puis " . count($apres) . " entrees",
 );
 
+// La pagination : 25 entrees fabriquees, rendues page par page. Le journal
+// est repose juste apres.
+$fabrique = array();
+
+for ($rang = 1; $rang <= 25; $rang++) {
+    $fabrique[] = array("id" => 1, "login" => "admin", "time" => time() - $rang);
+}
+
+update_option(LCDS_LOGIN_LOG_OPTION, $fabrique, false);
+$rendu = array();
+
+foreach (array(1, 2, 99) as $numero) {
+    $_GET["paged"] = $numero;
+    ob_start();
+    lcds_render_login_screen();
+    $rendu[$numero] = (string) ob_get_clean();
+}
+
+unset($_GET["paged"]);
+update_option(LCDS_LOGIN_LOG_OPTION, $avant, false);
+
+$lignes = static fn (string $html): int => substr_count($html, "<tr>") - 1;
+
+printf(
+    "%s|la premiere page montre %d connexions|%d\n",
+    $lignes($rendu[1]) === LcdsLoginLog::PER_PAGE ? "PASS" : "FAIL",
+    LcdsLoginLog::PER_PAGE,
+    $lignes($rendu[1]),
+);
+
+printf(
+    "%s|la seconde page montre le reste|%d\n",
+    $lignes($rendu[2]) === 25 - LcdsLoginLog::PER_PAGE ? "PASS" : "FAIL",
+    $lignes($rendu[2]),
+);
+
+// Un numero de page vient de l URL : il est hostile par principe.
+printf(
+    "%s|une page hors bornes retombe sur la derniere|%d\n",
+    $lignes($rendu[99]) === $lignes($rendu[2]) ? "PASS" : "FAIL",
+    $lignes($rendu[99]),
+);
+
+// Deux blocs de pagination sur la page : sans nom, rien ne les distingue a la
+// synthese vocale.
+printf(
+    "%s|la pagination est un systeme de navigation nomme|%d bloc(s)\n",
+    substr_count($rendu[1], "<nav class=\"tablenav-pages\" aria-label=") === 2 ? "PASS" : "FAIL",
+    substr_count($rendu[1], "<nav class=\"tablenav-pages\""),
+);
+
+// Et elle disparait quand il n y a qu une page.
+update_option(LCDS_LOGIN_LOG_OPTION, array_slice($fabrique, 0, 5), false);
+ob_start();
+lcds_render_login_screen();
+$courte = (string) ob_get_clean();
+update_option(LCDS_LOGIN_LOG_OPTION, $avant, false);
+
+printf(
+    "%s|aucune pagination sur une seule page|%s\n",
+    ! str_contains($courte, "tablenav-pages") ? "PASS" : "FAIL",
+    str_contains($courte, "tablenav-pages") ? "AFFICHEE" : "absente",
+);
+
 // L option ne doit pas etre autochargee : elle serait lue a CHAQUE requete du
 // site, pour un ecran que seul un administrateur ouvre.
 printf(

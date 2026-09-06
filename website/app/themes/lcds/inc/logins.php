@@ -114,6 +114,12 @@ function lcds_render_login_screen(): void
         return;
     }
 
+    $demandee = absint($_GET['paged'] ?? 1);
+    $page = LcdsLoginLog::page($demandee, count($journal));
+    $tranche = LcdsLoginLog::slice($journal, $page);
+
+    lcds_render_login_pagination(count($journal), $page);
+
     echo '<table class="widefat striped"><thead><tr>';
     printf('<th scope="col">%s</th>', esc_html__('Date', 'lcds'));
     printf('<th scope="col">%s</th>', esc_html__('Compte', 'lcds'));
@@ -122,7 +128,7 @@ function lcds_render_login_screen(): void
 
     $format = (string) get_option('date_format') . ' ' . (string) get_option('time_format');
 
-    foreach ($journal as $entree) {
+    foreach ($tranche as $entree) {
         $compte = get_userdata($entree['id']);
 
         echo '<tr>';
@@ -132,7 +138,52 @@ function lcds_render_login_screen(): void
         echo '</tr>';
     }
 
-    echo '</tbody></table></div>';
+    echo '</tbody></table>';
+    lcds_render_login_pagination(count($journal), $page);
+    echo '</div>';
+}
+
+/**
+ * Les liens de pagination, au-dessus et au-dessous du tableau.
+ *
+ * Un `<nav>` nommé et non une `<div>` : c'est un système de navigation, et il
+ * apparaît deux fois sur la page — sans nom, rien ne les distingue l'un de
+ * l'autre à la synthèse vocale.
+ */
+function lcds_render_login_pagination(int $total, int $page): void
+{
+    if (LcdsLoginLog::pages($total) < 2) {
+        return;
+    }
+
+    printf(
+        '<nav class="tablenav-pages" aria-label="%s"><span class="displaying-num">%s</span>',
+        esc_attr__('Pagination des connexions', 'lcds'),
+        esc_html(sprintf(
+            /* translators: %s : nombre de connexions. */
+            _n('%s connexion', '%s connexions', $total, 'lcds'),
+            number_format_i18n($total),
+        )),
+    );
+
+    // `paginate_links` compose ses propres liens : ce qu'on lui passe en
+    // libellé, en revanche, traverse tel quel.
+    echo paginate_links([
+        'base' => add_query_arg(
+            ['page' => LCDS_LOGIN_LOG_SCREEN, 'paged' => '%#%'],
+            admin_url('users.php'),
+        ),
+        'format' => '',
+        'total' => LcdsLoginLog::pages($total),
+        'current' => $page,
+        'type' => 'plain',
+        'prev_text' => '<span aria-hidden="true">&laquo;</span><span class="screen-reader-text">'
+            . esc_html__('Page précédente', 'lcds') . '</span>',
+        'next_text' => '<span aria-hidden="true">&raquo;</span><span class="screen-reader-text">'
+            . esc_html__('Page suivante', 'lcds') . '</span>',
+    ]);
+
+    echo '</nav>';
 }
 
 /**
