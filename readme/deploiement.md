@@ -312,6 +312,81 @@ ln -nsf "$PWD/shared/cache" website/app/cache
 for p in shared/plugins/*/; do ln -nsf "$PWD/${p%/}" "website/app/plugins/$(basename "$p")"; done
 ```
 
+## L'inventaire Watcha
+
+En fin de déploiement, la CI envoie `composer.lock` à Watcha, qui en tire la
+veille CVE du site. Un seul envoi décrit tout : Bedrock oblige, le lock porte à
+la fois le cœur WordPress et les extensions.
+
+L'étape est en `continue-on-error` — une veille injoignable ne doit pas marquer
+un déploiement réussi en échec.
+
+| Réglage | Portée | Rôle |
+| --- | --- | --- |
+| `WATCHA_TOKEN` | **secret d'environnement** | jeton généré sur la fiche du site |
+| `WATCHA_URL` | variable d'environnement | ex. `https://preprod-watcha.example` sans `/` final |
+
+> **Un jeton par environnement, jamais au niveau du dépôt.** Chaque envoi
+> REMPLACE l'inventaire du site visé : un secret de dépôt ferait s'écraser la
+> préprod et la production mutuellement.
+
+### Lire un refus
+
+Le message affiché distingue déjà les causes. Deux points méritent d'être connus.
+
+**L'écart de taille est normal.** Le journal compare le fichier local à ce que
+curl a réellement téléversé :
+
+```
+composer.lock local : 211751 octets ; téléversés : 211968 octets.
+```
+
+Les 217 octets d'écart sont l'**enveloppe multipart** — les bornes et les
+en-têtes de la partie. Mesuré : un envoi correct donne exactement ces deux
+nombres, et PHP y voit bien `lock`, 211751 octets, erreur 0.
+
+**Un 422 a deux sens opposés.** Si le corps dit « Envoyez un fichier "lock" »,
+Watcha n'a **pas vu** le fichier — la cause est sur son serveur, pas dans la CI.
+Tout autre message signifie qu'il l'a reçu et refuse son contenu.
+
+### Quand Watcha ne voit pas le fichier
+
+Son contrôleur nomme les refus de PHP, mais sa liste **omet deux codes** :
+`UPLOAD_ERR_NO_FILE` et `UPLOAD_ERR_OK` suivi d'un `is_uploaded_file()` faux —
+le second arrive quand `open_basedir` ne couvre pas `upload_tmp_dir`, cas
+classique en mutualisé. C'est précisément là que ce refus atterrit, d'où un
+message générique qui accuse l'appelant.
+
+Pour trancher en une requête, déposer temporairement ce fichier sur l'instance
+Watcha et lui poster le même envoi :
+
+```php
+<?php
+header('Content-Type: application/json');
+echo json_encode([
+    'content_length'      => $_SERVER['CONTENT_LENGTH'] ?? null,
+    'champs_recus'        => array_keys($_FILES),
+    'lock'                => isset($_FILES['lock']) ? [
+        'size'  => $_FILES['lock']['size'],
+        'error' => $_FILES['lock']['error'],
+        'is_uploaded_file' => is_uploaded_file($_FILES['lock']['tmp_name']),
+    ] : null,
+    'file_uploads'        => ini_get('file_uploads'),
+    'post_max_size'       => ini_get('post_max_size'),
+    'upload_max_filesize' => ini_get('upload_max_filesize'),
+    'upload_tmp_dir'      => ini_get('upload_tmp_dir') ?: '(défaut)',
+    'open_basedir'        => ini_get('open_basedir') ?: '(aucun)',
+], JSON_PRETTY_PRINT);
+```
+
+```bash
+curl -sS -X POST https://<instance>/sonde-upload.php -F "lock=@composer.lock"
+```
+
+`error` et `is_uploaded_file` désignent la cause sans ambiguïté. **Retirer le
+fichier ensuite** : il n'expose aucun secret, mais rien ne justifie de laisser
+un point d'entrée non authentifié en ligne.
+
 ## Points d'attention
 
 - **Les exclusions rsync doivent commencer par `/`.** Sans slash initial, rsync

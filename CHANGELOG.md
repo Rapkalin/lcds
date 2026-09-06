@@ -7,6 +7,21 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.7.3
+
+### Corrigé
+
+- **Un refus d'inventaire Watcha n'accuse plus `composer.lock` à tort.** Le même
+  code 422 couvre deux causes opposées : Watcha n'a pas vu le fichier, ou il l'a
+  reçu et refuse son contenu. Le journal les distingue désormais, et dit quand
+  la cause est sur le serveur de veille plutôt que dans la CI.
+
+### Documentation
+
+- `readme/deploiement.md` documente l'envoi d'inventaire à Watcha : les deux
+  réglages, le jeton par environnement, la lecture d'un refus, et une sonde qui
+  nomme la cause en une requête quand le fichier n'est pas vu.
+
 ## 2.7.2
 
 ### Corrigé

@@ -425,7 +425,18 @@ jobs:
                 fi ;;
               404) echo "→ Endpoint introuvable : vérifiez WATCHA_URL (sans / final)." ;;
               413) echo "→ composer.lock trop volumineux (max 8 Mo)." ;;
-              422) echo "→ Fichier refusé : est-ce bien un composer.lock ?" ;;
+              422)
+                # Deux causes très différentes sous le même code, que seul le
+                # corps sépare. L'ancien message accusait composer.lock ; il est
+                # innocent dans le premier cas, et on cherchait au mauvais endroit.
+                if grep -q 'Envoyez un fichier' "$body"; then
+                  echo "→ Watcha n'a PAS VU le fichier, alors que la CI l'a bien envoyé."
+                  echo "  L'écart de ~217 octets ci-dessus est l'enveloppe multipart : c'est normal."
+                  echo "  La cause est sur le SERVEUR Watcha — PHP n'a pas exposé le champ « lock »."
+                  echo "  Diagnostic en une requête : voir readme/deploiement.md, « L'inventaire Watcha »."
+                else
+                  echo "→ Watcha a bien reçu le fichier mais refuse son CONTENU (message ci-dessous)."
+                fi ;;
               429) echo "→ Trop d'envois pour ce site (60/heure)." ;;
               000) echo "→ Instance injoignable : vérifiez WATCHA_URL et le réseau." ;;
             esac
