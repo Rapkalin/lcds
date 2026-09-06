@@ -390,16 +390,30 @@ jobs:
           # ne dit pas QUI refuse. Le serveur web répond en HTML, Watcha en
           # JSON — c'est ce qui permet de nommer la cause au lieu de laisser
           # chercher.
+          # Un fichier absent ferait échouer curl AVANT la requête, avec un
+          # code 000 qui accuse le réseau. Mieux vaut le dire ici.
+          if [ ! -s composer.lock ]; then
+            echo "composer.lock introuvable ou vide dans $(pwd) : rien à envoyer."
+            ls -l composer.lock 2>&1 || true
+            exit 0
+          fi
+
           body=$(mktemp)
-          code=$(curl -sS -o "$body" -w '%{http_code}' \
+          # size_upload = ce que curl a REELLEMENT téléversé. Comparé à la taille
+          # du fichier, il sépare « la CI n'a rien envoyé » de « le serveur a
+          # jeté ce qu'il a reçu » — deux causes que le code HTTP confond.
+          result=$(curl -sS -o "$body" -w '%{http_code} %{size_upload}' \
             -X POST "$WATCHA_URL/api/inventory" \
             -H "X-Watcha-Token: $WATCHA_TOKEN" \
-            -F "lock=@composer.lock") || code=000
+            -F "lock=@composer.lock") || result="000 0"
+          code=${result%% *}
+          sent=${result##* }
 
           if [ "$code" = "200" ]; then
             cat "$body"; echo
           else
             echo "Envoi de l'inventaire refusé (HTTP $code)."
+            echo "→ composer.lock local : $(wc -c < composer.lock) octets ; téléversés : $sent octets."
             case "$code" in
               401)
                 if head -c 200 "$body" | grep -qi '<html\|<!doctype'; then
