@@ -7,6 +7,19 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.7.1
+
+### Corrigé
+
+- **Plus de bande vide entre la dernière section et le pied de page.** Le
+  panneau était descendu d'une hauteur de visuel pour le masquer, ce qui
+  laissait 513px de vide au-dessus de lui pendant presque tout le défilement.
+  Il reste désormais posé là où le contenu s'arrête ; c'est son bas peint qui
+  déborde puis se rétracte pour découvrir le visuel.
+- **La première carte du carrousel Technologies n'est plus rognée.** Une carte
+  inclinée déborde de 11,5px de chaque côté de sa boîte : les autres cartes
+  portent ce débord sur leurs voisines, la première n'a personne à sa gauche.
+
 ## 2.7.0
 
 ### Modifié

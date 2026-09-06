@@ -4,9 +4,16 @@
 /* ------------------------------------------------------------------------- *
  * Le panneau et le visuel qu'il découvre.
  *
- * Au repos le panneau RECOUVRE le visuel : le wrapper réserve la hauteur du
- * visuel, et le panneau la reprend par une marge négative. Le soulèvement n'est
- * qu'une translation du panneau, pilotée par une seule variable.
+ * Le panneau NE SE DÉPLACE PAS : il commence immédiatement après le contenu,
+ * comme la maquette le dessine. Ce qui bouge est son BAS PEINT — au repos il
+ * déborde sous lui d'une hauteur de visuel et le masque entièrement, puis il se
+ * rétracte et le découvre.
+ *
+ * La première version translatait le panneau vers le bas. Elle laissait alors
+ * une bande vide de 513px entre la dernière section et lui, visible pendant
+ * presque tout le défilement — l'avancement ne décolle que dans les 513 derniers
+ * pixels. Aucun agencement où le panneau se déplace n'évite ce vide : sous le
+ * contenu il faut bien peindre quelque chose.
  *
  * La classe `--animated` n'est posée que par le script. Sans JavaScript, ou
  * sous `prefers-reduced-motion`, le panneau reste posé et le visuel est
@@ -25,9 +32,6 @@
   // panneau le supprimait, et il n'y avait alors rien à découvrir — constaté,
   // l'avancement restait à 0 en bas de page.
   padding-bottom: var(--reveal-height);
-  // Le fond de la page, pour que la bande laissée libre au-dessus du panneau
-  // pendant qu'il est descendu se confonde avec elle : le panneau paraît alors
-  // remonter du bas, au lieu de flotter dans un trou.
   background: var.$white;
   overflow: hidden;
 }
@@ -76,13 +80,12 @@
   }
 }
 
-// Avancement 0 : le panneau est descendu d'une hauteur de visuel, son bas
-// coïncide avec celui du bloc, et il masque donc le visuel entièrement — ce qui
-// suppose un panneau AU MOINS aussi haut que la hauteur découverte, invariant
-// vérifié par la campagne de QA. Avancement 1 : il a repris sa place et le
-// visuel est entièrement découvert.
-.footer-reveal--animated .site-footer {
-  transform: translateY(calc((1 - var(--reveal-progress, 0)) * var(--reveal-height)));
+// Avancement 0 : le bas peint descend d'une hauteur de visuel et le masque
+// entièrement. Avancement 1 : il s'est rétracté sur le panneau, le visuel est
+// découvert. La hauteur du panneau n'entre plus dans le mécanisme — c'est le
+// débord qui masque, et il vaut exactement la réserve.
+.footer-reveal--animated .site-footer::before {
+  bottom: calc(-1 * (1 - var(--reveal-progress, 0)) * var(--reveal-height));
 }
 
 /* ------------------------------------------------------------------------- *
@@ -94,9 +97,26 @@
 .site-footer {
   position: relative;
   z-index: 1;
-  border-radius: 0 0 var(--footer-radius) var(--footer-radius);
-  background: var.$blue-pale;
   color: var.$blue;
+
+  // Le fond et les coins vivent sur un pseudo-élément, et non sur le panneau :
+  // c'est lui qui déborde sous le panneau pour masquer le visuel, et le panneau
+  // doit garder sa hauteur propre — c'est elle qui pose le contenu.
+  //
+  // Sans `--animated` il ne déborde pas : le panneau est simplement posé et le
+  // visuel visible dessous, ce que rend la maquette. C'est aussi le repli sans
+  // JavaScript et sous mouvement réduit.
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 0 0 var(--footer-radius) var(--footer-radius);
+    background: var.$blue-pale;
+  }
 
   // Colonne de droite de 440 : à 1440 elle commence donc à 952, comme sur le
   // PDF. Un `auto` la laissait glisser à 1064 selon la longueur des libellés.

@@ -324,7 +324,31 @@ Sans JavaScript, ou sous `prefers-reduced-motion`, le panneau reste posé et le
 visuel est simplement visible en dessous. C'est le rendu de la maquette, et rien
 ne devient inatteignable.
 
-Deux pièges rencontrés, tous deux mesurés :
+### Ce qui bouge est le BAS PEINT, pas le panneau
+
+Le panneau commence **immédiatement après le contenu**, comme la maquette le
+dessine, et il n'en bouge jamais. Son fond et ses coins vivent sur un
+pseudo-élément dont le bas déborde de 513px au repos — il masque alors le visuel
+entièrement — puis se rétracte.
+
+La première version translatait le panneau vers le bas. Elle laissait une bande
+vide de **513px entre la dernière section et lui**, visible pendant presque tout
+le défilement puisque l'avancement ne décolle que dans les 513 derniers pixels.
+Le code l'assumait — « la bande laissée libre se confond avec le fond de la
+page » — mais à l'écran ça se lit comme un trou, pas comme un panneau qui
+remonte.
+
+**Aucun agencement où le panneau se déplace n'évite ce vide.** Sous la dernière
+section il faut bien peindre quelque chose : soit le panneau, soit le visuel,
+soit rien. Descendre le panneau laisse le vide au-dessus ; le monter le laisse
+en dessous ; ne rien réserver ne laisse rien à découvrir. Il fallait donc que ce
+soit le **dessin** du panneau qui change, pas sa position.
+
+La hauteur du panneau n'entre plus dans le mécanisme. L'invariant « panneau au
+moins aussi haut que le visuel » a disparu avec elle : c'est le débord qui
+masque, et il vaut exactement la réserve.
+
+Trois pièges rencontrés, tous mesurés :
 
 - **Une marge négative sur le panneau supprimait l'espace réservé au visuel** :
   il n'y avait alors plus rien à découvrir, et l'avancement restait à 0 en bas de
@@ -334,6 +358,9 @@ Deux pièges rencontrés, tous deux mesurés :
   donnait 32 après `parseFloat` — ni sur le visuel, qui est volontairement plus
   haut : il **remonte d'un rayon sous le panneau**, sans quoi les encoches des
   coins arrondis laissent voir le fond du bloc.
+
+Le débord d'un rayon tient à **tout avancement** : le bas peint descend au plus
+de la réserve, et le visuel monte de la réserve plus un rayon.
 
 ## Compilation
 

@@ -53,6 +53,13 @@ Le rail est de 494 et non de 470 : la boîte englobante d'une carte de 471,5 ×
 faisait apparaître une barre de défilement verticale — le rail impose
 `overflow-x`, donc `overflow-y: auto`.
 
+**Le même raisonnement vaut en largeur, et il avait été oublié.** Cette boîte
+englobante mesure aussi **494,5 de large** pour une carte de 471,5, soit **11,5
+de débord de chaque côté**. Les cartes du milieu le portent sur leurs voisines ;
+la **première n'a personne à gauche**, et `overflow-x` le rognait — corrigé le
+06/09/2026 par un retrait de 12 sur le rail, compensé par une marge négative
+pour que la carte reste posée à 161.
+
 Chaque carte porte un titre et un bouton qui **révèle son texte par-dessus la
 photo**. La maquette dessine la première carte OUVERTE, titre masqué : ça se lit
 comme une démonstration de l'état ouvert, comme pour l'accordéon. Même contrat

@@ -64,7 +64,7 @@ window.runFrontQa = async (win) => {
         return null;
     };
 
-    const styleOf = (node) => win.getComputedStyle(node);
+    const styleOf = (node, pseudo) => win.getComputedStyle(node, pseudo || null);
 
     const toggle = doc.querySelector(".site-header__toggle");
     const panel = doc.getElementById("site-header-nav");
@@ -365,7 +365,30 @@ window.runFrontQa = async (win) => {
         const railCards = boite(".carousel--cards .carousel__rail");
         cote("techno : étiquette, bord gauche", boite(".block-techno .tag")?.left ?? null, 161);
         cote("techno : bouton d'action, bord droit", boite(".block-techno .cta")?.right ?? null, 1279);
-        cote("techno : rail, bord gauche", railCards?.left ?? null, 161);
+        // Le BORD DU CONTENU, et non celui de la boîte : le rail est tiré de
+        // 12px vers la gauche pour que le coin de la première carte inclinée
+        // reste visible, et il les reprend en retrait. C'est la carte qui doit
+        // tomber à 161, comme la maquette l'exige.
+        const railTechno = doc.querySelector(".carousel--cards .carousel__rail");
+        const retraitRail = railTechno === null
+            ? 0
+            : parseFloat(styleOf(railTechno).paddingLeft);
+
+        cote("techno : rail, bord gauche du contenu",
+            railCards === null ? null : railCards.left + retraitRail, 161);
+
+        // Une carte inclinée déborde de sa boîte : le rail rognait ce débord
+        // sur la première, seule à ne pas avoir de voisine pour le porter.
+        const premiereCarte = doc.querySelector(".carousel--cards .carousel__item");
+
+        if (premiereCarte !== null && railCards !== null) {
+            const debord = premiereCarte.getBoundingClientRect().left - railCards.left;
+
+            assert(
+                `techno : la 1re carte inclinée n'est pas rognée (${debord.toFixed(1)}px de marge)`,
+                debord >= -0.5
+            );
+        }
         cote("techno : rail, plein-bord droit", railCards?.right ?? null, 1440);
         cote("techno : rail, hauteur", railCards?.height ?? null, 494);
         cote("techno : piste, bord gauche", boite(".carousel--cards .carousel__track")?.left ?? null, 161);
@@ -443,23 +466,40 @@ window.runFrontQa = async (win) => {
             `mouvement réduit : le visuel est découvert (${(media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom).toFixed(0)}px)`,
             media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom > hauteur - 4
         );
-        // Un panneau plus court que le visuel ne pourrait pas le masquer : le
-        // mécanisme entier repose sur cet invariant.
-        assert(
-            `le panneau couvre au moins la hauteur du visuel (${footer.getBoundingClientRect().height.toFixed(0)} >= ${hauteur.toFixed(0)})`,
-            footer.getBoundingClientRect().height >= hauteur
-        );
+        // Le BAS PEINT du panneau, et non le bas de sa boîte : c'est le
+        // pseudo-élément qui déborde pour masquer le visuel. Une boîte ne dit
+        // plus rien du dessin depuis que le panneau ne se déplace plus.
+        const basPeint = () => footer.getBoundingClientRect().bottom
+            - parseFloat(styleOf(footer, "::before").bottom);
 
         revele.classList.add("footer-reveal--animated");
         revele.style.setProperty("--reveal-progress", "0");
-        const couvert = footer.getBoundingClientRect().bottom - media.getBoundingClientRect().bottom;
-        assert(`avancement 0 : le panneau recouvre le visuel (écart ${couvert.toFixed(1)}px)`, Math.abs(couvert) < 2);
+
+        // LE défaut corrigé : le panneau descendait, laissant une bande vide de
+        // toute la hauteur du visuel entre la dernière section et lui, visible
+        // pendant presque tout le défilement.
+        const vide = footer.getBoundingClientRect().top - revele.getBoundingClientRect().top;
+
+        assert(
+            `avancement 0 : aucun vide au-dessus du panneau (${vide.toFixed(1)}px)`,
+            Math.abs(vide) < 2
+        );
+
+        const couvert = basPeint() - media.getBoundingClientRect().bottom;
+
+        assert(`avancement 0 : le panneau recouvre le visuel (écart ${couvert.toFixed(1)}px)`,
+            Math.abs(couvert) < 2);
 
         revele.style.setProperty("--reveal-progress", "1");
-        const decouvert = media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom;
+        const decouvert = media.getBoundingClientRect().bottom - basPeint();
+
         assert(
             `avancement 1 : le visuel est découvert sur ${decouvert.toFixed(0)}px (attendu ${hauteur.toFixed(0)})`,
             Math.abs(decouvert - hauteur) < 4
+        );
+        assert(
+            `avancement 1 : le panneau n'a pas bougé (${(footer.getBoundingClientRect().top - revele.getBoundingClientRect().top).toFixed(1)}px)`,
+            Math.abs(footer.getBoundingClientRect().top - revele.getBoundingClientRect().top) < 2
         );
 
         // Le cadrage est du CONTENU : les trois valeurs proposées au
@@ -526,7 +566,7 @@ window.runFrontQa = async (win) => {
             // La boîte du visuel dépasse d'un rayon ce qu'on découvre : sans
             // compensation, « centre » laissait l'image 32px trop haut par
             // rapport à ce que le visiteur voit — mesuré.
-            const rayon = rayonImage(styleOf(footer));
+            const rayon = rayonImage(styleOf(footer, "::before"));
             const debord = hauteurAffichee - boite;
             const centreVu = rayon + (boite - rayon) / 2;
             const ecart = (hauts[1] + hauteurAffichee / 2) - centreVu;
@@ -553,8 +593,8 @@ window.runFrontQa = async (win) => {
         // L'arc occupe la bande des `rayon` derniers pixels du panneau — le
         // couvrir entièrement suffit donc, et ça vaut à TOUT avancement,
         // puisque le bas du panneau reste dans la portée du visuel.
-        const rayon = parseFloat(styleOf(footer).borderBottomLeftRadius);
-        const remonte = footer.getBoundingClientRect().bottom - media.getBoundingClientRect().top;
+        const rayon = parseFloat(styleOf(footer, "::before").borderBottomLeftRadius);
+        const remonte = basPeint() - media.getBoundingClientRect().top;
         assert(
             `le visuel remonte d'un rayon sous le panneau (${remonte.toFixed(0)} pour un rayon de ${rayon})`,
             Math.abs(remonte - rayon) < 2
@@ -570,7 +610,9 @@ window.runFrontQa = async (win) => {
 
     if (win.innerWidth === 1440) {
         const boitePied = (sel) => doc.querySelector(sel)?.getBoundingClientRect() ?? null;
-        const stylePied = styleOf(doc.querySelector(".site-footer"));
+        // Le fond et les coins vivent sur le pseudo-élément : c'est lui qui
+        // déborde sous le panneau pour masquer le visuel.
+        const stylePied = styleOf(doc.querySelector(".site-footer"), "::before");
         assert(`pied : bloc d'appel à 48 (${boitePied(".footer-call")?.left.toFixed(1)})`,
             Math.abs((boitePied(".footer-call")?.left ?? -1) - 48) <= 1);
         assert(`pied : colonne de droite à 952 (${boitePied(".site-footer__aside")?.left.toFixed(1)})`,
