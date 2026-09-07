@@ -332,143 +332,44 @@ jobs:
           sparse-checkout-cone-mode: false
 
       # ---------------------------------------------------------------------
-      # Veille des dépendances (Watcha)
-      # ---------------------------------------------------------------------
-      # Envoie la liste des paquets réellement déployés à Watcha, qui compare
-      # chacun à la dernière version publiée et alerte le propriétaire.
-      #
-      # `composer.lock` n'est pas dans l'artefact (il ne contient que website/,
-      # config/ et wp-cli.yml) : on le récupère seul, sans cloner le dépôt.
-      #
-      # Bedrock oblige : le lock porte à la fois le cœur WordPress
-      # (johnpbloch/wordpress-core) et les extensions (wpackagist-plugin/*),
-      # donc un seul envoi décrit tout le site — WP-CLI n'est pas nécessaire.
-      #
-      # ⚠️ Un jeton par environnement : chaque envoi REMPLACE l'inventaire du
-      # site visé. Définir WATCHA_TOKEN dans les secrets de l'environnement
-      # (preprod / production), jamais au niveau du dépôt — sinon la préprod et
-      # la production s'écraseraient l'une l'autre.
-      #
-      # Configuration (Settings > Environments > <env>) :
-      #   Secret   WATCHA_TOKEN   jeton généré sur la fiche du site dans Watcha
-      #   Variable WATCHA_URL     ex. https://preprod-watcha.rapkalin.fr
-      #                           (SANS « / » final ; accepté aussi en secret,
-      #                           mais masqué dans les logs, donc moins pratique)
-      #
-      # Tant que WATCHA_TOKEN et WATCHA_URL ne sont pas définis, l'étape ne fait
-      # rien.
+      # Veille des dépendances (Watcha) : envoie la liste des paquets déployés.
+      # Guide complet (variables à créer, cas particuliers, refus) : /documentation
+      # sur l'instance Watcha.
       #
       # ⚠️ WATCHA_TOKEN doit être défini au niveau de l'ENVIRONNEMENT, pas du
       # dépôt : un secret de dépôt s'applique à preprod ET à production, qui
       # écriraient alors dans le même site Watcha en s'écrasant mutuellement.
-      # Les secrets d'environnement l'emportent sur ceux du dépôt.
       - name: Signaler l'inventaire à Watcha
-        # Le déploiement a réussi : une veille injoignable ne doit pas le
-        # marquer en échec. L'étape apparaît en orange dans l'UI, le job reste
-        # vert — l'erreur reste visible sans rien casser.
+        # Le déploiement a réussi : une veille injoignable ne doit pas le marquer en échec.
         continue-on-error: true
         env:
           WATCHA_TOKEN: ${{ secrets.WATCHA_TOKEN }}
-          # Déclarée de préférence en VARIABLE : ce n'est pas un secret, et une
-          # variable reste lisible dans les logs — un 404 y devient évident.
           WATCHA_URL: ${{ vars.WATCHA_URL || secrets.WATCHA_URL }}
         run: |
-          if [ -z "$WATCHA_TOKEN" ] || [ -z "$WATCHA_URL" ]; then
-            echo "WATCHA_TOKEN ou WATCHA_URL non défini : envoi ignoré."
-            exit 0
-          fi
-          # Un « / » final donnerait « //api/inventory », que Symfony ne route
-          # pas (la route est /api/inventory exactement) : 404 difficile à
-          # relier à sa cause, surtout si l'URL est un secret et donc masquée.
+          # Guide d'installation : <WATCHA_URL>/documentation
+          [ -n "$WATCHA_TOKEN" ] && [ -n "$WATCHA_URL" ] || { echo "Watcha non configuré : envoi ignoré."; exit 0; }
+          [ -s composer.lock ] || { echo "composer.lock absent : rien à envoyer."; exit 0; }
           while [ "${WATCHA_URL%/}" != "$WATCHA_URL" ]; do WATCHA_URL="${WATCHA_URL%/}"; done
-          # Le jeton passe par X-Watcha-Token, un en-tête dédié, et non par
-          # Authorization : il n'existe qu'un seul en-tête Authorization, donc
-          # un jeton posé là entrerait en conflit avec toute authentification
-          # HTTP placée un jour devant l'instance.
-          #
-          # On récupère le corps et le code plutôt que d'utiliser -f : un 401 nu
-          # ne dit pas QUI refuse. Le serveur web répond en HTML, Watcha en
-          # JSON — c'est ce qui permet de nommer la cause au lieu de laisser
-          # chercher.
-          # Un fichier absent ferait échouer curl AVANT la requête, avec un
-          # code 000 qui accuse le réseau. Mieux vaut le dire ici.
-          if [ ! -s composer.lock ]; then
-            echo "composer.lock introuvable ou vide dans $(pwd) : rien à envoyer."
-            ls -l composer.lock 2>&1 || true
-            exit 0
-          fi
 
-          body=$(mktemp)
-          # size_upload = ce que curl a REELLEMENT téléversé. Comparé à la taille
-          # du fichier, il sépare « la CI n'a rien envoyé » de « le serveur a
-          # jeté ce qu'il a reçu » — deux causes que le code HTTP confond.
-          # --http1.1 et « Expect: » vide : deux causes classiques de corps perdu
-          # entre curl et l'application, quand un proxy s'intercale.
-          #   * en HTTP/2 le corps est transporté en trames, et un intermédiaire
-          #     qui retraduit mal vers l'origine peut le laisser tomber ;
-          #   * au-delà de 1 Ko, curl envoie « Expect: 100-continue » et attend
-          #     l'accord du serveur avant d'émettre le corps — un proxy qui ne
-          #     répond pas à cette attente le fait perdre en silence.
-          # Les deux options ne changent rien à un serveur qui fonctionne : la
-          # préprod accepte l'envoi avec ou sans.
-          # -v trace le dialogue HTTP sur stderr : ligne de requête, en-têtes
-          # émis et reçus, négociation TLS/ALPN. On le capture dans un fichier
-          # plutôt que de le laisser filer, pour l'afficher filtré et sans le
-          # jeton. Pas de --trace-ascii : il dumperait les 211 Ko du fichier.
-          trace=$(mktemp)
-          result=$(curl -sS --http1.1 -H "Expect:" -v -o "$body" \
-            -w '%{http_code} %{size_upload} %{http_version}' \
+          body=$(mktemp); trace=$(mktemp)
+          # --http1.1 et « Expect: » vidé : sans eux, un proxy peut faire perdre le corps.
+          result=$(curl -sS --http1.1 -H "Expect:" -v -o "$body" -w '%{http_code} %{size_upload}' \
             -X POST "$WATCHA_URL/api/inventory" \
             -H "X-Watcha-Token: $WATCHA_TOKEN" \
-            -F "lock=@composer.lock" 2>"$trace") || result="000 0 0"
-          # Découpage par expansion plutôt que « set -- $result » : ce dernier
-          # dépend du découpage en mots, que tous les shells ne font pas de la
-          # même façon (zsh ne le fait pas sans guillemets).
-          code=${result%% *}
-          rest=${result#* }
-          sent=${rest%% *}
-          proto=${rest##* }
+            -F "lock=@composer.lock" 2>"$trace") || result="000 0"
+          code=${result%% *}; sent=${result##* }   # expansion et non « set -- » : zsh diffère
 
-          echo "── Dialogue HTTP vu par curl (jeton masqué) ──"
-          # Le jeton est déjà masqué par GitHub, mais on ne compte pas là-dessus.
-          # On ne garde que les lignes de protocole : « * » diagnostic curl,
-          # « > » ce que la CI envoie, « < » ce que le serveur répond.
-          sed -E 's/(X-Watcha-Token:).*/\1 ***/I' "$trace" \
-            | grep -E '^[*<>]' | grep -vE '^\* (TLSv|SSL|ALPN: offers|Server certificate|  )' | head -45
-          rm -f "$trace"
-          echo "──────────────────────────────────────────────"
+          if [ "$code" = "200" ]; then cat "$body"; echo; exit 0; fi
 
-          if [ "$code" = "200" ]; then
-            cat "$body"; echo
-          else
-            echo "Envoi de l'inventaire refusé (HTTP $code)."
-            echo "→ composer.lock local : $(wc -c < composer.lock) octets ; téléversés : $sent octets (HTTP/$proto)."
-            case "$code" in
-              401)
-                if head -c 200 "$body" | grep -qi '<html\|<!doctype'; then
-                  echo "→ Refus du SERVEUR WEB, pas de Watcha : l'instance visée est"
-                  echo "  protégée par une authentification HTTP. Vérifiez WATCHA_URL."
-                else
-                  echo "→ Refus de WATCHA : jeton inconnu ou révoqué. Régénérez-le sur la"
-                  echo "  page « Modifier » du site et mettez à jour WATCHA_TOKEN."
-                fi ;;
-              404) echo "→ Endpoint introuvable : vérifiez WATCHA_URL (sans / final)." ;;
-              413) echo "→ composer.lock trop volumineux (max 8 Mo)." ;;
-              422)
-                # Deux causes très différentes sous le même code, que seul le
-                # corps sépare. L'ancien message accusait composer.lock ; il est
-                # innocent dans le premier cas, et on cherchait au mauvais endroit.
-                if grep -q 'Envoyez un fichier' "$body"; then
-                  echo "→ Watcha n'a PAS VU le fichier, alors que la CI l'a bien envoyé."
-                  echo "  L'écart de ~217 octets ci-dessus est l'enveloppe multipart : c'est normal."
-                  echo "  La cause est sur le SERVEUR Watcha — PHP n'a pas exposé le champ « lock »."
-                  echo "  Diagnostic en une requête : voir readme/deploiement.md, « L'inventaire Watcha »."
-                else
-                  echo "→ Watcha a bien reçu le fichier mais refuse son CONTENU (message ci-dessous)."
-                fi ;;
-              429) echo "→ Trop d'envois pour ce site (60/heure)." ;;
-              000) echo "→ Instance injoignable : vérifiez WATCHA_URL et le réseau." ;;
-            esac
-            head -c 400 "$body"; echo
+          # Watcha explique lui-même chaque refus dans sa réponse : on n'ajoute ici que
+          # ce qu'un serveur ne peut pas savoir.
+          echo "Envoi de l'inventaire refusé (HTTP $code) :"
+          head -c 500 "$body"; echo
+          echo "→ composer.lock : $(wc -c < composer.lock) octets ; émis par curl : $sent."
+          if [ "$code" = "000" ]; then
+            echo "→ Aucune réponse : vérifiez WATCHA_URL et le réseau."
+          elif head -c 200 "$body" | grep -qi '<html\|<!doctype'; then
+            echo "→ Réponse HTML : le SERVEUR WEB a refusé, Watcha n'a rien vu."
           fi
-          rm -f "$body"
+          sed -E 's/(X-Watcha-Token:).*/\1 ***/I' "$trace" | grep -E '^[*<>]' \
+            | grep -vE '^\* (TLSv|SSL|ALPN|Server certificate|  )' | head -30
