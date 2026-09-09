@@ -8,16 +8,12 @@
  *   url   string  Destination. Vide : rien n'est rendu, plutôt qu'un lien mort.
  *   icon    string Glyphe de la pastille de gauche. La maquette utilise un
  *                  émoji — voir readme/front.md pour la réserve que ça pose.
- *   variant string `solid` (défaut) : les deux pastilles jointes du hero et des
- *                  sections. `outline` : une SEULE pastille, sans glyphe — le
- *                  « voir le plan » des informations pratiques et les boutons
- *                  du pied de page, mesurés 131 × 30 sur le PDF contre 321 × 30
- *                  pour le solide.
- *
- * La clé `outline` garde son nom — c'est le mot de la maquette et la valeur
- * enregistrée — mais la pastille n'est plus contournée : le client demande du
- * texte blanc partout, ce qui impose un aplat foncé. Voir
- * assets/styles/components/cta.scss.
+ *   variant string Valeur d'un cas de `LcdsCtaVariant`. Défaut : la primaire,
+ *                  les deux pastilles du hero et des sections. La secondaire
+ *                  est une SEULE pastille contournée, sans glyphe — le « voir
+ *                  le plan » des informations pratiques et les boutons du pied
+ *                  de page, mesurés 131 × 30 sur le PDF contre 321 × 30 pour
+ *                  la primaire.
  *
  * @package lcds
  */
@@ -34,11 +30,19 @@ if ($label === '' || $url === '') {
 }
 
 $icon = isset($args['icon']) ? (string) $args['icon'] : '🦷';
-$variant = ($args['variant'] ?? '') === 'outline' ? 'outline' : 'solid';
+$variant = LcdsCtaVariant::fromValue($args['variant'] ?? null, LcdsCtaVariant::Primary);
 ?>
 
-<a class="cta cta--<?php echo esc_attr($variant); ?>" href="<?php echo esc_url($url); ?>">
-    <?php if ($variant === 'solid') : ?>
+<a class="<?php echo esc_attr($variant->className()); ?>" href="<?php echo esc_url($url); ?>">
+    <?php if ($variant->hasIcon()) : ?>
+        <?php
+        /*
+         * La silhouette, tracée par `initPillShape`. Elle vient AVANT les
+         * pastilles et reste vide : sans JavaScript elle ne peint rien, et ce
+         * sont leurs fonds qui portent le bleu.
+         */
+        ?>
+        <svg class="cta__shape" aria-hidden="true" focusable="false"><path d="" /></svg>
         <span class="cta__icon" aria-hidden="true"><?php echo esc_html($icon); ?></span>
     <?php endif; ?>
     <span class="cta__label"><?php echo esc_html($label); ?></span>

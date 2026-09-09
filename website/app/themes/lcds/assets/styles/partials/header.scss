@@ -105,7 +105,7 @@ body:has(.hero) .site-header {
   // « LES TRAITEMENTS » mesure plus de 400px : les pastilles peuvent donc
   // revenir à la ligne. Même lot RGAA 10.4 que ci-dessus.
   overflow-wrap: break-word;
-  transition: background-color 0.2s ease;
+  transition: background-color var.$fade;
 }
 
 // Fond blanc au repos, et non au survol : l'en-tête est transparent au-dessus
@@ -114,10 +114,7 @@ body:has(.hero) .site-header {
   position: relative;
   background: var.$white;
   color: var.$blue;
-  // Deux courbes distinctes selon le sens, relevées sur floema.com : la sortie
-  // se pose vite et net, l'entrée dépasse légèrement avant de revenir. C'est ce
-  // dépassement qui donne le ressort.
-  transition: margin 0.3s cubic-bezier(0.19, 1, 0.22, 1), background-color 0.2s ease;
+  transition: margin var.$spread-out, background-color var.$fade;
 
   // Zone de survol débordant de 20px sur les quatre côtés : l'écartement part
   // AVANT que le curseur touche la pastille. Sans elle, l'effet se déclenche
@@ -133,9 +130,9 @@ body:has(.hero) .site-header {
     // L'élément écarte ses voisins. `:focus-visible` en plus du survol : la
     // référence ne prévoit que le survol, un utilisateur au clavier ne voyait
     // donc jamais l'animation.
-    margin: 0 fn.toRem(20);
+    margin: 0 var.$spread;
     background: var.$blue-pale;
-    transition: margin 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease;
+    transition: margin var.$spread-in, background-color var.$fade;
   }
 }
 
@@ -201,7 +198,7 @@ body:has(.hero) .site-header {
  * ------------------------------------------------------------------------- */
 .site-nav__list li:last-child a:hover,
 .site-nav__list li:last-child a:focus-visible {
-  margin: 0 0 0 fn.toRem(20);
+  margin: 0 0 0 var.$spread;
 }
 
 /* ------------------------------------------------------------------------- *
@@ -226,7 +223,7 @@ body:has(.hero) .site-header {
   display: flex;
   align-items: center;
   gap: fn.toRem(8);
-  margin: 0 fn.toRem(20);
+  margin: 0 var.$spread;
 }
 
 // En `::after` avec `order: -1`, et non en `::before` : celui-ci porte déjà la
@@ -257,12 +254,12 @@ body:has(.hero) .site-header {
 
 .site-nav__list .current-menu-item:first-child a,
 .site-nav__list .current_page_item:first-child a {
-  margin: 0 fn.toRem(20) 0 0;
+  margin: 0 var.$spread 0 0;
 }
 
 .site-nav__list .current-menu-item:last-child a,
 .site-nav__list .current_page_item:last-child a {
-  margin: 0 0 0 fn.toRem(20);
+  margin: 0 0 0 var.$spread;
 }
 
 .site-nav__list .current-menu-item + li a:hover,
@@ -384,7 +381,7 @@ body:has(.hero) .site-header {
     // à la fermeture pour laisser le fondu se terminer.
     visibility: hidden;
     opacity: 0;
-    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+    transition: opacity var.$fade, visibility 0s linear var.$fade-duration;
   }
 
   .site-nav__list,
@@ -418,7 +415,7 @@ body:has(.hero) .site-header {
     .site-header__nav {
       visibility: visible;
       opacity: 1;
-      transition: opacity 0.2s ease, visibility 0s;
+      transition: opacity var.$fade, visibility 0s;
     }
   }
 }

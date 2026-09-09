@@ -115,7 +115,7 @@
     background: none;
     color: var.$blue;
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: background-color var.$fade, border-color var.$fade;
 
     &:hover:not(:disabled),
     &:focus-visible {

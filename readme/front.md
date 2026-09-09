@@ -43,6 +43,30 @@ Deux transpositions plutôt que des recopies :
 - **Les hauteurs de ligne sont sans unité** (`1.2`, `1.4`) : elles suivent la
   taille de police au lieu de la contredire.
 
+### Les jetons qui ne viennent PAS de Figma
+
+Trois familles, sous `/* MOUVEMENT */`, parce que la bibliothèque Figma
+n'expose ni durée ni courbe — les interactions de prototype ne sont pas lisibles
+par le connecteur, voir [`design/figma/README.md`](../design/figma/README.md).
+
+| Jeton | Ce qu'il vaut | Pourquoi il existe |
+| --- | --- | --- |
+| `$fade-duration` / `$fade` | `0.2s` / `0.2s ease` | Le fondu de TOUT changement de teinte du site. La valeur vivait en douze exemplaires dans cinq feuilles. |
+| `$spread-out` / `$spread-in` | deux `cubic-bezier` relevées sur floema.com | L'écartement des pastilles, dans les deux sens. Partagé par le menu et les boutons primaires. |
+| `$spread` / `$notch` | `20px` / `2px` | L'écart ouvert par le survol, et l'encoche au repos. |
+
+**`$fade` est scindé en deux, et c'est le piège à connaître** : la durée sert
+aussi de **délai**, sans son accélération. La `visibility` du panneau mobile est
+retardée du temps que dure le fondu — sans quoi elle masquerait le panneau
+pendant la première moitié de son apparition. Une durée changée d'un côté et pas
+de l'autre démasquerait le panneau avant la fin du fondu, sans que rien ne le
+signale.
+
+> `$blue-hover` est le seul jeton de couleur dérivé plutôt que relevé :
+> `color.adjust($blue, $lightness: -6%)`. Il sert aux aplats **et** au tracé de
+> la silhouette, qui doivent foncer de la même quantité — sinon l'écart de teinte
+> se voit en travers du bouton.
+
 ## Conteneur centré : `$content-outer`, pas `$content-width`
 
 `box-sizing: border-box` fait entrer le rembourrage **dans** la largeur. Un
@@ -498,6 +522,12 @@ de **doubler** entre elle et une voisine survolée.
 
 ### Le collet entre deux pastilles
 
+> Ce mécanisme sert désormais **aussi les boutons d'action primaires**, par le
+> même code — `initPillShape`. Voir « Les boutons primaires ont pris la
+> silhouette du menu » plus bas : ce qui suit décrit le cas de la navigation,
+> qui vide ses pastilles ; le bouton d'action, lui, garde leur aplat, et la
+> raison vaut d'être lue.
+
 Le blanc des pastilles **ne vient pas de leur fond**. Il vient d'un seul `<path>`
 peint derrière les liens, qui trace d'un trait les pastilles ET les collets qui
 les relient.
@@ -673,8 +703,14 @@ boutons contournés, et deux relevés le confirment sur `HP_06_Frame 54.pdf`
 | texte | `#143776` — du bleu |
 
 Du texte blanc impose un aplat foncé : c'est le contraire de contourné. La clé
-`outline` garde son nom — c'est le mot de la maquette et la valeur enregistrée
-côté ACF — mais ce qu'elle dessine a changé.
+`outline` garde son nom — c'est le mot de la maquette — mais ce qu'elle dessine a
+changé.
+
+> **Renversé par le retour suivant**, et la mesure de `#143776` corrigée : voir
+> « Le secondaire repasse sur fond transparent » plus bas. Ce qui reste vrai ici,
+> c'est que la variante n'a pas de rendu propre à inventer — elle suit la
+> maquette. Et que `outline` n'est la valeur d'AUCUN champ ACF : elle est écrite
+> en dur par ses deux appelants.
 
 > Première lecture, corrigée : « les CTA n'ont pas de blanc dans la gélule »
 > parlait du TEXTE, pas du fond. J'avais mesuré le remplissage, répondu juste à
@@ -756,6 +792,151 @@ d'au moins 8.
 > l'horloge marquent 12 et 4h30 là où la maquette montre 12 et 3, et le glyphe
 > « information » est un `i` là où la maquette dessine ce qui ressemble à un
 > `1` cerclé. À arbitrer avec le designer.
+
+## Le lot de retours suivant
+
+Deux retours du client, traités ensemble. Le premier **revient en partie** sur la
+livraison précédente : les boutons secondaires redeviennent contournés.
+
+### Le secondaire repasse sur fond transparent
+
+« Les CTA du pied de page doivent être sur fond transparent et non sur fond
+bleu. » C'est le dessin de la maquette, contre la demande précédente de texte
+blanc partout — et les deux ne peuvent pas tenir ensemble : du blanc sur le
+panneau `#F2F8FF` mesure **1,06:1**. Fond transparent impose donc un texte bleu.
+
+Relevé au pixel sur `HP_06_Frame 54.pdf`, rendu à 216 dpi puis échantillonné :
+
+| | mesuré | jeton |
+| --- | --- | --- |
+| remplissage | `#F2F8FF` — le fond lui-même | transparent |
+| bordure | `#A8BED6`, 1px (3 px device à 216 dpi) | `$blue-veil` |
+| texte | `#00387A` | `$blue` |
+| hauteur | 29 | inchangée |
+
+> L'entrée 2.13.0 du journal donnait ce texte à `#143776`. C'est faux : la mesure
+> donne `$blue` exactement. L'erreur venait d'un pixel d'antialiasing.
+
+#### Ce que `$blue-light` était vraiment
+
+Le CSS Figma de l'état de survol donne `rgba(0, 56, 122, 0.3)` en remplissage.
+Ce voile posé sur le panneau `$blue-pale` compose **#A9BED7** — soit `#A8BED6` à
+une unité près sur deux canaux, l'erreur d'échantillonnage du PDF.
+
+Autrement dit : **`$blue-light` n'est pas un jeton manquant de la bibliothèque
+Figma, c'est `$blue` à 30 % aplati sur un fond connu.** La note qui demandait de
+le faire promouvoir côté design tombe. La feuille déclare désormais le voile,
+`$blue-veil`, et l'utilise pour la bordure au repos comme pour le remplissage au
+survol : c'est la même valeur, à deux endroits du même composant.
+
+Le voile suit son fond, la teinte aplatie non. Ça compte ici : le « voir le
+plan » des informations pratiques ne vit pas sur le panneau, et un `#A8BED6` en
+dur y aurait trahi le dessin.
+
+#### Le piège du double voile
+
+La bordure **s'efface** au survol au lieu de rester sous le remplissage. Deux
+voiles à 30 % superposés ne composent pas 30 % : l'alpha effectif monte à 0,51 et
+donne `#7696BB`, un anneau foncé de **51 unités d'écart** avec l'intérieur, là où
+la maquette montre un aplat uni. Le fond continue de peindre sous la bordure
+devenue transparente et remplit toute la pastille.
+
+Contrastes mesurés du texte : **10,64:1** au repos, **5,97:1** au survol.
+
+#### La portée
+
+Une seule règle, sur `.cta--outline` : les quatre boutons du pied de page **et**
+le « voir le plan ». La maquette les dessine tous les deux contournés — le relevé
+`243:352` mesure ce dernier à 131 × 30. Une troisième variante aurait imposé deux
+styles de bouton contourné à tenir en parallèle.
+
+### Les boutons primaires ont pris la silhouette du menu
+
+« Les CTA primaires avec une petite icône à gauche doivent se comporter comme le
+menu au hover. » Le bouton primaire a exactement la structure d'une rangée du
+menu : deux pastilles à relier. Le code du menu a donc été **généralisé** plutôt
+que recopié.
+
+`initNavShape` s'est scindé en deux :
+
+- **`initPillShape`** prend la racine, le sélecteur du SVG, celui des pastilles,
+  la classe à poser et un prédicat d'activité facultatif. Tout le reste — le
+  relevé des boîtes, la garde « une seule rangée », la boucle par échéance — est
+  commun. Il renvoie sa fonction de mise à jour, que l'appelant rebranche sur ses
+  propres signaux.
+- **`initNavShape`** et **`initCtaShapes`** ne sont plus que deux appels.
+
+`cheminBarre` devient `cheminSilhouette`, et `NAV_*` devient `PILL_*` : les
+constantes ne sont plus celles de la navigation.
+
+Deux détails qui font que ça marche sans code supplémentaire :
+
+- **L'écart est une MARGE, pas le `gap` du conteneur.** `initPillShape` écoute
+  `transitionstart` filtré sur `margin`, exactement comme pour le menu. Un `gap`
+  animé aurait émis `column-gap` et demandé un second filtre.
+- **L'écouteur est posé sur la racine et non sur la liste.** Les évènements de
+  transition remontent : un seul écouteur couvre les pastilles à n'importe quelle
+  profondeur, ce qui rend le paramètre inutile.
+
+Conséquence assumée sur le repos : l'encoche nette de 2px devient une **taille de
+guêpe**, comme entre deux entrées du menu. C'est le prix de la silhouette
+continue, et c'est ce qui a été arbitré.
+
+#### La régression que la campagne a attrapée
+
+Première version : les pastilles étaient **vidées** au profit du seul `<path>`,
+comme le fait la barre de navigation. La campagne est passée au rouge sur une
+assertion qui ne visait pas ce composant :
+
+```
+FAIL :: contraste du texte (6 sous le seuil : span 1.07:1 < 4.5, …)
+```
+
+Six libellés, un par pastille des trois boutons primaires. Le rendu était juste à
+l'œil — blanc sur la silhouette bleue, 11,7:1 — mais **aucun contrôleur de
+contraste ne voit un SVG**, et en mode couleurs forcées, où le tracé peut ne rien
+peindre, c'était du blanc sur blanc pour de bon.
+
+La barre de navigation ne souffre pas du même défaut parce que son texte est
+bleu : vider ses pastilles la laisse lisible.
+
+Le correctif tient en une observation de géométrie : **le tracé passe en dehors
+de l'arrondi de chaque pastille au droit du collet**, qu'il enjambe. Chaque
+pastille tient donc tout entière dans la silhouette. Lui rendre son aplat bleu ne
+change rien au rendu — deux aplats de la même teinte, le second inclus dans le
+premier, aucune couture possible — et rend le contraste mesurable. La silhouette
+n'ajoute plus que le collet.
+
+> Vérifié dans les deux sens : la campagne était **verte sur `HEAD`** avant ce
+> lot, les deux seuls échecs restants portant sur la couleur de puce et
+> préexistant. L'assertion de contraste a donc bien détecté quelque chose de
+> neuf.
+
+Le survol fonce l'ensemble — pastilles **et** collet, de la même quantité, par le
+jeton `$blue-hover`. La barre de navigation, elle, ne repeint rien : l'écartement
+lui suffit. Ici le repeint est gardé parce qu'il est le seul signal dans deux cas
+où l'écartement n'a pas lieu : sans JavaScript, et sous `prefers-reduced-motion`.
+Foncer les pastilles seules aurait laissé le collet en clair en travers du bouton.
+
+### Ce que l'audit du lot a corrigé
+
+Trois points relevés en relisant la livraison, avant de la donner pour finie.
+
+- **`variant` était cinq chaînes magiques** — `'solid'` / `'outline'` répétées
+  dans `cta.php` et ses deux appelants — pour un domaine à deux valeurs, alors
+  que le thème porte huit enums pour exactement ça. D'où
+  `inc/enums/LcdsCtaVariant.php` : le **nom du cas** est le mot de la maquette
+  (`Primary`, `Secondary`), sa **valeur** est la classe CSS (`solid`,
+  `outline`). Les deux vocabulaires divergeaient, la correspondance vit
+  désormais en un seul endroit. `hasIcon()` remplace le test `=== 'solid'` du
+  gabarit : c'est la seule différence de balisage entre les deux variantes.
+  Volontairement **sans `choices()` ni `label()`**, contrairement aux autres
+  enums : aucun champ ACF n'offre la variante, ce serait du code mort.
+- **`0.2s ease` en douze exemplaires**, et j'en avais ajouté trois. Devenu
+  `$fade` — voir « Les jetons qui ne viennent pas de Figma ». La factorisation a
+  été vérifiée par comparaison du **CSS compilé avant/après : identique**.
+- **La boucle de `initCtaShapes`** utilisait `for…of Array.from(…)` là où le
+  reste du fichier itère une NodeList avec `.forEach`.
 
 ## La révélation du pied de page
 

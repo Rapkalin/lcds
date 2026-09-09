@@ -81,7 +81,7 @@ $visual = $image === 0 ? '' : lcds_render_image($image, ['class' => 'block-info_
 
                     <div class="block-info__head">
                         <h3 class="block-info__title"><?php echo esc_html($row['title']); ?></h3>
-                        <?php get_template_part('components/cta', null, $row['cta'] + ['variant' => 'outline']); ?>
+                        <?php get_template_part('components/cta', null, $row['cta'] + ['variant' => LcdsCtaVariant::Secondary->value]); ?>
                     </div>
 
                     <div class="block-info__body">

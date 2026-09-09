@@ -100,10 +100,30 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   force le mouvement réduit, où elle est neutralisée — et l'on éprouve à côté
   que le panneau fermé garde bien son `display: none`. Sans quoi il ne se
   fermerait plus jamais.
-- **Boutons d'action** : les huit pastilles de la page portent du **texte
-  blanc**, et un aplat bleu dessous. Les deux ensemble : mesurer la seule
-  couleur du texte laisserait passer du blanc sur blanc. Et **aucun sélecteur
-  `:visited`** ne subsiste dans la feuille servie — voir l'encadré ci-dessous.
+- **Boutons d'action**, éprouvés **par variante** : les trois primaires portent
+  du texte blanc ET un aplat bleu dessous — mesurer la seule couleur du texte
+  laisserait passer du blanc sur blanc. Les cinq secondaires portent du texte
+  bleu, un fond **transparent** et une bordure de 1px au voile `rgba(0, 56, 122,
+  0.3)`. Une assertion commune aux deux passerait sur l'une en masquant l'autre,
+  ce qui est exactement arrivé quand elles étaient toutes bleues. Et **aucun
+  sélecteur `:visited`** ne subsiste dans la feuille servie — voir l'encadré
+  ci-dessous.
+- **Le survol du bouton secondaire** est lu sur la RÈGLE : la campagne n'a pas de
+  pointeur. Le remplissage y vaut le même voile que la bordure au repos, et la
+  bordure s'efface — sans quoi deux voiles à 30 % superposés dessineraient un
+  anneau foncé.
+- **La silhouette des boutons primaires** : trois tracés non vides, la classe
+  `cta--shaped` posée sur chacun, et le `d` du path qui démarre à un rayon du
+  bord gauche. Ce dernier point est le seul qui dise que le tracé est calé sur le
+  BON conteneur — un tracé calé sur le mauvais cadre reste un tracé.
+
+> **L'aplat des pastilles primaires garde le contraste mesurable.** Vidées au
+> profit du seul `<path>`, comme le fait la barre de navigation, elles ont fait
+> tomber les six libellés à **1,07:1** dans l'assertion de contraste. Le rendu
+> était juste à l'œil — blanc sur la silhouette bleue — mais aucun contrôleur de
+> contraste ne voit un SVG, et en mode couleurs forcées c'était du blanc sur
+> blanc pour de bon. L'assertion « aplat bleu sous ce blanc » est donc AUSSI la
+> garde de la silhouette.
 - **Glyphes des informations pratiques** : leur INTÉGRATION, pas leur tracé, qui
   vient du client. Aucun ne déborde de la colonne de 24 — les exports font 26 —,
   tous peignent en `currentColor`, et la colonne porte bien le turquoise du

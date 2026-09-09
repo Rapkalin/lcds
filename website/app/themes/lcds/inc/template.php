@@ -10,6 +10,8 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/enums/LcdsCtaVariant.php';
+
 /**
  * Rend un composant et retourne son balisage au lieu de l'afficher.
  *

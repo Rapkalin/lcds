@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'functions' as fn;
 
 // Tokens issus des variables de bibliothèque de la maquette Figma (LCDS | UI).
@@ -15,10 +16,24 @@ $orange: #e25304;
 // deux teintes, l'une pour les aplats, l'autre pour les fonds de texte.
 $orange-on-text: #c43f04;
 $blue-pale: #f2f8ff;
-// Bordures et pistes inactives. Relevé au pixel sur les maquettes PDF, mais
-// ABSENT des variables de bibliothèque Figma : à faire promouvoir côté design,
-// sinon la prochaine nuance de bordure divergera.
+// Bordures et pistes inactives. Relevé au pixel sur les maquettes PDF.
+//
+// S'il est absent des variables de bibliothèque Figma, c'est qu'il n'en est pas
+// une : le CSS du bouton d'action secondaire donne `rgba(0, 56, 122, 0.3)`, et
+// ce voile posé sur le panneau `$blue-pale` compose EXACTEMENT #A9BED7 — soit
+// cette teinte à une unité près sur deux canaux, l'erreur d'échantillonnage du
+// PDF. Ce n'est donc pas un jeton à faire promouvoir, c'est `$blue-veil`
+// aplati sur un fond connu. Là où le fond est le panneau, les deux se valent ;
+// ailleurs, seul le voile suit.
 $blue-light: #a8bed6;
+// Le voile lui-même, tel que la maquette le déclare. À préférer à la teinte
+// aplatie ci-dessus dès que le fond peut changer : sur du blanc il compose
+// #B2C3D7, et un #A8BED6 en dur y trahirait le dessin.
+$blue-veil: rgba($blue, 0.3);
+// Le bleu au survol, pour les aplats comme pour le tracé de la silhouette : les
+// deux doivent foncer de la MÊME quantité, sinon l'écart de teinte se voit en
+// travers du bouton.
+$blue-hover: color.adjust($blue, $lightness: -6%);
 // Filets séparateurs, plus clairs que les bordures. Relevé au pixel, et lui
 // aussi absent des variables de bibliothèque Figma.
 $blue-separator: #d9e4f1;
@@ -116,6 +131,9 @@ $module: fn.toRem(52);
 $section-padding: clamp(#{fn.toRem(64)}, 8.889vw, #{fn.toRem(128)});
 $block-gap: fn.toRem(80);
 $radius: fn.toRem(8);
+// L'encoche entre les deux pastilles d'un bouton d'action primaire au repos.
+// C'est elle que le survol ouvre jusqu'à `$spread`.
+$notch: fn.toRem(2);
 // Pastilles pleinement arrondies (étiquettes, badges de durée) : une valeur
 // bien supérieure à la moitié de la hauteur reste juste quelle que soit celle-ci.
 $radius-pill: fn.toRem(999);
@@ -124,3 +142,25 @@ $radius-pill: fn.toRem(999);
 // Provisoires : aucune maquette mobile n'existe à ce jour.
 $bp-tablet: 1024px;
 $bp-mobile: 680px;
+
+/* MOUVEMENT */
+// Le fondu commun à TOUT changement de teinte du site — fonds de bouton,
+// bordures, cartes, pistes de carrousel. La valeur vivait en douze exemplaires
+// dans cinq feuilles : une seconde durée introduite par mégarde aurait donné
+// deux vitesses de survol sur la même page, sans que rien ne le signale.
+//
+// Scindé en deux parce que la durée sert AUSSI de DÉLAI, sans son accélération :
+// la `visibility` du panneau mobile est retardée du temps que dure le fondu, et
+// une durée changée ici sans l'autre démasquerait le panneau avant sa fin.
+$fade-duration: 0.2s;
+$fade: $fade-duration ease;
+// L'écartement des pastilles au survol, partagé par la barre de navigation et
+// les boutons d'action primaires. Deux courbes DISTINCTES selon le sens,
+// relevées sur floema.com : la sortie se pose vite et net, l'entrée dépasse
+// légèrement avant de revenir. C'est ce dépassement qui donne le ressort.
+$spread-out: 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+$spread-in: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+// Écart ouvert par le survol. Fixe la taille du collet : au-delà, les poignées
+// de Bézier plafonnent et le collet cesse de s'allonger — voir PILL_POIGNEE_MAX
+// dans assets/scripts/app.js.
+$spread: fn.toRem(20);

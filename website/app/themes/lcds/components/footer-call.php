@@ -32,7 +32,7 @@ $links = isset($args['liens']) && is_array($args['liens']) ? $args['liens'] : []
                 <?php get_template_part('components/cta', null, [
                     'label' => trim((string) ($link['title'] ?? '')),
                     'url' => trim((string) ($link['url'] ?? '')),
-                    'variant' => 'outline',
+                    'variant' => LcdsCtaVariant::Secondary->value,
                 ]); ?>
             <?php endforeach; ?>
         </div>

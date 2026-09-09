@@ -545,12 +545,13 @@ const initJourneys = () => {
 };
 
 /* ------------------------------------------------------------------------- *
- * La forme de la barre de navigation.
+ * La silhouette d'une rangée de pastilles.
  *
- * Les pastilles blanches et les collets qui les relient sont tracés d'un seul
- * `<path>` peint derrière les liens. C'est ce qui donne la CONTINUITÉ : un
- * chaînon posé dans l'écart resterait un second fond, et deux fonds qui se
- * touchent laissent toujours une couture. Ici il n'y a qu'une silhouette.
+ * Sert la barre de navigation et les boutons d'action primaires. Les pastilles
+ * et les collets qui les relient sont tracés d'un seul `<path>` peint derrière
+ * elles. C'est ce qui donne la CONTINUITÉ : un chaînon posé dans l'écart
+ * resterait un second fond, et deux fonds qui se touchent laissent toujours une
+ * couture. Ici il n'y a qu'une silhouette.
  *
  * Relevé sur la référence (floema.com), sur une rangée de 36,80 de haut pour un
  * arrondi de 12,51 : le collet s'accroche à 19,4° sur l'arrondi — donc il en
@@ -559,23 +560,23 @@ const initJourneys = () => {
  * guêpe : elle vaut ici 63 % de la hauteur de la rangée.
  * ------------------------------------------------------------------------- */
 
-const NAV_ANGLE_ACCROCHE = (19.4 * Math.PI) / 180;
+const PILL_ANGLE_ACCROCHE = (19.4 * Math.PI) / 180;
 
 // Longueur des poignées de Bézier, en fraction de l'arrondi. Elle vaut la
 // moitié de l'écart tant que celui-ci est petit — c'est le rapport relevé sur
 // la référence — puis PLAFONNE. Sans ce plafond, un écart de 20px enverrait les
 // poignées si loin que les deux arêtes se croiseraient et fermeraient le collet.
-const NAV_POIGNEE_MAX = 0.5;
+const PILL_POIGNEE_MAX = 0.5;
 
-const cheminBarre = (boites, rayon, hauteur) => {
-    const dx = rayon * (1 - Math.cos(NAV_ANGLE_ACCROCHE));
-    const dy = rayon * (1 - Math.sin(NAV_ANGLE_ACCROCHE));
+const cheminSilhouette = (boites, rayon, hauteur) => {
+    const dx = rayon * (1 - Math.cos(PILL_ANGLE_ACCROCHE));
+    const dy = rayon * (1 - Math.sin(PILL_ANGLE_ACCROCHE));
     // Tangente unitaire à l'arrondi au point d'accroche.
-    const tx = Math.sin(NAV_ANGLE_ACCROCHE);
-    const ty = Math.cos(NAV_ANGLE_ACCROCHE);
+    const tx = Math.sin(PILL_ANGLE_ACCROCHE);
+    const ty = Math.cos(PILL_ANGLE_ACCROCHE);
     const dernier = boites.length - 1;
     const arc = (x, y) => `A${rayon} ${rayon} 0 0 1 ${x} ${y}`;
-    const poignee = (ecart) => Math.min(ecart / 2, rayon * NAV_POIGNEE_MAX);
+    const poignee = (ecart) => Math.min(ecart / 2, rayon * PILL_POIGNEE_MAX);
     const d = [`M${boites[0].gauche + rayon} 0`];
 
     // Arête supérieure, de gauche à droite.
@@ -620,37 +621,44 @@ const cheminBarre = (boites, rayon, hauteur) => {
     return `${d.join(" ")} Z`;
 };
 
-const initNavShape = () => {
-    const nav = document.querySelector(".site-nav");
-
-    if (nav === null) {
-        return;
-    }
-
-    const svg = nav.querySelector(".site-nav__shape");
+/**
+ * Trace la silhouette d'une rangée de pastilles, et la suit pendant qu'elle
+ * s'écarte.
+ *
+ * Sert la barre de navigation ET les boutons d'action primaires : dans les deux
+ * cas des pastilles alignées sur une rangée, reliées par des collets, dont
+ * l'écart s'ouvre au survol par une transition de `margin`.
+ *
+ *   racine     L'élément qui porte le SVG, les pastilles et `position: relative`.
+ *   forme      Sélecteur du SVG décoratif, cherché dans la racine.
+ *   pastilles  Sélecteur des boîtes à relier, dans l'ORDRE du document — qui est
+ *              ici l'ordre visuel, celui que `cheminSilhouette` suppose.
+ *   classe     Classe posée sur la racine tant que la silhouette est tracée.
+ *   actif      Prédicat facultatif : rend la main sans rien tracer quand il est
+ *              faux.
+ *
+ * Renvoie sa fonction de mise à jour, pour la rebrancher sur d'autres signaux.
+ */
+const initPillShape = ({ racine, forme, pastilles, classe, actif = () => true }) => {
+    const svg = racine.querySelector(forme);
     const trace = svg === null ? null : svg.querySelector("path");
-    const liste = nav.querySelector(".site-nav__list");
 
-    if (trace === null || liste === null) {
-        return;
+    if (trace === null) {
+        return () => {};
     }
-
-    // Sous le point de rupture la navigation devient un panneau vertical : les
-    // pastilles ne forment plus une rangée, il n'y a plus de barre à tracer.
-    const rangee = window.matchMedia("(min-width: 1025px)");
 
     const update = () => {
-        const liens = Array.from(liste.querySelectorAll("a"));
+        const elements = Array.from(racine.querySelectorAll(pastilles));
 
-        if (liens.length === 0 || ! rangee.matches) {
-            nav.classList.remove("site-nav--shaped");
+        if (elements.length === 0 || ! actif()) {
+            racine.classList.remove(classe);
 
             return;
         }
 
-        const cadre = nav.getBoundingClientRect();
-        const boites = liens.map((lien) => {
-            const boite = lien.getBoundingClientRect();
+        const cadre = racine.getBoundingClientRect();
+        const boites = elements.map((element) => {
+            const boite = element.getBoundingClientRect();
 
             return {
                 gauche: boite.left - cadre.left,
@@ -662,23 +670,23 @@ const initNavShape = () => {
 
         // Une rangée, et une seule : à 200 % de taille de texte les pastilles
         // passent à la ligne, et un tracé qui suppose une bande unique peindrait
-        // alors un bloc plein en travers du menu.
+        // alors un bloc plein en travers.
         const hauteur = boites[0].hauteur;
         const alignees = boites.every(
             (boite) => Math.abs(boite.haut) < 0.5 && Math.abs(boite.hauteur - hauteur) < 0.5,
         );
 
         if (! alignees || hauteur <= 0) {
-            nav.classList.remove("site-nav--shaped");
+            racine.classList.remove(classe);
 
             return;
         }
 
-        const rayon = parseFloat(window.getComputedStyle(liens[0]).borderTopLeftRadius) || 0;
+        const rayon = parseFloat(window.getComputedStyle(elements[0]).borderTopLeftRadius) || 0;
 
         svg.setAttribute("viewBox", `0 0 ${cadre.width} ${hauteur}`);
-        trace.setAttribute("d", cheminBarre(boites, rayon, hauteur));
-        nav.classList.add("site-nav--shaped");
+        trace.setAttribute("d", cheminSilhouette(boites, rayon, hauteur));
+        racine.classList.add(classe);
     };
 
     // L'écartement est une transition de marge : la forme doit la suivre image
@@ -700,7 +708,9 @@ const initNavShape = () => {
         enCours = false;
     };
 
-    liste.addEventListener("transitionstart", (event) => {
+    // Posé sur la RACINE : les événements de transition remontent, un seul
+    // écouteur couvre donc toutes les pastilles quelle que soit leur profondeur.
+    racine.addEventListener("transitionstart", (event) => {
         if (! String(event.propertyName).startsWith("margin")) {
             return;
         }
@@ -714,7 +724,6 @@ const initNavShape = () => {
     });
 
     window.addEventListener("resize", update);
-    rangee.addEventListener("change", update);
 
     // La largeur des pastilles dépend de la police : tracer avant qu'elle soit
     // chargée fige la forme sur les métriques de la police de secours.
@@ -723,6 +732,48 @@ const initNavShape = () => {
     }
 
     update();
+
+    return update;
+};
+
+const initNavShape = () => {
+    const nav = document.querySelector(".site-nav");
+
+    if (nav === null) {
+        return;
+    }
+
+    // Sous le point de rupture la navigation devient un panneau vertical : les
+    // pastilles ne forment plus une rangée, il n'y a plus de barre à tracer.
+    const rangee = window.matchMedia("(min-width: 1025px)");
+
+    const update = initPillShape({
+        racine: nav,
+        forme: ".site-nav__shape",
+        pastilles: ".site-nav__list a",
+        classe: "site-nav--shaped",
+        actif: () => rangee.matches,
+    });
+
+    rangee.addEventListener("change", update);
+};
+
+/**
+ * Les boutons d'action primaires portent la même silhouette que le menu.
+ *
+ * Deux pastilles au lieu de cinq entrées, et un collet au lieu de quatre : le
+ * tracé est le même, l'écart s'ouvre de la même marge. La variante secondaire
+ * n'a qu'une pastille et aucun SVG — rien à faire pour elle.
+ */
+const initCtaShapes = () => {
+    document.querySelectorAll(".cta--solid").forEach((cta) => {
+        initPillShape({
+            racine: cta,
+            forme: ".cta__shape",
+            pastilles: ".cta__icon, .cta__label",
+            classe: "cta--shaped",
+        });
+    });
 };
 
 /**
@@ -767,6 +818,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initHeaderHeight();
     initNavShape();
+    initCtaShapes();
     initCarousels();
     initAccordions();
     initJourneys();

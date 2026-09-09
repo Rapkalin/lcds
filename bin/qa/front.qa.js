@@ -822,28 +822,153 @@ window.runFrontQa = async (win) => {
         cote("infos : bouton contourné, bord droit", boite(".block-info .cta--outline")?.right ?? null, 1279);
 
         /* ------------------------------------------------------------------ *
-         * TOUS les boutons d'action portent du texte blanc.
+         * Les deux variantes de bouton d'action, éprouvées SÉPARÉMENT.
          *
-         * La variante à une seule pastille avait du texte bleu, et c'est le
-         * défaut remonté. Éprouvé sur les deux variantes à la fois : la règle
-         * demandée ne souffre pas d'exception, et une exception ajoutée plus
-         * tard doit faire rougir la campagne.
+         * Elles ne partagent plus leur rendu : la primaire porte du texte blanc
+         * sur un aplat bleu, la secondaire du texte bleu sur fond transparent et
+         * une bordure. Une assertion commune passerait sur l'une en masquant
+         * l'autre — c'est ce qui est arrivé quand les deux étaient bleues.
          * ------------------------------------------------------------------ */
-        const pastilles = [...doc.querySelectorAll(".cta__label")];
-        const textes = pastilles.map((node) => styleOf(node).color);
-        const aplats = pastilles.map((node) => styleOf(node).backgroundColor);
+        const primaires = [...doc.querySelectorAll(".cta--solid .cta__label")];
+        const textesPrimaires = primaires.map((node) => styleOf(node).color);
+        const aplatsPrimaires = primaires.map((node) => styleOf(node).backgroundColor);
 
         assert(
-            `boutons d'action : texte blanc sur les ${pastilles.length} pastilles (${[...new Set(textes)].join(", ")})`,
-            pastilles.length > 0 && textes.every((teinte) => teinte === "rgb(255, 255, 255)")
+            `bouton primaire : texte blanc sur les ${primaires.length} pastilles (${[...new Set(textesPrimaires)].join(", ")})`,
+            primaires.length > 0 && textesPrimaires.every((teinte) => teinte === "rgb(255, 255, 255)")
         );
         // Le blanc n'est lisible que sur un aplat foncé : les deux vont
         // ensemble, et mesurer la seule couleur du texte laisserait passer du
         // blanc sur blanc.
+        //
+        // Cette mesure est aussi la GARDE de la silhouette : le tracé ne
+        // dispense pas les pastilles de leur propre aplat. Vidées au profit du
+        // seul `<path>`, elles ont fait tomber les six libellés à 1,07:1 —
+        // aucun contrôleur de contraste ne voit un SVG.
         assert(
-            `boutons d'action : aplat bleu sous ce blanc (${[...new Set(aplats)].join(", ")})`,
-            aplats.every((aplat) => aplat === "rgb(0, 56, 122)")
+            `bouton primaire : aplat bleu sous ce blanc (${[...new Set(aplatsPrimaires)].join(", ")})`,
+            aplatsPrimaires.every((aplat) => aplat === "rgb(0, 56, 122)")
         );
+
+        const secondaires = [...doc.querySelectorAll(".cta--outline .cta__label")];
+        const textesSecondaires = secondaires.map((node) => styleOf(node).color);
+        const fondsSecondaires = secondaires.map((node) => styleOf(node).backgroundColor);
+        const bordsSecondaires = secondaires.map((node) => (
+            `${styleOf(node).borderTopWidth} ${styleOf(node).borderTopColor}`
+        ));
+
+        assert(
+            `bouton secondaire : texte bleu sur les ${secondaires.length} pastilles (${[...new Set(textesSecondaires)].join(", ")})`,
+            secondaires.length > 0 && textesSecondaires.every((teinte) => teinte === "rgb(0, 56, 122)")
+        );
+        // Transparent, et non « la teinte du panneau » : un aplat en dur serait
+        // faux partout ailleurs. Le « voir le plan » ne vit pas sur le panneau.
+        assert(
+            `bouton secondaire : fond transparent (${[...new Set(fondsSecondaires)].join(", ")})`,
+            fondsSecondaires.every((fond) => fond === "rgba(0, 0, 0, 0)")
+        );
+        assert(
+            `bouton secondaire : bordure de 1px au voile bleu (${[...new Set(bordsSecondaires)].join(", ")})`,
+            bordsSecondaires.every((bord) => bord === "1px rgba(0, 56, 122, 0.3)")
+        );
+
+        // Le SURVOL de la variante secondaire, lu sur la RÈGLE : la campagne
+        // n'a pas de pointeur, l'état ne se mesure donc pas. Le remplissage y
+        // vaut le même voile que la bordure au repos — c'est le CSS Figma — et
+        // la bordure s'efface : deux voiles à 30 % superposés composeraient un
+        // anneau foncé de 51 unités d'écart avec l'intérieur.
+        assert(
+            "bouton secondaire : le survol remplit du voile et efface la bordure",
+            trouverRegle(doc, ".cta--outline:hover .cta__label", (regle) => (
+                regle.style.backgroundColor === "rgba(0, 56, 122, 0.3)"
+                    && regle.style.borderColor === "rgba(0, 0, 0, 0)"
+                    ? true
+                    : null
+            )) === true
+        );
+
+        /* ------------------------------------------------------------------ *
+         * La silhouette des boutons primaires.
+         *
+         * Même tracé que la barre de navigation, par le même code. Éprouvée sur
+         * le `d` du path et non sur une capture : ce qu'un copier-coller de
+         * `initPillShape` casse, c'est le rattachement au conteneur — un tracé
+         * calé sur le mauvais cadre reste un tracé.
+         * ------------------------------------------------------------------ */
+        const silhouettes = [...doc.querySelectorAll(".cta--solid")];
+        const traces = silhouettes.map((cta) => {
+            const path = cta.querySelector(".cta__shape path");
+
+            return path === null ? "" : path.getAttribute("d");
+        });
+
+        assert(
+            `boutons primaires : ${silhouettes.length} silhouettes tracées (${traces.filter((d) => d !== "" && d !== null).length})`,
+            silhouettes.length > 0 && traces.every((d) => typeof d === "string" && d.startsWith("M") && d.endsWith("Z"))
+        );
+        assert(
+            `boutons primaires : classe posée sur chacun (${silhouettes.filter((cta) => cta.classList.contains("cta--shaped")).length} sur ${silhouettes.length})`,
+            silhouettes.every((cta) => cta.classList.contains("cta--shaped"))
+        );
+        // Le tracé part du BORD GAUCHE du bouton, à un rayon près : c'est ce qui
+        // dit qu'il est calé sur le bon conteneur. Mesuré sur le premier `M`.
+        const departs = traces.map((d) => parseFloat(String(d).slice(1).split(" ")[0]));
+
+        assert(
+            `boutons primaires : tracé calé sur le conteneur (départs ${departs.map((x) => x.toFixed(1)).join(", ")})`,
+            departs.every((x) => x > 0 && x < 12)
+        );
+
+        /* ------------------------------------------------------------------ *
+         * Le collet SUIT l'écart, il n'est pas dessiné une fois pour toutes.
+         *
+         * C'est tout l'intérêt du tracé : sans ce contrôle, une silhouette
+         * figée au chargement passerait les trois assertions ci-dessus et ne
+         * s'ouvrirait jamais au survol.
+         *
+         * L'écart est forcé par un style en ligne, puis `resize` est synthétisé
+         * — c'est l'autre signal branché sur la même mise à jour. Le survol lui
+         * même n'est PAS reproductible ici : `:hover` ne se synthétise pas, et
+         * la campagne force `prefers-reduced-motion`, où la transition de marge
+         * est neutralisée et n'émet donc aucun `transitionstart`. Cette branche
+         * du script reste hors de portée de la recette, et c'est déclaré.
+         * ------------------------------------------------------------------ */
+        const premier = doc.querySelector(".cta--solid");
+
+        if (premier !== null) {
+            const traceCta = premier.querySelector(".cta__shape path");
+            const libelle = premier.querySelector(".cta__label");
+            // Distance entre les deux poignées de Bézier du collet : elle croît
+            // avec l'écart, là où la largeur du tracé entier croît aussi quand
+            // c'est seulement le libellé qui s'allonge.
+            const poignees = (d) => {
+                const courbe = String(d).match(/C([\d.]+) [\d.]+, ([\d.]+) /);
+
+                return courbe === null ? null : parseFloat(courbe[2]) - parseFloat(courbe[1]);
+            };
+            const auRepos = poignees(traceCta.getAttribute("d"));
+
+            libelle.style.marginLeft = "20px";
+            premier.ownerDocument.defaultView.dispatchEvent(new win.Event("resize"));
+
+            const ecarte = poignees(traceCta.getAttribute("d"));
+
+            libelle.style.marginLeft = "";
+            premier.ownerDocument.defaultView.dispatchEvent(new win.Event("resize"));
+
+            const revenu = poignees(traceCta.getAttribute("d"));
+
+            assert(
+                `collet : s'ouvre avec l'écart (${auRepos?.toFixed(2)} à 2px, ${ecarte?.toFixed(2)} à 20px)`,
+                auRepos !== null && ecarte !== null && ecarte > auRepos + 10
+            );
+            // Et il se referme : une mise à jour qui ne saurait que grandir
+            // laisserait le bouton ouvert après la sortie du curseur.
+            assert(
+                `collet : se referme (${revenu?.toFixed(2)} revenu sur ${auRepos?.toFixed(2)})`,
+                revenu !== null && auRepos !== null && Math.abs(revenu - auRepos) < 0.5
+            );
+        }
 
         // ET AUCUNE règle `:visited` dans la feuille. Celle qui neutralisait la
         // couleur des liens visités portait une spécificité (0,1,1) : elle

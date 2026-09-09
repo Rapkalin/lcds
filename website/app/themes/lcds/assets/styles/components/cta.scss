@@ -1,16 +1,22 @@
-@use "sass:color";
 @use "../basics/variables" as var;
 @use "../basics/functions" as fn;
 
-// Deux pastilles distinctes séparées de 2px, et non une seule avec un séparateur :
-// c'est ce liseré de fond qui creuse l'encoche visible sur la maquette.
+/* ------------------------------------------------------------------------- *
+ * Bouton d'action, deux variantes.
+ *
+ * `solid` (primaire) : deux pastilles, le glyphe puis le libellé. Elles se
+ * comportent comme les entrées de la barre de navigation — une silhouette
+ * continue dont le collet s'étire au survol. Voir plus bas.
+ *
+ * `outline` (secondaire) : une seule pastille contournée, sans glyphe.
+ * ------------------------------------------------------------------------- */
 .cta {
+  // La silhouette est posée en absolu par-dessus : c'est ici qu'elle se cale.
+  position: relative;
   display: inline-flex;
   max-width: 100%;
   align-items: stretch;
-  gap: fn.toRem(2);
   height: fn.toRem(29);
-  color: var.$white;
   font-size: var.$fs-cta;
   font-weight: var.$fw-cta;
   line-height: var.$lh-cta;
@@ -18,53 +24,150 @@
   text-transform: uppercase;
   white-space: nowrap;
   overflow-wrap: break-word;
+}
 
-  &__icon,
-  &__label {
-    display: flex;
-    align-items: center;
-    border-radius: var.$radius;
-    background: var.$blue;
-    transition: background-color 0.2s ease;
-  }
+.cta__icon,
+.cta__label {
+  // La silhouette est POSITIONNÉE, les pastilles ne l'étaient pas : l'ordre de
+  // peinture mettait alors le tracé au-dessus des libellés et les effaçait.
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var.$radius;
+}
 
-  &__icon {
-    justify-content: center;
-    width: fn.toRem(44);
-    // L'émoji ne suit pas l'interlettrage du libellé.
-    letter-spacing: normal;
-  }
+.cta__icon {
+  justify-content: center;
+  width: fn.toRem(44);
+  // L'émoji ne suit pas l'interlettrage du libellé.
+  letter-spacing: normal;
+}
 
-  &__label {
-    min-width: 0;
-    padding: 0 fn.toRem(16);
-  }
-
-  &:hover &__icon,
-  &:hover &__label,
-  &:focus-visible &__icon,
-  &:focus-visible &__label {
-    background: color.adjust(var.$blue, $lightness: -6%);
-  }
+.cta__label {
+  min-width: 0;
+  padding: 0 fn.toRem(16);
 }
 
 /* ------------------------------------------------------------------------- *
- * Variante à UNE SEULE PASTILLE, sans glyphe. C'est le « voir le plan » des
- * informations pratiques et les boutons du pied de page.
+ * VARIANTE PRIMAIRE — la silhouette du menu.
  *
- * Elle n'a plus de style propre : même pastille bleue et même texte blanc que
- * la variante pleine, dont elle ne diffère que par l'absence du glyphe. C'est
- * le composant PHP qui fait cette différence, pas la feuille de style — d'où
- * l'absence de règle ici.
+ * Le COLLET qui relie les deux pastilles vient d'un `<path>` peint derrière
+ * elles, et son écart s'ouvre au survol : même mécanisme que la barre de
+ * navigation, même code — `initPillShape` dans assets/scripts/app.js. Un
+ * chaînon posé dans l'écart resterait un second fond, et deux fonds qui se
+ * touchent laissent toujours une couture ; le tracé, lui, est d'un trait.
  *
- * ÉCART ASSUMÉ AVEC LA MAQUETTE, sur demande du client. Le PDF dessine ces
- * boutons contournés : relevé au pixel sur `HP_06_Frame 54.pdf`, le
- * remplissage des trois boutons du pied de page vaut (243, 248, 254) — le
- * panneau — et leur texte #143776, soit du bleu. Le client demande du texte
- * blanc partout, ce qui impose un aplat foncé : le contraire de contourné.
- * La classe garde son nom, qui est la clé de variante côté ACF et le mot de la
- * maquette ; ce qu'elle dessine, lui, a changé.
+ * Conséquence assumée sur le REPOS : l'encoche nette de 2px que dessine la
+ * maquette devient une taille de guêpe, comme entre deux entrées du menu.
  * ------------------------------------------------------------------------- */
+.cta--solid {
+  color: var.$white;
+
+  .cta__icon {
+    transition: background-color var.$fade;
+  }
+
+  // L'écart des deux pastilles est une MARGE et non le `gap` du conteneur :
+  // c'est la propriété que `initPillShape` écoute pour redessiner la silhouette
+  // image par image, et elle est déjà celle de la barre de navigation.
+  .cta__label {
+    margin-left: var.$notch;
+    transition: margin var.$spread-out, background-color var.$fade;
+  }
+
+  &:hover .cta__label,
+  &:focus-visible .cta__label {
+    // `:focus-visible` autant que le survol : la référence ne prévoit que le
+    // survol, un utilisateur au clavier ne verrait jamais l'animation.
+    margin-left: var.$spread;
+    transition: margin var.$spread-in, background-color var.$fade;
+  }
+}
+
+// Les pastilles GARDENT leur aplat, silhouette tracée ou non — contrairement à
+// la barre de navigation, qui vide les siennes.
+//
+// Rien ne se superpose : le tracé passe en DEHORS de l'arrondi de chaque
+// pastille au droit du collet, qu'il enjambe, et la pastille tient donc tout
+// entière dans la silhouette. Deux aplats de la même teinte, le second inclus
+// dans le premier : aucune couture possible.
+//
+// Et c'est ce qui rend le texte blanc lisible pour une machine. Vidées, les
+// pastilles laissaient le libellé sur un fond que seul un `<path>` peignait :
+// la campagne a mesuré 1,07:1 sur les six libellés, et tout audit automatisé
+// dira la même chose — un contrôleur de contraste ne voit pas un SVG. En mode
+// couleurs forcées, où le tracé peut ne rien peindre, c'était du blanc sur
+// blanc pour de bon.
+.cta--solid .cta__icon,
+.cta--solid .cta__label {
+  background: var.$blue;
+}
+
+// Le survol fonce l'ensemble — pastilles ET collet, de la même quantité.
+//
+// La barre de navigation, elle, ne repeint rien : l'écartement lui suffit. Ici
+// le repeint est gardé parce qu'il est le SEUL signal dans deux cas où
+// l'écartement n'a pas lieu — sans JavaScript, et sous `prefers-reduced-motion`.
+// Le distinguer par un `:not(.cta--shaped)` demandait de rattraper ces deux cas
+// séparément, pour un écart que personne ne lit comme « pas comme le menu ».
+.cta--solid:hover .cta__icon,
+.cta--solid:hover .cta__label,
+.cta--solid:focus-visible .cta__icon,
+.cta--solid:focus-visible .cta__label {
+  background: var.$blue-hover;
+}
+
+.cta__shape {
+  position: absolute;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: var.$blue;
+}
+
+.cta--shaped .cta__shape {
+  display: block;
+}
+
+.cta--shaped:hover .cta__shape,
+.cta--shaped:focus-visible .cta__shape {
+  fill: var.$blue-hover;
+}
+
+/* ------------------------------------------------------------------------- *
+ * VARIANTE SECONDAIRE — contournée, sur fond transparent.
+ *
+ * Relevé au pixel sur `HP_06_Frame 54.pdf` (boutons du pied de page et
+ * « voir le plan ») : remplissage #F2F8FF, soit le fond lui-même, bordure de
+ * 1px #A8BED6, texte #00387A. Et le CSS Figma de l'état de survol donne
+ * `rgba(0, 56, 122, 0.3)` en remplissage, texte inchangé.
+ *
+ * Les deux se recoupent : ce voile posé sur le panneau compose #A9BED7, la
+ * bordure relevée à une unité près. La bordure au repos et le remplissage au
+ * survol sont donc la MÊME valeur — `$blue-veil`.
+ *
+ * Contrastes mesurés : 10,64:1 au repos, 5,97:1 au survol. Conformes.
+ * ------------------------------------------------------------------------- */
+.cta--outline {
+  color: var.$blue;
+
+  .cta__label {
+    border: 1px solid var.$blue-veil;
+    transition: background-color var.$fade, border-color var.$fade;
+  }
+
+  &:hover .cta__label,
+  &:focus-visible .cta__label {
+    // La bordure S'EFFACE au lieu de rester sous le remplissage : deux voiles à
+    // 30 % superposés composent #7696BB, un anneau foncé de 51 unités d'écart
+    // avec l'intérieur, là où la maquette montre un aplat uni. Le fond continue
+    // de peindre sous elle et remplit toute la pastille.
+    border-color: transparent;
+    background: var.$blue-veil;
+  }
+}
 
 /* ------------------------------------------------------------------------- *
  * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
@@ -86,5 +189,22 @@
 
   .cta__label {
     padding: fn.toRem(7) fn.toRem(16);
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mouvement réduit.
+ *
+ * L'écartement déplace le libellé sous le curseur : quelqu'un qui demande à
+ * réduire les animations ne doit pas le subir. Les trois sélecteurs, survol
+ * compris : sans eux, la règle de survol restée dehors l'emporterait par sa
+ * spécificité.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .cta--solid .cta__label,
+  .cta--solid:hover .cta__label,
+  .cta--solid:focus-visible .cta__label {
+    margin-left: var.$notch;
+    transition: none;
   }
 }

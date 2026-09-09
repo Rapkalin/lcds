@@ -87,7 +87,7 @@
     // Centré sur la PREMIÈRE ligne du titre, pas sur le titre entier :
     // (58 − 52) / 2 = 3. Calculé, donc juste si l'échelle typographique bouge.
     margin-top: calc((#{var.$fs-h2} * #{var.$lh-title} - #{var.$module}) / 2);
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    transition: border-color var.$fade, background-color var.$fade;
   }
 
   &__trigger:hover &__icon,
