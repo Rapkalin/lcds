@@ -4,22 +4,42 @@
 /* ------------------------------------------------------------------------- *
  * Le panneau et le visuel qu'il découvre.
  *
- * Le panneau NE SE DÉPLACE PAS : il commence immédiatement après le contenu,
- * comme la maquette le dessine. Ce qui bouge est son BAS PEINT — au repos il
- * déborde sous lui d'une hauteur de visuel et le masque entièrement, puis il se
- * rétracte et le découvre.
+ * LE VISUEL NE BOUGE PAS. Il est fixé au bas de la fenêtre et peint DERRIÈRE la
+ * page (`z-index: -1`) ; ce qui glisse par-dessus, c'est la page elle-même. Le
+ * panneau bleu est donc un volet qui remonte et le découvre, alors que le
+ * visuel, lui, reste rigoureusement immobile.
  *
- * La première version translatait le panneau vers le bas. Elle laissait alors
- * une bande vide de 513px entre la dernière section et lui, visible pendant
- * presque tout le défilement — l'avancement ne décolle que dans les 513 derniers
- * pixels. Aucun agencement où le panneau se déplace n'évite ce vide : sous le
- * contenu il faut bien peindre quelque chose.
+ * Aucun JavaScript : l'effet est une pure géométrie de peinture. Le bloc réserve
+ * la hauteur du visuel en bas de page ET n'y peint AUCUN fond — c'est ce trou
+ * qui laisse voir le visuel fixé derrière. Partout ailleurs, `.main-content`
+ * porte un aplat opaque qui le masque.
  *
- * La classe `--animated` n'est posée que par le script. Sans JavaScript, ou
- * sous `prefers-reduced-motion`, le panneau reste posé et le visuel est
- * simplement visible en dessous — c'est le rendu de la maquette, et rien n'est
- * inaccessible.
+ * Deux tentatives précédentes, et ce qu'elles ont coûté :
+ *
+ *   - translater le panneau vers le bas laissait une bande vide de 513px entre
+ *     la dernière section et lui, visible pendant presque tout le défilement ;
+ *   - rétracter son BAS PEINT au fil d'un avancement calculé en JavaScript
+ *     réglait ce vide, mais le visuel défilait alors avec la page — ce n'était
+ *     pas un volet, tout bougeait ensemble.
+ *
+ * Sous `prefers-reduced-motion`, le visuel redevient `absolute` et défile avec
+ * la page : un fond qui ne suit pas le contenu est un effet de parallaxe, et
+ * c'est précisément ce que cette préférence demande d'éviter. Le visuel reste
+ * visible, rien ne devient inaccessible.
  * ------------------------------------------------------------------------- */
+
+// L'aplat opaque qui masque le visuel fixé partout SAUF dans la réserve du bloc
+// de fin, laquelle est hors de `main`. Sans lui, le visuel affleurerait sous
+// toute section dépourvue de fond propre — `.block-info` n'en a pas.
+//
+// Un fond de bloc EN FLUX, et non un élément positionné : l'ordre de peinture
+// place les fonds de blocs au-dessus des `z-index` négatifs, ce qui est
+// exactement ce qu'on demande ici. Le fond du `body`, lui, ne conviendrait pas :
+// il est propagé au CANEVAS, donc peint SOUS le visuel.
+.main-content {
+  background: var.$white;
+}
+
 .footer-reveal {
   --reveal-height: #{fn.toRem(513)};
   // Rayon des coins bas du panneau, ET hauteur dont le visuel remonte sous lui.
@@ -29,22 +49,39 @@
 
   position: relative;
   // L'espace du visuel est RÉSERVÉ, pas emprunté : une marge négative sur le
-  // panneau le supprimait, et il n'y avait alors rien à découvrir — constaté,
-  // l'avancement restait à 0 en bas de page.
+  // panneau le supprimait, et il n'y avait alors rien à découvrir.
+  //
+  // Et AUCUN fond ici : c'est ce trou qui laisse voir le visuel fixé derrière.
+  // Un aplat blanc, tel qu'il y en avait un, le masquait entièrement.
   padding-bottom: var(--reveal-height);
-  background: var.$white;
   overflow: hidden;
 }
 
 // Le visuel remonte SOUS le panneau d'un rayon : sans ce débord, les encoches
 // des coins arrondis laissaient voir le fond blanc du bloc. La hauteur VISIBLE
 // reste celle de la maquette, c'est la réserve du bloc qui la fixe.
+//
+// `absolute` par défaut : c'est le repli sous mouvement réduit, où le visuel
+// défile avec la page comme n'importe quel contenu.
 .footer-reveal__media {
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   height: calc(var(--reveal-height) + var(--footer-radius));
+}
+
+// Fixé au bas de la FENÊTRE, et derrière la page. C'est tout l'effet : le
+// visuel ne bouge plus, c'est le volet bleu qui remonte et le découvre.
+//
+// `overflow: hidden` sur le bloc ne le rogne pas — seul un `transform`, un
+// `filter` ou un `contain` sur un ancêtre ferait de lui un bloc conteneur pour
+// un descendant fixé. Ce qui le borne, c'est l'aplat de `.main-content`.
+@media (prefers-reduced-motion: no-preference) {
+  .footer-reveal__media {
+    position: fixed;
+    z-index: -1;
+  }
 }
 
 // Le visuel est rogné pour remplir la largeur : le cadrage dit quelle bande
@@ -80,14 +117,6 @@
   }
 }
 
-// Avancement 0 : le bas peint descend d'une hauteur de visuel et le masque
-// entièrement. Avancement 1 : il s'est rétracté sur le panneau, le visuel est
-// découvert. La hauteur du panneau n'entre plus dans le mécanisme — c'est le
-// débord qui masque, et il vaut exactement la réserve.
-.footer-reveal--animated .site-footer::before {
-  bottom: calc(-1 * (1 - var(--reveal-progress, 0)) * var(--reveal-height));
-}
-
 /* ------------------------------------------------------------------------- *
  * Le panneau.
  *
@@ -100,12 +129,8 @@
   color: var.$blue;
 
   // Le fond et les coins vivent sur un pseudo-élément, et non sur le panneau :
-  // c'est lui qui déborde sous le panneau pour masquer le visuel, et le panneau
-  // doit garder sa hauteur propre — c'est elle qui pose le contenu.
-  //
-  // Sans `--animated` il ne déborde pas : le panneau est simplement posé et le
-  // visuel visible dessous, ce que rend la maquette. C'est aussi le repli sans
-  // JavaScript et sous mouvement réduit.
+  // les coins arrondis ne doivent pas rogner le contenu, et le panneau doit
+  // garder sa hauteur propre — c'est elle qui pose ce contenu.
   &::before {
     content: "";
     position: absolute;

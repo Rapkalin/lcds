@@ -115,6 +115,59 @@ window.runFrontQa = async (win) => {
         );
     }
 
+    // En-tête collé : il doit rester visible où que l'on soit dans la page.
+    // Mesuré à un endroit où le document est plus haut que la vue, sinon
+    // l'assertion ne pourrait pas échouer.
+    const header = doc.getElementById("site-header");
+
+    if (header !== null && doc.documentElement.scrollHeight > win.innerHeight + 400) {
+        const attente = () => new Promise((resolve) => setTimeout(resolve, 120));
+        const position = win.getComputedStyle(header).position;
+
+        assert(
+            `en-tête ${hero === null ? "collé" : "fixé au-dessus du hero"} (${position})`,
+            hero === null ? position === "sticky" : position === "fixed"
+        );
+
+        // L'en-tête reste transparent sur toute la page : la maquette le dessine
+        // ainsi, et le fond au défilement a été arbitré contre. Éprouvé, sinon
+        // rien n'empêcherait de le réintroduire.
+        assert(
+            `en-tête transparent (${styleOf(header).backgroundColor} / ${styleOf(header, "::before").backgroundColor})`,
+            styleOf(header).backgroundColor === "rgba(0, 0, 0, 0)"
+                && styleOf(header, "::before").content === "none"
+        );
+
+        // La hauteur est publiée pour les blocs qui doivent l'éviter : la vue
+        // épinglée du parcours est collée au même bord que l'en-tête.
+        const publiee = parseFloat(
+            win.getComputedStyle(doc.documentElement).getPropertyValue("--header-height")
+        );
+        assert(
+            `hauteur publiée = hauteur réelle (${publiee} / ${header.offsetHeight})`,
+            Math.abs(publiee - header.offsetHeight) < 1
+        );
+
+        // Le défilement est provoqué, PUIS l'évènement est émis à la main.
+        // Sous `--virtual-time-budget`, `scrollTo` déplace bien la page — la
+        // position lue le confirme — mais Chrome ne délivre pas toujours le
+        // `scroll` correspondant : mesuré, zéro évènement pour un retour en
+        // haut qui a pourtant eu lieu. Ce qui est éprouvé ici est l'arithmétique
+        // du gestionnaire, pas la plomberie évènementielle du navigateur.
+        const defiler = async (y) => {
+            win.scrollTo(0, y);
+            win.dispatchEvent(new win.Event("scroll"));
+            await attente();
+        };
+
+        await defiler(doc.documentElement.scrollHeight);
+        assert(
+            `en-tête toujours en haut de la vue, page en bas (défilée de ${Math.round(win.scrollY)}px, en-tête à ${Math.round(header.getBoundingClientRect().top)})`,
+            win.scrollY > 400 && Math.abs(header.getBoundingClientRect().top) < 1
+        );
+        await defiler(0);
+    }
+
     // Carrousel : les cotes de la maquette, puis le comportement des boutons.
     // Le défilement est instantané parce que la campagne force la préférence de
     // réduction des animations — sans quoi rien ne serait mesurable au tick près.
@@ -185,6 +238,70 @@ window.runFrontQa = async (win) => {
             `dernier visuel entier en fin de course (respiration ${Math.round(bord - fin.right)}px)`,
             fin.right <= bord + 1 && Math.round(bord - fin.right) === 36
         );
+
+        rail.scrollTo({ left: 0, behavior: "auto" });
+        await tick();
+
+        // Glisser-déposer à la souris. Les évènements sont synthétisés : c'est
+        // le seul moyen d'éprouver un geste sans périphérique. Le montage ne
+        // pose PAS de capture de pointeur, sans quoi rien de tout ceci ne
+        // serait jouable — `setPointerCapture` exige un pointeur réellement
+        // actif et lève sur un identifiant synthétique.
+        const bloc = rail.closest("[data-carousel]");
+        const milieu = railBox.top + railBox.height / 2;
+        const pointeur = (type, x, extra) => rail.dispatchEvent(new win.PointerEvent(type, {
+            pointerId: 1,
+            pointerType: "mouse",
+            button: type === "pointerdown" ? 0 : -1,
+            buttons: 1,
+            clientX: x,
+            clientY: milieu,
+            bubbles: true,
+            cancelable: true,
+            ...(extra || {}),
+        }));
+
+        assert("rail débordant annoncé comme tirable", bloc.classList.contains("carousel--draggable"));
+
+        pointeur("pointerdown", 800);
+        pointeur("pointermove", 700);
+        await tick();
+        assert(
+            `un glissement de 100px défile de 100px (${Math.round(rail.scrollLeft)})`,
+            Math.abs(rail.scrollLeft - 100) < 2
+        );
+        assert("glissement en cours signalé", bloc.classList.contains("carousel--dragging"));
+
+        // Le clic qui suit le relâchement doit être avalé : sinon un glissement
+        // terminé sur le bouton d'une carte en ouvrirait le panneau.
+        pointeur("pointerup", 700);
+        assert("glissement terminé", !bloc.classList.contains("carousel--dragging"));
+
+        const clicApresGlissement = new win.MouseEvent("click", { bubbles: true, cancelable: true });
+        rail.dispatchEvent(clicApresGlissement);
+        assert("clic avalé après un glissement", clicApresGlissement.defaultPrevented === true);
+
+        // Sous le seuil, le geste reste un clic : un tremblement de souris ne
+        // doit pas empêcher d'ouvrir une carte.
+        rail.scrollTo({ left: 0, behavior: "auto" });
+        await tick();
+        pointeur("pointerdown", 800);
+        pointeur("pointermove", 797);
+        await tick();
+        assert(`sous le seuil, rien ne bouge (${Math.round(rail.scrollLeft)})`, rail.scrollLeft < 1);
+
+        const clicSansGlissement = new win.MouseEvent("click", { bubbles: true, cancelable: true });
+        rail.dispatchEvent(clicSansGlissement);
+        assert("clic préservé sans glissement", clicSansGlissement.defaultPrevented === false);
+        pointeur("pointerup", 797);
+
+        // Au doigt, le défilement natif porte déjà l'inertie : capter le geste
+        // ferait surtout perdre le défilement vertical de la page.
+        pointeur("pointerdown", 800, { pointerType: "touch" });
+        pointeur("pointermove", 700, { pointerType: "touch" });
+        await tick();
+        assert(`geste tactile laissé au natif (${Math.round(rail.scrollLeft)})`, rail.scrollLeft < 1);
+        pointeur("pointerup", 700, { pointerType: "touch" });
 
         rail.scrollTo({ left: 0, behavior: "auto" });
         await tick();
@@ -278,7 +395,38 @@ window.runFrontQa = async (win) => {
         // (1 + p × 5) / 6, donc 1/6 au départ et non zéro : c'est la maquette.
         journey.classList.add("journey--pinned");
 
-        for (const [progres, remplissage, vues] of [[0, 111, 0], [0.5, 388.5, 2.5], [1, 666, 5]]) {
+        // La section ne mesure plus un écran PAR ÉTAPE : un écran, plus un
+        // budget de défilement par transition. C'est ce qui rend le rail
+        // réactif à la molette. Le mesurer, et non le lire, couvre l'addition.
+        const budget = 0.8;
+        const attenduHaut = win.innerHeight * (1 + 5 * budget);
+        assert(
+            `section : ${(1 + 5 * budget).toFixed(2)} écrans — un pour la vue collée, le reste pour les cinq transitions (${round(journey.offsetHeight)} / ${round(attenduHaut)})`,
+            Math.abs(journey.offsetHeight - attenduHaut) < 4
+        );
+
+        // La translation est désormais ANIMÉE : sans cette neutralisation, les
+        // trois mesures ci-dessous liraient le rail en cours de route.
+        const railParcours = doc.querySelector(".journey__track");
+        const remplissageParcours = doc.querySelector(".journey__progress-fill");
+
+        assert(
+            `translation animée (${win.getComputedStyle(railParcours).transitionProperty})`,
+            win.getComputedStyle(railParcours).transitionProperty.includes("transform")
+                && parseFloat(win.getComputedStyle(railParcours).transitionDuration) > 0
+        );
+
+        railParcours.style.transition = "none";
+        remplissageParcours.style.transition = "none";
+
+        // Les fractions choisies PROUVENT l'arrondi : sans lui, 0,31 donnerait
+        // 1,55 vue et un remplissage de 283, et non 2 vues et 333.
+        //
+        // 0,9 est le cas de la DERNIÈRE carte : elle doit être entièrement en
+        // place alors qu'il reste un dixième de la course à parcourir, sinon
+        // elle n'apparaît qu'au moment où la section se décolle. Sans arrondi,
+        // 0,9 laisserait le rail à 4,5 vues, c'est-à-dire à cheval.
+        for (const [progres, remplissage, vues] of [[0, 111, 0], [0.31, 333, 2], [0.62, 444, 3], [0.9, 666, 5], [1, 666, 5]]) {
             journey.style.setProperty("--journey-progress", String(progres));
             assert(
                 `avancement ${progres} : remplissage ≈ ${remplissage} (${round(rect(".journey__progress-fill").width)})`,
@@ -290,6 +438,225 @@ window.runFrontQa = async (win) => {
             );
         }
 
+        journey.style.removeProperty("--journey-progress");
+
+        // Le repli existe : un moteur sans `round()` doit garder une
+        // translation, même continue. Éprouvé sur la règle, la garde
+        // `@supports` étant vraie ici.
+        assert(
+            "translation de repli déclarée hors de la garde",
+            trouverRegle(doc, ".journey__track", (regle) => {
+                const trace = regle.style.transform;
+
+                // `null` et non `false` pour toute règle qui ne dit rien : le
+                // premier `.journey__track` de la feuille ne porte AUCUNE
+                // translation, et un `false` y aurait arrêté la recherche avant
+                // d'atteindre celle qu'on cherche.
+                return trace !== "" && !trace.includes("round(")
+                    && trace.includes("var(--journey-progress") ? true : null;
+            }) === true
+        );
+
+        /* ----------------------------------------------------------------- *
+         * Une étape par cran de molette, et rien pendant la cadence.
+         *
+         * Éprouvable sans image d'animation : le gestionnaire lit la position
+         * de la section et la corrige dans le même appel, sans passer par
+         * `requestAnimationFrame`. Les évènements sont synthétisés, c'est le
+         * seul moyen d'éprouver un geste sans périphérique.
+         * ----------------------------------------------------------------- */
+        const haut = journey.getBoundingClientRect().top + win.scrollY;
+        const course = journey.offsetHeight - win.innerHeight;
+        const etape = course / 5;
+        const cran = (delta) => {
+            const evenement = new win.WheelEvent("wheel", {
+                deltaY: delta,
+                cancelable: true,
+                bubbles: true,
+            });
+            win.dispatchEvent(evenement);
+
+            return evenement.defaultPrevented;
+        };
+
+        const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const traine = async (tirs, ecart) => {
+            for (let tir = 0; tir < tirs; tir += 1) {
+                await pause(ecart);
+                cran(100);
+            }
+        };
+
+        // Hors de la section, le geste appartient à la page : sans cette borne
+        // le site entier deviendrait inutilisable à la molette. Ce cran désarme
+        // aussi l'état « collée », comme le ferait un vrai défilement d'approche.
+        win.scrollTo(0, Math.round(haut) - 40);
+        assert("hors section : le cran n'est pas confisqué", cran(100) === false);
+
+        // ARRIVÉE. Deux choses se cumulaient. Le geste d'entrée n'était pas
+        // confisqué — la section n'était pas encore collée — et Chrome ANIME le
+        // défilement de molette : la page continue de glisser après le dernier
+        // évènement, sans qu'aucun ne soit là pour l'arrêter.
+        //
+        // Le `scrollTo` ci-dessous rejoue cette glissade : 0,6 étape au-delà du
+        // bord, ce qu'un évènement synthétisé ne peut pas produire lui-même
+        // puisqu'il ne déclenche pas l'action par défaut du navigateur. C'est ce
+        // dépassement qu'il ne faut PAS entériner — s'ancrer « au plus proche »
+        // aurait ici retenu la deuxième carte.
+        win.scrollTo(0, Math.round(haut + 0.6 * etape));
+        const arrivee = cran(100);
+
+        assert("arrivée : le geste d'entrée est confisqué", arrivee === true);
+        assert(
+            `arrivée : aligné sur la première étape, sans avancer (${round(win.scrollY - haut)}px)`,
+            Math.abs(win.scrollY - haut) < 2
+        );
+
+        await traine(10, 100);
+        assert(
+            `arrivée : la traîne d'entrée n'emporte pas la première carte (${round(win.scrollY - haut)}px)`,
+            Math.abs(win.scrollY - haut) < 2
+        );
+
+        // Même chose EN REMONTANT : on arrive alors par le bas, et c'est la
+        // DERNIÈRE étape qu'il faut bloquer.
+        win.scrollTo(0, Math.round(haut + course) + 40);
+        assert("hors section par le bas : le cran n'est pas confisqué", cran(-100) === false);
+
+        win.scrollTo(0, Math.round(haut + course - 0.6 * etape));
+        const arriveeBas = cran(-100);
+
+        assert("arrivée par le bas : le geste d'entrée est confisqué", arriveeBas === true);
+        assert(
+            `arrivée par le bas : aligné sur la dernière étape (${round(win.scrollY - haut - course)}px)`,
+            Math.abs(win.scrollY - haut - course) < 2
+        );
+
+        await traine(10, 100);
+        assert(
+            `arrivée par le bas : la traîne n'emporte pas la dernière carte (${round(win.scrollY - haut - course)}px)`,
+            Math.abs(win.scrollY - haut - course) < 2
+        );
+
+        // Amené AU MILIEU de la section autrement qu'à la molette — clavier,
+        // barre de défilement — le premier cran ne doit PAS être pris pour une
+        // arrivée : le visiteur serait ramené en arrière de plusieurs écrans.
+        win.scrollTo(0, 0);
+        cran(100);
+        win.scrollTo(0, Math.round(haut + 2 * etape));
+        await pause(1800);
+        cran(100);
+        assert(
+            `au milieu : le premier cran avance, il ne ramène pas au début (${round((win.scrollY - haut) / etape)} étape(s))`,
+            Math.abs(win.scrollY - haut - 3 * etape) < 2
+        );
+
+        // Retour au premier palier pour la suite.
+        win.scrollTo(0, 0);
+        cran(100);
+        win.scrollTo(0, Math.round(haut) + 20);
+        cran(100);
+        await pause(1800);
+
+        // Le geste SUIVANT, lui, porte d'exactement une étape.
+        await pause(1800);
+        const confisque = cran(100);
+        const apresUnCran = win.scrollY;
+
+        assert("section collée : le cran est confisqué", confisque === true);
+        assert(
+            `un cran porte d'exactement une étape (${round(apresUnCran - haut)} / ${round(etape)})`,
+            Math.abs(apresUnCran - haut - etape) < 2
+        );
+
+        // Trois crans de plus AVANT la fin de la cadence : absorbés sans effet.
+        // C'est ce qui rend le geste presque idempotent — l'amplitude d'une
+        // roulette lâchée d'un coup ne compte pas.
+        const absorbes = [cran(100), cran(100), cran(100)];
+
+        assert(`crans rapprochés confisqués (${absorbes.join(", ")})`,
+            absorbes.every((prevenu) => prevenu === true));
+        assert(
+            `page immobile pendant la cadence (${round(win.scrollY)} = ${round(apresUnCran)})`,
+            Math.abs(win.scrollY - apresUnCran) < 2
+        );
+
+        // La TRAÎNE d'un geste. Un pavé tactile émet près d'une seconde après
+        // que le doigt a quitté la surface : avec une cadence fixe, cette
+        // inertie déclenchait une seconde étape — deux cartes passaient d'un
+        // seul geste.
+        await pause(1800);
+        cran(100);
+        const departTraine = win.scrollY;
+
+        await traine(10, 100);
+        assert(
+            `une traîne d'une seconde ne vaut qu'une étape (${round(win.scrollY - departTraine)}px de plus)`,
+            Math.abs(win.scrollY - departTraine) < 2
+        );
+
+        // Et le plafond : un défilement CONTINU doit finir par avancer, sinon
+        // la section devient un cul-de-sac.
+        const departContinu = win.scrollY;
+
+        await traine(40, 50);
+        assert(
+            `un défilement continu franchit le plafond (${round(win.scrollY - departContinu)}px de plus)`,
+            win.scrollY - departContinu >= etape - 2
+        );
+
+        /* ----------------------------------------------------------------- *
+         * L'ARRÊT sur les cartes de bout.
+         *
+         * La carte est posée par une bascule — et non par un `scrollTo`, sinon
+         * l'arrêt ne serait pas armé et l'assertion ne prouverait rien. Le geste
+         * qui vient de la poser ne doit pas l'emporter par sa traîne ; il faut
+         * un second geste pour sortir.
+         * ----------------------------------------------------------------- */
+        win.scrollTo(0, 0);
+        cran(100);
+        win.scrollTo(0, Math.round(haut + 4 * etape));
+        await pause(1800);
+        cran(100);
+
+        assert(
+            `dernière étape posée par une bascule (${round((win.scrollY - haut) / etape)} étape(s))`,
+            Math.abs(win.scrollY - haut - course) < 2
+        );
+
+        const surLaDerniere = win.scrollY;
+
+        assert("dernière étape : la traîne ne fait pas sortir", cran(100) === true);
+        await traine(10, 100);
+        assert(
+            `dernière étape : arrêt marqué à l'écran (${round(win.scrollY - surLaDerniere)}px)`,
+            Math.abs(win.scrollY - surLaDerniere) < 2
+        );
+
+        await pause(1800);
+        assert("dernière étape : un second geste rend la main", cran(100) === false);
+
+        // Symétrique en haut : la première carte marque le même arrêt avant de
+        // laisser remonter dans la section précédente.
+        win.scrollTo(0, 0);
+        cran(100);
+        win.scrollTo(0, Math.round(haut + etape));
+        await pause(1800);
+        cran(-100);
+
+        assert(
+            `première étape posée par une bascule (${round((win.scrollY - haut) / etape)} étape(s))`,
+            Math.abs(win.scrollY - haut) < 2
+        );
+        assert("première étape : la traîne ne fait pas remonter", cran(-100) === true);
+
+        await pause(1800);
+        assert("première étape : un second geste rend la main", cran(-100) === false);
+
+        win.scrollTo(0, 0);
+
+        railParcours.style.removeProperty("transition");
+        remplissageParcours.style.removeProperty("transition");
         journey.style.removeProperty("--journey-progress");
         journey.classList.remove("journey--pinned");
     }
@@ -421,6 +788,30 @@ window.runFrontQa = async (win) => {
             englobante <= railCards.height + 1
         );
 
+        // Rien ne doit être peint SOUS le visuel d'une carte. Le découpage
+        // arrondi d'une carte inclinée est anticrénelé : son pixel de bord
+        // mélange le visuel avec ce qui est dessous, et l'aplat bleu foncé y
+        // dessinait un liseré d'un pixel. Mesuré sur la construction réelle :
+        // le bord valait #9CAEBA quand le mélange visuel/fond attendu était
+        // chaud, et l'écart médian au mélange légitime est passé de 18,8 à 2,9.
+        //
+        // L'aplat n'est pas supprimé pour autant : il ne sert plus qu'aux
+        // cartes sans visuel, et sa règle est éprouvée juste après.
+        const cartesVisuel = [...doc.querySelectorAll(".tech-card")]
+            .filter((node) => node.querySelector(".tech-card__image") !== null);
+        const fonds = cartesVisuel.map((node) => styleOf(node).backgroundColor);
+        assert(
+            `techno : aucun aplat sous un visuel (${cartesVisuel.length} cartes : ${[...new Set(fonds)].join(", ")})`,
+            cartesVisuel.length > 0
+                && fonds.every((fond) => fond === "rgba(0, 0, 0, 0)" || fond === "transparent")
+        );
+        assert(
+            "techno : l'aplat de repli subsiste pour une carte sans visuel",
+            trouverRegle(doc, ".tech-card--plain", (regle) => (
+                regle.style.backgroundColor === "rgb(0, 56, 122)" ? true : null
+            )) === true
+        );
+
         cote("infos : étiquette, bord gauche", boite(".block-info .tag")?.left ?? null, 161);
         cote("infos : visuel, largeur", boite(".block-info__media")?.width ?? null, 440);
         cote("infos : visuel, hauteur", boite(".block-info__media")?.height ?? null, 549);
@@ -429,6 +820,75 @@ window.runFrontQa = async (win) => {
         cote("infos : icône, largeur", boite(".block-info__icon")?.width ?? null, 24);
         cote("infos : texte, bord gauche", boite(".block-info__head")?.left ?? null, 774);
         cote("infos : bouton contourné, bord droit", boite(".block-info .cta--outline")?.right ?? null, 1279);
+
+        // La pastille contournée ne peint AUCUN fond : elle prend la couleur de
+        // ce sur quoi elle est posée. L'aplat blanc qu'elle portait ne se
+        // voyait pas ici — le bloc est blanc — mais tranchait sur le panneau
+        // bleu pâle du pied de page. Relevé sur la maquette : (243, 248, 254).
+        const contournes = [...doc.querySelectorAll(".cta--outline .cta__label")];
+        const fondsContournes = contournes.map((node) => styleOf(node).backgroundColor);
+
+        assert(
+            `pastilles contournées sans aplat (${contournes.length} : ${[...new Set(fondsContournes)].join(", ")})`,
+            contournes.length > 0
+                && fondsContournes.every((fond) => fond === "rgba(0, 0, 0, 0)")
+        );
+        // Le panneau du pied de page doit donc transparaître au travers.
+        const contournePied = doc.querySelector(".site-footer .cta--outline .cta__label");
+
+        if (contournePied !== null) {
+            assert(
+                `pied de page : la pastille laisse voir le panneau (${styleOf(doc.querySelector(".site-footer::before") ?? doc.querySelector(".site-footer"), "::before").backgroundColor})`,
+                styleOf(contournePied).backgroundColor === "rgba(0, 0, 0, 0)"
+                    && styleOf(doc.querySelector(".site-footer"), "::before").backgroundColor === "rgb(242, 248, 255)"
+            );
+        }
+
+        /* ------------------------------------------------------------------ *
+         * Les glyphes des informations pratiques.
+         *
+         * Le bus était ÉCRASÉ : une caisse de 8,5 sur une boîte de 24, avec des
+         * roues détachées deux pixels plus bas. Relevé au pixel sur la maquette
+         * (`HP_06_Frame 54.pdf`, icône à y=2124) : la caisse y occupe environ 15
+         * des 22 pixels d'encre, et les roues chevauchent son bas.
+         *
+         * Éprouvé sur le TRACÉ et non sur la boîte : la boîte mesurait déjà
+         * 24 × 24, ce qui ne disait rien du dessin qu'elle contenait.
+         * ------------------------------------------------------------------ */
+        const bus = doc.querySelector(".block-info .icon-info-entry rect");
+
+        if (bus !== null) {
+            const caisse = parseFloat(bus.getAttribute("height"));
+            const basCaisse = parseFloat(bus.getAttribute("y")) + caisse;
+            const roue = bus.closest("svg").querySelector("circle");
+            const hautRoue = parseFloat(roue.getAttribute("cy")) - parseFloat(roue.getAttribute("r"));
+
+            assert(
+                `bus : la caisse occupe plus de la moitié de la boîte (${caisse} sur 24)`,
+                caisse > 12
+            );
+            assert(
+                `bus : les roues chevauchent la caisse (haut de roue ${hautRoue}, bas de caisse ${basCaisse})`,
+                hautRoue < basCaisse
+            );
+        }
+
+        // Même défaut, moins visible : le repère d'adresse avait un anneau de
+        // rayon 4,25 sur une boîte de 24, perdu au milieu de ses quatre
+        // marques, là où la maquette le fait presque toucher les bords. On
+        // éprouve donc TOUS les glyphes annulaires — ceux qui ne portent pas de
+        // caisse — d'un coup.
+        const anneaux = [...doc.querySelectorAll(".block-info .icon-info-entry")]
+            .filter((svg) => svg.querySelector("rect") === null)
+            .map((svg) => Math.max(...[...svg.querySelectorAll("circle")]
+                .map((cercle) => parseFloat(cercle.getAttribute("r")))));
+
+        if (anneaux.length > 0) {
+            assert(
+                `glyphes annulaires : l'anneau occupe la boîte (rayons ${anneaux.join(", ")})`,
+                anneaux.every((rayon) => rayon >= 8)
+            );
+        }
 
         const secondeEntree = doc.querySelectorAll(".block-info__entry")[1];
         const styleEntree = styleOf(secondeEntree);
@@ -441,65 +901,80 @@ window.runFrontQa = async (win) => {
     /* --------------------------------------------------------------------- *
      * Pied de page et sa révélation.
      *
-     * La campagne tourne avec `prefers-reduced-motion` forcé : la révélation y
-     * est donc DÉSACTIVÉE, et c'est ce qu'on vérifie d'abord — le visuel doit
-     * rester visible, sinon il serait inatteignable pour qui refuse les
-     * animations. Les maths de la translation sont ensuite éprouvées en posant
-     * la classe et l'avancement à la main, ce qui les rend déterministes sans
-     * dépendre d'un défilement.
+     * La campagne tourne avec `prefers-reduced-motion` forcé : le visuel y est
+     * donc `absolute` et défile avec la page, ce qu'on éprouve tel quel. Le mode
+     * FIXÉ est éprouvé en posant la déclaration à la main — deux défilements de
+     * 200px, et la boîte du visuel ne doit pas bouger d'un pixel.
      * --------------------------------------------------------------------- */
-    const revele = doc.querySelector("[data-footer-reveal]");
+    const revele = doc.querySelector(".footer-reveal");
+    const media = revele === null ? null : revele.querySelector(".footer-reveal__media");
 
-    if (revele !== null) {
-        const media = revele.querySelector(".footer-reveal__media");
+    if (media !== null) {
+        const round = (valeur) => Math.round(valeur);
         const footer = doc.querySelector(".site-footer");
         // La hauteur DÉCOUVERTE est la réserve du bloc, pas la hauteur du
         // visuel : celui-ci est volontairement plus haut, puisqu'il remonte
         // sous les coins arrondis du panneau.
         const hauteur = parseFloat(styleOf(revele).paddingBottom);
+        const principal = doc.querySelector(".main-content");
 
+        /* ------------------------------------------------------------------ *
+         * Les deux conditions de peinture. L'effet n'existe que par elles, et
+         * aucune ne se voit dans une capture : elles se lisent sur les fonds.
+         * ------------------------------------------------------------------ */
         assert(
-            "mouvement réduit : la révélation reste désactivée",
-            !revele.classList.contains("footer-reveal--animated")
+            `la réserve ne peint aucun fond (${styleOf(revele).backgroundColor})`,
+            styleOf(revele).backgroundColor === "rgba(0, 0, 0, 0)"
         );
         assert(
-            `mouvement réduit : le visuel est découvert (${(media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom).toFixed(0)}px)`,
+            `le contenu porte l'aplat qui masque le visuel fixé (${principal === null ? "absent" : styleOf(principal).backgroundColor})`,
+            principal !== null && styleOf(principal).backgroundColor === "rgb(255, 255, 255)"
+        );
+
+        /* ------------------------------------------------------------------ *
+         * Le visuel NE BOUGE PAS.
+         *
+         * La campagne force `prefers-reduced-motion`, où le visuel redevient
+         * `absolute` et défile avec la page — un fond qui ne suit pas le contenu
+         * est un effet de parallaxe, et c'est ce que la préférence demande
+         * d'éviter. Les deux branches sont donc éprouvées : le repli tel qu'il
+         * est rendu, et le mode fixé en posant la déclaration à la main.
+         * ------------------------------------------------------------------ */
+        const hautDe = () => media.getBoundingClientRect().top;
+
+        win.scrollTo(0, 0);
+        const replisHaut = hautDe();
+        win.scrollTo(0, 200);
+        const replisBas = hautDe();
+
+        assert(
+            `mouvement réduit : le visuel défile avec la page (${round(replisHaut - replisBas)}px pour 200)`,
+            Math.abs(replisHaut - replisBas - 200) < 2
+        );
+
+        assert(
+            "le visuel est fixé hors du mouvement réduit",
+            trouverRegle(doc, ".footer-reveal__media", (regle) => (
+                regle.style.position === "fixed" ? true : null
+            )) === true
+        );
+
+        media.style.position = "fixed";
+        win.scrollTo(0, 0);
+        const fixeHaut = hautDe();
+        win.scrollTo(0, 200);
+        const fixeBas = hautDe();
+        media.style.removeProperty("position");
+        win.scrollTo(0, 0);
+
+        assert(
+            `fixé : 200px de défilement ne le déplacent pas (${round(fixeHaut - fixeBas)}px)`,
+            Math.abs(fixeHaut - fixeBas) < 1
+        );
+
+        assert(
+            `le visuel est découvert sur la réserve (${round(media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom)}px pour ${round(hauteur)})`,
             media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom > hauteur - 4
-        );
-        // Le BAS PEINT du panneau, et non le bas de sa boîte : c'est le
-        // pseudo-élément qui déborde pour masquer le visuel. Une boîte ne dit
-        // plus rien du dessin depuis que le panneau ne se déplace plus.
-        const basPeint = () => footer.getBoundingClientRect().bottom
-            - parseFloat(styleOf(footer, "::before").bottom);
-
-        revele.classList.add("footer-reveal--animated");
-        revele.style.setProperty("--reveal-progress", "0");
-
-        // LE défaut corrigé : le panneau descendait, laissant une bande vide de
-        // toute la hauteur du visuel entre la dernière section et lui, visible
-        // pendant presque tout le défilement.
-        const vide = footer.getBoundingClientRect().top - revele.getBoundingClientRect().top;
-
-        assert(
-            `avancement 0 : aucun vide au-dessus du panneau (${vide.toFixed(1)}px)`,
-            Math.abs(vide) < 2
-        );
-
-        const couvert = basPeint() - media.getBoundingClientRect().bottom;
-
-        assert(`avancement 0 : le panneau recouvre le visuel (écart ${couvert.toFixed(1)}px)`,
-            Math.abs(couvert) < 2);
-
-        revele.style.setProperty("--reveal-progress", "1");
-        const decouvert = media.getBoundingClientRect().bottom - basPeint();
-
-        assert(
-            `avancement 1 : le visuel est découvert sur ${decouvert.toFixed(0)}px (attendu ${hauteur.toFixed(0)})`,
-            Math.abs(decouvert - hauteur) < 4
-        );
-        assert(
-            `avancement 1 : le panneau n'a pas bougé (${(footer.getBoundingClientRect().top - revele.getBoundingClientRect().top).toFixed(1)}px)`,
-            Math.abs(footer.getBoundingClientRect().top - revele.getBoundingClientRect().top) < 2
         );
 
         // Le cadrage est du CONTENU : les trois valeurs proposées au
@@ -590,11 +1065,8 @@ window.runFrontQa = async (win) => {
 
         // Le visuel doit remonter SOUS le panneau d'exactement un rayon : les
         // encoches des coins arrondis laissaient sinon voir le fond du bloc.
-        // L'arc occupe la bande des `rayon` derniers pixels du panneau — le
-        // couvrir entièrement suffit donc, et ça vaut à TOUT avancement,
-        // puisque le bas du panneau reste dans la portée du visuel.
         const rayon = parseFloat(styleOf(footer, "::before").borderBottomLeftRadius);
-        const remonte = basPeint() - media.getBoundingClientRect().top;
+        const remonte = footer.getBoundingClientRect().bottom - media.getBoundingClientRect().top;
         assert(
             `le visuel remonte d'un rayon sous le panneau (${remonte.toFixed(0)} pour un rayon de ${rayon})`,
             Math.abs(remonte - rayon) < 2
@@ -603,9 +1075,6 @@ window.runFrontQa = async (win) => {
             `le visuel couvre toute la largeur (${media.getBoundingClientRect().width.toFixed(0)} = ${revele.getBoundingClientRect().width.toFixed(0)})`,
             Math.abs(media.getBoundingClientRect().width - revele.getBoundingClientRect().width) < 1
         );
-
-        revele.classList.remove("footer-reveal--animated");
-        revele.style.removeProperty("--reveal-progress");
     }
 
     if (win.innerWidth === 1440) {
@@ -621,6 +1090,50 @@ window.runFrontQa = async (win) => {
             stylePied.borderTopLeftRadius === "0px" && stylePied.borderBottomLeftRadius === "64px");
         assert(`pied : logo de 80 (${boitePied(".site-footer__logo")?.width.toFixed(0)})`,
             Math.abs((boitePied(".site-footer__logo")?.width ?? -1) - 80) <= 1);
+    }
+
+    /* --------------------------------------------------------------------- *
+     * L'ouverture ADOUCIE du panneau d'accordéon.
+     *
+     * La campagne force `prefers-reduced-motion`, où la transition est
+     * neutralisée : la lire sur l'état calculé ne dirait donc rien de ce que
+     * voit un visiteur ordinaire. On lit la RÈGLE, et on éprouve à côté que la
+     * neutralisation, elle, est bien celle qui s'applique ici.
+     *
+     * Le contrat d'accessibilité n'est pas touché : le panneau reste un vrai
+     * `hidden`, ce que garde l'assertion « le second clic retire le texte de
+     * l'arbre » plus haut.
+     * --------------------------------------------------------------------- */
+    if (doc.querySelector(".accordion__panel") !== null) {
+        const transition = trouverRegle(doc, ".accordion__panel", (regle) => {
+            const valeur = regle.style.transition;
+
+            return valeur !== "" && valeur !== "none" ? valeur : null;
+        });
+
+        assert(
+            `accordéon : ouverture adoucie (${transition})`,
+            typeof transition === "string"
+                && transition.includes("grid-template-rows")
+                && transition.includes("opacity")
+        );
+        // `display` est une propriété DISCRÈTE : sans `allow-discrete` elle
+        // saute d'un coup et la fermeture n'a pas lieu du tout.
+        assert(
+            "accordéon : la bascule de display est différée (allow-discrete)",
+            typeof transition === "string" && transition.includes("allow-discrete")
+        );
+        // Le `display: grid` ne doit valoir QUE pour l'état ouvert : déclaré
+        // sur les deux, il l'emporterait sur le `display: none` du navigateur
+        // et le panneau ne se fermerait jamais.
+        assert(
+            "accordéon : le panneau fermé garde son display: none",
+            styleOf(doc.querySelector(".accordion__panel[hidden]") ?? doc.body).display === "none"
+        );
+        assert(
+            `accordéon : mouvement réduit, bascule instantanée (${styleOf(doc.querySelector(".accordion__panel")).transitionDuration})`,
+            parseFloat(styleOf(doc.querySelector(".accordion__panel")).transitionDuration) === 0
+        );
     }
 
     // Le panneau de la carte de technologie suit le MÊME contrat que
@@ -872,6 +1385,59 @@ window.runFrontQa = async (win) => {
             margesDerniere === "1.25rem|0px" || margesDerniere === "20px|0px"
         );
 
+        /* ------------------------------------------------------------------ *
+         * La PUCE de l'entrée courante.
+         *
+         * Le contenu de démonstration n'a pas de page courante — ses entrées
+         * sont des liens personnalisés — donc la classe est posée à la main,
+         * comme WordPress le ferait. Sans cela l'assertion ne pourrait pas
+         * échouer : il n'y aurait rien à mesurer.
+         * ------------------------------------------------------------------ */
+        const premiere = doc.querySelector(".site-nav__list li");
+
+        if (premiere !== null) {
+            const round = (valeur) => Math.round(valeur);
+            const lien = premiere.querySelector("a");
+            const largeurSansPuce = lien.getBoundingClientRect().width;
+
+            premiere.classList.add("current-menu-item");
+
+            const puce = styleOf(lien, "::after");
+            const largeurAvecPuce = lien.getBoundingClientRect().width;
+
+            assert(
+                `navigation : puce de 12px sur l'entrée courante (${puce.width} × ${puce.height}, ${puce.borderRadius})`,
+                puce.content !== "none" && puce.width === "12px" && puce.height === "12px"
+                    && parseFloat(puce.borderRadius) >= 6
+            );
+            assert(
+                `navigation : puce turquoise, comme l'étiquette d'une section (${puce.backgroundColor})`,
+                puce.backgroundColor === "rgb(4, 139, 140)"
+            );
+            // `order: -1` la place AVANT le libellé, alors qu'elle est en
+            // `::after` — le `::before` porte déjà la zone de survol étendue.
+            assert(
+                `navigation : puce placée avant le libellé (order ${puce.order})`,
+                styleOf(lien).display === "flex" && puce.order === "-1"
+            );
+            // Elle occupe de la place : 12 de puce et 8 d'écart. Une puce en
+            // position absolue, superposée au libellé, passerait les mesures
+            // ci-dessus sans rien pousser.
+            //
+            // Mesurable en RANGÉE seulement : en colonne, les entrées sont
+            // étirées à la largeur du panneau, et c'est l'écart permanent de
+            // l'entrée courante qui pilote alors leur largeur — la puce n'y
+            // change rien.
+            if (win.innerWidth > 1024) {
+                assert(
+                    `navigation : la puce élargit la pastille de 20px (${round(largeurAvecPuce - largeurSansPuce)})`,
+                    Math.abs(largeurAvecPuce - largeurSansPuce - 20) < 1
+                );
+            }
+
+            premiere.classList.remove("current-menu-item");
+        }
+
         // Le bouton d'action ne porte pas l'animation : il flotte à côté du
         // menu, sur son propre emplacement.
         const boutonAction = doc.querySelector(".site-header__cta a");
@@ -975,6 +1541,30 @@ window.runFrontQa = async (win) => {
 
         return box.width > 0 && box.height > 0;
     };
+    // Une photo en plein cadre rend la mesure tout aussi impossible qu'une
+    // image de fond CSS — mais elle arrive par un `<img>`, pas par une
+    // déclaration. C'est le montage des cartes de technologie : le visuel est
+    // un `position: absolute; inset: 0` posé DERRIÈRE le titre, donc invisible
+    // à une remontée qui ne lit que `background-image`.
+    //
+    // Sans ce cas, la campagne mesurait le titre contre l'aplat de repli de la
+    // carte — un aplat que la photo recouvrait entièrement. Elle passait donc
+    // en mesurant une couleur que personne ne voit.
+    const couvertParUneImage = (node) => {
+        const boite = node.getBoundingClientRect();
+
+        return [...node.querySelectorAll("img")].some((image) => {
+            const cs = styleOf(image);
+
+            if (cs.position !== "absolute" && cs.position !== "fixed") {
+                return false;
+            }
+
+            const cadre = image.getBoundingClientRect();
+
+            return cadre.width >= boite.width - 1 && cadre.height >= boite.height - 1;
+        });
+    };
     // Le fond effectif : on remonte jusqu'à un aplat opaque. Une image de fond
     // rend la mesure impossible — on écarte plutôt que de deviner.
     const fondDe = (node) => {
@@ -983,7 +1573,7 @@ window.runFrontQa = async (win) => {
         while (courant !== null && courant.nodeType === 1) {
             const cs = styleOf(courant);
 
-            if (cs.backgroundImage !== "none") {
+            if (cs.backgroundImage !== "none" || couvertParUneImage(courant)) {
                 return null;
             }
 

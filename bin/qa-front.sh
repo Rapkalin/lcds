@@ -98,9 +98,15 @@ dump_dom() {
 
     # --force-prefers-reduced-motion : rend le défilement du carrousel
     # instantané, donc mesurable. Sans cela rien n'est déterministe.
+    #
+    # --virtual-time-budget compte le temps VIRTUEL, que chaque `setTimeout` de
+    # la campagne avance d'un coup. Les épreuves du verrou de molette en
+    # consomment une dizaine de secondes à elles seules ; à 8000 la campagne
+    # n'atteignait plus sa fin et le pilote ne trouvait aucun résultat. Le
+    # relever ne coûte pas de temps réel, ce budget n'étant pas une attente.
     "$CHROME" --headless --disable-gpu --no-first-run --no-default-browser-check \
         --force-prefers-reduced-motion \
-        --window-size=1600,900 --virtual-time-budget=8000 --dump-dom \
+        --window-size=1600,900 --virtual-time-budget=60000 --dump-dom \
         --user-data-dir="$SCRATCH/profile-$width" \
         "$SITE_URL/app/themes/lcds/dist/$HARNESS_NAME?w=${width}px" > "$out" 2>/dev/null &
     pid=$!

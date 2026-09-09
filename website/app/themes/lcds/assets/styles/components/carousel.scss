@@ -30,6 +30,20 @@
     }
   }
 
+  // Le curseur « main » est posé par le script, et seulement quand le rail
+  // dépasse réellement de la vue : sur un rail qui tient en entier, il
+  // promettrait un geste sans effet.
+  &--draggable &__rail {
+    cursor: grab;
+  }
+
+  // Pendant le glissement, le rail ne doit pas sélectionner le texte qu'il
+  // traverse — sinon la carte se surligne en bleu sous le curseur.
+  &--dragging &__rail {
+    cursor: grabbing;
+    user-select: none;
+  }
+
   &__item {
     display: flex;
     flex-direction: column;

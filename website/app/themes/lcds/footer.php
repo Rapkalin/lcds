@@ -3,13 +3,16 @@
 /**
  * Pied de page.
  *
- * Un panneau à coins arrondis posé PAR-DESSUS un visuel pleine largeur. En fin
- * de page le panneau se soulève et découvre le visuel — voir `initFooterReveal`
- * dans assets/scripts/app.js.
+ * Un panneau à coins arrondis posé PAR-DESSUS un visuel pleine largeur. Le
+ * visuel est FIXÉ au bas de la fenêtre et peint derrière la page : il ne bouge
+ * pas, c'est le panneau qui remonte et le découvre, comme un volet.
  *
- * Sans JavaScript, ou si l'utilisateur demande à réduire les animations, le
- * panneau reste posé et le visuel est simplement visible en dessous : c'est
- * exactement ce que dessine la maquette, et rien n'est inaccessible.
+ * Aucun JavaScript — l'effet est une pure géométrie de peinture. Voir
+ * assets/styles/partials/footer.scss, qui porte le raisonnement complet.
+ *
+ * Si l'utilisateur demande à réduire les animations, le visuel défile avec la
+ * page : un fond qui ne suit pas le contenu est un effet de parallaxe. Il reste
+ * visible, rien ne devient inaccessible.
  *
  * Le contenu vient des « Réglages du site » (page d'options ACF) : le pied de
  * page est commun à toutes les pages, il n'appartient à aucune d'elles.
@@ -34,7 +37,7 @@ $visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
 ], 'full');
 ?>
 
-<div class="footer-reveal"<?php echo $visual === '' ? '' : ' data-footer-reveal'; ?>>
+<div class="footer-reveal">
     <?php if ($visual !== '') : ?>
         <div class="footer-reveal__media"><?php echo $visual; ?></div>
     <?php endif; ?>

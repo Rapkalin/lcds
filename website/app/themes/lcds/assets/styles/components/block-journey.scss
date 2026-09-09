@@ -22,7 +22,14 @@
     // Le retrait vaut 128px sur les 900px de hauteur dessinés, soit 14,2vh :
     // exprimé ainsi, il se resserre sur un écran bas au lieu de pousser le
     // contenu hors de la vue.
-    padding: clamp(#{fn.toRem(32)}, 14.2vh, #{var.$section-padding}) 0;
+    --journey-inset: clamp(#{fn.toRem(32)}, 14.2vh, #{var.$section-padding});
+
+    padding: var(--journey-inset) 0;
+    // La vue est collée en haut de l'écran, et l'en-tête aussi : sur un écran
+    // bas, le retrait se resserre sous la hauteur de l'en-tête et l'étiquette
+    // passait dessous. `--header-height` est mesurée par le script ; sans lui
+    // c'est le retrait seul qui s'applique, comme avant.
+    padding-top: max(var(--journey-inset), var(--header-height, 0px));
   }
 
   &__head {
@@ -159,7 +166,20 @@
  * rail ET la barre : ils ne peuvent pas se désynchroniser.
  * ------------------------------------------------------------------------- */
 .journey--pinned {
-  height: calc(var(--journey-steps, 6) * 100svh);
+  // Budget de défilement d'UNE transition. C'est le seul nombre qui règle le
+  // rythme de la section : la hauteur totale en découle.
+  //
+  // 80svh valent environ 720px sur un écran de 900, et l'étape bascule à la
+  // MOITIÉ de ce budget. La section mesure donc cinq écrans : un pour la vue
+  // collée, quatre pour les cinq transitions.
+  //
+  // Valeur arbitrée en trois essais. Un écran plein par étape (six écrans de
+  // défilement) rendait le glissement très lent ; 25svh le rendaient trop
+  // nerveux ; 50svh ne laissaient que 225px à la DERNIÈRE carte avant que la
+  // section se décolle, soit deux crans de molette. Elle en a 360 ici.
+  --journey-step-scroll: 80svh;
+
+  height: calc(100svh + (var(--journey-steps, 6) - 1) * var(--journey-step-scroll));
 
   .journey__viewport {
     position: sticky;
@@ -174,11 +194,51 @@
     transform: translateX(
       calc(var(--journey-progress, 0) * (var(--journey-steps, 6) - 1) * -100%)
     );
+    // L'avancement arrive par paliers d'une étape : c'est cette transition qui
+    // fait le glissement. Sans elle, la carte sauterait d'un coup.
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
+  }
+
+  // La barre suit le même palier, avec la même courbe : les deux ne peuvent pas
+  // se désynchroniser.
+  .journey__progress-fill {
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .journey__step {
     flex: 0 0 100%;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Le rail ne s'arrête JAMAIS entre deux étapes.
+ *
+ * Le script publie la fraction brute du défilement ; l'arrondi au palier est
+ * fait ici, en un seul endroit que la translation ET le remplissage lisent. Un
+ * arrondi côté script aurait dû être refait à l'identique pour chacun des deux.
+ *
+ * Sans lui, le rail se posait n'importe où : la fin d'une étape et le début de
+ * la suivante se partageaient l'écran avec un grand vide entre les deux, leur
+ * colonne de texte étant à droite de leur grille.
+ *
+ * Sous garde de prise en charge, et non en repli de cascade : `round()` ne
+ * s'évalue qu'au calcul, donc une propriété personnalisée qui l'emploie reste
+ * valide à l'analyse et n'écarte pas la déclaration précédente. Sans cette
+ * garde, un moteur qui l'ignore n'aurait PLUS DE TRANSLATION DU TOUT et cinq
+ * étapes deviendraient inatteignables.
+ * ------------------------------------------------------------------------- */
+@supports (width: round(nearest, 1px, 1px)) {
+  .journey {
+    --journey-step-index: round(nearest, var(--journey-progress, 0) * (var(--journey-steps, 6) - 1), 1);
+  }
+
+  .journey__progress-fill {
+    width: calc((1 + var(--journey-step-index)) / var(--journey-steps, 6) * 100%);
+  }
+
+  .journey--pinned .journey__track {
+    transform: translateX(calc(var(--journey-step-index) * -100%));
   }
 }
 

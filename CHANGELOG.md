@@ -7,6 +7,65 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.12.0
+
+### Ajouté
+
+- **L'entrée du menu correspondant à la page affichée porte une puce turquoise**,
+  comme l'étiquette d'une section.
+- **Les carrousels se tirent à la souris.** Les images avancent au
+  glisser-déposer et plus seulement aux flèches, qui restent en place. Le geste
+  tactile est laissé au défilement natif, qui porte déjà l'inertie ; un
+  glissement terminé sur le bouton d'une carte n'en ouvre plus le panneau.
+- **Le menu principal suit le défilement** et reste atteignable partout dans la
+  page, y compris tout en bas. Il reste transparent sur toute la hauteur, comme
+  la maquette le dessine : les pastilles blanches des liens suffisent à les
+  rendre lisibles sur ce qui défile derrière.
+
+### Corrigé
+
+- **Le texte des accordeons « traitements » apparaît en fondu** au lieu de
+  surgir d'un coup. Sous préférence de mouvement réduit, la bascule reste
+  instantanée.
+- **Les boutons contournés du pied de page laissent voir le panneau bleu.** Ils
+  portaient un fond blanc qui y tranchait — la maquette les veut sans fond, ce
+  qu'un relevé au pixel a confirmé.
+- **Le pictogramme « transports » n'est plus écrasé** et le repère d'adresse
+  n'est plus perdu au milieu de sa boîte : leurs proportions suivent désormais
+  celles de la maquette.
+- **La photo du bas ne bouge plus au défilement.** Elle est désormais fixée au
+  bas de l'écran et c'est le panneau bleu qui remonte pour la découvrir, comme un
+  volet — avant, tout défilait ensemble et seule la frontière se déplaçait. Sous
+  préférence de mouvement réduit, la photo défile avec la page comme auparavant :
+  un fond qui ne suit pas le contenu est un effet de parallaxe.
+- **Le parcours de soin avance d'une carte par cran de molette, et tient chaque
+  carte le temps qu'il faut.** La section demandait un écran de défilement
+  complet par carte — six écrans pour six cartes, d'où un glissement très
+  lent —, et le rail pouvait s'arrêter entre deux cartes, qui paraissaient alors
+  très écartées.
+
+  Désormais un cran de molette avance d'exactement une carte, quelle que soit
+  l'amplitude du geste, et tout ce qui arrive pendant la bascule est absorbé :
+  plusieurs coups de molette rapprochés valent un seul, et l'inertie d'une
+  lancée de pavé tactile ne fait plus passer deux cartes à la fois.
+
+  Les cartes de bout marquent un **arrêt**, à l'entrée comme à la sortie : la
+  première carte est tenue le temps que le geste d'arrivée s'éteigne, puis un
+  second coup de molette repart — et symétriquement sur la dernière avant de
+  quitter la section. Sans cela on démarrait sur la deuxième carte et la dernière
+  n'apparaissait qu'un instant, le geste en cours étant compté comme un nouveau
+  coup de molette.
+
+  Chaque carte est donc tenue le même temps, la première et la dernière
+  comprises. Un défilement continu avance d'une carte toutes les 1,6 seconde,
+  pour que la section ne puisse pas devenir un cul-de-sac. Le clavier, la barre de
+  défilement et le geste tactile ne sont pas touchés, et sous préférence de
+  mouvement réduit les étapes s'empilent comme avant — rien n'y est confisqué.
+- **Plus de liseré autour des visuels inclinés des technologies.** L'aplat de
+  repli des cartes affleurait au bord anticrénelé du découpage et y dessinait un
+  pointillé bleu foncé d'un pixel. Il ne sert plus qu'aux cartes dépourvues de
+  visuel, qui gardent donc leur fond lisible.
+
 ## 2.11.0
 
 ### Ajouté

@@ -9,9 +9,22 @@
   height: 100%;
   overflow: hidden;
   border-radius: fn.toRem(16);
-  // Aplat de repli : une carte sans visuel doit rester lisible.
-  background: var.$blue;
   color: var.$white;
+
+  // Aplat de repli, posé SEULEMENT sur une carte sans visuel — l'absence de
+  // visuel est connue du composant, qui pose la classe.
+  //
+  // Sous la carte, l'aplat affleurait au bord : le rail incline les cartes, le
+  // découpage arrondi devient donc un contour anticrénelé, et le pixel de bord
+  // mélange l'image AVEC ce qui est peint dessous. Mesuré sur la construction
+  // exacte de cette carte, pivotée de 2,88° : le pixel de bord valait #6B8DB5
+  // là où le mélange image/fond attendu donne #EEEFEF — un liseré bleu foncé
+  // d'un pixel, dont l'intensité varie le long du bord puisque la couverture
+  // varie. C'est ce qui se lit comme un pointillé. Sans aplat sous l'image,
+  // l'écart au mélange attendu tombe de 72 à 0,3.
+  &--plain {
+    background: var.$blue;
+  }
 
   &__image {
     position: absolute;

@@ -101,6 +101,68 @@
   }
 }
 
+/* ------------------------------------------------------------------------- *
+ * Ouverture ADOUCIE du panneau.
+ *
+ * Le panneau reste un vrai `hidden` : c'est ce qui le retire de l'arbre
+ * d'accessibilité et de l'ordre de tabulation, et rien ici ne le remplace. Ce
+ * qui est ajouté, c'est une transition qui SURVIT à la bascule de `display`.
+ *
+ * `display` est une propriété discrète : sans `allow-discrete`, elle saute d'un
+ * coup et la fermeture n'a pas lieu — le panneau disparaît avant d'avoir pu
+ * s'effacer. Avec elle, le passage à `none` est différé jusqu'à la fin de la
+ * transition.
+ *
+ * `@starting-style` fournit l'état de DÉPART à l'ouverture : sans lui, un
+ * élément qui vient de quitter `display: none` n'a pas d'ancienne valeur à
+ * interpoler, et la transition n'a pas lieu non plus.
+ *
+ * `grid-template-rows: 0fr → 1fr` plutôt qu'une hauteur : la hauteur du contenu
+ * n'est pas connue, et `height: auto` ne s'anime pas. L'enfant a besoin de
+ * `min-height: 0` pour que la ligne puisse réellement se refermer.
+ *
+ * Le `display: grid` n'est posé QUE sur l'état ouvert : déclaré sur les deux, il
+ * l'emporterait sur le `display: none` de la feuille du navigateur et le
+ * panneau ne se fermerait jamais.
+ *
+ * Sans prise en charge d'`allow-discrete`, tout ceci est ignoré et la bascule
+ * reste instantanée — c'est-à-dire le comportement d'avant.
+ * ------------------------------------------------------------------------- */
+.accordion__panel {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    grid-template-rows 0.3s ease,
+    opacity 0.25s ease,
+    display 0.3s allow-discrete;
+
+  > * {
+    min-height: 0;
+  }
+
+  &:not([hidden]) {
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@starting-style {
+  .accordion__panel:not([hidden]) {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+// Le contenu qui s'ouvre et pousse ce qui suit EST du mouvement : quelqu'un qui
+// demande à le réduire retrouve la bascule instantanée.
+@media (prefers-reduced-motion: reduce) {
+  .accordion__panel {
+    transition: none;
+  }
+}
+
 // Panneau ouvert : la barre verticale disparaît, le « + » devient « − ».
 .accordion__trigger[aria-expanded="true"] .icon-plus__bar {
   display: none;

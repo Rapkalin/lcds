@@ -55,7 +55,14 @@
  * ------------------------------------------------------------------------- */
 .cta--outline .cta__label {
   border: 1px solid var.$blue-light;
-  background: var.$white;
+  // AUCUN fond : la pastille prend la couleur de ce sur quoi elle est posée.
+  //
+  // Elle portait un aplat blanc. Invisible sur les informations pratiques, dont
+  // le fond est blanc — mais dans le pied de page, elle tranchait sur le
+  // panneau bleu pâle. Relevé au pixel sur la maquette (`HP_06_Frame 54.pdf`,
+  // bordures des trois boutons à y=3657, 3816 et 3975) : leur remplissage vaut
+  // (243, 248, 254), soit le panneau à une unité de rendu près. Pas du blanc.
+  background: none;
   color: var.$blue;
   transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }

@@ -37,9 +37,16 @@ if ($id === '' || $title === '') {
 }
 
 $visual = $image === 0 ? '' : lcds_render_image($image, ['class' => 'tech-card__image'], 'large');
+
+// L'aplat de repli n'est peint que sur une carte SANS visuel. Sous une image,
+// il affleurait au bord incliné de la carte et y dessinait un liseré — voir
+// assets/styles/components/tech-card.scss.
+$classes = 'tech-card';
+$classes .= $visual === '' ? ' tech-card--plain' : '';
+$classes .= $is_open ? ' tech-card--open' : '';
 ?>
 
-<article class="tech-card<?php echo $is_open ? ' tech-card--open' : ''; ?>">
+<article class="<?php echo esc_attr($classes); ?>">
     <?php if ($visual !== '') : ?>
         <?php echo $visual; ?>
     <?php endif; ?>

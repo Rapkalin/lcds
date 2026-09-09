@@ -22,7 +22,12 @@
 // au pixel sur le PDF — #BEDAFF (le ciel) au-dessus du header, #FFFFFF
 // seulement derrière les liens.
 .site-header {
-  position: relative;
+  // Collé, et donc visible sur toute la hauteur de la page. `sticky` plutôt que
+  // `fixed` : il reste dans le flux, donc il réserve lui-même sa hauteur sur une
+  // page sans hero. En `fixed`, il aurait fallu rendre cette hauteur à la page
+  // par un nombre écrit à la main, faux dès que l'en-tête revient à la ligne.
+  position: sticky;
+  top: 0;
   z-index: 10;
   display: flex;
   // La maquette cale la navigation en haut, pas au centre du logo.
@@ -59,8 +64,11 @@
 // l'en-tête reste dans le flux et réserve sa hauteur, sinon le premier bloc
 // passerait dessous. Piloté par la présence du hero plutôt que par une classe
 // de body, qui pourrait se désynchroniser du gabarit.
+//
+// `fixed` et non plus `absolute` : posé en absolu, l'en-tête restait accroché
+// au HAUT DU DOCUMENT et disparaissait au premier écran de défilement.
 body:has(.hero) .site-header {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   left: 0;
@@ -195,11 +203,42 @@ body:has(.hero) .site-header {
   margin: 0 0 0 fn.toRem(20);
 }
 
+/* ------------------------------------------------------------------------- *
+ * L'entrée de la page courante.
+ *
+ * Elle porte une PUCE, comme l'étiquette d'une section — même diamètre et même
+ * teinte que `tag__dot`, dont elle reprend le jeton. La maquette ne dessine
+ * aucun état « page courante » : c'est une demande postérieure, et le
+ * turquoise est celui de l'étiquette « histoire ».
+ *
+ * La puce N'EST PAS le seul repère : WordPress pose `aria-current="page"` sur
+ * ce lien, et l'entrée reste écartée en permanence. Un critère de couleur seule
+ * aurait échoué au WCAG 1.4.1.
+ * ------------------------------------------------------------------------- */
+
 // La page courante reste écartée en permanence, et ne se réécarte pas au
 // survol de sa voisine : sans ces deux règles, l'écart doublait entre elles.
 .site-nav__list .current-menu-item a,
 .site-nav__list .current_page_item a {
+  // `flex` posé SUR CETTE ENTRÉE SEULEMENT : sur toutes, il aurait changé la
+  // boîte de chacune, et c'est cette boîte que le tracé de la barre mesure.
+  display: flex;
+  align-items: center;
+  gap: fn.toRem(8);
   margin: 0 fn.toRem(20);
+}
+
+// En `::after` avec `order: -1`, et non en `::before` : celui-ci porte déjà la
+// zone de survol étendue de 20px, en position absolue.
+.site-nav__list .current-menu-item a::after,
+.site-nav__list .current_page_item a::after {
+  content: "";
+  order: -1;
+  flex-shrink: 0;
+  width: fn.toRem(12);
+  height: fn.toRem(12);
+  border-radius: 50%;
+  background: var.$turquoise;
 }
 
 .site-nav__list .current-menu-item:first-child a,
@@ -346,6 +385,12 @@ body:has(.hero) .site-header {
     padding: fn.toRem(16);
     font-size: var.$fs-h3;
     text-align: center;
+  }
+
+  // L'entrée courante passe en `flex` : `text-align` n'y centre plus rien.
+  .site-nav__list .current-menu-item a,
+  .site-nav__list .current_page_item a {
+    justify-content: center;
   }
 
   .site-logo {

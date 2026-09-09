@@ -205,6 +205,274 @@ dupliqué le rail, les contrôles et leur câblage JavaScript.
 la sortie et n'offre aucun moyen de récupérer le résultat, or le rail a besoin du
 balisage de ses cartes sous forme de chaîne.
 
+## Le rail se tire à la souris
+
+Les flèches ne sont plus le seul moyen d'avancer : le rail se **glisse** au
+pointeur. `pointerdown` sur le rail note la position, `pointermove` reporte
+l'écart sur `scrollLeft`, `pointerup` rend la main.
+
+Trois décisions valent d'être écrites, chacune ayant coûté une reprise :
+
+- **Souris seulement** (`event.pointerType !== "touch"`). Au doigt, le
+  défilement natif porte déjà l'inertie et le rebond ; capter le geste tactile
+  fait surtout perdre le défilement **vertical** de la page dès que le doigt
+  part de travers.
+- **Pas de `setPointerCapture`.** Elle redirige tous les évènements vers le
+  rail, y compris ceux destinés au bouton d'une carte : le clic n'arrivait plus.
+  `pointermove` et `pointerup` sont donc écoutés sur le **document**, ce qui
+  couvre aussi le relâchement hors du rail. Un `event.buttons === 0` au retour
+  dans la fenêtre rattrape un bouton relâché dehors.
+- **Un seuil de 6px** avant que l'appui devienne un glissement, et le `click`
+  qui suit un glissement est **avalé en capture**. Sans le seuil, un tremblement
+  de souris empêchait d'ouvrir une carte ; sans l'avalement, un glissement
+  terminé sur un bouton en ouvrait le panneau.
+
+Le glissement **s'ajoute**, il ne remplace rien : flèches, clavier, molette et
+geste tactile restent les chemins d'origine. C'est ce qui satisfait le critère
+WCAG 2.5.7, qui exige une alternative à tout geste de glissement.
+
+Le curseur « main » n'apparaît que si le rail déborde réellement de la vue
+(`carousel--draggable`, posée par le script) : sur un rail qui tient en entier,
+il promettrait un geste sans effet.
+
+## Le parcours avance par étapes, jamais entre deux
+
+La section « parcours de soin » est haute de plusieurs écrans, la vue reste
+collée et le rail se décale. **Deux mécanismes** cohabitent, et ils répondent à
+deux questions différentes.
+
+### Un cran de molette, une étape — le rythme est un CHRONO
+
+Le geste de molette est **confisqué** tant que la vue épinglée occupe l'écran et
+qu'il reste une étape dans son sens : la page ne bouge plus de son fait, c'est
+le script qui la porte d'une étape à la suivante. Deux effets voulus :
+
+- **seul le SENS du geste compte, pas son amplitude** — une roulette lâchée d'un
+  coup avance d'une étape, pas de quatre ;
+- **tout ce qui arrive pendant la cadence est absorbé** (`JOURNEY_CADENCE`,
+  600ms — elle couvre la transition CSS de 450ms), donc plusieurs crans
+  rapprochés valent un seul.
+
+C'est **un chrono qui règle le rythme, plus une distance**. Chaque carte est donc
+tenue le même temps, la dernière comprise — ce que les réglages de hauteur ne
+parvenaient pas à obtenir.
+
+#### Trois constantes, et pourquoi il en faut trois
+
+Une cadence fixe ne suffit pas, et c'est le premier défaut qu'elle a produit :
+**deux étapes passaient d'un seul geste.**
+
+Un geste de pavé tactile — et une roulette sous macOS — n'émet pas un évènement
+mais une **traîne**, qui continue près d'une seconde après que le doigt a quitté
+la surface. À l'expiration des 600ms, l'inertie encore vivante déclenchait une
+seconde bascule. D'où :
+
+| | rôle |
+| --- | --- |
+| `JOURNEY_CADENCE` (600ms) | plancher après une bascule ; couvre la transition CSS |
+| `JOURNEY_REPOS` (150ms) | **silence** au-delà duquel un évènement ouvre un geste NEUF |
+| `JOURNEY_PLAFOND` (1600ms) | sortie de secours, comptée depuis la dernière bascule |
+
+Un geste neuf se reconnaît à un **silence qui le précède**. Tant que les
+évènements se suivent, c'est le même geste qui vit sur son inertie, et il a déjà
+eu son étape — quelle que soit la durée de sa traîne. C'est ce qui rend le
+blocage **catégorique** et non seulement probable : une cadence fixe, elle,
+finissait par expirer sous une traîne d'une seconde et laissait passer une
+seconde carte.
+
+Le plafond n'est pas décoratif : sans lui, un défilement **continu** — deux
+doigts qui ne se lèvent pas — n'ouvrirait jamais de geste neuf et la section
+deviendrait un cul-de-sac. Avec lui, un tel défilement avance d'une étape toutes
+les 1,6s.
+
+Les deux comportements sont éprouvés : exigence de geste neuf retirée, une traîne
+d'une seconde vaut `650px de plus`, soit une seconde étape. Plafond retiré, un
+défilement continu de deux secondes n'avance plus du tout (`0px de plus`).
+
+#### L'arrivée bloque sur le bord franchi, puis rend la main
+
+Le geste qui amène la page jusqu'à la section n'est **pas** confisqué — il ne
+peut pas l'être, la section n'étant pas encore collée. Deux choses s'ensuivaient,
+et il a fallu les corriger l'une après l'autre.
+
+**Sa traîne emportait la carte d'entrée.** Elle arrive quand la section est
+collée, trouvait un verrou libre et faisait aussitôt basculer une étape : on
+démarrait sur la deuxième carte. Le premier geste vu à l'intérieur est donc
+absorbé sans rien avancer, et la cadence est armée comme après une bascule.
+
+**Et le dépassement était entériné.** Chrome **anime** le défilement de molette :
+la page continue de glisser après le dernier évènement, sans qu'aucun ne soit là
+pour l'arrêter. S'ancrer « au palier le plus proche » revenait donc à accepter la
+glissade. L'ancrage se fait sur le **bord franchi** — la première étape si l'on
+descend, la dernière si l'on remonte — ce qui ramène la page en arrière si la
+glissade a dépassé.
+
+C'est symétrique, et pas par élégance : on arrive aussi **par le bas**, et
+c'était alors la dernière carte qui était sautée.
+
+La reconnaissance de l'arrivée est **bornée à une étape du bord**. Au-delà, on
+n'arrive pas, on est déjà dedans : un visiteur amené au milieu au clavier ou à la
+barre de défilement ne doit pas être ramené en arrière de plusieurs écrans à son
+premier coup de molette.
+
+Les quatre règles sont éprouvées, et chaque épreuve reproduit un défaut réel :
+
+| ce qu'on retire | ce qui se passe |
+| --- | --- |
+| l'ancrage sur le bord | la page reste à `650px`, deuxième carte — le défaut constaté |
+| l'exigence de geste neuf | la traîne d'entrée emporte `650px` |
+| la borne d'une étape | un visiteur au milieu est ramené à la première carte |
+| la détection d'arrivée | la page reste où la glissade l'a laissée, `1301px` |
+
+#### Les cartes de bout marquent un arrêt
+
+Le même défaut se rejoue à la **sortie**, et il fallait la même réponse. La
+dernière carte est posée par un geste ; la traîne de ce geste emportait aussitôt
+la page hors de la section, et la carte n'apparaissait qu'un instant. Elle
+marque donc un **arrêt** : il faut un second geste pour sortir, comme il en faut
+un pour avancer.
+
+C'est armé par l'ancrage lui-même — `arret` vaut vrai dès qu'on se pose sur la
+première ou la dernière étape, que ce soit par une arrivée ou par une bascule.
+L'arrivée et la sortie tiennent donc par une seule règle.
+
+L'arrêt **retombe dès que la sortie est accordée**. Sans cela, les évènements
+suivants du même geste rattrapaient la page en route et la bloquaient à
+mi-chemin — et sans le plafond, un défilement continu n'en sortait jamais. Les
+deux sont éprouvés : arrêt jamais relâché, `un second geste rend la main` passe
+au rouge dans les deux sens.
+
+> **C'est du détournement de défilement, et il faut le savoir.** À la molette,
+> un visiteur doit parcourir les six cartes pour passer la section. Quatre
+> sorties existent, et aucune n'est un accident :
+>
+> - **le clavier n'est pas touché** — et `Page suivante` (≈ 810px sur un écran
+>   de 900) vaut à peu près une étape (650px), donc l'expérience est la même ;
+>   c'est aussi la sortie de secours si un arrêt de bout se coinçait, ce que le
+>   plafond interdit déjà ;
+> - **le tactile n'est pas touché** : sur mobile, le défilement natif garde
+>   l'inertie et le rebond, et c'est le chemin de repli ci-dessous qui joue ;
+> - **la barre de défilement** reste libre ;
+> - **sous `prefers-reduced-motion`, la section n'est pas épinglée du tout** :
+>   rien n'est confisqué, les étapes s'empilent.
+>
+> Le verrou est un **minuteur**, jamais l'attente d'un évènement qui pourrait ne
+> pas venir : il ne peut pas se coincer. Et aux deux bouts — premier palier vers
+> le haut, dernier vers le bas — le geste n'est pas confisqué, sans quoi on
+> n'entrerait jamais dans la section et on n'en sortirait plus.
+
+### La hauteur — désormais le chemin de repli
+
+```
+height: calc(100svh + (var(--journey-steps) - 1) * var(--journey-step-scroll))
+--journey-step-scroll: 80svh
+```
+
+Elle valait un écran **par étape** — six écrans de défilement pour six cartes,
+donc un glissement très lent. Elle vaut 5 écrans : un pour la vue collée, quatre
+pour les cinq transitions.
+
+Depuis le verrou, cette hauteur ne règle plus le rythme à la molette — elle
+règle **la distance dont la page saute** à chaque étape (invisible, la vue étant
+épinglée) et le comportement des chemins que le verrou ne touche pas : clavier,
+barre de défilement, tactile. 80svh valent 650px de course par étape sur un
+écran de 900, soit à peu près une pression de `Page suivante` : c'est ce qui
+aligne le clavier sur la molette.
+
+**L'arrondi.** Le script publie la fraction **brute** du défilement ; le CSS la
+ramène à l'étape la plus proche. Avant, le rail se posait n'importe où : la fin
+d'une étape et le début de la suivante se partageaient l'écran avec un grand
+vide entre les deux — leur colonne de texte est à droite de leur grille, d'où
+l'impression de cartes « très écartées ».
+
+```css
+@supports (width: round(nearest, 1px, 1px)) {
+  .journey { --journey-step-index: round(nearest, var(--journey-progress) * (var(--journey-steps) - 1), 1); }
+}
+```
+
+Deux points de méthode :
+
+- **En CSS et non dans le script**, pour que la translation ET le remplissage de
+  la barre lisent le même nombre arrondi. Un arrondi côté script aurait dû être
+  refait à l'identique pour chacun.
+- **Sous `@supports` et non en repli de cascade.** `round()` ne s'évalue qu'au
+  calcul : une propriété personnalisée qui l'emploie reste valide à l'analyse et
+  n'écarte donc pas la déclaration précédente. Sans cette garde, un moteur qui
+  l'ignore n'aurait **plus de translation du tout** et cinq étapes deviendraient
+  inatteignables.
+
+> Ce qui reste supposé : le comportement des **traînes plus longues que 1,6s**.
+> Le plafond finit par céder, donc un geste dont l'inertie dépasserait cette
+> durée vaudrait deux étapes. Aucun périphérique observé ne va aussi loin — la
+> mesure porte sur une traîne d'une seconde — mais la borne existe, et c'est
+> `JOURNEY_PLAFOND` qui la déplace si le cas se présente.
+>
+> Supposé aussi : **l'amplitude de la glissade de Chrome**. La campagne la rejoue
+> à 0,6 étape, ce qu'un évènement synthétisé ne peut pas produire lui-même. Une
+> glissade dépassant une étape entière ne serait plus reconnue comme une arrivée
+> et laisserait la première carte de côté ; c'est la borne de `<= 1` étape qui se
+> desserre alors.
+
+## L'en-tête suit le défilement
+
+`position: sticky; top: 0` par défaut, `fixed` sur une page qui porte un hero.
+
+Le choix de `sticky` pour le cas général n'est pas cosmétique : l'en-tête reste
+**dans le flux**, donc il réserve lui-même sa hauteur. En `fixed` partout, il
+aurait fallu rendre cette hauteur à la page par un nombre écrit à la main —
+faux dès que l'en-tête revient à la ligne, ce qu'il fait à fort grossissement de
+texte. Le cas `hero` n'a pas ce problème : le recouvrement de la photo est
+justement voulu.
+
+`--header-height` est publiée sur `:root` par le script, parce qu'aucune
+addition de jetons ne la donne. La vue épinglée du parcours s'en sert : elle est
+collée au même bord que l'en-tête, et son retrait se resserre sous 128px sur un
+écran bas — l'étiquette passait dessous.
+
+### Aucun fond au défilement — arbitré
+
+**L'en-tête reste transparent sur toute la page.** C'est la maquette, et c'est
+la décision prise : les pastilles blanches des liens et le bouton d'action
+suffisent à les rendre lisibles sur ce qui défile derrière.
+
+Un fond blanc apparaissant une fois le hero passé avait été proposé, puis
+écarté. Deux assertions gardent la décision — le fond de l'en-tête **et** celui
+de son pseudo-élément doivent rester transparents. Elles ont été éprouvées dans
+les deux sens, un fond réintroduit sur l'un comme sur l'autre les faisant
+passer au rouge.
+
+> Si la question se rouvre, sachez que le fond doit être peint sur un
+> **pseudo-élément** et non sur l'en-tête dès qu'un `backdrop-filter` entre en
+> jeu : ce filtre fait de son élément le bloc conteneur de ses descendants en
+> `fixed`, et le panneau de menu mobile est précisément un
+> `position: fixed; inset: 0`. Posé sur l'en-tête, il le rabattait à la taille
+> de la barre.
+
+## Rien sous un visuel : le liseré des cartes inclinées
+
+Les cartes du carrousel Technologies sont **inclinées**. Leur découpage arrondi
+devient donc un contour anticrénelé, et le pixel de bord mélange le visuel avec
+**ce qui est peint dessous**. L'aplat de repli `background: $blue` de
+`.tech-card` y dessinait un liseré bleu foncé d'un pixel, dont l'intensité varie
+le long du bord puisque la couverture varie — ce qui se lit comme un pointillé.
+
+Mesuré sur la construction réelle (feuille compilée, balisage servi, photo de la
+médiathèque), pivotée de 2,88° : l'écart du pixel de bord au mélange légitime
+visuel/fond passe de **18,8 à 2,9** de médiane quand l'aplat n'est plus sous le
+visuel. Les pires cas parlent d'eux-mêmes : bord `#9CAEBA` — bleu froid — alors
+que l'intérieur immédiat est un olive `#726410`.
+
+L'aplat n'est pas supprimé, il est **déplacé** sur `tech-card--plain`, posée par
+le composant quand il n'y a pas de visuel. Une carte sans photo garde donc son
+fond lisible, et une carte avec photo n'a plus rien dessous.
+
+> Ce qui reste supposé : le **crénelage du découpage lui-même**. Il n'a pas pu
+> être reproduit — en rendu logiciel, le bord d'une carte inclinée est
+> anticrénelé à 94 % des colonnes, avec ou sans masque. Si un escalier subsiste
+> sur une machine donnée, c'est une affaire de composition GPU, hors de portée
+> de la campagne.
+
 ## L'animation de la navigation
 
 Reprise de **floema.com** (référence client) : l'élément survolé **écarte ses
@@ -318,57 +586,173 @@ Mesuré au survol de « Contact » :
 - **Suspendue sous `prefers-reduced-motion`.** L'écartement déplace les voisins :
   c'est du mouvement. Le survol est alors signalé par un soulignement.
 
+### L'entrée courante porte une puce
+
+L'entrée du menu qui correspond à la page affichée porte une **puce turquoise**
+avant son libellé — même diamètre et même teinte que la puce d'une étiquette de
+section (`tag__dot`), dont elle reprend le jeton. La maquette ne dessine aucun
+état « page courante » : c'est une demande postérieure, et le turquoise est
+celui de l'étiquette « histoire ».
+
+Trois décisions de mise en œuvre, chacune pour une raison :
+
+- **`::after` avec `order: -1`**, et non `::before` : celui-ci porte déjà la zone
+  de survol étendue de 20px, en position absolue.
+- **`display: flex` posé sur cette entrée SEULEMENT.** Sur toutes, il aurait
+  changé la boîte de chacune — et c'est cette boîte que le tracé de la barre
+  mesure.
+- **La puce occupe de la place** (12 de puce, 8 d'écart) plutôt que d'être
+  superposée en absolu. Une assertion mesure ces 20px : une puce qui ne pousse
+  rien passerait toutes les autres.
+
+Ce n'est **pas le seul repère** : WordPress pose `aria-current="page"` sur ce
+lien, et l'entrée reste écartée en permanence. Un repère de couleur seule aurait
+échoué au WCAG 1.4.1.
+
+## L'ouverture des panneaux d'accordéon
+
+Le panneau reste un vrai `hidden` — c'est ce qui le retire de l'arbre
+d'accessibilité et de l'ordre de tabulation, et rien ne le remplace. Ce qui a été
+ajouté, c'est une transition qui **survit à la bascule de `display`** :
+
+```css
+transition: grid-template-rows .3s, opacity .25s, display .3s allow-discrete;
+```
+
+Quatre points, tous nécessaires :
+
+- **`allow-discrete`** : `display` est une propriété discrète, elle saute d'un
+  coup. Sans elle la fermeture n'a pas lieu du tout — le panneau disparaît avant
+  d'avoir pu s'effacer.
+- **`@starting-style`** fournit l'état de départ à l'ouverture : un élément qui
+  vient de quitter `display: none` n'a pas d'ancienne valeur à interpoler.
+- **`grid-template-rows: 0fr → 1fr`** plutôt qu'une hauteur : celle du contenu
+  n'est pas connue, et `height: auto` ne s'anime pas. L'enfant a besoin de
+  `min-height: 0` pour que la ligne puisse réellement se refermer.
+- **`display: grid` sur l'état OUVERT seulement.** Déclaré sur les deux, il
+  l'emporte sur le `display: none` de la feuille du navigateur et le panneau ne
+  se ferme plus jamais — éprouvé, l'assertion passe au rouge.
+
+Sans prise en charge d'`allow-discrete`, tout ceci est ignoré et la bascule reste
+instantanée : c'est le comportement d'avant. Et sous `prefers-reduced-motion`,
+la transition est neutralisée — un contenu qui s'ouvre et pousse ce qui suit est
+du mouvement.
+
+## Deux relevés qui ont corrigé une interprétation
+
+Deux retours de recette portaient sur des détails qu'on aurait pu « corriger » au
+jugé. Dans les deux cas le **PDF de maquette** a tranché, lu au pixel avec le
+décodeur PNG de `bin/qa` — `sips` convertit le PDF, le reste est de l'arithmétique.
+
+### Les pastilles contournées n'ont pas d'aplat
+
+`.cta--outline` portait `background: $white`. Invisible sur les informations
+pratiques, dont le fond est blanc — mais dans le pied de page, la pastille
+tranchait sur le panneau bleu pâle.
+
+Relevé sur `HP_06_Frame 54.pdf`, bordures des trois boutons du pied de page à
+y=3657, 3816 et 3975 : leur **remplissage vaut (243, 248, 254)**, soit le panneau
+`#F2F8FF` à une unité de rendu près. Pas du blanc. La pastille ne peint donc plus
+rien et prend la couleur de ce sur quoi elle est posée.
+
+### Le bus était écrasé, et le repère d'adresse trop petit
+
+« Icônes écrasées » ne se voyait pas dans les boîtes : elles mesurent bien
+24 × 24, mesuré. C'est le **tracé** qui était faux.
+
+| glyphe | avant | maquette (relevé) | après |
+| --- | --- | --- | --- |
+| bus, hauteur de caisse | 8,5 / 24 | ~15 / 22 | 14,5 / 24 |
+| bus, roues | détachées de 1,5 sous la caisse | chevauchant son bas | chevauchant de 0,75 |
+| repère d'adresse, rayon | 4,25 | anneau touchant presque les bords | 8,75 |
+
+Les assertions portent sur le **tracé** et non sur la boîte, faute de quoi elles
+n'auraient rien vu : la caisse doit occuper plus de la moitié de la boîte, les
+roues doivent chevaucher son bas, et tout glyphe annulaire doit avoir un rayon
+d'au moins 8.
+
+> Deux écarts relevés et NON corrigés, faute de demande : les aiguilles de
+> l'horloge marquent 12 et 4h30 là où la maquette montre 12 et 3, et le glyphe
+> « information » est un `i` là où la maquette dessine ce qui ressemble à un
+> `1` cerclé. À arbitrer avec le designer.
+
 ## La révélation du pied de page
 
-Le panneau masque un visuel pleine largeur, puis se soulève en fin de page et le
-découvre. Le principe vient d'une référence client (`piaget.com`) ; sa règle CSS
-n'étant pas dans les feuilles servies, ce qui est ici suit la description et la
-maquette.
+Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page
+et le découvre. Le principe vient d'une référence client (`piaget.com`) ; sa
+règle CSS n'étant pas dans les feuilles servies, ce qui est ici suit la
+description et la maquette.
 
-Comme le parcours de soin, le script ne calcule **qu'un seul nombre** —
-l'avancement — et le donne au CSS, qui possède chaque pixel. Et comme lui, il est
-**opt-in** : la classe `footer-reveal--animated` n'est posée que par le script.
-Sans JavaScript, ou sous `prefers-reduced-motion`, le panneau reste posé et le
-visuel est simplement visible en dessous. C'est le rendu de la maquette, et rien
-ne devient inatteignable.
+### Le visuel NE BOUGE PAS
 
-### Ce qui bouge est le BAS PEINT, pas le panneau
+C'est tout l'effet, et c'est ce qui le distingue d'un simple dévoilement : le
+visuel est **fixé au bas de la fenêtre** et peint **derrière** la page
+(`z-index: -1`). Ce qui glisse par-dessus, c'est la page. Le panneau est un
+volet qui remonte, alors que le visuel reste rigoureusement immobile.
 
-Le panneau commence **immédiatement après le contenu**, comme la maquette le
-dessine, et il n'en bouge jamais. Son fond et ses coins vivent sur un
-pseudo-élément dont le bas déborde de 513px au repos — il masque alors le visuel
-entièrement — puis se rétracte.
+**Aucun JavaScript** : l'effet est une pure géométrie de peinture. Il tient à
+trois conditions, et retirer l'une des trois le supprime :
 
-La première version translatait le panneau vers le bas. Elle laissait une bande
-vide de **513px entre la dernière section et lui**, visible pendant presque tout
-le défilement puisque l'avancement ne décolle que dans les 513 derniers pixels.
-Le code l'assumait — « la bande laissée libre se confond avec le fond de la
-page » — mais à l'écran ça se lit comme un trou, pas comme un panneau qui
-remonte.
+| condition | rôle |
+| --- | --- |
+| le visuel est `position: fixed; z-index: -1` | il ne suit plus la page, et passe derrière elle |
+| la réserve du bloc ne peint **aucun fond** | c'est le trou par lequel on le voit |
+| `.main-content` porte un aplat opaque | c'est ce qui le masque partout ailleurs |
 
-**Aucun agencement où le panneau se déplace n'évite ce vide.** Sous la dernière
-section il faut bien peindre quelque chose : soit le panneau, soit le visuel,
-soit rien. Descendre le panneau laisse le vide au-dessus ; le monter le laisse
-en dessous ; ne rien réserver ne laisse rien à découvrir. Il fallait donc que ce
-soit le **dessin** du panneau qui change, pas sa position.
+L'aplat de `main` n'est pas un détail : `.block-info` n'a pas de fond propre, et
+sans lui le visuel affleurerait sous cette section. Le fond du `body` ne
+conviendrait pas — il est **propagé au canevas**, donc peint SOUS les `z-index`
+négatifs. Il faut un fond de bloc en flux, que l'ordre de peinture place
+au-dessus.
 
-La hauteur du panneau n'entre plus dans le mécanisme. L'invariant « panneau au
-moins aussi haut que le visuel » a disparu avec elle : c'est le débord qui
-masque, et il vaut exactement la réserve.
+Mesuré sur le site réel, deux captures à 1440 × 900 — collé en bas, puis 200px
+avant :
 
-Trois pièges rencontrés, tous mesurés :
+```
+bord haut du visuel : 387px  puis  587px   (le volet a bougé de 200)
+hauteur découverte  : 513px  puis  313px
+pixels du visuel    : IDENTIQUES à toutes les lignes échantillonnées
+```
 
-- **Une marge négative sur le panneau supprimait l'espace réservé au visuel** :
-  il n'y avait alors plus rien à découvrir, et l'avancement restait à 0 en bas de
-  page. C'est un `padding-bottom` sur le bloc, pas une marge sur le panneau.
-- **La hauteur découverte se lit sur la réserve du bloc**, ni sur la variable
+Le volet bouge de 200px, le visuel de zéro.
+
+### Deux versions précédentes, et ce qu'elles ont coûté
+
+**Translater le panneau vers le bas** laissait une bande vide de **513px entre
+la dernière section et lui**, visible pendant presque tout le défilement. Aucun
+agencement où le panneau se déplace n'évite ce vide : sous la dernière section il
+faut bien peindre quelque chose.
+
+**Rétracter son BAS PEINT** au fil d'un avancement calculé en JavaScript réglait
+ce vide — mais le visuel défilait alors avec la page. Ce n'était pas un volet :
+tout bougeait ensemble, et seule la frontière se déplaçait. Le passage au visuel
+fixé a supprimé 68 lignes de script, une variable CSS, une classe d'état et un
+écouteur de défilement.
+
+### Ce qui subsiste des deux versions
+
+- **L'espace du visuel est RÉSERVÉ, pas emprunté** : c'est un `padding-bottom`
+  sur le bloc, pas une marge négative sur le panneau. Une marge supprimait
+  l'espace, et il n'y avait plus rien à découvrir.
+- **La hauteur découverte se lit sur la réserve du bloc**, pas sur la variable
   CSS — une propriété personnalisée n'est pas résolue en pixels, `32.0625rem`
   donnait 32 après `parseFloat` — ni sur le visuel, qui est volontairement plus
   haut : il **remonte d'un rayon sous le panneau**, sans quoi les encoches des
-  coins arrondis laissent voir le fond du bloc.
+  coins arrondis laissent voir ce qu'il y a derrière.
+- **Le cadrage est du contenu**, choisi par le contributeur, et compensé pour
+  être centré sur la partie VUE et non sur la boîte — voir `LcdsFocalPoint`.
 
-Le débord d'un rayon tient à **tout avancement** : le bas peint descend au plus
-de la réserve, et le visuel monte de la réserve plus un rayon.
+### Sous mouvement réduit, le visuel redevient mobile
+
+Un fond qui ne suit pas le contenu est un effet de **parallaxe**, et c'est
+précisément ce que `prefers-reduced-motion` demande d'éviter : la gêne
+vestibulaire vient du mouvement différentiel, pas du mouvement absolu. Le visuel
+y redevient `absolute` et défile avec la page. Il reste visible, rien ne devient
+inaccessible.
+
+La campagne forçant cette préférence, le mode fixé y est éprouvé en **posant la
+déclaration à la main** : deux défilements de 200px, et la boîte du visuel ne
+doit pas bouger d'un pixel.
 
 ## Compilation
 
