@@ -102,11 +102,23 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   fermerait plus jamais.
 - **Boutons d'action** : les huit pastilles de la page portent du **texte
   blanc**, et un aplat bleu dessous. Les deux ensemble : mesurer la seule
-  couleur du texte laisserait passer du blanc sur blanc.
-- **Glyphes des informations pratiques** : éprouvés sur le TRACÉ et non sur la
-  boîte, qui mesurait déjà 24 × 24 sans rien dire du dessin. La caisse du bus
-  doit occuper plus de la moitié de la boîte, ses roues chevaucher son bas, et
-  tout glyphe annulaire avoir un rayon d'au moins 8.
+  couleur du texte laisserait passer du blanc sur blanc. Et **aucun sélecteur
+  `:visited`** ne subsiste dans la feuille servie — voir l'encadré ci-dessous.
+- **Glyphes des informations pratiques** : leur INTÉGRATION, pas leur tracé, qui
+  vient du client. Aucun ne déborde de la colonne de 24 — les exports font 26 —,
+  tous peignent en `currentColor`, et la colonne porte bien le turquoise du
+  jeton.
+
+> **Un défaut qui restera invisible à la recette : `:visited`.**
+> `getComputedStyle` ment délibérément sur cet état — c'est une protection de la
+> vie privée — et un profil de navigateur neuf n'a de toute façon aucun
+> historique. Mesuré : deux captures d'un lien visité et d'un lien jamais visité,
+> dans un profil persistant où la cible avait été chargée au préalable, rendent
+> **le même blanc**. Le texte bleu que voyait le client était pourtant réel.
+>
+> Quand l'état est inobservable, l'assertion porte sur la RÈGLE : la feuille
+> servie ne doit contenir aucun sélecteur `:visited`. C'est le seul angle qui
+> mord.
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé

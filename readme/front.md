@@ -681,7 +681,62 @@ côté ACF — mais ce qu'elle dessine a changé.
 > la mauvaise question, et retiré l'aplat blanc. La mesure était bonne, la
 > question non.
 
-### Le bus était écrasé, et le repère d'adresse trop petit
+### Et pas de règle `:visited`
+
+Le texte est resté bleu **une fois le lien visité**, alors que deux mesures
+disaient « blanc ». La cause : `a:visited { color: inherit }` dans
+`basics/general.scss`.
+
+Sa spécificité (0,1,1) l'emporte sur toute classe de composant (0,1,0) : le
+`color: var.$white` de `.cta` perdait, et la pastille héritait du bleu de son
+conteneur. La règle a été **supprimée**, pas contournée par une exception sur
+`.cta` — sinon le prochain composant à colorer un lien retomberait dedans.
+
+Elle était inutile. Une déclaration d'auteur l'emporte sur celle du navigateur
+**par l'origine**, avant toute question de spécificité, et la preuve est sous
+les yeux : les liens NON visités du site n'affichent pas le bleu du navigateur,
+ils héritent déjà par le `a { color: inherit }` qui reste.
+
+> **Ce défaut était invisible à la recette automatisée, et le restera.**
+> `getComputedStyle` ment délibérément sur `:visited` — c'est une protection de
+> la vie privée — et un profil de navigateur neuf n'a de toute façon aucun
+> historique. J'ai tenté de fabriquer cet historique avec un profil persistant :
+> les deux captures rendent du blanc dans les deux cas, visité ou non.
+>
+> L'assertion porte donc sur la RÈGLE : aucun sélecteur `:visited` ne doit
+> subsister dans la feuille servie. C'est le seul angle mesurable.
+
+### Les glyphes des informations pratiques viennent du client
+
+Les cinq tracés ont été **fournis par le client** et sont repris tels quels, un
+par composant — `components/icon-<valeur>.php`, que `LcdsInfoIcon::template()`
+résout sans qu'aucun nom de fichier soit écrit dans un gabarit.
+
+Trois adaptations à l'export, et elles valent d'être connues :
+
+- **`stroke="#048B8C"` répété sur chaque tracé devient un `currentColor` hissé
+  sur le `<g>`.** La teinte vient alors de la feuille de style, donc du jeton,
+  et le glyphe se recolore où qu'il serve. Un turquoise en dur aurait figé une
+  valeur que la bibliothèque Figma est seule à porter.
+- **La boîte rendue est ramenée à 24**, la colonne d'icône que la maquette
+  mesure. Les exports font 26 : rendus tels quels, ils débordent de 2px. Le
+  `viewBox` garde ses 26, c'est lui qui porte le dessin.
+- **Le bus est livré sur 26 × 22.** Il est recadré par `viewBox="0 -2 26 26"` —
+  origine décalée de 2 vers le haut — plutôt qu'étiré à 24 × 24. Les cinq
+  glyphes partagent ainsi la même boîte, sans distorsion.
+
+Les tracés eux-mêmes ne sont pas éprouvés : ce sont les dessins du client, pas
+des cotes de maquette à retrouver. Ce qui l'est, c'est leur **intégration** —
+aucun débord de colonne, un trait en `currentColor`, une teinte prise sur le
+jeton. C'est exactement ce qu'un copier-coller d'export casse en silence.
+
+### Ce qui précédait ces tracés
+
+Avant qu'ils arrivent, deux glyphes redessinés d'après le PDF avaient déjà été
+corrigés — le bus écrasé et le repère d'adresse trop petit. Le relevé garde sa
+valeur de méthode.
+
+#### Le bus était écrasé, et le repère d'adresse trop petit
 
 « Icônes écrasées » ne se voyait pas dans les boîtes : elles mesurent bien
 24 × 24, mesuré. C'est le **tracé** qui était faux.

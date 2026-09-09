@@ -22,6 +22,12 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
   prennent désormais la même pastille bleue que les autres. C'est un écart
   assumé avec la maquette, qui les dessine contournés — le relevé au pixel de la
   livraison précédente portait sur leur remplissage, pas sur leur texte.
+- **Le texte restait bleu sur un lien déjà visité.** Une règle de style
+  neutralisait la couleur des liens visités en l'emportant sur celle des
+  composants ; elle est retirée. Elle était inutile.
+- **Les cinq pictogrammes des informations pratiques sont ceux fournis par le
+  client**, un par fichier. Ils prennent la couleur définie par la feuille de
+  style au lieu d'une teinte figée, et tiennent dans la colonne prévue.
 
 ## 2.12.0
 

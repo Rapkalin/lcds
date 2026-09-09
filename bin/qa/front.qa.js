@@ -845,53 +845,89 @@ window.runFrontQa = async (win) => {
             aplats.every((aplat) => aplat === "rgb(0, 56, 122)")
         );
 
+        // ET AUCUNE règle `:visited` dans la feuille. Celle qui neutralisait la
+        // couleur des liens visités portait une spécificité (0,1,1) : elle
+        // l'emportait sur toute classe de composant (0,1,0), et le texte blanc
+        // de ces pastilles redevenait bleu dès que le lien avait été visité.
+        //
+        // Cette assertion porte sur la RÈGLE parce que l'état, lui, est
+        // inobservable : `getComputedStyle` ment délibérément sur `:visited`
+        // — c'est une protection de la vie privée — et un profil de navigateur
+        // neuf n'a de toute façon aucun historique. Les deux mesures faites
+        // ici disaient donc « blanc » alors que le défaut était bien réel.
+        const visites = [];
+
+        for (const feuille of Array.from(doc.styleSheets)) {
+            let regles;
+
+            try {
+                regles = feuille.cssRules;
+            } catch (erreur) {
+                continue;
+            }
+
+            const fouiller = (liste) => {
+                for (const regle of Array.from(liste || [])) {
+                    if (typeof regle.selectorText === "string" && regle.selectorText.includes(":visited")) {
+                        visites.push(regle.selectorText);
+                    }
+
+                    if (regle.cssRules !== undefined) {
+                        fouiller(regle.cssRules);
+                    }
+                }
+            };
+
+            fouiller(regles);
+        }
+
+        assert(
+            `aucune règle :visited dans la feuille (${visites.length === 0 ? "aucune" : visites.join(", ")})`,
+            visites.length === 0
+        );
+
         /* ------------------------------------------------------------------ *
          * Les glyphes des informations pratiques.
          *
-         * Le bus était ÉCRASÉ : une caisse de 8,5 sur une boîte de 24, avec des
-         * roues détachées deux pixels plus bas. Relevé au pixel sur la maquette
-         * (`HP_06_Frame 54.pdf`, icône à y=2124) : la caisse y occupe environ 15
-         * des 22 pixels d'encre, et les roues chevauchent son bas.
-         *
-         * Éprouvé sur le TRACÉ et non sur la boîte : la boîte mesurait déjà
-         * 24 × 24, ce qui ne disait rien du dessin qu'elle contenait.
+         * Les tracés viennent du client et ne sont pas éprouvés : ce sont ses
+         * dessins, pas des cotes de maquette à retrouver. Ce qui EST éprouvé,
+         * c'est leur intégration — la seule chose qu'un copier-coller d'export
+         * casse silencieusement.
          * ------------------------------------------------------------------ */
-        const bus = doc.querySelector(".block-info .icon-info-entry rect");
+        const glyphes = [...doc.querySelectorAll(".block-info__icon")];
 
-        if (bus !== null) {
-            const caisse = parseFloat(bus.getAttribute("height"));
-            const basCaisse = parseFloat(bus.getAttribute("y")) + caisse;
-            const roue = bus.closest("svg").querySelector("circle");
-            const hautRoue = parseFloat(roue.getAttribute("cy")) - parseFloat(roue.getAttribute("r"));
+        if (glyphes.length > 0) {
+            const debords = glyphes.map((boite) => {
+                const svg = boite.querySelector("svg");
+
+                return svg === null
+                    ? 999
+                    : svg.getBoundingClientRect().width - boite.getBoundingClientRect().width;
+            });
+
+            // Les exports du client mesurent 26 : rendus tels quels, ils
+            // débordent de la colonne d'icône, que la maquette mesure à 24.
+            assert(
+                `glyphes : aucun ne déborde de sa colonne (${debords.map((d) => d.toFixed(0)).join(", ")})`,
+                debords.every((debord) => debord <= 0.5)
+            );
+            // Le trait suit la couleur du texte, donc le jeton : un
+            // `stroke="#048B8C"` en dur figerait une teinte que seule la
+            // bibliothèque Figma porte, et le glyphe ne se recolorerait plus.
+            const teintes = glyphes.map((boite) => styleOf(boite).color);
 
             assert(
-                `bus : la caisse occupe plus de la moitié de la boîte (${caisse} sur 24)`,
-                caisse > 12
+                `glyphes : peints à la teinte de la colonne (${[...new Set(teintes)].join(", ")})`,
+                teintes.every((teinte) => teinte === "rgb(4, 139, 140)")
             );
             assert(
-                `bus : les roues chevauchent la caisse (haut de roue ${hautRoue}, bas de caisse ${basCaisse})`,
-                hautRoue < basCaisse
-            );
-        }
-
-        // Même défaut, moins visible : le repère d'adresse avait un anneau de
-        // rayon 4,25 sur une boîte de 24, perdu au milieu de ses quatre
-        // marques, là où la maquette le fait presque toucher les bords. On
-        // éprouve donc TOUS les glyphes annulaires — ceux qui ne portent pas de
-        // caisse — d'un coup.
-        const anneaux = [...doc.querySelectorAll(".block-info .icon-info-entry")]
-            .filter((svg) => svg.querySelector("rect") === null)
-            .map((svg) => Math.max(...[...svg.querySelectorAll("circle")]
-                .map((cercle) => parseFloat(cercle.getAttribute("r")))));
-
-        if (anneaux.length > 0) {
-            assert(
-                `glyphes annulaires : l'anneau occupe la boîte (rayons ${anneaux.join(", ")})`,
-                anneaux.every((rayon) => rayon >= 8)
+                `glyphes : trait en currentColor (${glyphes.length} glyphes)`,
+                glyphes.every((boite) => [...boite.querySelectorAll("[stroke]")]
+                    .every((trait) => trait.getAttribute("stroke") === "currentColor"))
             );
         }
 
-        const secondeEntree = doc.querySelectorAll(".block-info__entry")[1];
+                const secondeEntree = doc.querySelectorAll(".block-info__entry")[1];
         const styleEntree = styleOf(secondeEntree);
         assert(
             `infos : filet de 1px et 48px au-dessus (${styleEntree.borderTopWidth} / ${styleEntree.paddingTop})`,

@@ -57,13 +57,20 @@ h3 {
   font-size: var.$fs-h3;
 }
 
+// PAS de `&:visited`. Il y en avait un, et il valait une régression : sa
+// spécificité (0,1,1) l'emporte sur toute classe de composant (0,1,0), donc le
+// texte blanc des boutons d'action redevenait bleu dès que le lien avait été
+// visité. Invisible en recette automatisée — `getComputedStyle` ment
+// délibérément sur `:visited`, et un profil de navigateur neuf n'a pas
+// d'historique.
+//
+// Il était de toute façon inutile : une déclaration d'auteur l'emporte sur
+// celle du navigateur PAR L'ORIGINE, avant toute question de spécificité. La
+// preuve est sous les yeux — les liens non visités du site n'affichent pas le
+// bleu du navigateur, ils héritent déjà par la règle ci-dessous.
 a {
   color: inherit;
   text-decoration-line: none;
-
-  &:visited {
-    color: inherit;
-  }
 }
 
 // Retire un libellé du flux visuel en le laissant lisible par un lecteur
