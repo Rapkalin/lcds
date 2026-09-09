@@ -7,6 +7,39 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.14.0
+
+### Ajouté
+
+- **Les boutons d'action principaux se comportent comme le menu au survol.**
+  Le glyphe et le libellé forment une silhouette continue dont le collet s'étire
+  quand le curseur arrive, avec le même ressort que les entrées du menu.
+- **La galerie de la section « l'histoire » défile avec la page.** Arrivé sur
+  elle, le défilement fait avancer les visuels horizontalement, puis reprend son
+  cours normal une fois le dernier atteint. Les flèches continuent de naviguer.
+  L'effet ne s'applique ni sur mobile, ni pour qui demande à réduire les
+  animations : la galerie y reste un carrousel ordinaire.
+
+### Corrigé
+
+- **Les boutons secondaires sont de nouveau contournés**, sur fond transparent
+  et texte bleu — les quatre du pied de page et le « voir le plan » des
+  informations pratiques. Ils reviennent au dessin de la maquette : la pastille
+  bleue à texte blanc de la version précédente est abandonnée, du blanc étant
+  illisible sur un fond transparent. Au survol, un voile bleu remplit la
+  pastille.
+- **Le pied de page annonçait une teinte de texte inexacte** dans le journal de
+  la version précédente : le relevé donne le bleu du thème, pas `#143776`.
+
+### Pour les contributeurs et les développeurs
+
+- Les deux variantes de bouton d'action ont désormais une **source unique** côté
+  code, qui réconcilie les noms de la maquette et ceux de la feuille de style.
+  Aucun champ ne change dans l'administration : la variante reste imposée par
+  l'emplacement.
+- La durée de fondu commune à tout le site, jusqu'ici recopiée en douze
+  exemplaires, vit en un seul endroit.
+
 ## 2.13.0
 
 ### Ajouté

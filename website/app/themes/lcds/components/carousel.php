@@ -26,6 +26,17 @@
  *   height int    Hauteur du rail en pixels. 629 pour la galerie d'intro, 494
  *                 pour les cartes inclinées — voir readme/front.md.
  *   modifier string Suffixe de classe posé sur le carrousel.
+ *   pinned   bool  Le rail est-il piloté par le défilement vertical de la page ?
+ *                  Déclaré par la SECTION qui compose le carrousel, jamais
+ *                  deviné d'un sélecteur parent : le composant sert aussi la
+ *                  section Technologies, qui n'en veut pas. Et ce n'est pas un
+ *                  champ ACF — c'est une décision de conception, pas un choix
+ *                  de contribution.
+ *
+ *                  L'attribut ne fait qu'AUTORISER l'effet. C'est le script qui
+ *                  l'active, et lui seul : sans JavaScript, sous
+ *                  `prefers-reduced-motion` ou sur un rail qui tient dans la
+ *                  vue, le carrousel reste celui de partout ailleurs.
  *
  * Les éléments sont normalisés AVANT le balisage : une instruction PHP au milieu
  * du HTML se fait désaligner par Pint (`statement_indentation`).
@@ -51,6 +62,7 @@ if ($items === []) {
 
 $height = isset($args['height']) ? (float) $args['height'] : 629.0;
 $modifier = isset($args['modifier']) ? (string) $args['modifier'] : '';
+$isPinned = ! empty($args['pinned']);
 $rows = [];
 
 foreach ($items as $item) {
@@ -81,7 +93,22 @@ foreach ($items as $item) {
 }
 ?>
 
-<div class="carousel<?php echo $modifier === '' ? '' : ' carousel--' . esc_attr($modifier); ?>" data-carousel style="--rail-height: <?php echo esc_attr((string) $height); ?>px">
+<?php if ($isPinned) : ?>
+    <?php
+    /*
+     * Réserve de défilement de l'épinglage. Elle vaut la course horizontale du
+     * rail, publiée par le script : celle-ci dépend des largeurs choisies par
+     * le contributeur ET de la largeur de vue, aucun calcul CSS ne la donne.
+     *
+     * Le conteneur est rendu inconditionnellement dès que l'épinglage est
+     * autorisé, mais il ne porte AUCUN style tant que le script ne l'a pas
+     * activé : sans JavaScript, c'est un `<div>` transparent.
+     */
+    ?>
+    <div class="carousel-pin" data-carousel-pin>
+<?php endif; ?>
+
+<div class="carousel<?php echo $modifier === '' ? '' : ' carousel--' . esc_attr($modifier); ?>" data-carousel<?php echo $isPinned ? ' data-carousel-pinned' : ''; ?> style="--rail-height: <?php echo esc_attr((string) $height); ?>px">
     <?php /* Pas de role="group" : il écrasait le rôle `list` du <ul>, et le nombre de visuels n'était plus annoncé. */ ?>
     <ul class="carousel__rail" tabindex="0" aria-label="<?php echo esc_attr($label); ?>">
         <?php foreach ($rows as $row) : ?>
@@ -114,3 +141,7 @@ foreach ($items as $item) {
         </div>
     </div>
 </div>
+
+<?php if ($isPinned) : ?>
+    </div>
+<?php endif; ?>

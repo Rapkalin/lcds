@@ -139,6 +139,39 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > Quand l'état est inobservable, l'assertion porte sur la RÈGLE : la feuille
 > servie ne doit contenir aucun sélecteur `:visited`. C'est le seul angle qui
 > mord.
+- **Rail piloté par le défilement** : un seul conteneur d'épinglage sur la page
+  — celui de L'HISTOIRE, pas celui des technologies qui partage le composant —,
+  la réserve **déclarée** égale à la course (le rapport de 1:1 relevé sur la
+  référence), le rail en `overflow-x: hidden`, l'association éprouvée à
+  mi-réserve, au bout **et au retour**, et la flèche qui avance la page d'une
+  largeur de rail.
+
+> **Deux assertions de ce bloc ne valaient rien, et la mutation les a
+> démasquées.** « Réserve = course » et « arrêt de tabulation retiré » restaient
+> VERTES avec un script qui publiait la course décalée de 100px et qui ne
+> retirait plus le `tabindex` — parce que la campagne posait elle-même ces deux
+> états avant de les mesurer. Elle vérifiait son propre échafaudage.
+>
+> La première est devenue une assertion sur la **règle** : la feuille déclare
+> bien `calc(100svh + var(--pin-course))`. La seconde a été **supprimée** ; le
+> retrait du `tabindex` est vérifié à la main sur le site réel — mesuré `null`
+> une fois l'épinglage actif — et déclaré comme tel plutôt que faussement
+> couvert.
+>
+> Ce que la campagne ne peut pas produire ici, c'est l'état ACTIF par le script
+> lui-même : `prefers-reduced-motion` est forcé, et c'est justement l'une des
+> sorties de secours de l'épinglage. Elle pose donc l'état et n'éprouve que ce
+> qui reste au script — le calcul de l'association.
+
+> **L'épinglage n'est jamais posé de lui-même pendant la campagne** : elle force
+> `prefers-reduced-motion`, qui est précisément l'une de ses trois sorties de
+> secours. Les assertions du rail natif mesurent donc le REPLI, et c'est aussi
+> ce qu'elles éprouvent — la première vérifie explicitement qu'au repos le rail
+> garde son `overflow-x: auto` et son `tabindex`. L'état épinglé est ensuite
+> FORCÉ, en posant ce que pose le script, pour éprouver la seule chose qui reste
+> en jeu : le calcul de l'association. Un réglage de réserve faux ne casserait
+> rien d'autre.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé

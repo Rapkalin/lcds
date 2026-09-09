@@ -40,5 +40,9 @@ get_template_part('components/block-intro', null, [
     'gallery' => $items === [] ? [] : [
         'label' => lcds_sub_field_text('galerie_libelle') ?: __('Galerie', 'lcds'),
         'items' => $items,
+        // Seule cette galerie est pilotée par le défilement de la page. Le
+        // carrousel des technologies partage le composant et garde le
+        // défilement natif.
+        'pinned' => true,
     ],
 ]);

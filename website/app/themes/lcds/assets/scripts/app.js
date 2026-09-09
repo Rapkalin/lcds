@@ -73,6 +73,12 @@ const initHeaderMenu = () => {
 // geste reste un clic.
 const CAROUSEL_SEUIL_GLISSEMENT = 6;
 
+// Un rail épinglé est piloté par le défilement de la PAGE : sa position ne
+// s'écrit pas, elle se demande. La classe est posée par `initScrollRails`, donc
+// ce prédicat est faux sans JavaScript d'épinglage, sous mouvement réduit, sous
+// le point de rupture et sur un rail qui tient dans la vue.
+const estEpingle = (carousel) => carousel.closest(".carousel-pin--active") !== null;
+
 /**
  * Horizontal carousels.
  *
@@ -138,6 +144,16 @@ const initCarousels = () => {
         };
 
         const scrollByPage = (direction) => {
+            // Rail épinglé : le rapport étant de 1:1, une page de rail vaut
+            // exactement une largeur de rail en défilement de page. Écrire
+            // `scrollLeft` ici serait écrasé à l'image suivante par
+            // l'avancement de la page.
+            if (estEpingle(carousel)) {
+                window.scrollBy({ top: direction * rail.clientWidth, behavior: behavior() });
+
+                return;
+            }
+
             const furthest = rail.scrollWidth - rail.clientWidth;
             const from = target === null ? rail.scrollLeft : target;
             target = Math.max(0, Math.min(furthest, from + direction * rail.clientWidth));
@@ -174,7 +190,10 @@ const initCarousels = () => {
             // précédent ne doit pas être avalé par celui-ci.
             aGlisse = false;
 
-            if (event.pointerType === "touch" || event.button !== 0) {
+            // Sur un rail épinglé la position appartient à la page : un
+            // glissement écrirait une valeur aussitôt écrasée. Les flèches
+            // restent l'alternative au geste — WCAG 2.5.7.
+            if (event.pointerType === "touch" || event.button !== 0 || estEpingle(carousel)) {
                 return;
             }
 
@@ -344,7 +363,6 @@ const initJourneys = () => {
         ) || 1) - 1;
 
         const update = () => {
-            frame = null;
 
             if (!journey.classList.contains("journey--pinned")) {
                 return;
@@ -536,7 +554,19 @@ const initJourneys = () => {
 
         apply();
         reduceMotion.addEventListener("change", apply);
-        window.addEventListener("scroll", schedule, { passive: true });
+        // Écriture DIRECTE dans l'évènement, sans passer par une image.
+        //
+        // Le parcours de soin, lui, coalesce sur `requestAnimationFrame` parce
+        // qu'il en fait davantage. Ici le travail par évènement se réduit à une
+        // lecture de rectangle et une écriture de propriété — moins cher que la
+        // comptabilité du planificateur, et Chrome cadence déjà `scroll` sur
+        // l'image.
+        //
+        // Surtout, cette indirection ne tenait qu'à une image RENDUE. Mesuré en
+        // campagne : `update` n'était appelé qu'une fois pour six évènements, la
+        // dernière image demandée n'étant jamais produite, et le rail restait à
+        // zéro. Une mécanique de défilement ne doit pas dépendre de ça.
+        window.addEventListener("scroll", update, { passive: true });
         window.addEventListener("resize", schedule);
         // `passive: false` explicitement : Chrome rend passif tout écouteur de
         // `wheel` posé sur la fenêtre, et `preventDefault` y serait sans effet.
@@ -777,6 +807,119 @@ const initCtaShapes = () => {
 };
 
 /**
+ * Rail piloté par le défilement de la page.
+ *
+ * La bande reste collée le temps qu'une réserve s'épuise, et l'avancement dans
+ * cette réserve DONNE la position horizontale du rail. Rien n'est confisqué :
+ * la page défile normalement, le rail est une fonction de son avancement. C'est
+ * ce qui rend le mouvement naturel et le laisse marcher au doigt, là où une
+ * molette interceptée n'aurait touché ni le tactile ni le clavier.
+ *
+ * Relevé sur la référence donnée par le client — buildcover.com, le bloc
+ * `module-mediaGroup` : le `pin-spacer` de GSAP y réserve 1212px et la course
+ * horizontale du conteneur en mesure 1212. Le rapport est donc de 1:1, et c'est
+ * la réserve qui le porte : elle vaut la course, aucun facteur à régler ici.
+ *
+ * Le rail passe en `overflow-x: hidden` : le script devient SEUL à écrire
+ * `scrollLeft`. Deux écrivains sur la même position se disputeraient chaque
+ * image — et c'est ce que fait la référence.
+ *
+ * Trois sorties de secours, comme la vue épinglée du parcours de soin : sous le
+ * point de rupture, sous `prefers-reduced-motion` et sur un rail qui tient dans
+ * la vue, l'épinglage n'est PAS posé et le carrousel reste celui de partout
+ * ailleurs — défilement natif, clavier, glissement.
+ */
+const initScrollRails = () => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // La bande occupe un écran entier : sous le point de rupture, elle mangerait
+    // toute la vue d'un téléphone pour un rail qui s'y balaie déjà au doigt.
+    const large = window.matchMedia("(min-width: 1025px)");
+
+    document.querySelectorAll("[data-carousel-pinned]").forEach((carousel) => {
+        const reserve = carousel.closest("[data-carousel-pin]");
+        const rail = carousel.querySelector(".carousel__rail");
+
+        if (reserve === null || rail === null) {
+            return;
+        }
+
+        const course = () => rail.scrollWidth - rail.clientWidth;
+
+        const update = () => {
+
+            if (! reserve.classList.contains("carousel-pin--active")) {
+                return;
+            }
+
+            // La course VERTICALE est mesurée, pas déduite de la course
+            // horizontale : `100svh` et `innerHeight` divergent sur mobile, et
+            // un avancement calculé sur la valeur attendue plutôt que sur la
+            // hauteur réelle décalerait le rail de cet écart.
+            const verticale = reserve.offsetHeight - window.innerHeight;
+
+            if (verticale <= 0) {
+                return;
+            }
+
+            const parcouru = -reserve.getBoundingClientRect().top;
+            const avancement = Math.min(1, Math.max(0, parcouru / verticale));
+            rail.scrollLeft = avancement * course();
+        };
+
+        const apply = () => {
+            // `course()` est lue AVANT de poser la classe : elle reste juste en
+            // `overflow-x: hidden`, mais la lire après aurait fait dépendre la
+            // hauteur de la réserve d'un état qu'on vient de changer.
+            const horizontale = course();
+            const actif = ! reduceMotion.matches && large.matches && horizontale > 0;
+
+            reserve.classList.toggle("carousel-pin--active", actif);
+
+            if (! actif) {
+                reserve.style.removeProperty("--pin-course");
+                // Le rail redevient défilable : il lui faut son arrêt de
+                // tabulation.
+                rail.setAttribute("tabindex", "0");
+
+                return;
+            }
+
+            reserve.style.setProperty("--pin-course", `${horizontale}px`);
+            // Le rail n'est plus défilable par l'utilisateur : un arrêt de
+            // tabulation qui ne défile rien serait un piège au clavier. Les
+            // flèches, elles, sont de vrais boutons focalisables, et elles
+            // pilotent le défilement de la page.
+            rail.removeAttribute("tabindex");
+            update();
+        };
+
+        // Écriture DIRECTE dans l'évènement, sans passer par une image.
+        //
+        // Le parcours de soin, lui, coalesce sur `requestAnimationFrame` parce
+        // qu'il en fait davantage. Ici le travail par évènement se réduit à une
+        // lecture de rectangle et une écriture de propriété — moins cher que la
+        // comptabilité du planificateur, et Chrome cadence déjà `scroll` sur
+        // l'image.
+        //
+        // Surtout, cette indirection ne tenait qu'à une image RENDUE. Mesuré en
+        // campagne : `update` n'était appelé qu'une fois pour six évènements, la
+        // dernière image demandée n'étant jamais produite, et le rail restait à
+        // zéro. Une mécanique de défilement ne doit pas dépendre de ça.
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("resize", apply);
+        reduceMotion.addEventListener("change", apply);
+        large.addEventListener("change", apply);
+
+        // Aucune attente du chargement des visuels, contrairement à la
+        // silhouette des pastilles qui attend la police : la course ne dépend
+        // pas de ce qui se charge. Chaque élément du rail porte une largeur en
+        // pixels issue de `LcdsMediaShape`, et le rembourrage de bout est un
+        // jeton — `scrollWidth` est donc juste dès la première mise en page.
+        apply();
+    });
+};
+
+/**
  * Hauteur de l'en-tête, publiée pour les blocs qui doivent l'éviter.
  *
  * L'en-tête collé est du CSS pur (`sticky`, ou `fixed` au-dessus d'un hero) et
@@ -820,6 +963,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initNavShape();
     initCtaShapes();
     initCarousels();
+    initScrollRails();
     initAccordions();
     initJourneys();
 });

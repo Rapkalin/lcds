@@ -307,6 +307,157 @@ window.runFrontQa = async (win) => {
         await tick();
     }
 
+    /* --------------------------------------------------------------------- *
+     * Le rail piloté par le défilement de la page.
+     *
+     * La campagne force `prefers-reduced-motion` : l'épinglage n'y est donc
+     * JAMAIS posé de lui-même, et c'est voulu — c'est la sortie de secours du
+     * dispositif. Les assertions ci-dessus mesurent par conséquent le rail dans
+     * son comportement natif, celui du repli, et rien n'a eu à changer.
+     *
+     * L'état épinglé est donc FORCÉ ici : on pose ce que `apply()` pose, puis on
+     * éprouve ce qui reste en jeu — l'association que `update()` calcule. C'est
+     * la seule chose qu'un réglage de réserve faux casserait en silence.
+     * --------------------------------------------------------------------- */
+    const reservePin = doc.querySelector("[data-carousel-pin]");
+
+    if (reservePin !== null && win.innerWidth === 1440) {
+        const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
+
+        // La mise à jour de l'association est cadencée par
+        // `requestAnimationFrame`, et `setTimeout` passe DEVANT l'image en
+        // attente sous `--virtual-time-budget` : lire juste après un `tick`
+        // donnait un rail encore à zéro, et accusait du code juste.
+        //
+        // On ATTEND donc la valeur, au lieu de la lire une fois — mais sur un
+        // nombre borné de tours. Attendre l'image elle-même a été essayé et
+        // rejeté : le `await` ne se dénouait pas et la campagne entière restait
+        // suspendue à 1440, sans produire un seul résultat. Un contrôle ne doit
+        // jamais pouvoir suspendre la campagne, fût-ce pour dire vrai.
+        const attendreRail = async (attendu) => {
+            for (let essai = 0; essai < 20; essai += 1) {
+                if (Math.abs(railPin.scrollLeft - attendu) < 3) {
+                    return railPin.scrollLeft;
+                }
+
+                await tick();
+            }
+
+            return railPin.scrollLeft;
+        };
+        const railPin = reservePin.querySelector(".carousel__rail");
+        const suivant = reservePin.querySelector("[data-carousel-next]");
+        const course = railPin.scrollWidth - railPin.clientWidth;
+        const tabAvant = railPin.getAttribute("tabindex");
+
+        // Un seul conteneur d'épinglage sur la page : le carrousel des
+        // technologies partage le composant et ne doit PAS en porter.
+        assert(
+            `épinglage : un seul rail concerné (${doc.querySelectorAll("[data-carousel-pin]").length})`,
+            doc.querySelectorAll("[data-carousel-pin]").length === 1
+        );
+        assert(
+            "épinglage : le rail des technologies n'est pas concerné",
+            doc.querySelector(".carousel--cards")?.closest("[data-carousel-pin]") === null
+        );
+        // Au repos — donc sous mouvement réduit — rien n'est posé : le rail
+        // garde son défilement natif et son arrêt de tabulation.
+        assert(
+            `épinglage : inactif sous mouvement réduit (${reservePin.className || "aucune classe"})`,
+            ! reservePin.classList.contains("carousel-pin--active")
+                && win.getComputedStyle(railPin).overflowX === "auto"
+                && tabAvant === "0"
+        );
+
+        /* ------------------------------------------------------------------ *
+         * LE NOMBRE de la mécanique, lu sur la RÈGLE.
+         *
+         * La réserve verticale vaut la course horizontale : c'est ce qui donne
+         * le rapport de 1:1 relevé sur la référence. Éprouvé sur la déclaration
+         * et non sur la hauteur rendue, parce que c'est la campagne elle-même
+         * qui doit poser `--pin-course` ci-dessous — le script ne l'active
+         * jamais ici, `prefers-reduced-motion` étant forcé.
+         *
+         * Une assertion sur la hauteur mesurerait donc l'échafaudage du test.
+         * Vérifié : elle restait VERTE avec un script qui publiait la course
+         * décalée de 100px.
+         * ------------------------------------------------------------------ */
+        assert(
+            "épinglage : la réserve est déclarée égale à la course",
+            trouverRegle(doc, ".carousel-pin--active", (regle) => (
+                regle.style.height.includes("100svh") && regle.style.height.includes("--pin-course")
+                    ? true
+                    : null
+            )) === true
+        );
+
+        // Échafaudage : la campagne pose ce que `apply()` poserait. Ce qui est
+        // éprouvé ensuite, c'est le CALCUL de l'association — la seule part qui
+        // reste au script une fois l'état posé.
+        reservePin.style.setProperty("--pin-course", `${course}px`);
+        reservePin.classList.add("carousel-pin--active");
+        await tick();
+
+        const verticale = reservePin.offsetHeight - win.innerHeight;
+
+        assert(
+            `épinglage : rail non défilable par le geste (${win.getComputedStyle(railPin).overflowX})`,
+            win.getComputedStyle(railPin).overflowX === "hidden"
+        );
+
+        const hautReserve = reservePin.getBoundingClientRect().top + win.scrollY;
+        // Le défilement est provoqué, PUIS l'évènement est émis à la main —
+        // même contournement que pour l'en-tête plus haut : sous
+        // `--virtual-time-budget`, `scrollTo` déplace la page mais Chrome ne
+        // délivre pas toujours le `scroll` correspondant. Sans cette émission,
+        // le gestionnaire du rail n'était jamais appelé et le rail restait à
+        // zéro sur une association pourtant juste.
+        const aller = async (part) => {
+            win.scrollTo(0, hautReserve + part * verticale);
+            win.dispatchEvent(new win.Event("scroll"));
+
+            return attendreRail(part * course);
+        };
+
+        const mi = await aller(0.5);
+        const bout = await aller(1);
+        const retour = await aller(0);
+
+        assert(
+            `épinglage : à mi-réserve, rail à mi-course (${Math.round(mi)} / ${Math.round(course / 2)})`,
+            Math.abs(mi - course / 2) < 3
+        );
+        assert(
+            `épinglage : réserve épuisée, rail au bout (${Math.round(bout)} / ${course})`,
+            Math.abs(bout - course) < 3
+        );
+        // Et l'association marche dans les DEUX sens : un calcul qui ne saurait
+        // qu'avancer laisserait le rail au bout en remontant la page.
+        assert(
+            `épinglage : retour à l'origine en remontant (${Math.round(retour)})`,
+            retour < 3
+        );
+
+        // La flèche pilote alors le défilement de la PAGE : écrire `scrollLeft`
+        // serait écrasé à l'image suivante par l'avancement.
+        await aller(0);
+        const avant = win.scrollY;
+        suivant.click();
+        await tick();
+
+        assert(
+            `épinglage : la flèche avance la page d'une largeur de rail (${Math.round(win.scrollY - avant)} / ${railPin.clientWidth})`,
+            Math.abs((win.scrollY - avant) - railPin.clientWidth) < 3
+        );
+
+        reservePin.classList.remove("carousel-pin--active");
+        reservePin.style.removeProperty("--pin-course");
+        win.scrollTo(0, 0);
+        win.dispatchEvent(new win.Event("scroll"));
+        railPin.scrollTo({ left: 0, behavior: "auto" });
+        await tick();
+    }
+
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
     const items = doc.querySelectorAll(".accordion__item");
 

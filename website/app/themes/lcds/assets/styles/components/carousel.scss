@@ -187,3 +187,49 @@
     }
   }
 }
+
+/* ------------------------------------------------------------------------- *
+ * Rail piloté par le défilement de la page — activé par le JavaScript, jamais
+ * par défaut.
+ *
+ * Le conteneur réserve une hauteur de défilement ÉGALE à la course horizontale
+ * du rail : un pixel de page vaut alors un pixel de rail. C'est le rapport
+ * relevé sur la référence donnée par le client (buildcover.com, le bloc
+ * `module-mediaGroup`) : réserve et course y mesurent 1212px toutes les deux.
+ *
+ * La bande reste collée le temps que la réserve s'épuise, et le rail passe en
+ * `overflow-x: hidden` : le défilement horizontal natif est coupé, donc le
+ * script est SEUL à écrire `scrollLeft`. Sans ça, le geste de l'utilisateur et
+ * l'avancement de la page se disputeraient la même position à chaque image.
+ *
+ * `sticky` plutôt que le `position: fixed` de la référence — qui utilise GSAP
+ * et doit alors gérer elle-même le calage. Le collage natif n'a pas ce coût, et
+ * c'est déjà ce que fait la vue épinglée du parcours de soin.
+ * ------------------------------------------------------------------------- */
+.carousel-pin--active {
+  height: calc(100svh + var(--pin-course, 0px));
+
+  .carousel {
+    position: sticky;
+    top: 0;
+    display: flex;
+    // La bande fait un écran : sans quoi la page se bloquerait alors qu'un
+    // morceau de la section suivante est déjà visible. Le carrousel est centré
+    // dedans, la maquette ne se prononçant pas sur ce décalage — la référence
+    // le cale à 20 % du haut de sa vue, ce qui est son cadrage, pas le nôtre.
+    flex-direction: column;
+    justify-content: center;
+    height: 100svh;
+  }
+
+  .carousel__rail {
+    overflow-x: hidden;
+  }
+
+  // Le rail n'étant plus tirable, le curseur ne doit pas le promettre. Le
+  // script coupe le glissement de son côté ; ceci en retire la trace visible.
+  .carousel__rail,
+  .carousel--draggable .carousel__rail {
+    cursor: default;
+  }
+}

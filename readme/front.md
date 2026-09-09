@@ -938,6 +938,100 @@ Trois points relevés en relisant la livraison, avant de la donner pour finie.
 - **La boucle de `initCtaShapes`** utilisait `for…of Array.from(…)` là où le
   reste du fichier itère une NodeList avec `.forEach`.
 
+### La galerie de L'HISTOIRE est pilotée par le défilement de la page
+
+Troisième retour du lot : « le scroll se bloque sur le carrousel, le scroll
+horizontal doit être fluide, il reprend une fois que le scroll a atteint la
+dernière image ». La bande reste collée le temps qu'une réserve s'épuise, et
+l'avancement dans cette réserve **donne** la position du rail.
+
+#### Relevé sur la référence du client
+
+`buildcover.com`, le bloc `module module-mediaGroup` et son enfant
+`module-mediaGroup-scroller`. C'est **GSAP ScrollTrigger avec `pin`** : la
+bibliothèque insère un `pin-spacer` dont les styles en ligne disent tout.
+
+| Mesure | Relevé |
+| --- | --- |
+| Réserve de défilement | `padding-bottom: 1212px` sur le `pin-spacer` |
+| Course horizontale | `scrollWidth 3748 − clientWidth 2536` = **1212px** |
+| Élément épinglé | `position: fixed`, calé à `top: 256px` |
+| Porteur du déplacement | **`scrollLeft`** de `.module-mediaGroup-inner`, en `overflow-x: hidden` |
+| Transformations | `translateX` reste à 0 sur le scroller comme sur l'inner |
+| Composition | 4 visuels de 738px, `gap: 20px`, 368px de rembourrage de chaque côté |
+
+**Le nombre décisif : réserve = course = 1212px, exactement.** C'est
+l'association absolue à l'échelle 1:1 — un pixel de défilement de page vaut un
+pixel de rail. Et c'est la RÉSERVE qui porte ce rapport : il n'y a aucun facteur
+à régler dans le script, ce qui est la raison de ne pas en introduire un.
+
+> **Ce qui reste supposé.** La présence d'un amortissement entre le défilement et
+> `scrollLeft` (`scrub: true` contre `scrub: <nombre>` chez GSAP) n'a pas pu être
+> mesurée : les sondes en `requestAnimationFrame` ont fait expirer le lien CDP à
+> trois reprises, et le défilement programmatique ne pilotait pas le déclencheur.
+> L'égalité réserve = course plaide pour l'absence de retard, mais un lissage ne
+> changerait pas la réserve.
+
+#### Ce qui a été retenu, et ce qui s'en écarte
+
+- **`position: sticky` et non `fixed`.** La référence utilise GSAP et doit alors
+  calculer elle-même le calage. Le collage natif n'a pas ce coût, et c'est déjà
+  ce que fait la vue épinglée du parcours de soin.
+- **La bande fait un écran** (`100svh`), le carrousel centré dedans. Sans quoi la
+  page se bloquerait alors qu'un morceau de la section suivante est déjà visible.
+  La référence cale sa bande à 256px du haut, soit 20 % de sa hauteur de vue :
+  c'est son cadrage, pas le nôtre, et **aucune maquette LCDS ne se prononce**.
+- **`overflow-x: hidden` sur le rail épinglé**, comme la référence. C'est ce
+  détail qui résout le problème des deux écrivains : le défilement horizontal
+  natif est coupé, donc le script est SEUL à écrire `scrollLeft`. Deux écrivains
+  se disputeraient la position à chaque image.
+
+#### Pourquoi ce n'est pas la mécanique du parcours de soin
+
+Le parcours **confisque la molette** et porte la page d'une étape à l'autre : un
+cran, une étape, avec un chrono qui absorbe le reste. C'est du magnétisme, et
+c'est ce que le client ne voulait pas ici.
+
+Ici rien n'est confisqué : la page défile normalement, et le rail est une
+*fonction* de son avancement. D'où deux propriétés que la confiscation
+n'aurait pas données — le **tactile** et le **clavier** marchent sans traitement
+particulier, puisqu'ils font défiler la page comme le reste.
+
+#### Ce que l'épinglage retire, et ce qui le remplace
+
+Trois comportements du rail natif tombent quand l'épinglage est actif, et chacun
+a sa compensation :
+
+| Ce qui tombe | Pourquoi | Ce qui reste |
+| --- | --- | --- |
+| Le défilement horizontal au geste | `overflow-x: hidden` | La page défile, le rail suit |
+| Le glisser-déposer à la souris | Il écrirait une position aussitôt écrasée | Les flèches — l'alternative exigée par le WCAG 2.5.7 |
+| L'arrêt de tabulation du rail | Il ne défile plus rien : ce serait un piège au clavier | Les flèches sont de vrais boutons focalisables |
+
+Les flèches, elles, **pilotent le défilement de la page**. Le rapport étant de
+1:1, une page de rail vaut exactement une largeur de rail en défilement vertical.
+L'indicateur et l'état désactivé des boutons continuent de lire `rail.scrollLeft`
+et n'ont rien demandé.
+
+Le composant est partagé avec la section Technologies : l'épinglage est donc
+**déclaré** par la section qui compose le carrousel — `'pinned' => true` dans
+`layouts/histoire.php` — et jamais déduit d'un sélecteur parent. Ce n'est pas un
+champ ACF : c'est une décision de conception, pas un choix de contribution.
+
+#### Trois sorties de secours
+
+Comme la vue épinglée du parcours, l'épinglage **n'est pas posé** sous le point
+de rupture (la bande mangerait toute la vue d'un téléphone, où le rail se balaie
+déjà au doigt), sous `prefers-reduced-motion` (RGAA 13.8, voir
+[`accessibilite.md`](accessibilite.md)) et sur un rail qui tient dans la vue —
+où il n'y aurait rien à parcourir. Dans ces trois cas le carrousel est celui de
+partout ailleurs.
+
+> **Conséquence sur la recette** : la campagne force `prefers-reduced-motion`,
+> donc l'épinglage n'y est jamais posé de lui-même. Les assertions du rail natif
+> n'ont eu à changer — c'est le repli qu'elles mesurent. L'état épinglé est
+> forcé par la campagne pour éprouver l'association. Voir [`qa.md`](qa.md).
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page
