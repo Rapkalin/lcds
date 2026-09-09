@@ -1,0 +1,44 @@
+{
+    "key": "group_lcds_navigation",
+    "title": "Navigation",
+    "fields": [
+        {
+            "key": "field_lcds_nav_puce",
+            "label": "Puce de la page courante",
+            "name": "puce_page_courante",
+            "type": "button_group",
+            "instructions": "Couleur du point affiché devant l'entrée de menu correspondant à la page consultée.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {},
+            "default_value": "orange",
+            "allow_null": 0,
+            "other_choice": 0,
+            "layout": "horizontal",
+            "return_format": "value"
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "lcds-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "modified": 1789000000
+}

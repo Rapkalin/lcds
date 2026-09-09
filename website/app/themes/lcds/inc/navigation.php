@@ -10,6 +10,7 @@
  */
 
 require_once __DIR__ . '/enums/LcdsMenuLocation.php';
+require_once __DIR__ . '/enums/LcdsDotColor.php';
 
 if (! defined('ABSPATH')) {
     exit;
@@ -23,10 +24,15 @@ if (! defined('ABSPATH')) {
  */
 function lcds_header_nav(): void
 {
+    // La couleur de la puce de la page courante vient des réglages du site :
+    // c'est un choix de contribution, pas une constante de thème. Le repli est
+    // « Rouge » — l'orange du système de design, voir LcdsDotColor.
+    $dot = LcdsDotColor::fromValue(lcds_option('puce_page_courante'), LcdsDotColor::Orange);
+
     wp_nav_menu([
         'theme_location' => LcdsMenuLocation::Header->value,
         'container' => 'nav',
-        'container_class' => 'site-nav',
+        'container_class' => 'site-nav site-nav--dot-' . $dot->value,
         'container_aria_label' => __('Navigation principale', 'lcds'),
         'menu_class' => 'site-nav__list',
         // La forme blanche de la barre, peinte derrière les liens par

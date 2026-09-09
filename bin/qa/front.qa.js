@@ -821,28 +821,29 @@ window.runFrontQa = async (win) => {
         cote("infos : texte, bord gauche", boite(".block-info__head")?.left ?? null, 774);
         cote("infos : bouton contourné, bord droit", boite(".block-info .cta--outline")?.right ?? null, 1279);
 
-        // La pastille contournée ne peint AUCUN fond : elle prend la couleur de
-        // ce sur quoi elle est posée. L'aplat blanc qu'elle portait ne se
-        // voyait pas ici — le bloc est blanc — mais tranchait sur le panneau
-        // bleu pâle du pied de page. Relevé sur la maquette : (243, 248, 254).
-        const contournes = [...doc.querySelectorAll(".cta--outline .cta__label")];
-        const fondsContournes = contournes.map((node) => styleOf(node).backgroundColor);
+        /* ------------------------------------------------------------------ *
+         * TOUS les boutons d'action portent du texte blanc.
+         *
+         * La variante à une seule pastille avait du texte bleu, et c'est le
+         * défaut remonté. Éprouvé sur les deux variantes à la fois : la règle
+         * demandée ne souffre pas d'exception, et une exception ajoutée plus
+         * tard doit faire rougir la campagne.
+         * ------------------------------------------------------------------ */
+        const pastilles = [...doc.querySelectorAll(".cta__label")];
+        const textes = pastilles.map((node) => styleOf(node).color);
+        const aplats = pastilles.map((node) => styleOf(node).backgroundColor);
 
         assert(
-            `pastilles contournées sans aplat (${contournes.length} : ${[...new Set(fondsContournes)].join(", ")})`,
-            contournes.length > 0
-                && fondsContournes.every((fond) => fond === "rgba(0, 0, 0, 0)")
+            `boutons d'action : texte blanc sur les ${pastilles.length} pastilles (${[...new Set(textes)].join(", ")})`,
+            pastilles.length > 0 && textes.every((teinte) => teinte === "rgb(255, 255, 255)")
         );
-        // Le panneau du pied de page doit donc transparaître au travers.
-        const contournePied = doc.querySelector(".site-footer .cta--outline .cta__label");
-
-        if (contournePied !== null) {
-            assert(
-                `pied de page : la pastille laisse voir le panneau (${styleOf(doc.querySelector(".site-footer::before") ?? doc.querySelector(".site-footer"), "::before").backgroundColor})`,
-                styleOf(contournePied).backgroundColor === "rgba(0, 0, 0, 0)"
-                    && styleOf(doc.querySelector(".site-footer"), "::before").backgroundColor === "rgb(242, 248, 255)"
-            );
-        }
+        // Le blanc n'est lisible que sur un aplat foncé : les deux vont
+        // ensemble, et mesurer la seule couleur du texte laisserait passer du
+        // blanc sur blanc.
+        assert(
+            `boutons d'action : aplat bleu sous ce blanc (${[...new Set(aplats)].join(", ")})`,
+            aplats.every((aplat) => aplat === "rgb(0, 56, 122)")
+        );
 
         /* ------------------------------------------------------------------ *
          * Les glyphes des informations pratiques.
@@ -1410,9 +1411,29 @@ window.runFrontQa = async (win) => {
                 puce.content !== "none" && puce.width === "12px" && puce.height === "12px"
                     && parseFloat(puce.borderRadius) >= 6
             );
+            // La teinte vient des RÉGLAGES du site, pas du thème : on éprouve
+            // que la classe de la navigation la pilote, et que les deux choix
+            // proposés au contributeur donnent bien deux couleurs distinctes.
+            // Sans ce second point, une propriété jamais lue passerait.
+            const nav = doc.querySelector(".site-nav");
+            const classeNav = nav.className;
+            const teinteDe = (couleur) => {
+                nav.className = `site-nav site-nav--dot-${couleur}`;
+
+                return styleOf(lien, "::after").backgroundColor;
+            };
+            const rouge = teinteDe("orange");
+            const vert = teinteDe("turquoise");
+            nav.className = classeNav;
+
             assert(
-                `navigation : puce turquoise, comme l'étiquette d'une section (${puce.backgroundColor})`,
-                puce.backgroundColor === "rgb(4, 139, 140)"
+                `navigation : puce « Rouge » par défaut (${puce.backgroundColor})`,
+                puce.backgroundColor === "rgb(226, 83, 4)"
+                    && classeNav.includes("site-nav--dot-orange")
+            );
+            assert(
+                `navigation : le réglage pilote la teinte (rouge ${rouge} / vert ${vert})`,
+                rouge === "rgb(226, 83, 4)" && vert === "rgb(4, 139, 140)"
             );
             // `order: -1` la place AVANT le libellé, alors qu'elle est en
             // `::after` — le `::before` porte déjà la zone de survol étendue.

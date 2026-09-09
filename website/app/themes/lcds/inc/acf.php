@@ -258,6 +258,24 @@ function lcds_load_info_icons(array $field): array
 add_filter('acf/load_field/key=field_lcds_infos_icone', 'lcds_load_info_icons');
 
 /**
+ * Alimente la couleur de puce de la page courante depuis LcdsDotColor.
+ *
+ * Accroché sur la CLÉ et non sur le nom : le champ vit sur la page de réglages
+ * et n'a rien à voir avec les puces d'étiquette, qui sont accrochées sur le nom
+ * `puce`. Les deux tirent leurs choix de la même enum — d'où « Vert » et
+ * « Rouge » ici aussi, les noms du client.
+ *
+ * @param array $field Définition du champ, telle qu'ACF la charge.
+ */
+function lcds_load_nav_dot_colors(array $field): array
+{
+    $field['choices'] = LcdsDotColor::choices();
+
+    return $field;
+}
+add_filter('acf/load_field/key=field_lcds_nav_puce', 'lcds_load_nav_dot_colors');
+
+/**
  * Alimente la liste des cadrages depuis LcdsFocalPoint.
  *
  * @param array $field Définition du champ, telle qu'ACF la charge.

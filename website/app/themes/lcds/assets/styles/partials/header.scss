@@ -1,4 +1,5 @@
 @use "sass:color";
+@use "sass:map";
 @use "../basics/variables" as var;
 @use "../basics/functions" as fn;
 
@@ -230,6 +231,10 @@ body:has(.hero) .site-header {
 
 // En `::after` avec `order: -1`, et non en `::before` : celui-ci porte déjà la
 // zone de survol étendue de 20px, en position absolue.
+//
+// La teinte vient d'une propriété personnalisée posée par la classe de la
+// navigation, elle-même issue des réglages du site : une seule règle de puce
+// sert donc toutes les couleurs.
 .site-nav__list .current-menu-item a::after,
 .site-nav__list .current_page_item a::after {
   content: "";
@@ -238,7 +243,16 @@ body:has(.hero) .site-header {
   width: fn.toRem(12);
   height: fn.toRem(12);
   border-radius: 50%;
-  background: var.$turquoise;
+  background: var(--nav-dot, #{map.get(var.$dot-colors, "orange")});
+}
+
+// Une déclaration par couleur, engendrée depuis la même correspondance que les
+// puces d'étiquette. Le repli ci-dessus couvre le cas où la classe manque —
+// réglages vides, ou ACF absent.
+@each $nom, $teinte in var.$dot-colors {
+  .site-nav--dot-#{$nom} {
+    --nav-dot: #{$teinte};
+  }
 }
 
 .site-nav__list .current-menu-item:first-child a,

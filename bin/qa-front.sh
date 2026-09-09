@@ -764,11 +764,79 @@ printf(
     return 0
 }
 
+# Le champ de reglage de la puce vit dans acf-json/, ecrit a la main : ACF peut
+# tres bien refuser un groupe mal forme sans que rien ne le signale cote front.
+# On verifie donc qu il le CHARGE, et que ses choix viennent bien de l enum.
+check_reglages() {
+    local out
+
+    out="$(cd "$ROOT" && docker compose exec -T --user www-data php wp eval '
+if (! function_exists("acf_get_field_group")) {
+    echo "FAIL|ACF charge le groupe Navigation|ACF absent\n";
+
+    return;
+}
+
+$groupe = acf_get_field_group("group_lcds_navigation");
+
+printf(
+    "%s|ACF charge le groupe Navigation depuis le JSON|%s\n",
+    ($groupe && ($groupe["local"] ?? "") === "json") ? "PASS" : "FAIL",
+    $groupe ? ("source " . ($groupe["local"] ?? "base")) : "groupe absent",
+);
+
+$champ = acf_get_field("field_lcds_nav_puce");
+
+printf(
+    "%s|le champ est sur la page de reglages|%s\n",
+    ($champ && $champ["type"] === "button_group") ? "PASS" : "FAIL",
+    $champ ? $champ["type"] : "champ absent",
+);
+
+$choix = $champ ? $champ["choices"] : array();
+$attendu = LcdsDotColor::choices();
+
+printf(
+    "%s|les choix viennent de LcdsDotColor|%s\n",
+    $choix === $attendu ? "PASS" : "FAIL",
+    implode(", ", array_map(fn($k, $v) => "$k=$v", array_keys($choix), $choix)),
+);
+
+// Le defaut ACF ne sert que dans le formulaire : tant que rien n est
+// enregistre, get_field rend NULL et c est le repli PHP qui decide. Les deux
+// doivent donner la MEME couleur, sinon la puce change de teinte au premier
+// enregistrement sans que personne ait rien choisi.
+$repli = LcdsDotColor::fromValue(get_field("puce_page_courante", "option"), LcdsDotColor::Orange);
+
+printf(
+    "%s|le repli du theme et le defaut ACF concordent|%s\n",
+    ($champ && $champ["default_value"] === $repli->value) ? "PASS" : "FAIL",
+    "ACF " . ($champ["default_value"] ?? "-") . " / theme " . $repli->value,
+);
+' 2>/dev/null)"
+
+    if [ -z "$out" ]; then
+        printf '  FAIL :: reglages du site (aucune sortie)\n'
+        return 1
+    fi
+
+    printf '%s\n' "$out" | while IFS="|" read -r verdict label detail; do
+        [ -z "$verdict" ] && continue
+        printf '  %s :: %s (%s)\n' "$verdict" "$label" "$detail"
+    done
+
+    printf '%s' "$out" | grep -q '^FAIL' && return 1
+    return 0
+}
+
 echo "== Rôle de contribution =="
 check_role || FAILURES=$((FAILURES + 1))
 
 echo "== Journal des connexions =="
 check_logins || FAILURES=$((FAILURES + 1))
+
+echo "== Réglages du site =="
+check_reglages || FAILURES=$((FAILURES + 1))
 
 echo "== Contribution de la page d'accueil =="
 check_contribution || FAILURES=$((FAILURES + 1))

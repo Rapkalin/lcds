@@ -180,7 +180,7 @@
             }
         ]
     ],
-    "menu_order": 0,
+    "menu_order": 1,
     "position": "normal",
     "style": "default",
     "label_placement": "top",
@@ -189,5 +189,5 @@
     "active": true,
     "description": "Contenu du pied de page, commun à toutes les pages.",
     "show_in_rest": 0,
-    "modified": 1788880000
+    "modified": 1789000000
 }

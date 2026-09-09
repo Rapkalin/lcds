@@ -27,6 +27,18 @@ $black: #000000;
 
 $font-color: $blue;
 
+// Couleurs de puce proposées aux contributeurs. La CLÉ est la valeur enregistrée
+// par ACF — celle de `LcdsDotColor` — et la teinte est le jeton. Cette
+// correspondance vivait en double, dans `tag.scss` et dans `header.scss` : une
+// couleur ajoutée à l'enum devait alors être déclarée deux fois.
+//
+// Ajouter une couleur = un cas dans `inc/enums/LcdsDotColor.php` et une entrée
+// ici. Les deux feuilles la reprennent d'elles-mêmes.
+$dot-colors: (
+  "turquoise": $turquoise,
+  "orange": $orange,
+);
+
 /* FONTS */
 // Sligoil et Inter ne sont pas encore auto-hébergées : tant que les fichiers
 // manquent, seule la pile de secours s'applique. Voir readme/front.md.

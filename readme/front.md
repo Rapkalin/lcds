@@ -588,11 +588,23 @@ Mesuré au survol de « Contact » :
 
 ### L'entrée courante porte une puce
 
-L'entrée du menu qui correspond à la page affichée porte une **puce turquoise**
-avant son libellé — même diamètre et même teinte que la puce d'une étiquette de
-section (`tag__dot`), dont elle reprend le jeton. La maquette ne dessine aucun
-état « page courante » : c'est une demande postérieure, et le turquoise est
-celui de l'étiquette « histoire ».
+L'entrée du menu qui correspond à la page affichée porte une **puce** avant son
+libellé — même diamètre que la puce d'une étiquette de section (`tag__dot`).
+
+**Sa couleur se règle dans « Réglages → Configuration »**, entre « Vert » et
+« Rouge », et vaut « Rouge » par défaut. C'est un choix de contribution, pas une
+constante de thème.
+
+Le « rouge » du client est l'`orange` du système de design (`#E25304`) : la
+correspondance existait déjà dans `LcdsDotColor`, dont le libellé dit « Rouge »
+là où la valeur enregistrée dit `orange`. **Aucun jeton n'a été ajouté** — la
+règle est qu'une teinte absente de la bibliothèque Figma s'ajoute côté design
+d'abord.
+
+La correspondance valeur → teinte vit dans **une seule** carte Sass,
+`$dot-colors` (`basics/variables.scss`). `tag.scss` et `header.scss` la
+parcourent : elle était écrite en double, et une couleur ajoutée à l'enum devait
+alors être déclarée deux fois.
 
 Trois décisions de mise en œuvre, chacune pour une raison :
 
@@ -644,16 +656,30 @@ Deux retours de recette portaient sur des détails qu'on aurait pu « corriger �
 jugé. Dans les deux cas le **PDF de maquette** a tranché, lu au pixel avec le
 décodeur PNG de `bin/qa` — `sips` convertit le PDF, le reste est de l'arithmétique.
 
-### Les pastilles contournées n'ont pas d'aplat
+### Les boutons d'action portent tous du texte blanc
 
-`.cta--outline` portait `background: $white`. Invisible sur les informations
-pratiques, dont le fond est blanc — mais dans le pied de page, la pastille
-tranchait sur le panneau bleu pâle.
+`.cta--outline` était la seule variante à texte bleu — c'est ce qui a été
+remonté. Elle n'a plus de style propre : même pastille bleue et même texte blanc
+que la variante pleine, dont elle ne diffère que par l'absence du glyphe. La
+règle CSS a donc **disparu**, ainsi que son état de survol inversé.
 
-Relevé sur `HP_06_Frame 54.pdf`, bordures des trois boutons du pied de page à
-y=3657, 3816 et 3975 : leur **remplissage vaut (243, 248, 254)**, soit le panneau
-`#F2F8FF` à une unité de rendu près. Pas du blanc. La pastille ne peint donc plus
-rien et prend la couleur de ce sur quoi elle est posée.
+**Écart assumé avec la maquette, sur demande du client.** Le PDF dessine ces
+boutons contournés, et deux relevés le confirment sur `HP_06_Frame 54.pdf`
+(bordures des trois boutons du pied de page à y=3657, 3816 et 3975) :
+
+| | relevé sur la maquette |
+| --- | --- |
+| remplissage | (243, 248, 254) — le panneau, pas du blanc |
+| texte | `#143776` — du bleu |
+
+Du texte blanc impose un aplat foncé : c'est le contraire de contourné. La clé
+`outline` garde son nom — c'est le mot de la maquette et la valeur enregistrée
+côté ACF — mais ce qu'elle dessine a changé.
+
+> Première lecture, corrigée : « les CTA n'ont pas de blanc dans la gélule »
+> parlait du TEXTE, pas du fond. J'avais mesuré le remplissage, répondu juste à
+> la mauvaise question, et retiré l'aplat blanc. La mesure était bonne, la
+> question non.
 
 ### Le bus était écrasé, et le repère d'adresse trop petit
 

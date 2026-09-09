@@ -7,6 +7,22 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.13.0
+
+### Ajouté
+
+- **La couleur de la puce de la page courante se règle dans « Réglages →
+  Configuration ».** Deux choix, « Vert » et « Rouge », les mêmes que pour les
+  puces d'étiquette de section. **« Rouge » par défaut** — la puce était verte.
+
+### Corrigé
+
+- **Tous les boutons d'action portent du texte blanc.** Ceux du pied de page et
+  le « voir le plan » des informations pratiques avaient du texte bleu : ils
+  prennent désormais la même pastille bleue que les autres. C'est un écart
+  assumé avec la maquette, qui les dessine contournés — le relevé au pixel de la
+  livraison précédente portait sur leur remplissage, pas sur leur texte.
+
 ## 2.12.0
 
 ### Ajouté

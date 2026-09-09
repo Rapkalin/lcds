@@ -9,9 +9,15 @@
  *   icon    string Glyphe de la pastille de gauche. La maquette utilise un
  *                  émoji — voir readme/front.md pour la réserve que ça pose.
  *   variant string `solid` (défaut) : les deux pastilles jointes du hero et des
- *                  sections. `outline` : une seule pastille contournée, sans
- *                  glyphe — le « voir le plan » des informations pratiques,
- *                  mesuré 131 × 30 sur le PDF contre 321 × 30 pour le solide.
+ *                  sections. `outline` : une SEULE pastille, sans glyphe — le
+ *                  « voir le plan » des informations pratiques et les boutons
+ *                  du pied de page, mesurés 131 × 30 sur le PDF contre 321 × 30
+ *                  pour le solide.
+ *
+ * La clé `outline` garde son nom — c'est le mot de la maquette et la valeur
+ * enregistrée — mais la pastille n'est plus contournée : le client demande du
+ * texte blanc partout, ce qui impose un aplat foncé. Voir
+ * assets/styles/components/cta.scss.
  *
  * @package lcds
  */

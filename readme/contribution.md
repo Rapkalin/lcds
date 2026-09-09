@@ -159,12 +159,28 @@ Les boutons pointent vers `#` : les pages cibles n'existent pas encore. Un lien
 **vide** ferait disparaître le bouton — le composant CTA refuse de produire un
 lien mort — d'où ce jalon plutôt que rien.
 
-## Le pied de page : « Réglages → Configuration »
+## « Réglages → Configuration »
 
-Le pied de page est commun à toutes les pages : son contenu n'appartient à
-aucune d'elles. Il vit donc dans une **page d'options** ACF, en sous-menu de
-*Réglages* — trois blocs d'appel, le sur-titre et l'adresse, la mention de
-copyright, le **visuel révélé** et son **cadrage**.
+Cette page d'options ACF, en sous-menu de *Réglages*, porte ce qui n'appartient
+à aucune page : **Navigation** puis **Pied de page**, dans cet ordre.
+
+### Navigation — la puce de la page courante
+
+L'entrée de menu correspondant à la page consultée porte un point devant son
+libellé. Sa couleur se choisit ici, entre **« Vert »** et **« Rouge »** — les
+mêmes deux noms, et la même enum, que les puces d'étiquette de section.
+**« Rouge » par défaut.**
+
+Deux valeurs par défaut existent et doivent concorder : celle du champ ACF, qui
+ne joue que dans le formulaire, et le repli du thème, qui joue tant que rien
+n'est enregistré. Une assertion de `bin/qa-front.sh` échoue si elles divergent —
+sinon la puce changerait de couleur au premier enregistrement, sans que personne
+ait rien choisi.
+
+### Le pied de page
+
+Trois blocs d'appel, le sur-titre et l'adresse, la mention de copyright, le
+**visuel révélé** et son **cadrage**.
 
 Sa navigation vient de deux emplacements de menu distincts, `footer-menu` et
 `legal-menu` : un contributeur ne peut pas glisser « Mentions légales » au

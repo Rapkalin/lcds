@@ -82,17 +82,27 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 - **Cartes de technologie** : aucun aplat peint **sous** un visuel, et l'aplat
   de repli subsiste pour une carte sans visuel — voir
   [`front.md`](front.md#rien-sous-un-visuel--le-liseré-des-cartes-inclinées).
+- **Réglages du site** (par WP-CLI) : ACF charge bien le groupe *Navigation*
+  **depuis le JSON**, le champ est un `button_group`, ses choix viennent de
+  `LcdsDotColor`, et le défaut ACF concorde avec le repli du thème. Ce dernier
+  point compte : les deux valeurs par défaut vivent à deux endroits, et si elles
+  divergeaient la puce changerait de couleur au premier enregistrement sans que
+  personne ait rien choisi. Le groupe est écrit à la main dans `acf-json/` —
+  ACF peut refuser un JSON mal formé sans que rien ne le signale côté front.
 - **Entrée courante du menu** : la classe est posée à la main — le contenu de
   démonstration n'a pas de page courante — puis la puce est mesurée : 12px,
-  turquoise, placée avant le libellé, et **élargissant la pastille de 20px**.
-  Cette dernière est la seule qui distingue une puce qui pousse d'une puce
-  superposée en absolu.
+  « Rouge » par défaut, placée avant le libellé, et **élargissant la pastille de
+  20px**. Cette dernière est la seule qui distingue une puce qui pousse d'une
+  puce superposée en absolu. La classe de la navigation est ensuite permutée
+  pour éprouver que le **réglage pilote vraiment la teinte** : sans ça, une
+  propriété jamais lue passerait.
 - **Accordéon** : la transition d'ouverture est lue sur la RÈGLE — la campagne
   force le mouvement réduit, où elle est neutralisée — et l'on éprouve à côté
   que le panneau fermé garde bien son `display: none`. Sans quoi il ne se
   fermerait plus jamais.
-- **Pastilles contournées** : aucune ne peint d'aplat, et celle du pied de page
-  laisse voir le panneau bleu pâle.
+- **Boutons d'action** : les huit pastilles de la page portent du **texte
+  blanc**, et un aplat bleu dessous. Les deux ensemble : mesurer la seule
+  couleur du texte laisserait passer du blanc sur blanc.
 - **Glyphes des informations pratiques** : éprouvés sur le TRACÉ et non sur la
   boîte, qui mesurait déjà 24 × 24 sans rien dire du dessin. La caisse du bus
   doit occuper plus de la moitié de la boîte, ses roues chevaucher son bas, et

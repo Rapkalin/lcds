@@ -49,36 +49,22 @@
 }
 
 /* ------------------------------------------------------------------------- *
- * Variante contournée : une seule pastille, sans glyphe. C'est le « voir le
- * plan » des informations pratiques, mesuré 131 × 30 sur le PDF contre
- * 321 × 30 pour la variante pleine.
+ * Variante à UNE SEULE PASTILLE, sans glyphe. C'est le « voir le plan » des
+ * informations pratiques et les boutons du pied de page.
+ *
+ * Elle n'a plus de style propre : même pastille bleue et même texte blanc que
+ * la variante pleine, dont elle ne diffère que par l'absence du glyphe. C'est
+ * le composant PHP qui fait cette différence, pas la feuille de style — d'où
+ * l'absence de règle ici.
+ *
+ * ÉCART ASSUMÉ AVEC LA MAQUETTE, sur demande du client. Le PDF dessine ces
+ * boutons contournés : relevé au pixel sur `HP_06_Frame 54.pdf`, le
+ * remplissage des trois boutons du pied de page vaut (243, 248, 254) — le
+ * panneau — et leur texte #143776, soit du bleu. Le client demande du texte
+ * blanc partout, ce qui impose un aplat foncé : le contraire de contourné.
+ * La classe garde son nom, qui est la clé de variante côté ACF et le mot de la
+ * maquette ; ce qu'elle dessine, lui, a changé.
  * ------------------------------------------------------------------------- */
-.cta--outline .cta__label {
-  border: 1px solid var.$blue-light;
-  // AUCUN fond : la pastille prend la couleur de ce sur quoi elle est posée.
-  //
-  // Elle portait un aplat blanc. Invisible sur les informations pratiques, dont
-  // le fond est blanc — mais dans le pied de page, elle tranchait sur le
-  // panneau bleu pâle. Relevé au pixel sur la maquette (`HP_06_Frame 54.pdf`,
-  // bordures des trois boutons à y=3657, 3816 et 3975) : leur remplissage vaut
-  // (243, 248, 254), soit le panneau à une unité de rendu près. Pas du blanc.
-  background: none;
-  color: var.$blue;
-  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-}
-
-// Le survol INVERSE la pastille : fond bleu, texte blanc. Aucune maquette ne
-// couvre cet état — c'est une proposition, à revalider.
-//
-// Les deux états sont mesurés : bleu sur blanc et blanc sur bleu valent
-// 11,37:1, très au-dessus du seuil de 4,5. Le sens de lecture change, pas la
-// lisibilité.
-.cta--outline:hover .cta__label,
-.cta--outline:focus-visible .cta__label {
-  border-color: var.$blue;
-  background: var.$blue;
-  color: var.$white;
-}
 
 /* ------------------------------------------------------------------------- *
  * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.

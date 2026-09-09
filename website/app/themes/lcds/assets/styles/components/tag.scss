@@ -42,10 +42,10 @@
   }
 }
 
-.tag--turquoise .tag__dot {
-  background: var.$turquoise;
-}
-
-.tag--orange .tag__dot {
-  background: var.$orange;
+// Une règle par couleur, engendrée depuis la correspondance de
+// `basics/variables.scss` : la liste des couleurs n'est écrite qu'une fois.
+@each $nom, $teinte in var.$dot-colors {
+  .tag--#{$nom} .tag__dot {
+    background: $teinte;
+  }
 }
