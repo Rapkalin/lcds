@@ -80,6 +80,13 @@ $fs-h3: clamp(#{fn.toRem(20)}, 0.4167vw + #{fn.toRem(18)}, #{fn.toRem(24)});
 // 16px est déjà le plancher de lisibilité : le corps de texte ne bouge pas.
 $fs-p: fn.toRem(16);
 $fs-cta: fn.toRem(13);
+// Numéro d'étape du parcours. FIXE, contrairement aux titres qui sont fluides,
+// et c'est le CONTRASTE qui l'impose : le turquoise mesure 3,87:1 sur le
+// panneau bleu pâle. Ça passe le seuil de 3 réservé au texte large — 24px et
+// au-delà — mais échoue au 4,5 du texte courant. Laissé sur l'échelle fluide,
+// le numéro rétrécirait sous 24 dès que la vue passe sous 1440, et basculerait
+// du bon côté au mauvais sans que rien ne le signale.
+$fs-step-number: fn.toRem(24);
 
 /* LINE HEIGHTS */
 // Sans unité : suivent la taille de police au lieu de la contredire.

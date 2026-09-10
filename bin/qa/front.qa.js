@@ -836,6 +836,68 @@ window.runFrontQa = async (win) => {
         );
     }
 
+    /* --------------------------------------------------------------------- *
+     * Le numéro d'étape porte le style H3 de la maquette.
+     *
+     * Deux valeurs de Figma ne se recopient pas, et ce sont celles-là qu'on
+     * éprouve : le `font-weight: 90` est le nom de la coupe et doit devenir
+     * 400, et le `line-height: 120 %` doit rendre 29 — l'entier auquel Figma
+     * arrondit — et non 28,8.
+     * --------------------------------------------------------------------- */
+    const numeroEtape = doc.querySelector(".journey__number");
+
+    if (numeroEtape !== null && win.innerWidth === 1440) {
+        const cs = styleOf(numeroEtape);
+        const titreEtape = doc.querySelector(".journey__title");
+        const ct = styleOf(titreEtape);
+        const centre = (node, style, avecPadding) => Math.round(
+            node.getBoundingClientRect().top
+            + (avecPadding ? parseFloat(style.paddingTop) : 0)
+            + parseFloat(style.lineHeight) / 2,
+        );
+
+        assert(
+            `parcours : numéro en Sligoil 24 (${cs.fontFamily.split(",")[0]} ${cs.fontSize})`,
+            cs.fontFamily.startsWith("Sligoil") && cs.fontSize === "24px"
+        );
+        assert(
+            `parcours : numéro turquoise (${cs.color})`,
+            cs.color === "rgb(4, 139, 140)"
+        );
+        assert(
+            `parcours : le poids 90 de Figma vaut 400 en CSS (${cs.fontWeight})`,
+            cs.fontWeight === "400"
+        );
+        assert(
+            `parcours : interligne rendu à l'entier, 29 et non 28,8 (${cs.lineHeight})`,
+            cs.lineHeight === "29px"
+        );
+        assert(
+            `parcours : aucun interlettrage (${cs.letterSpacing})`,
+            cs.letterSpacing === "normal"
+        );
+        // Le calage vertical est la seule chose que le changement de taille
+        // pouvait casser en silence : la formule compare deux boîtes de ligne.
+        assert(
+            `parcours : numéro centré sur la première ligne du titre (${centre(numeroEtape, cs, true)} / ${centre(titreEtape, ct, false)})`,
+            Math.abs(centre(numeroEtape, cs, true) - centre(titreEtape, ct, false)) <= 1
+        );
+    }
+
+    // Le numéro NE RÉTRÉCIT PAS avec la vue, et c'est le contraste qui
+    // l'impose : le turquoise mesure 3,87:1 sur le panneau, conforme au seuil
+    // de 3 du texte large — 24px — mais pas au 4,5 du texte courant. Éprouvé à
+    // TOUTES les largeurs de la campagne, puisque c'est en rétrécissant qu'il
+    // basculerait du bon côté au mauvais.
+    const numeroToutesVues = doc.querySelector(".journey__number");
+
+    if (numeroToutesVues !== null) {
+        assert(
+            `parcours : le numéro reste à 24 quelle que soit la vue (${styleOf(numeroToutesVues).fontSize} à ${win.innerWidth}px)`,
+            styleOf(numeroToutesVues).fontSize === "24px"
+        );
+    }
+
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
     const items = doc.querySelectorAll(".accordion__item");
 

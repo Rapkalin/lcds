@@ -7,6 +7,19 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.16.1
+
+### Corrigé
+
+- **Les numéros d'étape du parcours de soin reprennent la typographie et la
+  couleur de la maquette** : Sligoil en 24, en turquoise, là où ils portaient le
+  style des boutons — Inter en 13, en bleu, avec un fort interlettrage. Ils
+  restent alignés sur la première ligne du titre de l'étape.
+
+  Leur taille ne diminue plus sur les écrans étroits, contrairement aux titres :
+  le turquoise n'est lisible sur le panneau qu'à partir de 24px, seuil au-delà
+  duquel un texte est considéré comme grand.
+
 ## 2.16.0
 
 ### Ajouté

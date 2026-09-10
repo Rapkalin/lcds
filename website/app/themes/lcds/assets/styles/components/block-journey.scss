@@ -81,14 +81,28 @@
     @include journey-grid;
   }
 
+  // Le numéro d'étape prend le style H3 de la maquette, relevé sur Figma :
+  // Sligoil, 24, interligne 120 %, sans interlettrage. Il portait jusqu'ici le
+  // style CTA — Inter 13 avec 8 % d'interlettrage.
+  //
+  // Deux valeurs de Figma ne se recopient PAS, et les deux sont documentées
+  // dans variables.scss :
+  //
+  //   - `font-weight: 90` est le nom de la coupe « Sligoil Micro », pas un
+  //     poids CSS. Le fichier de police porte le 400.
+  //   - `line-height: 120 %` donnerait 28,8. Figma ARRONDIT l'interligne rendu
+  //     au pixel entier, soit 29 ; `$lh-title` restitue cet entier à 24.
   &__number {
     grid-column: 2;
-    font-size: var.$fs-cta;
-    font-weight: var.$fw-cta;
-    line-height: var.$lh-cta;
-    letter-spacing: var.$ls-cta;
-    // Aligné sur la première ligne du titre : (58 − 13) / 2.
-    padding-top: calc((#{var.$fs-h2} * #{var.$lh-title} - #{var.$fs-cta}) / 2);
+    font-family: var.$font-title;
+    font-size: var.$fs-step-number;
+    font-weight: var.$fw-title;
+    line-height: var.$lh-title;
+    color: var.$turquoise;
+    // Aligné sur la première ligne du titre, comme avant : la formule compare
+    // les deux BOÎTES DE LIGNE — (58 − 29) / 2 — et reste juste si l'échelle
+    // typographique bouge.
+    padding-top: calc((#{var.$fs-h2} - #{var.$fs-step-number}) * #{var.$lh-title} / 2);
   }
 
   &__body {

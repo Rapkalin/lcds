@@ -183,6 +183,15 @@ Les relever déviateraient des cotes relevées au pixel sans gain
 d'accessibilité. Ce sont, à noter, les deux couleurs **absentes des variables de
 la bibliothèque Figma** — à faire promouvoir côté design.
 
+**Le turquoise des numéros d'étape** mesure **3,87:1** sur le panneau bleu pâle.
+Conforme, mais au seuil du texte LARGE uniquement : 3:1 à partir de 24px, contre
+4,5:1 en dessous. Le numéro est donc figé à 24 — voir `$fs-step-number` — et une
+assertion le vérifie aux trois largeurs de la campagne.
+
+> Corollaire : **ce turquoise ne peut pas servir à du texte courant** sur ce
+> fond. Il y faudrait une variante assombrie, comme `$orange-on-text` en est une
+> pour l'orange, qui mesurait 3,84:1 dans la même situation.
+
 **La carte blanche du hero** repose sur la photo, pas sur un aplat : le
 contraste de sa frontière n'est **pas mesurable** avant les visuels définitifs.
 À revérifier à ce moment-là.

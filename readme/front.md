@@ -25,6 +25,17 @@ ligne correspondante :
 | Paragraphe | 16 / 1.4 | Inter SemiBold |
 | CTA | 13 / 1, interlettrage 8 % | Inter Medium |
 
+> **Une exception à la fluidité : le numéro d'étape du parcours.** Il porte le
+> style H3 — Sligoil 24, interligne 29 — mais à taille FIXE, quand les titres
+> sont fluides. C'est le contraste qui l'impose : son turquoise mesure 3,87:1
+> sur le panneau bleu pâle, conforme au seuil de 3 du texte large mais pas au
+> 4,5 du texte courant. Sur l'échelle fluide, il rétrécirait sous 24 dès que la
+> vue passe sous 1440 et basculerait du bon côté au mauvais sans rien signaler.
+>
+> D'où `$fs-step-number`, et une assertion jouée aux TROIS largeurs de la
+> campagne — c'est en rétrécissant que le défaut apparaîtrait. « Harmoniser » ce
+> numéro avec `$fs-h3` casserait la conformité.
+
 > **Piège des interlignes annoncés par Figma.** Il affiche 1.2 et 1.4, mais
 > **arrondit au pixel entier** l'interligne rendu — ce que CSS ne fait pas.
 > Mesuré sur les PDF : **58,000** pour un titre de 48 (et non 57,6) et
