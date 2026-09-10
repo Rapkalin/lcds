@@ -31,6 +31,13 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 
 ### Corrigé
 
+- **Le parcours de soin repart plus vite d'une étape à l'autre.** Après une
+  bascule, le défilement en trop était absorbé pendant trop longtemps avant
+  qu'on puisse passer à l'étape suivante : l'attente tombe de 1,6 à 1,2 seconde
+  au pavé tactile, et de 0,6 à 0,5 seconde à la molette. Le reste du
+  comportement ne bouge pas — plusieurs crans rapprochés valent toujours une
+  seule étape, et une seule étape passe par geste.
+
 - **Les boutons secondaires sont de nouveau contournés**, sur fond transparent
   et texte bleu — les quatre du pied de page et le « voir le plan » des
   informations pratiques. Ils reviennent au dessin de la maquette : la pastille

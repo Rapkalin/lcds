@@ -274,7 +274,7 @@ le script qui la porte d'une étape à la suivante. Deux effets voulus :
 - **seul le SENS du geste compte, pas son amplitude** — une roulette lâchée d'un
   coup avance d'une étape, pas de quatre ;
 - **tout ce qui arrive pendant la cadence est absorbé** (`JOURNEY_CADENCE`,
-  600ms — elle couvre la transition CSS de 450ms), donc plusieurs crans
+  500ms — elle couvre la transition CSS de 450ms), donc plusieurs crans
   rapprochés valent un seul.
 
 C'est **un chrono qui règle le rythme, plus une distance**. Chaque carte est donc
@@ -288,14 +288,14 @@ Une cadence fixe ne suffit pas, et c'est le premier défaut qu'elle a produit :
 
 Un geste de pavé tactile — et une roulette sous macOS — n'émet pas un évènement
 mais une **traîne**, qui continue près d'une seconde après que le doigt a quitté
-la surface. À l'expiration des 600ms, l'inertie encore vivante déclenchait une
+la surface. À l'expiration de la cadence, l'inertie encore vivante déclenchait une
 seconde bascule. D'où :
 
 | | rôle |
 | --- | --- |
-| `JOURNEY_CADENCE` (600ms) | plancher après une bascule ; couvre la transition CSS |
+| `JOURNEY_CADENCE` (500ms) | plancher après une bascule ; couvre la transition CSS |
 | `JOURNEY_REPOS` (150ms) | **silence** au-delà duquel un évènement ouvre un geste NEUF |
-| `JOURNEY_PLAFOND` (1600ms) | sortie de secours, comptée depuis la dernière bascule |
+| `JOURNEY_PLAFOND` (1200ms) | sortie de secours, comptée depuis la dernière bascule |
 
 Un geste neuf se reconnaît à un **silence qui le précède**. Tant que les
 évènements se suivent, c'est le même geste qui vit sur son inertie, et il a déjà
@@ -303,6 +303,34 @@ eu son étape — quelle que soit la durée de sa traîne. C'est ce qui rend le
 blocage **catégorique** et non seulement probable : une cadence fixe, elle,
 finissait par expirer sous une traîne d'une seconde et laissait passer une
 seconde carte.
+
+#### Les deux valeurs ont été abaissées, et elles ont chacune un plancher DUR
+
+Retour client : « quand j'arrive sur une étape, si je scroll plusieurs fois
+c'est bloqué […] c'est absorbé pendant trop longtemps ». La cadence est passée
+de 600 à **500ms**, le plafond de 1600 à **1200ms**.
+
+Lequel agit dépend du périphérique, et c'est ce qui rend le réglage
+contre-intuitif : à la molette, avec des crans espacés de plus de
+`JOURNEY_REPOS`, c'est la **cadence**. Au pavé tactile, où le flux ne s'arrête
+jamais et où aucun geste neuf ne peut donc être reconnu, c'est le **plafond
+seul** — donc 1,6 seconde d'attente avant l'ajustement.
+
+Ni l'un ni l'autre ne peut descendre plus bas sans casser quelque chose :
+
+| Constante | Plancher | Ce qui casse en dessous |
+| --- | --- | --- |
+| `JOURNEY_CADENCE` | **450ms** | La transition CSS du rail. L'étape suivante partirait avant que la précédente soit posée. |
+| `JOURNEY_PLAFOND` | **1000ms** | La traîne d'un pavé tactile. Elle franchirait le plafond seule, et un geste passerait deux cartes. |
+
+> **Le second plancher est mesuré, pas supposé.** Plafond ramené à 900 : deux
+> assertions rougissent en annonçant `650px`, soit exactement une étape de trop
+> — « une traîne d'une seconde ne vaut qu'une étape » et « l'arrivée n'emporte
+> pas la première carte ». Il reste 200ms de marge à 1200.
+
+Le seul levier restant serait de **raccourcir la transition CSS**, ce qui
+abaisserait mécaniquement le plancher de la cadence. Ça change le glissement
+lui-même, donc le ressenti du bloc : écarté pour cette raison.
 
 Le plafond n'est pas décoratif : sans lui, un défilement **continu** — deux
 doigts qui ne se lèvent pas — n'ouvrirait jamais de geste neuf et la section

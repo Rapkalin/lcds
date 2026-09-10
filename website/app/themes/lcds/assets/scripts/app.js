@@ -330,9 +330,16 @@ const initAccordions = () => {
  * steps stay stacked, nothing is confiscated, and every word remains reachable.
  */
 // Durée pendant laquelle le défilement est absorbé après une bascule d'étape.
-// Elle couvre la transition CSS de 0,45s : en dessous, l'étape suivante
-// partirait avant que la précédente soit posée.
-const JOURNEY_CADENCE = 600;
+//
+// PLANCHER DUR : la transition CSS du rail, 0,45s. En dessous, l'étape suivante
+// partirait avant que la précédente soit posée. Les 50ms qui restent sont la
+// marge, et c'est tout ce qui séparait 600 de ce plancher.
+//
+// Ramenée de 600 à 500 sur retour client : l'absorption durait trop longtemps
+// et il fallait attendre pour repartir. Descendre plus bas exige de raccourcir
+// d'abord la transition dans block-journey.scss — les deux ne peuvent pas
+// diverger.
+const JOURNEY_CADENCE = 500;
 
 // Silence au-delà duquel un évènement de molette ouvre un geste NEUF.
 //
@@ -346,7 +353,16 @@ const JOURNEY_REPOS = 150;
 // Sortie de secours, comptée depuis la dernière bascule : un défilement qui ne
 // s'interrompt JAMAIS — deux doigts qui ne se lèvent pas — avance tout de même,
 // sinon la section deviendrait un cul-de-sac.
-const JOURNEY_PLAFOND = 1600;
+//
+// C'est LUI qui gouverne l'attente sur un pavé tactile, où le flux ne s'arrête
+// pas et où `JOURNEY_REPOS` ne peut donc pas reconnaître de geste neuf.
+// Ramené de 1600 à 1200 sur le même retour client.
+//
+// PLANCHER DUR : la traîne d'un geste de pavé tactile, qui dure PRÈS D'UNE
+// SECONDE après que le doigt a quitté la surface. Sous 1000, cette inertie
+// franchirait le plafond toute seule et un seul geste passerait deux cartes —
+// le défaut que ce dispositif corrige. Il reste 200ms de marge.
+const JOURNEY_PLAFOND = 1200;
 
 const initJourneys = () => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
