@@ -725,6 +725,37 @@ window.runFrontQa = async (win) => {
         }
     }
 
+    /* --------------------------------------------------------------------- *
+     * Le survol suit partout le principe du bouton secondaire.
+     *
+     * Trois familles portent la même construction — contournées au repos,
+     * remplies du VOILE au survol, bordure effacée : le bouton d'action
+     * secondaire, les flèches de carrousel et l'icône d'accordéon. Éprouvées
+     * ensemble : c'est la règle qui ne doit pas souffrir d'exception, et une
+     * exception ajoutée plus tard doit faire rougir la campagne.
+     *
+     * Lu sur la RÈGLE, la campagne n'ayant pas de pointeur.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        const survols = [
+            [".cta--outline:hover .cta__label", "bouton secondaire"],
+            [".carousel__button:hover", "flèche de carrousel"],
+            [".accordion__trigger:hover", "icône d'accordéon"],
+        ];
+
+        for (const [selecteur, nom] of survols) {
+            assert(
+                `survol : ${nom} — le voile remplit, la bordure s'efface`,
+                trouverRegle(doc, selecteur, (regle) => (
+                    regle.style.backgroundColor === "rgba(0, 56, 122, 0.3)"
+                        && regle.style.borderColor === "rgba(0, 0, 0, 0)"
+                        ? true
+                        : null
+                )) === true
+            );
+        }
+    }
+
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
     const items = doc.querySelectorAll(".accordion__item");
 

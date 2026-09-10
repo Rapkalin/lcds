@@ -90,10 +90,12 @@
     transition: border-color var.$fade, background-color var.$fade;
   }
 
+  // Même principe que le bouton d'action secondaire et que les flèches de
+  // carrousel : le VOILE remplit la pastille, la bordure s'efface.
   &__trigger:hover &__icon,
   &__trigger:focus-visible &__icon {
-    border-color: var.$blue;
-    background: var.$white;
+    border-color: transparent;
+    background: var.$blue-veil;
   }
 
   &__panel {

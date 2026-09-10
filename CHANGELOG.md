@@ -31,6 +31,10 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 
 ### Corrigé
 
+- **Les flèches des carrousels et les boutons d'accordéon réagissent au survol
+  comme les boutons secondaires** : un voile bleu remplit la pastille, au lieu
+  du fond blanc qu'ils prenaient jusqu'ici.
+
 - **La galerie de « l'histoire » n'a plus de flèches.** Elle avance avec le
   défilement de la page. Le glisser-déposer à la souris disparaît avec elles :
   les flèches en étaient l'alternative accessible, et un geste sans alternative

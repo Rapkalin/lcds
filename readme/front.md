@@ -1380,6 +1380,45 @@ respiration de fin — ne supportent pas le rail des cartes inclinées : la boî
 englobante d'une carte pivotée gonflait la somme attendue de 69px, et son débord
 de 12px ramenait la respiration finale de 36 à 24.
 
+### Le survol : un VOILE remplit, la bordure s'efface
+
+Retour client : appliquer aux boutons et aux accordéons le principe de survol du
+bouton secondaire — celui de « voir sur doctolib », au pied de page.
+
+**Le principe.** Un élément CONTOURNÉ au repos — transparent, bordure de 1px —
+se remplit au survol du même voile `rgba(0, 56, 122, 0.3)` que porte sa bordure,
+et cette bordure s'efface. Le relevé Figma l'a fixé sur le bouton secondaire ;
+il vaut désormais pour toute la famille.
+
+| Famille | Repos | Survol |
+| --- | --- | --- |
+| Bouton d'action secondaire | transparent, bordure au voile | voile plein, bordure effacée |
+| Flèches de carrousel | transparent, bordure `$blue-light` | voile plein, bordure effacée |
+| Icône d'accordéon | transparent, bordure `$blue-light` | voile plein, bordure effacée |
+
+**La bordure s'efface, et ce n'est pas cosmétique** : deux voiles à 30 %
+superposés ne composent pas 30 %. L'alpha effectif monte à 0,51 et dessine un
+anneau de 51 unités d'écart avec l'intérieur — mesuré lors du relevé du bouton
+secondaire.
+
+#### Trois cas où le principe ne s'applique PAS
+
+- **Le bouton d'action primaire** et **le « Prendre RDV » de l'en-tête** sont des
+  aplats PLEINS. Un voile de bleu à 30 % posé sur du bleu plein ne change
+  strictement rien : le principe y est mathématiquement inopérant. Ils gardent
+  leur assombrissement, qui en est l'équivalent pour un fond opaque.
+- **Le déclencheur des cartes de technologie** l'applique DÉJÀ, mais en blanc :
+  `rgba(255, 255, 255, .16)` au repos, `.32` au survol. Il est posé sur une
+  photo sombre, où un voile bleu serait invisible. Même geste, transposé au
+  fond.
+
+> **Les trois assertions sont jouées ensemble**, sur une liste de sélecteurs et
+> non recopiées. Ajouter une quatrième famille contournée demande une ligne dans
+> la liste, et l'oublier laisse un trou visible à la lecture. Éprouvées par
+> mutation : le survol du carrousel remis au blanc ne fait rougir QUE lui, donc
+> les trois mordent chacune sur son élément au lieu de mesurer trois fois la
+> même chose.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page

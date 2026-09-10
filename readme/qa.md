@@ -213,6 +213,11 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > d'évitement, hors écran, est exclu de la boucle et son état FOCALISÉ éprouvé
 > à la place. Rien de tout cela n'était couvert avant.
 
+- **Principe de survol** : les trois familles contournées — bouton secondaire,
+  flèches de carrousel, icône d'accordéon — remplissent du voile et effacent
+  leur bordure. Éprouvées ENSEMBLE, sur une liste de sélecteurs : la règle ne
+  souffre pas d'exception, et une exception ajoutée plus tard doit rougir.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé
