@@ -1,22 +1,21 @@
 @use "../basics/variables" as var;
 @use "../basics/functions" as fn;
 
-// Maquette : 1440 × 900. Le ratio fait la hauteur sur les écrans plus étroits ;
-// au-delà de 1440 la hauteur dessinée sert de plafond, sinon le hero occuperait
-// 1200px de haut sur un écran large. `object-fit` absorbe l'écart de cadrage.
+// Le hero fait TOUJOURS une hauteur d'écran, demande client.
 //
-// La hauteur de la VUE est le second plafond, et il est indispensable : sans lui
-// le hero gardait ses 900px sur un écran plus bas, et la carte « Prendre RDV »
-// passait sous la ligne de flottaison — mesuré à 63px de coupe sur une vue de
-// 813px, 163px sur une vue de 713px. `svh` et non `vh` : sur mobile, la barre
-// d'adresse ne doit pas rogner la carte.
+// ÉCART ASSUMÉ AVEC LA MAQUETTE, qui le dessine en 1440 × 900. Le rapport 16/10
+// qui donnait cette hauteur a disparu : sur une vue de 1100 le hero s'arrêtait
+// à 900 et laissait voir la section suivante sous lui. `object-fit` absorbe
+// l'écart de cadrage, comme il absorbait déjà celui des écrans étroits.
+//
+// `svh` et non `vh`, comme les sections : sur mobile, la barre d'adresse ne
+// doit ni rogner la carte « Prendre RDV » ni faire déborder le hero d'un écran.
 .hero {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  aspect-ratio: 16 / 10;
-  max-height: min(#{fn.toRem(900)}, 100svh);
+  height: 100svh;
   padding: 0 var.$header-padding fn.toRem(24);
 
   // PAS de `overflow: hidden` : le visuel doit déborder d'un rayon SOUS la
@@ -115,8 +114,6 @@
  * ------------------------------------------------------------------------- */
 @media (max-width: var.$bp-mobile) {
   .hero {
-    aspect-ratio: 3 / 4;
-    max-height: none;
     padding: 0 fn.toRem(20) fn.toRem(20);
 
     &__card {

@@ -137,15 +137,33 @@ vide, disproportionné sur un écran étroit.
 Le corps de texte, lui, reste à **16px partout** : c'est déjà le plancher de
 lisibilité.
 
-## Le hero est borné par la hauteur de la vue
+## Le hero fait une hauteur d'écran, toujours
 
-`max-height: min(900px, 100svh)`. Le second plafond n'est pas cosmétique : sans
-lui le hero gardait ses 900px sur un écran plus bas, et **la carte « Prendre
-RDV » passait sous la ligne de flottaison** — mesuré à 63px de coupe sur une vue
-de 813px, 163px sur une vue de 713px, sur toutes les tailles d'écran portable
-courantes.
+`height: 100svh`. **ÉCART ASSUMÉ AVEC LA MAQUETTE**, demandé par le client :
+le PDF le dessine en 1440 × 900, et le rapport `16 / 10` qui produisait cette
+hauteur a disparu. Sur une vue plus haute que 900 le hero s'arrêtait avant le
+bas de l'écran et laissait voir la section suivante sous lui. `object-fit`
+absorbe l'écart de cadrage, comme il absorbait déjà celui des écrans étroits.
 
-`svh` et non `vh` : sur mobile, la barre d'adresse ne doit pas rogner la carte.
+C'est aussi ce qui aligne le hero sur les autres volets, qui portent tous
+`min-height: 100svh`.
+
+Mesuré à 1440 de large, hauteur du hero et bas de la carte « Prendre RDV » :
+
+| Vue | Hero | Bas de la carte |
+| --- | --- | --- |
+| 700 | 700 | 676 |
+| 900 | 900 | 876 |
+| 1100 | 1100 | 1076 |
+| 1400 | 1400 | 1376 |
+
+La carte reste à 24px du bas quelle que soit la vue — c'est ce que l'ancien
+plafond `min(900px, 100svh)` protégeait, et le plein écran le donne
+directement. Le défaut d'origine, mesuré avant ce plafond : 63px de coupe sur
+une vue de 813px, 163px sur une vue de 713px.
+
+`svh` et non `vh` : sur mobile, la barre d'adresse ne doit ni rogner la carte
+ni faire déborder le hero d'un écran.
 
 > Corollaire pour les assertions : la hauteur du hero dépend de la vue, donc les
 > positions **absolues** de tout ce qui suit aussi. Mesurer depuis le haut de la

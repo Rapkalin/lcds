@@ -100,13 +100,35 @@ window.runFrontQa = async (win) => {
         const cardBox = card.getBoundingClientRect();
         const round = (value) => Math.round(value);
 
-        // Le hero vaut la hauteur dessinée OU celle de la vue, la plus petite :
-        // sans ce second plafond la carte d'appel passait sous la ligne de
-        // flottaison sur tout écran de moins de 900px de haut.
-        const heroAttendu = Math.min(900, win.innerHeight);
+        // Le hero fait UNE HAUTEUR D'ÉCRAN, quelle qu'elle soit — demande
+        // client, écart assumé avec la maquette qui le dessine en 1440 × 900.
+        // Le rapport 16/10 qui donnait cette hauteur laissait voir la section
+        // suivante sous lui dès que la vue dépassait 900px.
         assert(
-            `hauteur du hero = min(900, vue) = ${heroAttendu} (${round(heroBox.height)})`,
-            round(heroBox.height) === heroAttendu
+            `hauteur du hero = hauteur de la vue = ${win.innerHeight} (${round(heroBox.height)})`,
+            round(heroBox.height) === win.innerHeight
+        );
+
+        // La mesure rendue NE SUFFIT PAS, et c'est la mutation qui l'a montré :
+        // la campagne joue sur une vue de 900, et l'ancienne écriture
+        // `aspect-ratio: 16/10` + `max-height: min(900px, 100svh)` y rend
+        // exactement 900 elle aussi. La régression réelle passait donc au
+        // travers. On éprouve la RÈGLE, et l'ABSENCE des deux déclarations qui
+        // se disputeraient la hauteur.
+        const regleHero = trouverRegle(doc, ".hero", (regle) => (
+            regle.selectorText === ".hero" && regle.style.height !== "" ? regle.style : null
+        ));
+
+        assert(
+            "hero : une hauteur d'écran déclarée, sans rapport de forme ni plafond concurrent"
+            + ` (${regleHero === null
+                ? "règle introuvable"
+                : `${regleHero.height}, ratio ${regleHero.aspectRatio || "aucun"},`
+                    + ` plafond ${regleHero.maxHeight || "aucun"}`})`,
+            regleHero !== null
+                && regleHero.height === "100svh"
+                && regleHero.aspectRatio === ""
+                && regleHero.maxHeight === ""
         );
         assert(`largeur de la carte = 327 (${round(cardBox.width)})`, round(cardBox.width) === 327);
         assert(

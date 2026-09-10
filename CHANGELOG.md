@@ -7,6 +7,17 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.18.0
+
+### Modifié
+
+- **La bannière d'accueil occupe toujours toute la hauteur de l'écran.** Elle
+  était calée sur un rapport 16/10 plafonné à 900px : sur un écran plus haut,
+  elle s'arrêtait avant le bas et laissait voir la section suivante sous elle.
+  La carte « Prendre RDV » reste à 24px du bas quelle que soit la hauteur —
+  vérifié de 700 à 1400. Écart assumé avec la maquette, qui la dessine en
+  1440 × 900.
+
 ## 2.17.0
 
 ### Ajouté
