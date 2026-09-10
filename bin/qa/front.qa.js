@@ -2150,30 +2150,65 @@ window.runFrontQa = async (win) => {
     // Sans ce cas, la campagne mesurait le titre contre l'aplat de repli de la
     // carte — un aplat que la photo recouvrait entièrement. Elle passait donc
     // en mesurant une couleur que personne ne voit.
-    const couvertParUneImage = (node) => {
+    // Un fond que le contrôleur ne peut pas lire : une image ou un SVG posé
+    // par-dessus. On rend alors `null` — « indécidable » — plutôt qu'une
+    // couleur fausse.
+    //
+    // Le SVG a été ajouté pour la barre de navigation : quand le script trace
+    // sa silhouette, les pastilles perdent leur fond blanc et c'est le `<path>`
+    // qui peint. Remonter les ancêtres atterrissait alors sur le `body` et
+    // annonçait du bleu sur bleu. Même cas que les images du hero, un élément
+    // près.
+    const couvertParUnDessin = (node) => {
         const boite = node.getBoundingClientRect();
+        const dessins = [...node.querySelectorAll("img, svg")];
 
-        return [...node.querySelectorAll("img")].some((image) => {
-            const cs = styleOf(image);
+        return dessins.some((dessin) => {
+            const cs = styleOf(dessin);
 
             if (cs.position !== "absolute" && cs.position !== "fixed") {
                 return false;
             }
 
-            const cadre = image.getBoundingClientRect();
+            const cadre = dessin.getBoundingClientRect();
 
             return cadre.width >= boite.width - 1 && cadre.height >= boite.height - 1;
         });
     };
     // Le fond effectif : on remonte jusqu'à un aplat opaque. Une image de fond
     // rend la mesure impossible — on écarte plutôt que de deviner.
+    // Le fond peint par un PSEUDO-ÉLÉMENT couvrant. Le panneau du pied de page
+    // porte le sien sur un `::before` en absolu calé sur les quatre bords —
+    // remonter les ancêtres ne le voyait pas, et le contrôle atterrissait sur
+    // le `body`. Blanc, il passait par chance ; coloré, il annonçait 1,00:1 sur
+    // 26 éléments alors que le texte est parfaitement lisible sur son panneau.
+    //
+    // Le `bottom` n'est PAS exigé à zéro : le panneau du pied de page déborde
+    // volontairement par le bas pour masquer le visuel révélé, et un débord
+    // couvre l'élément tout autant.
+    const fondDuPseudo = (node) => {
+        const cs = styleOf(node, "::before");
+
+        if (cs.content === "none" || cs.position !== "absolute") {
+            return null;
+        }
+
+        if (cs.top !== "0px" || cs.left !== "0px" || cs.right !== "0px") {
+            return null;
+        }
+
+        const fond = couleur(cs.backgroundColor);
+
+        return fond !== null && fond.a === 1 ? fond.rgb : null;
+    };
+
     const fondDe = (node) => {
         let courant = node;
 
         while (courant !== null && courant.nodeType === 1) {
             const cs = styleOf(courant);
 
-            if (cs.backgroundImage !== "none" || couvertParUneImage(courant)) {
+            if (cs.backgroundImage !== "none" || couvertParUnDessin(courant)) {
                 return null;
             }
 
@@ -2181,6 +2216,12 @@ window.runFrontQa = async (win) => {
 
             if (fond !== null && fond.a === 1) {
                 return fond.rgb;
+            }
+
+            const pseudo = fondDuPseudo(courant);
+
+            if (pseudo !== null) {
+                return pseudo;
             }
 
             courant = courant.parentElement;
@@ -2198,7 +2239,16 @@ window.runFrontQa = async (win) => {
             .join(" ")
             .trim();
 
-        if (texte === "" || !affiche(node) || node.closest(".screen-reader-text") !== null) {
+        // `.skip-link` est l'AUTRE motif de masquage du thème, à côté de
+        // `.screen-reader-text` : il pousse l'élément à `left: -9999px` au lieu
+        // de le réduire à un pixel. Son texte n'est donc jamais lu là où il est
+        // mesuré ici — il ne devient visible qu'à la prise de focus, où il
+        // reçoit un fond blanc. C'est cet état-là qui compte, et il est éprouvé
+        // juste après la boucle.
+        const masque = node.closest(".screen-reader-text") !== null
+            || node.closest(".skip-link") !== null;
+
+        if (texte === "" || !affiche(node) || masque) {
             continue;
         }
 
@@ -2219,6 +2269,19 @@ window.runFrontQa = async (win) => {
             insuffisants.push(`${node.tagName.toLowerCase()} ${mesure.toFixed(2)}:1 < ${seuil}`);
         }
     }
+
+    // Le lien d'évitement, exclu de la boucle ci-dessus parce qu'il est hors
+    // écran, est éprouvé sur la RÈGLE de son état visible : à la prise de
+    // focus il doit recevoir un fond OPAQUE, sans quoi son texte se poserait
+    // sur ce qu'il recouvre — et ce serait le seul moment où on le lit.
+    assert(
+        "lien d'évitement : fond opaque à la prise de focus",
+        trouverRegle(doc, ".skip-link", (regle) => {
+            const fond = couleur(regle.style.backgroundColor);
+
+            return fond !== null && fond.a === 1 ? true : null;
+        }) === true
+    );
 
     // Le bouton d'action était à 3,84:1 : blanc sur l'orange de la maquette,
     // 13px. D'où la variante assombrie $orange-on-text.

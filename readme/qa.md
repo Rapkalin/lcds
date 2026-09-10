@@ -206,6 +206,13 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   seul qui ait encore des flèches, et apparier un rail aux boutons d'un autre
   mesurait un attelage inexistant.
 
+> **Le contrôle de contraste passait par chance sur trois familles.** Il
+> remontait les ancêtres jusqu'au `body`, le trouvait blanc, et concluait juste
+> sans mesurer le bon fond. Il sait désormais lire un fond posé par un
+> **pseudo-élément** et reconnaître un élément **couvert par un SVG** ; le lien
+> d'évitement, hors écran, est exclu de la boucle et son état FOCALISÉ éprouvé
+> à la place. Rien de tout cela n'était couvert avant.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé

@@ -1267,19 +1267,36 @@ côtés reçoivent `$page-outside`.
 - **Un élément FIXÉ se cale sur la fenêtre, pas sur son conteneur.** Borner
   `.footer-reveal` ne bornait pas son visuel révélé, ni l'en-tête au-dessus du
   hero. Les deux portent leur propre borne et des marges automatiques.
-- **La teinte des côtés va sur `html`, jamais sur `body`.** Un fond sur `html`
-  est propagé au canevas, donc il couvre la fenêtre entière. Et surtout : un
-  `body` coloré a fait tomber le contrôle de contraste de la campagne à
-  **1,00:1 sur 26 éléments**. Le panneau du pied de page porte son fond sur un
-  pseudo-élément, qu'un contrôleur remontant les ancêtres ne voit pas — il
-  atterrissait sur le `body`. Blanc, il passait par chance ; coloré, il
-  annonçait du bleu sur bleu. Le `body` reste donc l'aplat blanc, borné lui
-  aussi.
+- **La teinte des côtés va sur `html`, jamais sur `body`.** Un fond posé sur
+  `html` est propagé au canevas, donc il couvre la fenêtre entière quelles que
+  soient les largeurs en dessous.
 - **Une flèche parcourt maintenant presque toute la course.** Le rail montre
   plus d'images d'un coup, donc il en reste moins à parcourir : à 1440, une
   page vaut 1440 pour une course de 1407. Les assertions bornent l'attendu au
   lieu de maquiller l'écart. **À revalider en recette** — faire défiler d'une
   largeur de vignette plutôt que d'une pleine page reste possible.
+
+#### Ce que la teinte a révélé dans la recette
+
+En cours de mise au point, une version intermédiaire posait cette teinte sur le
+`body`. Elle a fait tomber le contrôle de contraste à 1,00:1 sur 26 éléments —
+et c'est ce qui a mis au jour une lacune qui n'a rien à voir avec elle.
+
+Le contrôle **passait par chance** sur trois familles d'éléments :
+il remontait les ancêtres jusqu'au `body`, le trouvait blanc, et concluait juste
+sans mesurer le bon fond. Coloré, il a annoncé 1,00:1 sur 26 éléments. Les trois
+sont corrigés à la source :
+
+| Ce qu'il ne savait pas lire | Où | Correctif |
+| --- | --- | --- |
+| Un fond peint par un **pseudo-élément** | Le panneau du pied de page | `fondDuPseudo`, qui accepte un `::before` en absolu calé sur les bords |
+| Un fond peint par un **SVG** | La silhouette de la barre de navigation | `couvertParUneImage` devient `couvertParUnDessin` |
+| Un texte **hors écran** | Le lien d'évitement, à `left: -9999px` | Exclu de la boucle, et son état FOCALISÉ éprouvé à la place |
+
+Le dernier point vaut d'être souligné : exclure sans remplacer aurait supprimé
+tout contrôle sur le seul instant où ce lien se lit. Une assertion vérifie
+désormais qu'il reçoit un fond opaque à la prise de focus — la campagne n'en
+avait aucune sur lui auparavant.
 
 > `$page-outside` vaut `$blue`, **arbitré** : aucune maquette ne couvre ce cas.
 > Le bleu du système se lit comme « hors de la page » quelle que soit la section
