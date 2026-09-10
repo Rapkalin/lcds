@@ -7,6 +7,67 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.15.0
+
+### Ajouté
+
+- **La section qui suit la bannière d'accueil remonte par-dessus elle**, comme
+  un volet qui la referme peu à peu. Peu importe quelle section est placée là :
+  l'effet suit l'ordre choisi dans l'administration, et vaut pour celle qui s'y
+  retrouvera si l'ordre change. Désactivé pour qui demande à réduire les
+  animations.
+- **Les sections de la page d'accueil ont les coins du haut arrondis**, et
+  s'emboîtent comme des panneaux empilés — sauf la première sous la bannière,
+  qui arrive après elle sans la recouvrir. Écart assumé avec la maquette, qui
+  les dessine à angles francs.
+- **Les carrousels ne s'arrêtent plus au bord gauche.** La première image garde
+  sa place à l'arrivée ; au défilement, les visuels sortent par le bord de la
+  page comme ils le font déjà à droite. Vaut pour la galerie de « l'histoire »
+  et pour les cartes de technologies.
+
+### Modifié
+
+- **La galerie de « l'histoire » n'a plus de flèches.** Elle avance avec le
+  défilement de la page. Le glisser-déposer à la souris disparaît avec elles :
+  les flèches en étaient l'alternative accessible, et un geste sans alternative
+  ne doit pas exister. L'indicateur d'avancement, lui, reste.
+- **Un seul panneau dépliable reste ouvert à la fois.** Déplier une entrée de
+  l'accordéon des traitements referme la précédente, et les cartes de
+  technologie se comportent de même entre elles. Les deux ensembles restent
+  indépendants : ouvrir une carte ne ferme pas l'accordéon. La règle vaut aussi
+  à l'ouverture de la page, si plusieurs panneaux sont cochés « ouvert ».
+- **Les flèches des carrousels et les boutons d'accordéon réagissent au survol
+  comme les boutons secondaires** : un voile bleu remplit la pastille, au lieu
+  du fond blanc qu'ils prenaient.
+- **Les liens du pied de page ne se soulignent plus au survol** : le texte
+  s'épaissit à la place. Vaut pour la navigation comme pour les liens légaux.
+
+### Corrigé
+
+- **Le parcours de soin repart plus vite d'une étape à l'autre.** Après une
+  bascule, le défilement en trop était absorbé trop longtemps : l'attente tombe
+  de 1,6 à 1,2 seconde au pavé tactile, et de 0,6 à 0,5 seconde à la molette. Le
+  reste ne bouge pas — plusieurs crans rapprochés valent toujours une seule
+  étape.
+- **La photo révélée en bas de page disparaissait** derrière un aplat, à cause
+  du travail sur la largeur maximale. L'ordre d'affichage est désormais déclaré
+  explicitement au lieu de dépendre d'une subtilité de peinture.
+
+### Pour les contributeurs et les développeurs
+
+- **L'accordéon est un composant réutilisable**, comme l'étaient déjà toutes les
+  sections. Le poser sur une autre page ne demande qu'un appel avec ses
+  arguments — voir [`readme/contribution.md`](readme/contribution.md).
+- **Une largeur maximale de page existe mais est SUSPENDUE.** Le dispositif est
+  en place et borne l'en-tête, le contenu et le pied de page ensemble ; sa
+  valeur est réglée sur la largeur de la vue, donc sans effet. Une seule valeur
+  à changer pour l'activer.
+- Le contrôle de contraste de la recette **passait par chance** sur trois
+  familles d'éléments : il ne savait lire ni un fond posé par un pseudo-élément,
+  ni un fond peint par un SVG, et mesurait le lien d'évitement là où il n'est
+  jamais visible. Corrigé, et le lien d'évitement gagne une couverture qu'il
+  n'avait pas.
+
 ## 2.14.0
 
 ### Ajouté
@@ -14,15 +75,6 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 - **Les boutons d'action principaux se comportent comme le menu au survol.**
   Le glyphe et le libellé forment une silhouette continue dont le collet s'étire
   quand le curseur arrive, avec le même ressort que les entrées du menu.
-- **Les sections de la page d'accueil ont les coins du haut arrondis**, et
-  s'emboîtent les unes sur les autres comme des panneaux empilés — sauf la
-  première sous la bannière d'accueil, qui arrive après elle sans la recouvrir.
-  C'est un écart assumé avec la maquette, qui les dessine à angles francs.
-- **La section qui suit la bannière d'accueil remonte par-dessus elle**, comme
-  un volet qui la referme peu à peu. Peu importe quelle section est placée là :
-  l'effet suit l'ordre choisi dans l'administration, et vaut pour celle qui se
-  retrouvera sous la bannière si l'ordre change. Désactivé pour qui demande à
-  réduire les animations.
 - **La galerie de la section « l'histoire » défile avec la page.** Arrivé sur
   elle, le défilement fait avancer les visuels horizontalement, puis reprend son
   cours normal une fois le dernier atteint. Les flèches continuent de naviguer.
@@ -30,36 +82,6 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
   animations : la galerie y reste un carrousel ordinaire.
 
 ### Corrigé
-
-- **Les flèches des carrousels et les boutons d'accordéon réagissent au survol
-  comme les boutons secondaires** : un voile bleu remplit la pastille, au lieu
-  du fond blanc qu'ils prenaient jusqu'ici.
-
-- **La galerie de « l'histoire » n'a plus de flèches.** Elle avance avec le
-  défilement de la page. Le glisser-déposer à la souris disparaît avec elles :
-  les flèches en étaient l'alternative accessible, et un geste sans alternative
-  ne doit pas exister. L'indicateur d'avancement, lui, reste.
-- **Les carrousels ne s'arrêtent plus au bord gauche.** La première image garde
-  sa place à l'arrivée, mais au défilement les visuels sortent par le bord de la
-  page comme ils le font déjà à droite. Vaut pour la galerie de « l'histoire »
-  et pour les cartes de technologies.
-- **La page est bornée à 1920 px de large**, centrée, avec les côtés au bleu du
-  cabinet sur les écrans plus larges. Sans cette borne, les carrousels
-  s'étalaient sans fin.
-
-- **Un seul panneau dépliable reste ouvert à la fois.** Déplier une entrée de
-  l'accordéon des traitements referme la précédente, et les cartes de
-  technologie se comportent de même entre elles. Les deux ensembles restent
-  indépendants : ouvrir une carte ne ferme pas l'accordéon. La règle s'applique
-  aussi à l'ouverture de la page, si plusieurs panneaux sont cochés « ouvert »
-  dans l'administration.
-
-- **Le parcours de soin repart plus vite d'une étape à l'autre.** Après une
-  bascule, le défilement en trop était absorbé pendant trop longtemps avant
-  qu'on puisse passer à l'étape suivante : l'attente tombe de 1,6 à 1,2 seconde
-  au pavé tactile, et de 0,6 à 0,5 seconde à la molette. Le reste du
-  comportement ne bouge pas — plusieurs crans rapprochés valent toujours une
-  seule étape, et une seule étape passe par geste.
 
 - **Les boutons secondaires sont de nouveau contournés**, sur fond transparent
   et texte bleu — les quatre du pied de page et le « voir le plan » des

@@ -1428,6 +1428,50 @@ secondaire.
 > les trois mordent chacune sur son élément au lieu de mesurer trois fois la
 > même chose.
 
+### Les liens du pied de page s'épaississent au lieu de se souligner
+
+Retour client : au survol, pas de soulignement — l'épaisseur passe à **600**.
+
+`$fw-cta-hover`, à côté de `$fw-cta` : les épaisseurs du thème sont nommées par
+RÔLE, pas par graisse. Réutiliser `$fw-p`, qui vaut aussi 600, aurait couplé le
+survol d'un lien à la graisse des paragraphes — deux choses sans rapport qui
+auraient bougé ensemble.
+
+**La famille n'est pas redéclarée.** Ces liens héritent déjà de la pile Inter du
+`body`, et une assertion vérifie que rien ne la redéclare en chemin. La poser
+ici en ferait une seconde source, qui divergerait à la première évolution de la
+pile.
+
+> **Portée plus large que la demande** : la navigation et les liens légaux
+> partagent la classe `site-footer__list`. Les deux changent ensemble.
+
+#### L'épaississement élargit le texte — mesuré, et sans conséquence
+
+Une graisse plus forte prend plus de place. Mesuré sur le lien le plus large de
+chaque liste : la liste grandit de **2 à 3px**. Les listes étant alignées à
+gauche dans une colonne de 440, le bord gauche ne bouge pas et la croissance se
+fait dans du vide.
+
+Aucune compensation n'a donc été posée. Elle l'aurait été si le décalage avait
+déplacé un voisin — c'est le défaut classique de ce genre de survol, et il ne se
+voit qu'en le mesurant.
+
+#### Ce que « la bonne police » veut dire ici
+
+Le CSS est juste : la pile est déclarée sur le `body` et correctement héritée.
+**Mais le thème n'embarque aucun fichier de police** — pas de `assets/fonts/`,
+aucun `@font-face`. Inter s'affiche sur un poste où elle est installée, et sur
+lui seul.
+
+Vérifié : `document.fonts.check('13px Inter')` répond vrai sur la machine de
+développement, et une mesure au canevas confirme une largeur différente de
+`system-ui`. Ça ne dit rien du rendu chez un visiteur.
+
+Tant que les `.woff2` ne sont pas déposés et les `@font-face` déclarés — voir
+« Polices — pas encore auto-hébergées » plus haut, Inter étant sous SIL OFL et
+donc libre —, **valider une demande de typographie à l'œil dépend du poste qui
+regarde**.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page

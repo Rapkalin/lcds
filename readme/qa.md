@@ -218,6 +218,11 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   leur bordure. Éprouvées ENSEMBLE, sur une liste de sélecteurs : la règle ne
   souffre pas d'exception, et une exception ajoutée plus tard doit rougir.
 
+- **Liens du pied de page** : pas de soulignement au repos ni au survol, où
+  l'épaisseur passe à 600 — les deux ensemble, sans quoi un soulignement
+  réintroduit donnerait deux signaux pour un. Et la pile Inter est bien
+  HÉRITÉE du `body`, ce qui interdit qu'on la redéclare en chemin.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé

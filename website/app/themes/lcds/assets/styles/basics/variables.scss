@@ -100,6 +100,9 @@ $lh-cta: 1;
 $fw-title: 400;
 $fw-p: 600;
 $fw-cta: 500;
+// Le même style, ÉPAISSI au survol. Les liens textuels du pied de page s'en
+// servent à la place d'un soulignement : demande du client.
+$fw-cta-hover: 600;
 
 /* LETTER SPACING */
 // 8 % de la taille dans la maquette. En `em`, la valeur suit n'importe quelle

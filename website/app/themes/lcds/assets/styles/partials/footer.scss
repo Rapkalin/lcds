@@ -236,9 +236,15 @@
       letter-spacing: var.$ls-cta;
       text-transform: uppercase;
 
+      // Ni soulignement ni changement de teinte : c'est l'ÉPAISSEUR qui
+      // signale le survol. Demande du client.
+      //
+      // La famille n'est pas redéclarée : ces liens héritent déjà de la pile
+      // Inter du `body`. La redéclarer ici en ferait une seconde source, qui
+      // divergerait le jour où la pile change.
       &:hover,
       &:focus-visible {
-        text-decoration-line: underline;
+        font-weight: var.$fw-cta-hover;
       }
     }
   }

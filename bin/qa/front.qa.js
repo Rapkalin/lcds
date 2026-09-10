@@ -764,6 +764,41 @@ window.runFrontQa = async (win) => {
         }
     }
 
+    /* --------------------------------------------------------------------- *
+     * Les liens textuels du pied de page.
+     *
+     * Au survol : PAS de soulignement, l'épaisseur passe à 600. Les deux vont
+     * ensemble — remettre un soulignement en gardant l'épaisseur donnerait
+     * deux signaux là où le client n'en veut qu'un.
+     *
+     * L'état de survol est lu sur la règle, la campagne n'ayant pas de
+     * pointeur ; la famille, elle, se mesure sur l'état rendu.
+     * --------------------------------------------------------------------- */
+    const lienPied = doc.querySelector(".site-footer__list a");
+
+    if (lienPied !== null && win.innerWidth === 1440) {
+        assert(
+            "pied de page : le survol épaissit et ne souligne pas",
+            trouverRegle(doc, ".site-footer__list a:hover", (regle) => (
+                regle.style.fontWeight === "600"
+                    && regle.style.textDecorationLine === ""
+                    ? true
+                    : null
+            )) === true
+        );
+        assert(
+            `pied de page : pas de soulignement au repos (${styleOf(lienPied).textDecorationLine})`,
+            styleOf(lienPied).textDecorationLine === "none"
+        );
+        // La famille est HÉRITÉE du `body` : l'éprouver ici vérifie que rien
+        // ne la redéclare en chemin, ce qui créerait une seconde source.
+        assert(
+            `pied de page : la pile Inter est bien héritée (${styleOf(lienPied).fontFamily.split(",")[0]})`,
+            styleOf(lienPied).fontFamily.startsWith("Inter")
+                && styleOf(lienPied).fontFamily === styleOf(doc.body).fontFamily
+        );
+    }
+
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
     const items = doc.querySelectorAll(".accordion__item");
 
