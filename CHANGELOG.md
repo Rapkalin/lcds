@@ -7,6 +7,16 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.18.1
+
+### Corrigé
+
+- **Plus de saut à la jonction entre le parcours de soin et la section
+  suivante**, dans les deux sens. Une fois la dernière étape atteinte,
+  l'animation s'arrête et le volet suivant passe par-dessus comme à toutes les
+  autres jonctions. Le premier cran de molette vers le haut renvoyait jusque-là
+  la page 650px en arrière, sous le volet — mesuré.
+
 ## 2.18.0
 
 ### Modifié

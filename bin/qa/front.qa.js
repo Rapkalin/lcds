@@ -1353,6 +1353,55 @@ window.runFrontQa = async (win) => {
         await pause(1800);
         assert("première étape : un second geste rend la main", cran(-100) === false);
 
+        /* ----------------------------------------------------------------- *
+         * LA JONCTION AVEC LE VOLET SUIVANT.
+         *
+         * Une fois sa course finie, la section est COLLÉE par le volet : son
+         * rectangle se fige alors que la page continue de défiler. Tout ce qui
+         * précède lit ce rectangle — `ancrer` calculait sa cible sur
+         * `cadre.top + scrollY`, qui dérivait de 1336px dès que le collage
+         * prenait. D'où un saut à la jonction, dans les deux sens.
+         *
+         * La campagne force le mouvement réduit, et la règle de collage vit
+         * sous `no-preference` : elle ne s'applique donc pas ici. On la POSE à
+         * la main — c'est la seule façon d'éprouver cette géométrie, et sans
+         * elle l'assertion ne pourrait pas échouer.
+         * ----------------------------------------------------------------- */
+        journey.style.position = "sticky";
+        journey.style.top = `${-course}px`;
+
+        win.scrollTo(0, Math.round(haut + course) + 600);
+        await pause(1800);
+
+        const departJonction = win.scrollY;
+        const remonteJonction = cran(-100);
+
+        assert(
+            "jonction : la section figée ne confisque pas le cran vers le haut",
+            remonteJonction === false
+        );
+        assert(
+            `jonction : la page ne saute pas sous le volet (${round(win.scrollY - departJonction)}px)`,
+            Math.abs(win.scrollY - departJonction) < 2
+        );
+
+        await pause(1800);
+
+        const departDescente = win.scrollY;
+        const descenteJonction = cran(100);
+
+        assert(
+            "jonction : la section figée ne confisque pas le cran vers le bas",
+            descenteJonction === false
+        );
+        assert(
+            `jonction : rien ne bouge non plus vers le bas (${round(win.scrollY - departDescente)}px)`,
+            Math.abs(win.scrollY - departDescente) < 2
+        );
+
+        journey.style.removeProperty("position");
+        journey.style.removeProperty("top");
+
         win.scrollTo(0, 0);
 
         railParcours.style.removeProperty("transition");

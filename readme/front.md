@@ -448,6 +448,44 @@ mi-chemin — et sans le plafond, un défilement continu n'en sortait jamais. Le
 deux sont éprouvés : arrêt jamais relâché, `un second geste rend la main` passe
 au rouge dans les deux sens.
 
+#### La jonction avec le volet suivant : la section FIGÉE
+
+Depuis que chaque section est un volet, celle du parcours est **collée** une
+fois sa course finie : son rectangle ne bouge plus alors que la page continue
+de défiler. Or tout le verrou lit ce rectangle, et `ancrer` calculait sa cible
+sur `cadre.top + scrollY`. Mesuré sur la page :
+
+| `scrollY` | `cadre.top` | `cadre.top + scrollY` |
+| --- | --- | --- |
+| 0 | 5264 | 5264 |
+| 9000 | −3736 | 5264 |
+| **11000** | **−4400, figé** | **6600** |
+| 12500 | −4777 | 7723 |
+
+Le repère dérivait donc de plus de 1300px, et le premier cran vers le haut
+renvoyait la page **650px en arrière**, sous le volet. C'est le saut que le
+client a signalé, dans les deux sens.
+
+`offsetTop` ne sauve pas la mise : **il porte le décalage de collage lui
+aussi** — vérifié, il suit exactement `cadre.top + scrollY`. La position de flux
+est donc inaccessible une fois la section collée.
+
+La reconnaissance passe par le décalage : `initVolets` colle la section à
+`-course` exactement, donc **`cadre.top === -course` signifie « figée »**. Le
+verrou rend alors la main entièrement, l'animation reste sur sa dernière étape
+(`--journey-progress` plafonné à 1) et le volet suivant passe par-dessus comme
+à toutes les autres jonctions.
+
+> **Égalité, et non « au-delà ».** Sous `prefers-reduced-motion` rien ne colle,
+> et une section simplement dépassée a elle aussi un `top` inférieur à
+> `-course` — mais elle continue de descendre. Les confondre faisait manquer
+> l'ancrage d'arrivée par le bas, qui repartait deux étapes trop tôt : attrapé
+> par la recette, `arrivée par le bas : aligné sur la dernière étape (−390px)`.
+
+Un `etaitCollee` maintenu à vrai pendant l'état figé garde le retour cohérent :
+en remontant sous le volet, le premier cran **recule d'une étape** au lieu de
+rejouer l'ancrage d'arrivée, qui nous remettrait là où nous sommes déjà.
+
 > **C'est du détournement de défilement, et il faut le savoir.** À la molette,
 > un visiteur doit parcourir les six cartes pour passer la section. Quatre
 > sorties existent, et aucune n'est un accident :

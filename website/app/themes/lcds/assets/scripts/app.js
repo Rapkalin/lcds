@@ -525,6 +525,53 @@ const initJourneys = () => {
             const course = journey.offsetHeight - window.innerHeight;
             const sens = Math.sign(event.deltaY);
 
+            // La section a FINI sa course : le volet la colle en place, son
+            // rectangle se fige alors que la page continue de défiler. Tout ce
+            // qui suit lit ce rectangle, et `ancrer` calcule sa cible sur
+            // `cadre.top + scrollY` — une valeur qui DÉRIVE dès que le collage
+            // prend. Mesuré : 5264 en défilement libre, 6600 une fois collée.
+            // Le verrou renvoyait donc la page 650px en arrière au premier
+            // cran vers le haut, sous le volet suivant.
+            //
+            // Le décalage de collage vaut exactement `-course` — voir
+            // `initVolets` : c'est ce qui rend l'état reconnaissable sans
+            // connaître la position de flux, inaccessible ici puisque
+            // `offsetTop` porte le décalage lui aussi.
+            //
+            // ÉGALITÉ, et non « au-delà » : une section simplement dépassée —
+            // mouvement réduit, où rien ne colle — a elle aussi un `top`
+            // inférieur à `-course`, mais elle continue de descendre. La
+            // confondre avec l'état collé faisait manquer l'ancrage d'arrivée
+            // par le bas, qui repartait alors deux étapes trop tôt.
+            const figee = course > 0 && Math.abs(cadre.top + course) <= 1;
+
+            if (figee) {
+                // Toujours DANS la section : au retour par le bas, le premier
+                // cran doit reculer d'une étape, et non rejouer l'ancrage
+                // d'arrivée qui nous remettrait là où nous sommes déjà.
+                etaitCollee = true;
+
+                // L'ARRÊT reste dû sur la dernière carte : sans lui, la traîne
+                // du geste qui vient de la poser emporte la page et le volet
+                // suivant la recouvre aussitôt.
+                if (arret && sens > 0) {
+                    const instant = performance.now();
+                    const neuf = instant - dernier > JOURNEY_REPOS || instant >= plafond;
+
+                    dernier = instant;
+
+                    if (! neuf || instant < verrou) {
+                        event.preventDefault();
+
+                        return;
+                    }
+
+                    arret = false;
+                }
+
+                return;
+            }
+
             // `collee` : la vue épinglée occupe exactement l'écran. Hors de cet
             // intervalle, la section entre ou sort, et le défilement lui
             // appartient.
