@@ -126,9 +126,16 @@ $content-outer: calc(#{fn.toRem(1118)} + 2 * #{fn.toRem(20)});
 // le contenu se décalerait vers l'intérieur.
 $content-inset: max(#{fn.toRem(20)}, calc(50% - #{$content-width} / 2));
 // Largeur maximale de la PAGE. Au-delà, tout est centré et les côtés reçoivent
-// `$page-outside`. Sans elle, le rail des carrousels — plein-bord des deux
-// côtés depuis le retour client — s'étalait sans fin sur un écran très large.
-$page-max: fn.toRem(1920);
+// `$page-outside`. Trois blocs la portent — l'en-tête, `main` et le pied de
+// page — plus le visuel FIXÉ du pied de page, qui échappe à son conteneur.
+//
+// SUSPENDUE À LA DEMANDE DU CLIENT : `100%` vaut la largeur de la vue, donc
+// aucun bornage. Le dispositif reste entier, il suffit de remettre une valeur
+// pour le réactiver — la précédente était `fn.toRem(1920)`, posée pour éviter
+// que le rail des carrousels, plein-bord des deux côtés, ne s'étale sans fin
+// sur un écran très large. `$page-outside` ne se voit qu'une fois la borne
+// rétablie.
+$page-max: 100%;
 // Débord d'une carte inclinée hors de sa boîte : 471,5 × 470 pivotée de 2,88°
 // englobe 494,5, soit 11,5 de chaque côté. Le rail impose `overflow-x` et
 // rognerait ce débord sur la première carte.

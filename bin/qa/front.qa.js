@@ -604,14 +604,22 @@ window.runFrontQa = async (win) => {
      * largeur, et les côtés montrent le fond de page.
      * --------------------------------------------------------------------- */
     if (win.innerWidth === 1440) {
-        for (const nom of [".main-content", ".site-header", ".footer-reveal"]) {
-            assert(
-                `page : ${nom} est bornée à 1920`,
-                trouverRegle(doc, nom, (regle) => (
-                    regle.style.maxWidth === "120rem" ? true : null
-                )) === true
-            );
-        }
+        // Les trois blocs de premier niveau déclarent LA MÊME largeur maximale.
+        //
+        // Éprouvé sur leur ÉGALITÉ et non sur une valeur : le bornage est
+        // suspendu à `100%` pour l'instant, et une assertion écrite sur 1920
+        // aurait rougi sur une suspension voulue. Ce qui ne doit jamais varier,
+        // c'est qu'ils soient bornés ENSEMBLE — trois blocs qui divergent
+        // décalent la page d'un cran à l'autre.
+        const bornes = [".main-content", ".site-header", ".footer-reveal"].map((nom) => [
+            nom,
+            trouverRegle(doc, nom, (regle) => regle.style.maxWidth || null),
+        ]);
+
+        assert(
+            `page : les trois blocs partagent la même borne (${bornes.map(([n, v]) => `${n} ${v}`).join(", ")})`,
+            bornes.every(([, v]) => v !== null && v === bornes[0][1])
+        );
 
         // Le retrait de la première vignette est un REMBOURRAGE du rail, pas un
         // retrait de la section : c'est ce qui laisse les images sortir par le

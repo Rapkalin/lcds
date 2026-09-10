@@ -1256,11 +1256,20 @@ compensation et posé la carte 12px trop à gauche, à 164 au lieu de 176. Les
 deux valeurs s'additionnent désormais explicitement, et le débord est un jeton,
 `$tilt-bleed`.
 
-#### La page est bornée à 1920
+#### La page peut être bornée — le bornage est SUSPENDU pour l'instant
 
-Sans cela, un rail plein-bord des deux côtés s'étale sans fin sur un écran très
+Sans borne, un rail plein-bord des deux côtés s'étale sans fin sur un écran très
 large. `$page-max` borne l'en-tête, `main` et le pied de page ; au-delà, les
 côtés reçoivent `$page-outside`.
+
+> **`$page-max` vaut `100%` à la demande du client**, soit la largeur de la vue,
+> soit aucun bornage. Le dispositif reste entier : une seule valeur à changer
+> pour le rétablir — la précédente était `1920`. `$page-outside` ne se voit
+> qu'une fois la borne active.
+>
+> L'assertion de recette porte donc sur l'ÉGALITÉ des trois bornes, pas sur leur
+> valeur : écrite sur 1920, elle aurait rougi sur une suspension voulue. Ce qui
+> ne doit jamais varier, c'est que les trois blocs soient bornés ensemble.
 
 **Trois pièges, tous rencontrés :**
 
