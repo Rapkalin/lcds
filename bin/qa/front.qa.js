@@ -438,16 +438,40 @@ window.runFrontQa = async (win) => {
             retour < 3
         );
 
-        // La flèche pilote alors le défilement de la PAGE : écrire `scrollLeft`
-        // serait écrasé à l'image suivante par l'avancement.
+        /* ------------------------------------------------------------------ *
+         * La flèche pilote le défilement de la PAGE.
+         *
+         * Éprouvé sur la DÉCISION — l'appel à `scrollBy` et son argument — et
+         * non sur le déplacement obtenu. Mesurer `scrollY` rendait l'assertion
+         * INSTABLE : constaté rouge à 0 sur une passe, vert à 1279 sur la
+         * suivante, sans rien changer au code. Le défilement de la page sous
+         * temps virtuel n'est pas déterministe, la décision du gestionnaire si.
+         *
+         * `scrollBy` est donc remplacé le temps du clic. Effet de bord utile :
+         * la page ne bouge pas, donc rien ne réécrit `scrollLeft`, et la
+         * seconde assertion peut vérifier que la flèche ne l'a pas touché —
+         * c'est le contrat de la garde.
+         * ------------------------------------------------------------------ */
         await aller(0);
-        const avant = win.scrollY;
+
+        const appels = [];
+        const scrollByOrigine = win.scrollBy;
+        const avantRail = railPin.scrollLeft;
+
+        win.scrollBy = (options) => {
+            appels.push(options);
+        };
         suivant.click();
-        await tick();
+        win.scrollBy = scrollByOrigine;
 
         assert(
-            `épinglage : la flèche avance la page d'une largeur de rail (${Math.round(win.scrollY - avant)} / ${railPin.clientWidth})`,
-            Math.abs((win.scrollY - avant) - railPin.clientWidth) < 3
+            `épinglage : la flèche demande une largeur de rail à la page`
+            + ` (${appels.length} appel(s), ${appels.length === 0 ? "aucun" : Math.round(appels[0].top)} / ${railPin.clientWidth})`,
+            appels.length === 1 && Math.abs(appels[0].top - railPin.clientWidth) < 3
+        );
+        assert(
+            `épinglage : la flèche n'écrit pas le rail (${Math.round(railPin.scrollLeft)} / ${Math.round(avantRail)})`,
+            Math.abs(railPin.scrollLeft - avantRail) < 3
         );
 
         reservePin.classList.remove("carousel-pin--active");
@@ -456,6 +480,100 @@ window.runFrontQa = async (win) => {
         win.dispatchEvent(new win.Event("scroll"));
         railPin.scrollTo({ left: 0, behavior: "auto" });
         await tick();
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Le volet : ce qui suit le hero lui passe dessus.
+     *
+     * L'effet est gated sous `prefers-reduced-motion: no-preference`, que la
+     * campagne force à l'inverse : la POSITION rendue ne dit donc rien ici, et
+     * les deux premières assertions portent sur la RÈGLE.
+     *
+     * La troisième, elle, porte sur l'état réel — et c'est la seule qui protège
+     * la CONTRIBUTION. Les sections sont réordonnables : n'importe laquelle peut
+     * passer sous le hero, et une section sans fond propre le laisserait
+     * transparaître. L'aplat de `.main-content` n'y suffit pas, un fond de
+     * parent peignant sous ses enfants.
+     * --------------------------------------------------------------------- */
+    const heroVolet = doc.querySelector(".hero");
+
+    if (heroVolet !== null && win.innerWidth === 1440) {
+        assert(
+            "volet : le hero est déclaré collé",
+            trouverRegle(doc, ".hero", (regle) => (
+                regle.style.position === "sticky" && regle.style.top === "0px" ? true : null
+            )) === true
+        );
+        assert(
+            "volet : ce qui suit le hero est déclaré au-dessus",
+            trouverRegle(doc, ".hero ~ *", (regle) => (
+                regle.style.zIndex === "1" && regle.style.position === "relative" ? true : null
+            )) === true
+        );
+
+        const apresHero = [];
+
+        for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            apresHero.push(noeud);
+        }
+
+        const transparentes = apresHero.filter(
+            (section) => styleOf(section).backgroundColor === "rgba(0, 0, 0, 0)"
+        );
+
+        assert(
+            `volet : les ${apresHero.length} sections sous le hero ont un fond opaque`
+            + ` (${transparentes.length === 0 ? "toutes" : transparentes.map((n) => n.className).join(", ")})`,
+            apresHero.length > 0 && transparentes.length === 0
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Coins hauts des sections empilées.
+     *
+     * Le rayon seul ne suffit pas : sans le CHEVAUCHEMENT de la même valeur,
+     * l'encoche des deux coins laisse voir ce qui peint derrière — le blanc de
+     * `.main-content` — soit deux oreilles claires à chaque épaule. Les deux
+     * assertions vont donc ensemble, comme le texte blanc et son aplat.
+     *
+     * Éprouvé sur l'état rendu et non sur la règle : celle-ci n'est sous aucune
+     * requête de média, la campagne la voit donc telle qu'un visiteur.
+     * --------------------------------------------------------------------- */
+    const pageAccueil = doc.querySelector(".front-page");
+
+    if (pageAccueil !== null && win.innerWidth === 1440) {
+        const panneaux = [...pageAccueil.children].filter(
+            (noeud) => ! noeud.classList.contains("hero")
+                && ! noeud.classList.contains("screen-reader-text")
+        );
+        const rayons = panneaux.map((noeud) => {
+            const cs = styleOf(noeud);
+
+            return `${cs.borderTopLeftRadius}/${cs.borderTopRightRadius}/${cs.borderBottomLeftRadius}`;
+        });
+
+        assert(
+            `sections : coins hauts arrondis à 48, bas francs (${[...new Set(rayons)].join(", ")})`,
+            panneaux.length > 0 && rayons.every((r) => r === "48px/48px/0px")
+        );
+
+        // Le bloc qui suit le hero ARRIVE APRÈS lui : aucun recouvrement.
+        // Arbitré par le client — la maquette montre un chevauchement à cet
+        // endroit pour dire l'intention de volet, pas pour être reproduit.
+        assert(
+            `sections : le bloc sous le hero ne chevauche pas (${styleOf(panneaux[0]).marginTop})`,
+            styleOf(panneaux[0]).marginTop === "0px"
+        );
+
+        // Les suivantes, si : sans ce chevauchement l'encoche de leurs coins
+        // laisserait voir le blanc du conteneur, deux oreilles claires par
+        // épaule. Sous le hero c'est lui qu'on voit, d'où la différence.
+        const chevauchements = panneaux.slice(1).map((noeud) => styleOf(noeud).marginTop);
+
+        assert(
+            `sections : les suivantes chevauchent la précédente de 48 (${[...new Set(chevauchements)].join(", ")})`,
+            chevauchements.length > 0 && chevauchements.every((m) => m === "-48px")
+        );
     }
 
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.

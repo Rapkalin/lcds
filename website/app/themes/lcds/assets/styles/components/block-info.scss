@@ -5,6 +5,10 @@
 // Visuel de gauche 440 × 549 posé à x=161, colonne de droite de 726 à 1279 avec
 // les icônes en débord à gauche du texte, qui commence à 774.
 .block-info {
+  // Fond PROPRE, et non celui hérité de `.main-content` : un fond de parent
+  // peint sous ses enfants. Sans lui, le hero collé transparaîtrait sous cette
+  // section quand elle lui passe dessus — voir le volet dans hero.scss.
+  background: var.$white;
   padding: var.$section-padding 0;
 
   &__inner {

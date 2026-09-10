@@ -1032,6 +1032,131 @@ partout ailleurs.
 > n'ont eu à changer — c'est le repli qu'elles mesurent. L'état épinglé est
 > forcé par la campagne pour éprouver l'association. Voir [`qa.md`](qa.md).
 
+### Le hero se fait recouvrir comme par un volet
+
+Quatrième retour du lot : « le premier bloc en-dessous de la home remonte et
+passe par dessus au scroll pour cacher petit à petit la hero banner ». Le hero
+**ne bouge pas** — il reste collé en haut de la vue — et c'est la section
+suivante qui remonte et le recouvre.
+
+**Aucun JavaScript.** `position: sticky` sur le hero, `position: relative` et
+`z-index: 1` sur ses frères. La géométrie de peinture suffit, comme pour la
+révélation du pied de page.
+
+Mesuré sur le site, hero de 900 :
+
+| Défilement | Haut du hero | Haut de la section suivante |
+| --- | --- | --- |
+| 0 | 0 | 900 |
+| 300 | **0** | 600 |
+| 600 | **0** | 300 |
+| 900 | **0** | 0 — hero entièrement couvert |
+
+#### La règle porte sur les FRÈRES, jamais sur une section nommée
+
+C'est la contrainte que le client a posée avec le retour : les sections sont un
+contenu flexible, **le contributeur les réordonne**, et n'importe laquelle peut
+se retrouver sous le hero. Un sélecteur `.hero ~ *` couvre celle qui suit quelle
+qu'elle soit — et la nouvelle si l'ordre change demain. Une règle écrite sur
+`.block-intro` aurait été fausse au premier glisser-déposer dans l'admin.
+
+#### Le piège : un fond de parent ne recouvre rien
+
+Ce qui rend le volet opaque n'est pas `.main-content`, qui porte pourtant un
+aplat blanc : **le fond d'un parent peint SOUS ses enfants**. Il ne peut donc
+pas masquer un frère collé derrière eux. C'est le fond **propre** de chaque
+section qui fait le volet.
+
+`.block-info` n'en avait pas — elle se contentait du blanc hérité. Placée sous
+le hero, elle l'aurait laissé transparaître. Elle porte désormais le sien, ce
+qui ne change rien à son rendu actuel.
+
+> Le pied de page avait déjà rencontré ce cas exact, et son commentaire le dit :
+> « le visuel affleurerait sous toute section dépourvue de fond propre —
+> `.block-info` n'en a pas ». Le même piège, deux effets différents.
+
+**Une assertion de recette verrouille l'invariant** pour les sections à venir :
+aucun frère du hero ne doit avoir de fond transparent. Éprouvée par mutation —
+le fond de `.block-info` retiré, elle rougit **en nommant la section fautive**.
+C'est le seul contrôle des trois qui protège la contribution ; les deux autres
+portent sur la règle, la campagne forçant `prefers-reduced-motion`.
+
+#### Désactivé sous mouvement réduit
+
+Un fond qui ne suit pas le contenu est un effet de parallaxe. La règle est donc
+sous `prefers-reduced-motion: no-preference`, comme le parcours de soin et la
+révélation du pied de page — RGAA 13.8, voir
+[`accessibilite.md`](accessibilite.md). Le hero y défile normalement.
+
+> **Réserve, non mesurée** : le hero reste collé pendant TOUTE la page, occulté
+> derrière les sections. C'est visuellement correct, mais ça maintient une
+> couche de composition pleine vue jusqu'au pied de page. Le coût sur un
+> appareil modeste n'a pas été relevé.
+
+### Les sections empilées arrondissent leurs coins hauts
+
+Cinquième retour du lot : un rayon de **48px** en haut de chaque section.
+
+**ÉCART ASSUMÉ AVEC LA MAQUETTE.** Le PDF dessine des jonctions franches, relevé
+au pixel sur `HP_01_LCDS_hp full.pdf` : à x=4, l'image du hero court jusqu'à
+y=899 et le bleu pâle commence exactement à **y=900**. Avec un rayon de 48, il
+ne commencerait qu'à y≈929 à cette abscisse. C'est une demande postérieure, pas
+une correction.
+
+#### Le rayon seul ne suffit pas
+
+Une section aux coins arrondis laisse voir, dans l'encoche des deux coins, ce
+qui peint **derrière** elle. Et derrière, c'est le blanc de `.main-content` :
+deux oreilles claires à chaque épaule. Le fond d'une section ne s'étend pas sous
+sa voisine.
+
+Chaque section **chevauche donc la précédente** de la valeur du rayon, par une
+marge haute négative. L'encoche montre alors la section d'avant, et l'épaule est
+propre. Les deux déclarations vont ensemble : la campagne les éprouve ensemble.
+
+#### Sauf sous le hero, où le bloc arrive après
+
+**Arbitré par le client** : le bloc qui suit le hero ne le chevauche pas. La
+maquette montre un recouvrement à cet endroit pour dire l'intention de volet,
+pas pour être reproduit. Le volet reste entier de toute façon — c'est le hero
+collé qui le produit au défilement, pas ce décalage de 48px.
+
+Là, l'encoche n'a pas besoin du chevauchement : c'est **le hero** qu'elle laisse
+voir, puisqu'il est collé derrière. Vérifié par sondage du point exact de
+l'encoche, sur toute sa hauteur, à sept positions de défilement — seuls `hero`
+et la section elle-même y apparaissent.
+
+> **Une exception mesurée, et non corrigée.** Sur une vue PLUS HAUTE que le hero
+> — donc au-delà de 900px, où celui-ci est plafonné et ne remplit plus l'écran —
+> le blanc de `.main-content` apparaît dans l'encoche pendant les **48 premiers
+> pixels de défilement**, le temps que le hero collé vienne se placer derrière.
+> Deux petites encoches claires aux épaules, transitoires.
+>
+> Reproduit en réduisant la hauteur du hero à 500 sur une vue de 797 : à
+> défilement 0, l'encoche montre `main-content` ; à 60, elle ne montre plus que
+> `hero`. Deux remèdes possibles si ça gêne — supprimer le rayon sur le seul
+> bloc qui suit le hero, ce que la maquette dessine d'ailleurs ; ou étendre la
+> surface peinte du hero de 48px sous lui, ce qui touche au cadrage de son
+> visuel.
+
+> C'est le même piège que le volet du hero, pris par l'autre bout — là, il
+> fallait un fond PROPRE à chaque section ; ici, il faut que ce fond DÉBORDE
+> sous sa voisine. Dans les deux cas, la cause est qu'un fond ne peint ni sous
+> ses enfants ni sous ses frères.
+
+#### Ce que la règle ne nomme pas
+
+Elle porte sur la **position dans la liste** — `.front-page > * + *` — et jamais
+sur une section nommée : les sections sont réordonnables. Deux exclusions :
+
+- **le hero**, qui est une bannière pleine largeur et non un panneau ;
+- **`.screen-reader-text`**, le `h1` de la page, enfant du même conteneur et hors
+  flux. Un rayon sur lui ne se verrait pas, mais il n'est pas une section.
+
+Le rayon vit dans `$radius-section`, distinct de `--footer-radius` qui vaut 64 et
+arrondit les coins BAS du panneau de pied de page. Deux rôles, deux valeurs :
+les confondre ferait bouger l'un en corrigeant l'autre.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page

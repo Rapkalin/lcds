@@ -14,6 +14,15 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 - **Les boutons d'action principaux se comportent comme le menu au survol.**
   Le glyphe et le libellé forment une silhouette continue dont le collet s'étire
   quand le curseur arrive, avec le même ressort que les entrées du menu.
+- **Les sections de la page d'accueil ont les coins du haut arrondis**, et
+  s'emboîtent les unes sur les autres comme des panneaux empilés — sauf la
+  première sous la bannière d'accueil, qui arrive après elle sans la recouvrir.
+  C'est un écart assumé avec la maquette, qui les dessine à angles francs.
+- **La section qui suit la bannière d'accueil remonte par-dessus elle**, comme
+  un volet qui la referme peu à peu. Peu importe quelle section est placée là :
+  l'effet suit l'ordre choisi dans l'administration, et vaut pour celle qui se
+  retrouvera sous la bannière si l'ordre change. Désactivé pour qui demande à
+  réduire les animations.
 - **La galerie de la section « l'histoire » défile avec la page.** Arrivé sur
   elle, le défilement fait avancer les visuels horizontalement, puis reprend son
   cours normal une fois le dernier atteint. Les flèches continuent de naviguer.

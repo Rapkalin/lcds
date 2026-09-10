@@ -131,6 +131,10 @@ $module: fn.toRem(52);
 $section-padding: clamp(#{fn.toRem(64)}, 8.889vw, #{fn.toRem(128)});
 $block-gap: fn.toRem(80);
 $radius: fn.toRem(8);
+// Coins HAUTS des sections empilées. Distinct de `--footer-radius`, qui vaut 64
+// et arrondit les coins BAS du panneau de pied de page : deux rôles, deux
+// valeurs, et les confondre ferait bouger l'un en corrigeant l'autre.
+$radius-section: fn.toRem(48);
 // L'encoche entre les deux pastilles d'un bouton d'action primaire au repos.
 // C'est elle que le survol ouvre jusqu'à `$spread`.
 $notch: fn.toRem(2);

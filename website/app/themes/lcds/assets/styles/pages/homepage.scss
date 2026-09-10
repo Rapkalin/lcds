@@ -7,3 +7,43 @@
   display: flex;
   flex-direction: column;
 }
+
+/* ------------------------------------------------------------------------- *
+ * Sections empilées : coins HAUTS arrondis.
+ *
+ * ÉCART ASSUMÉ AVEC LA MAQUETTE, demandé par le client. Le PDF dessine des
+ * jonctions franches — relevé au pixel sur `HP_01_LCDS_hp full.pdf` : à x=4,
+ * l'image du hero court jusqu'à y=899 et le bleu pâle commence exactement à
+ * y=900. Avec un rayon de 48, il ne commencerait qu'à y≈929 à cette abscisse.
+ *
+ * Chaque section CHEVAUCHE la précédente de la valeur du rayon. Sans ce
+ * chevauchement, l'encoche des deux coins laisserait voir ce qui peint
+ * derrière — le blanc de `.main-content` — soit deux oreilles claires à chaque
+ * épaule. Le fond d'une section ne s'étend pas sous sa voisine : c'est le même
+ * piège que le volet du hero, pris par l'autre bout.
+ *
+ * Le hero est exclu : c'est une bannière pleine largeur, pas un panneau. Et la
+ * règle porte sur la POSITION dans la liste, jamais sur une section nommée —
+ * les sections sont réordonnables.
+ * ------------------------------------------------------------------------- */
+// `.screen-reader-text` est exclu : le `h1` de la page est un enfant de ce même
+// conteneur, et il est hors flux. Un rayon sur lui ne se voit pas, mais il
+// n'est pas une section et n'a rien à faire dans la règle.
+.front-page > *:not(.hero, .screen-reader-text) {
+  border-radius: var.$radius-section var.$radius-section 0 0;
+}
+
+.front-page > * + *:not(.hero, .screen-reader-text) {
+  margin-top: calc(-1 * #{var.$radius-section});
+}
+
+// SAUF le bloc qui suit le hero : il ARRIVE APRÈS lui et ne le chevauche pas.
+// La maquette montre un recouvrement à cet endroit pour dire l'intention de
+// volet, pas pour être reproduit — arbitré par le client. Le volet, lui, reste
+// entier : c'est le hero collé qui le produit au défilement, pas ce décalage.
+//
+// Même spécificité que la règle ci-dessus, donc placée APRÈS elle : les deux se
+// valent à (0,2,0) et c'est l'ordre qui tranche.
+.front-page > .hero + * {
+  margin-top: 0;
+}

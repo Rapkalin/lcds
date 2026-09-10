@@ -108,3 +108,36 @@
     }
   }
 }
+
+/* ------------------------------------------------------------------------- *
+ * Le volet : ce qui suit le hero lui passe DESSUS.
+ *
+ * Le hero ne bouge pas, il reste collé en haut de la vue ; c'est la section
+ * suivante qui remonte et le recouvre peu à peu. Aucun JavaScript — la
+ * géométrie de peinture suffit, comme pour la révélation du pied de page.
+ *
+ * Écrit sur le hero et sur ses FRÈRES, jamais sur une section nommée. Les
+ * sections sont un contenu flexible : le contributeur les réordonne, et
+ * n'importe laquelle peut se retrouver sous le hero. La règle vaut donc pour
+ * celle qui suit, quelle qu'elle soit — et pour la suivante si l'ordre change.
+ *
+ * CE QUI REND LE VOLET OPAQUE n'est pas ici : c'est le fond propre de chaque
+ * section. `.main-content` porte bien un aplat blanc, mais un fond de parent
+ * peint SOUS ses enfants — il ne peut donc rien recouvrir. Une section sans
+ * fond laisserait le hero transparaître. Une assertion de recette le
+ * verrouille pour les sections à venir.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .hero {
+    position: sticky;
+    top: 0;
+    // Positionné, donc peint au-dessus de tout frère qui ne l'est pas. Sans le
+    // `z-index` des frères ci-dessous, c'est le hero qui recouvrirait la page.
+    z-index: 0;
+  }
+
+  .hero ~ * {
+    position: relative;
+    z-index: 1;
+  }
+}

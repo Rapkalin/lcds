@@ -172,6 +172,17 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > en jeu : le calcul de l'association. Un réglage de réserve faux ne casserait
 > rien d'autre.
 
+- **Volet du hero** : le hero déclaré collé, ses frères déclarés au-dessus, et
+  surtout — seule assertion qui porte sur l'état réel — **aucune section suivant
+  le hero n'a de fond transparent**. C'est elle qui protège la contribution : les
+  sections étant réordonnables, une section sans fond propre placée sous le hero
+  le laisserait transparaître. Elle rougit en nommant la section fautive.
+
+- **Coins hauts des sections** : rayon de 48 en haut, francs en bas, **et** le
+  chevauchement de 48 qui va avec. Les deux ensemble : sans le chevauchement,
+  l'encoche des coins laisse voir le blanc du conteneur, soit deux oreilles
+  claires à chaque épaule.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé
