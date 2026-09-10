@@ -799,6 +799,43 @@ window.runFrontQa = async (win) => {
         );
     }
 
+    /* --------------------------------------------------------------------- *
+     * Les colonnes d'étiquette restent au même niveau.
+     *
+     * `align-self: start` est éprouvé AUTANT que `position: sticky` : sans lui,
+     * l'élément de grille s'étire à sa rangée, n'a plus de course, et le
+     * collage devient SILENCIEUSEMENT inopérant. C'est le seul des deux qu'un
+     * relecteur pourrait retirer en croyant nettoyer.
+     *
+     * Et le calage lit `--header-height` : un nombre écrit à la main serait
+     * faux dès que l'en-tête revient à la ligne.
+     * --------------------------------------------------------------------- */
+    const collantes = [
+        [".block-treatments__label", "traitements"],
+        [".block-info__aside", "informations pratiques"],
+    ];
+
+    for (const [selecteur, nom] of collantes) {
+        const colonne = doc.querySelector(selecteur);
+
+        if (colonne === null || win.innerWidth !== 1440) {
+            continue;
+        }
+
+        const cs = styleOf(colonne);
+
+        assert(
+            `${nom} : la colonne est collante et a sa course (${cs.position}, align-self ${cs.alignSelf})`,
+            cs.position === "sticky" && cs.alignSelf === "start"
+        );
+        assert(
+            `${nom} : le calage suit la hauteur d'en-tête publiée`,
+            trouverRegle(doc, selecteur, (regle) => (
+                regle.style.top.includes("--header-height") ? true : null
+            )) === true
+        );
+    }
+
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
     const items = doc.querySelectorAll(".accordion__item");
 

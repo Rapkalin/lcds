@@ -7,6 +7,20 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.16.0
+
+### Ajouté
+
+- **L'étiquette des sections « les traitements » et « informations pratiques »
+  reste au même niveau pendant le défilement** : seule la colonne de droite
+  bouge. Elle se décroche à la fin de la section, quand celle-ci laisse la
+  place à la suivante.
+
+  Sur « informations pratiques », la colonne de gauche porte aussi le visuel :
+  l'ensemble mesure 626px et ne peut donc rester immobile que sur les **38
+  premiers pourcents** de la section, faute de course suffisante. Sur « les
+  traitements », où l'étiquette est seule, elle tient tout du long.
+
 ## 2.15.0
 
 ### Ajouté

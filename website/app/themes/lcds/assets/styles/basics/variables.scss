@@ -148,6 +148,15 @@ $tilt-bleed: fn.toRem(12);
 // la section derrière. `$blue-pale` aurait effacé la limite sur les sections
 // pâles et l'aurait accentuée sur les blanches. Un seul jeton à changer.
 $page-outside: $blue;
+// Hauteur à laquelle se cale une colonne collante : sous l'en-tête, plus une
+// respiration. `--header-height` est publiée par le script — l'en-tête revient
+// à la ligne à fort grossissement de texte et sa hauteur double, aucune
+// addition de jetons ne la donne.
+//
+// Le repli de 128 vaut la hauteur de bureau (logo de 80 plus 24 de part et
+// d'autre) : sans JavaScript, la colonne se cale là où l'en-tête serait, plutôt
+// qu'à zéro où elle passerait dessous.
+$sticky-top: calc(var(--header-height, #{fn.toRem(128)}) + #{fn.toRem(24)});
 $header-padding: fn.toRem(48);
 $logo-size: fn.toRem(80);
 $logo-size-mobile: fn.toRem(56);

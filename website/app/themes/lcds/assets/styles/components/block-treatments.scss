@@ -19,6 +19,19 @@
     padding: 0 var.$gutter-min;
   }
 
+  // L'étiquette reste au même niveau pendant que l'accordéon défile : seule la
+  // colonne de droite bouge.
+  //
+  // `align-self: start` est INDISPENSABLE. Un élément de grille s'étire par
+  // défaut à la hauteur de sa rangée : il remplirait alors toute la colonne et
+  // n'aurait aucune marge pour coller, ce qui rend `sticky` silencieusement
+  // inopérant.
+  &__label {
+    position: sticky;
+    top: var.$sticky-top;
+    align-self: start;
+  }
+
   &__content {
     display: flex;
     flex-direction: column;

@@ -21,7 +21,14 @@
     padding: 0 var.$gutter-min;
   }
 
+  // Même principe que la section des traitements : la colonne de gauche —
+  // étiquette ET visuel — reste au même niveau, seule la liste défile.
+  // `align-self: start` pour la même raison qu'ailleurs : sans lui, l'élément
+  // s'étire à la rangée et `sticky` n'a plus de course.
   &__aside {
+    position: sticky;
+    top: var.$sticky-top;
+    align-self: start;
     display: flex;
     flex-direction: column;
     align-items: flex-start;

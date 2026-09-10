@@ -1472,6 +1472,50 @@ Tant que les `.woff2` ne sont pas déposés et les `@font-face` déclarés — v
 donc libre —, **valider une demande de typographie à l'œil dépend du poste qui
 regarde**.
 
+### Les étiquettes de section restent au même niveau
+
+Retour client : sur « les traitements » et « informations pratiques », l'étiquette
+à puce ne doit pas bouger pendant le défilement — seule la colonne de droite
+défile.
+
+`position: sticky` sur la colonne de gauche des deux grilles, calée sous
+l'en-tête par `$sticky-top`.
+
+#### Deux pièges, tous deux rencontrés
+
+**`align-self: start` est INDISPENSABLE.** Un élément de grille s'étire par
+défaut à la hauteur de sa rangée. Étiré, il remplit toute la colonne et n'a
+aucune course pour coller : `sticky` devient **silencieusement inopérant** —
+aucune erreur, aucun avertissement, la règle est simplement sans effet.
+
+**Le calage vertical lit `--header-height`**, publiée par le script, et non une
+addition de jetons. L'en-tête revient à la ligne à fort grossissement de texte
+et sa hauteur double ; un nombre écrit à la main serait faux dans ce cas. Le
+repli de 128px — logo de 80 plus 24 de part et d'autre — vaut la hauteur de
+bureau, pour que la colonne ne passe pas sous l'en-tête en l'absence de
+JavaScript.
+
+#### Une limite arithmétique sur « informations pratiques »
+
+Un élément collant est borné par son conteneur : il ne peut rester immobile que
+tant que la fin de sa section ne le rattrape pas. La course disponible vaut donc
+la hauteur de la section moins celle de la colonne.
+
+| Section | Colonne gauche | Reste immobile sur |
+| --- | --- | --- |
+| Les traitements | l'étiquette seule, 29px | toute la section |
+| Informations pratiques | étiquette **et visuel**, 626px | **38 %** de la section |
+
+Mesuré : la colonne des informations pratiques réclame 778px de vue pour tenir
+collée sous l'en-tête, pour une vue de 797 — 19px de marge. Dans une section de
+1456px, elle décroche à 38 %.
+
+> **Deux exigences qui s'opposent ici**, et c'est arbitré : « l'indicateur reste
+> au même niveau » demanderait de ne coller que l'étiquette, qui tiendrait alors
+> tout du long ; « seule la partie de droite défile » demande de coller la
+> colonne entière, visuel compris. La seconde a été retenue. Rendre l'étiquette
+> seule collante est une ligne à déplacer.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page
