@@ -22,25 +22,35 @@
 
 // `width: 100vw` incluait la largeur de la barre de défilement et provoquait un
 // débordement horizontal de quelques pixels sur toute page assez haute.
-// La teinte des côtés est posée sur `html`, PAS sur `body`, et le `body` est
-// borné comme le reste. Deux raisons :
+// La teinte des côtés est posée sur le `body`, et SURTOUT PAS sur `html`.
 //
-// - un fond posé sur `html` est propagé au CANEVAS, donc il couvre toute la
-//   fenêtre quelles que soient les largeurs en dessous ;
-// - un `body` bleu faisait tomber le contrôle de contraste de la campagne à
-//   1,00:1 sur 26 éléments. Le panneau du pied de page porte son fond sur un
-//   PSEUDO-ÉLÉMENT : un contrôleur qui remonte les ancêtres ne le voit pas et
-//   atterrit sur le `body`. Blanc, il passait par chance ; bleu, il annonçait
-//   du bleu sur bleu. Le `body` reste donc l'aplat de la page.
-html {
-  background: var.$page-outside;
-}
-
+// Un fond de `body` est propagé au CANEVAS tant que `html` n'en a pas : le
+// `body` ne peint alors aucune boîte, et tout ce qui a un `z-index` négatif
+// reste visible au-dessus du canevas. C'est ce qui laisse voir le visuel révélé
+// du pied de page.
+//
+// Posé sur `html`, ce fond ARRÊTE la propagation : le `body` se met à peindre
+// sa propre boîte, qui passe alors AU-DESSUS du `z-index: -1` et masque le
+// visuel. Constaté — la photo du pied de page avait disparu sous un aplat.
+// Le commentaire de footer.scss prévenait du piège dans l'autre sens.
+// Le `body` n'est PAS borné, et c'est délibéré. Trois pièges empilés :
+//
+// 1. Son fond est propagé au CANEVAS tant que `html` n'en a pas. Le `body` ne
+//    peint alors aucune boîte, et tout ce qui a un `z-index` négatif reste
+//    visible au-dessus — c'est ce qui laisse voir le visuel révélé du pied de
+//    page.
+// 2. Poser ce fond sur `html` ARRÊTE la propagation : le `body` peint sa boîte,
+//    qui recouvre le `z-index: -1`. La photo du pied de page disparaissait.
+// 3. BORNER le `body` produit le MÊME effet, et c'est le piège le moins
+//    intuitif — mesuré : `max-width` posé dessus, la photo disparaît ; retiré,
+//    elle revient, à fond identique.
+//
+// Le bornage vit donc sur les trois blocs de premier niveau — l'en-tête, `main`
+// et le pied de page — et jamais sur le `body`, dont le seul rôle ici est de
+// donner sa teinte au canevas.
 body {
   margin: 0;
-  max-width: var.$page-max;
-  margin-inline: auto;
-  background: var.$white;
+  background: var.$page-outside;
   color: var.$font-color;
   font-family: var.$font-body;
   font-size: var.$fs-p;

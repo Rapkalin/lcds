@@ -36,7 +36,12 @@
 // place les fonds de blocs au-dessus des `z-index` négatifs, ce qui est
 // exactement ce qu'on demande ici. Le fond du `body`, lui, ne conviendrait pas :
 // il est propagé au CANEVAS, donc peint SOUS le visuel.
+// L'aplat qui masque le visuel fixé partout SAUF dans la réserve du bloc de
+// fin. POSITIONNÉ, désormais : le visuel étant passé en `z-index: 0`, un fond
+// en flux ne suffit plus à le recouvrir — il faut un `z-index` supérieur.
 .main-content {
+  position: relative;
+  z-index: 1;
   max-width: var.$page-max;
   margin-inline: auto;
   background: var.$white;
@@ -84,7 +89,18 @@
 @media (prefers-reduced-motion: no-preference) {
   .footer-reveal__media {
     position: fixed;
-    z-index: -1;
+    // `z-index: 0` et NON `-1`. Un `z-index` négatif place le visuel sous les
+    // fonds des blocs en flux — dont celui du `body` — et il suffisait alors
+    // que le `body` peigne sa boîte pour le masquer. Cette peinture dépend de
+    // la propagation du fond au canevas, une subtilité que deux réglages
+    // anodins ont suffi à rompre : une teinte posée sur `html`, puis un
+    // `max-width` posé sur le `body`. La photo disparaissait dans les deux cas.
+    //
+    // À zéro, le visuel est un élément POSITIONNÉ : il peint au-dessus de tous
+    // les fonds en flux, et ce sont `main` et le panneau du pied de page qui
+    // passent devant lui par leur propre `z-index`. L'empilement est alors
+    // déclaré, et non hérité d'une règle de propagation.
+    z-index: 0;
     // Un élément FIXÉ se cale sur la fenêtre, pas sur son conteneur : borner
     // `.footer-reveal` ne le borne pas. `left: 0; right: 0` plus des marges
     // automatiques le recentrent dans la largeur de page.

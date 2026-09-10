@@ -1267,22 +1267,53 @@ côtés reçoivent `$page-outside`.
 - **Un élément FIXÉ se cale sur la fenêtre, pas sur son conteneur.** Borner
   `.footer-reveal` ne bornait pas son visuel révélé, ni l'en-tête au-dessus du
   hero. Les deux portent leur propre borne et des marges automatiques.
-- **La teinte des côtés va sur `html`, jamais sur `body`.** Un fond posé sur
-  `html` est propagé au canevas, donc il couvre la fenêtre entière quelles que
-  soient les largeurs en dessous.
+- **La teinte des côtés va sur le `body`, et le `body` n'est PAS borné.** Un
+  fond de `body` est propagé au CANEVAS tant que `html` n'en a pas ; le `body`
+  ne peint alors aucune boîte. Poser la teinte sur `html`, ou borner le `body`,
+  arrête cette propagation — voir l'encadré ci-dessous, ça a coûté cher.
 - **Une flèche parcourt maintenant presque toute la course.** Le rail montre
   plus d'images d'un coup, donc il en reste moins à parcourir : à 1440, une
   page vaut 1440 pour une course de 1407. Les assertions bornent l'attendu au
   lieu de maquiller l'écart. **À revalider en recette** — faire défiler d'une
   largeur de vignette plutôt que d'une pleine page reste possible.
 
+#### La photo du pied de page a disparu, et je ne pouvais pas le voir
+
+Le visuel révélé est en `position: fixed`. La première version du conteneur de
+1920 l'a fait disparaître sous un aplat, et il a fallu deux allers-retours avec
+le client pour l'établir — **mon environnement de test ne pouvait pas le
+montrer**.
+
+**La cause.** Un fond de `body` est propagé au canevas tant que `html` n'en a
+pas : le `body` ne peint alors aucune boîte, et un `z-index` négatif reste
+visible au-dessus du canevas. Deux gestes rompent cette propagation, et la
+première version faisait les deux — poser la teinte sur `html`, et borner le
+`body` par `max-width`. Le `body` se met alors à peindre sa boîte, qui passe
+au-dessus du `z-index: -1`.
+
+**Le correctif ne rétablit pas la propagation, il supprime la dépendance.** Le
+visuel passe en `z-index: 0` — donc élément POSITIONNÉ, peint au-dessus de tous
+les fonds en flux — et ce sont `main` et le panneau du pied de page qui passent
+devant lui par leur propre `z-index`. L'empilement est déclaré au lieu d'être
+hérité d'une règle de propagation que deux réglages anodins suffisent à rompre.
+
+> **Piège d'outillage, à retenir.** Un élément en `position: fixed` vit sur une
+> couche de composition séparée, et un onglet d'automatisation en arrière-plan
+> ne la restitue pas : la capture montrait la photo absente AVANT comme APRÈS
+> le défaut, y compris sur des commits antérieurs sains. J'en ai conclu à tort
+> qu'il n'y avait pas de régression. Deux signaux auraient dû m'alerter dans le
+> même onglet — `document.hidden` à `true`, et `requestAnimationFrame` qui ne
+> s'exécute jamais.
+>
+> **Ce qui a tranché, c'est l'œil du client** : correctif en place, photo
+> présente ; correctif retiré, photo absente. Pour tout ce qui touche à une
+> couche fixée, c'est la seule mesure fiable.
+
 #### Ce que la teinte a révélé dans la recette
 
-En cours de mise au point, une version intermédiaire posait cette teinte sur le
-`body`. Elle a fait tomber le contrôle de contraste à 1,00:1 sur 26 éléments —
-et c'est ce qui a mis au jour une lacune qui n'a rien à voir avec elle.
-
-Le contrôle **passait par chance** sur trois familles d'éléments :
+La teinte posée sur le `body` a fait tomber le contrôle de contraste à 1,00:1
+sur 26 éléments — et c'est ce qui a mis au jour une lacune sans rapport avec
+elle. Le contrôle **passait par chance** sur trois familles d'éléments :
 il remontait les ancêtres jusqu'au `body`, le trouvait blanc, et concluait juste
 sans mesurer le bon fond. Coloré, il a annoncé 1,00:1 sur 26 éléments. Les trois
 sont corrigés à la source :
