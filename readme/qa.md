@@ -200,6 +200,12 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   1200 : en-tête, `main`, pied de page et le visuel FIXÉ du pied de page se
   centrent tous.
 
+- **Galerie de l'histoire** : aucune flèche, aucune classe de glissement,
+  l'indicateur conservé — plus ses cotes de maquette, course et respiration de
+  fin. Le bloc des CONTRÔLES, lui, vise le carrousel des technologies : c'est le
+  seul qui ait encore des flèches, et apparier un rail aux boutons d'un autre
+  mesurait un attelage inexistant.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé

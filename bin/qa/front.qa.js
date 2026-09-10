@@ -168,26 +168,27 @@ window.runFrontQa = async (win) => {
         await defiler(0);
     }
 
-    // Carrousel : les cotes de la maquette, puis le comportement des boutons.
+    // Comportement des contrôles, éprouvé sur le carrousel QUI EN A.
+    //
+    // La galerie de l'histoire n'a plus de flèches — elle avance avec le
+    // défilement de la page — donc ce bloc vise celui des technologies. Le
+    // prendre au premier rail venu appariait le rail de l'histoire aux boutons
+    // des technologies, et mesurait un attelage qui n'existe pas.
+    //
     // Le défilement est instantané parce que la campagne force la préférence de
     // réduction des animations — sans quoi rien ne serait mesurable au tick près.
-    const rail = doc.querySelector(".carousel__rail");
+    const next = doc.querySelector("[data-carousel-next]");
+    const blocAFleches = next === null ? null : next.closest("[data-carousel]");
+    const rail = blocAFleches === null ? null : blocAFleches.querySelector(".carousel__rail");
 
     if (rail !== null && win.innerWidth === 1440) {
         const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
-        const thumb = doc.querySelector("[data-carousel-thumb]");
-        const previous = doc.querySelector("[data-carousel-prev]");
-        const next = doc.querySelector("[data-carousel-next]");
+        const thumb = blocAFleches.querySelector("[data-carousel-thumb]");
+        const previous = blocAFleches.querySelector("[data-carousel-prev]");
         const offset = () => parseFloat(thumb.style.getPropertyValue("--thumb-offset")) || 0;
         const page = rail.clientWidth;
         const furthest = rail.scrollWidth - rail.clientWidth;
-        const railBox = rail.getBoundingClientRect();
 
-        assert(`rail : hauteur = 629 (${Math.round(railBox.height)})`, Math.round(railBox.height) === 629);
-        assert(
-            `rail : plein-bord droit (${Math.round(railBox.right)} = ${win.innerWidth})`,
-            Math.round(railBox.right) === win.innerWidth
-        );
         assert("précédent désactivé au repos", previous.disabled === true);
         assert(`curseur à l'origine (${offset().toFixed(1)}%)`, offset() < 0.1);
 
@@ -217,38 +218,6 @@ window.runFrontQa = async (win) => {
         assert(`précédent recule d'une page (${Math.round(rail.scrollLeft)})`,
             Math.abs(rail.scrollLeft - Math.max(0, furthest - page)) < 2);
 
-        // La course doit valoir la somme des visuels, et rien ne doit plafonner
-        // leur nombre : plus il y a d'images, plus on défile.
-        const cadres = [...rail.querySelectorAll(".carousel__item")];
-        const largeurs = cadres.map((node) => node.getBoundingClientRect().width);
-        const attendu =
-            largeurs.reduce((total, largeur) => total + largeur, 0) +
-            (cadres.length - 1) * 12 +
-            // Les DEUX rembourrages : celui de gauche porte le retrait de la
-            // première vignette depuis que le rail est plein-bord à gauche.
-            parseFloat(win.getComputedStyle(rail).paddingLeft) +
-            parseFloat(win.getComputedStyle(rail).paddingRight);
-
-        assert(
-            `course = somme des visuels + respiration (${rail.scrollWidth} / ${Math.round(attendu)})`,
-            Math.abs(rail.scrollWidth - attendu) < 2
-        );
-        // Un cadre étroit rempli d'une photo se lit comme un visuel tronqué :
-        // le reliquat de 36px de la maquette est une respiration, pas une image.
-        assert(
-            `aucun visuel étroit (${largeurs.map((l) => Math.round(l)).join("/")})`,
-            largeurs.every((largeur) => largeur >= 100)
-        );
-
-        rail.scrollTo({ left: rail.scrollWidth, behavior: "auto" });
-        await tick();
-        const fin = cadres[cadres.length - 1].getBoundingClientRect();
-        const bord = rail.getBoundingClientRect().right;
-        assert(
-            `dernier visuel entier en fin de course (respiration ${Math.round(bord - fin.right)}px)`,
-            fin.right <= bord + 1 && Math.round(bord - fin.right) === 36
-        );
-
         rail.scrollTo({ left: 0, behavior: "auto" });
         await tick();
 
@@ -258,6 +227,11 @@ window.runFrontQa = async (win) => {
         // serait jouable — `setPointerCapture` exige un pointeur réellement
         // actif et lève sur un identifiant synthétique.
         const bloc = rail.closest("[data-carousel]");
+        // Mesuré ICI et non en tête de bloc : le rail a défilé entre-temps, et
+        // sa boîte est la seule chose qui n'ait pas bougé. La déclaration de
+        // tête a disparu avec les cotes propres à la galerie de l'histoire,
+        // parties dans leur propre bloc.
+        const railBox = rail.getBoundingClientRect();
         const milieu = railBox.top + railBox.height / 2;
         const pointeur = (type, x, extra) => rail.dispatchEvent(new win.PointerEvent(type, {
             pointerId: 1,
@@ -446,57 +420,6 @@ window.runFrontQa = async (win) => {
         assert(
             `épinglage : retour à l'origine en remontant (${Math.round(retour)})`,
             retour < 3
-        );
-
-        /* ------------------------------------------------------------------ *
-         * La flèche pilote le défilement de la PAGE.
-         *
-         * Éprouvé sur la DÉCISION — l'appel à `scrollBy` et son argument — et
-         * non sur le déplacement obtenu. Mesurer `scrollY` rendait l'assertion
-         * INSTABLE : constaté rouge à 0 sur une passe, vert à 1279 sur la
-         * suivante, sans rien changer au code. Le défilement de la page sous
-         * temps virtuel n'est pas déterministe, la décision du gestionnaire si.
-         *
-         * `scrollBy` est donc remplacé le temps du clic. Effet de bord utile :
-         * la page ne bouge pas, donc rien ne réécrit `scrollLeft`, et la
-         * seconde assertion peut vérifier que la flèche ne l'a pas touché —
-         * c'est le contrat de la garde.
-         * ------------------------------------------------------------------ */
-        await aller(0);
-        // L'état DÉSACTIVÉ des flèches est posé par `update()`, qui écoute le
-        // `scroll` DU RAIL. `aller(1)` a mené le rail au bout et désactivé la
-        // flèche ; `aller(0)` l'a ramené à zéro, mais l'évènement qui la
-        // réactiverait n'est pas délivré sous `--virtual-time-budget` — même
-        // piège que pour la page, plus haut. Sans cette émission, le clic
-        // portait sur un bouton désactivé et ne faisait RIEN : ni appel à
-        // `scrollBy`, ni écriture du rail. Constaté deux fois de suite.
-        railPin.dispatchEvent(new win.Event("scroll"));
-
-        // Éprouvé avant de cliquer : un échec dit alors POURQUOI, au lieu de
-        // laisser croire que la garde ne délègue pas.
-        assert(
-            `épinglage : la flèche suivante est active avant le clic (désactivée : ${suivant.disabled})`,
-            suivant.disabled === false
-        );
-
-        const appels = [];
-        const scrollByOrigine = win.scrollBy;
-        const avantRail = railPin.scrollLeft;
-
-        win.scrollBy = (options) => {
-            appels.push(options);
-        };
-        suivant.click();
-        win.scrollBy = scrollByOrigine;
-
-        assert(
-            `épinglage : la flèche demande une largeur de rail à la page`
-            + ` (${appels.length} appel(s), ${appels.length === 0 ? "aucun" : Math.round(appels[0].top)} / ${railPin.clientWidth})`,
-            appels.length === 1 && Math.abs(appels[0].top - railPin.clientWidth) < 3
-        );
-        assert(
-            `épinglage : la flèche n'écrit pas le rail (${Math.round(railPin.scrollLeft)} / ${Math.round(avantRail)})`,
-            Math.abs(railPin.scrollLeft - avantRail) < 3
         );
 
         reservePin.classList.remove("carousel-pin--active");
@@ -727,6 +650,77 @@ window.runFrontQa = async (win) => {
             assert(
                 `${nom} : au défilement, elle sort par le bord gauche (${apres})`,
                 apres < 0
+            );
+        }
+
+        const galerie = doc.querySelector(".block-intro [data-carousel]");
+
+        if (galerie !== null) {
+            const railGalerie = galerie.querySelector(".carousel__rail");
+
+            assert(
+                `histoire : rail de 629 de haut (${Math.round(railGalerie.getBoundingClientRect().height)})`,
+                Math.round(railGalerie.getBoundingClientRect().height) === 629
+            );
+            // Les flèches sont retirées : la galerie avance avec le défilement
+            // de la page. L'indicateur, lui, reste — il dit l'avancement.
+            assert(
+                `histoire : aucune flèche (${galerie.querySelectorAll("[data-carousel-prev], [data-carousel-next]").length})`,
+                galerie.querySelectorAll("[data-carousel-prev], [data-carousel-next]").length === 0
+            );
+            /* -------------------------------------------------------- *
+             * La géométrie du rail se mesure ICI et non dans le bloc des
+             * contrôles, qui vise désormais les technologies.
+             *
+             * Ces cotes sont celles de la maquette pour CETTE galerie, et
+             * elles ne supportent pas le rail des cartes : une carte inclinée
+             * a une boîte englobante plus large que sa boîte de mise en page,
+             * ce qui gonflait la somme attendue de 69px, et son débord mange
+             * 12 des 36px de respiration finale.
+             * -------------------------------------------------------- */
+            const cadres = [...railGalerie.querySelectorAll(".carousel__item")];
+            const largeurs = cadres.map((node) => node.getBoundingClientRect().width);
+            const attendu =
+                largeurs.reduce((total, largeur) => total + largeur, 0) +
+                (cadres.length - 1) * 12 +
+                // Les DEUX rembourrages : celui de gauche porte le retrait de
+                // la première vignette depuis que le rail est plein-bord.
+                parseFloat(win.getComputedStyle(railGalerie).paddingLeft) +
+                parseFloat(win.getComputedStyle(railGalerie).paddingRight);
+
+            assert(
+                `histoire : course = somme des visuels + respiration (${railGalerie.scrollWidth} / ${Math.round(attendu)})`,
+                Math.abs(railGalerie.scrollWidth - attendu) < 2
+            );
+            // Un cadre étroit rempli d'une photo se lit comme un visuel
+            // tronqué : le reliquat de 36px est une respiration, pas une image.
+            assert(
+                `histoire : aucun visuel étroit (${largeurs.map((l) => Math.round(l)).join("/")})`,
+                largeurs.every((largeur) => largeur >= 100)
+            );
+
+            railGalerie.scrollTo({ left: railGalerie.scrollWidth, behavior: "auto" });
+
+            const finVisuel = cadres[cadres.length - 1].getBoundingClientRect();
+            const bordRail = railGalerie.getBoundingClientRect().right;
+
+            assert(
+                `histoire : dernier visuel entier en fin de course (respiration ${Math.round(bordRail - finVisuel.right)}px)`,
+                finVisuel.right <= bordRail + 1 && Math.round(bordRail - finVisuel.right) === 36
+            );
+
+            railGalerie.scrollTo({ left: 0, behavior: "auto" });
+
+            assert(
+                "histoire : l'indicateur d'avancement reste",
+                galerie.querySelector("[data-carousel-thumb]") !== null
+            );
+            // ET PAS DE GLISSEMENT : les flèches en étaient l'alternative, et
+            // le WCAG 2.5.7 en exige une. Un geste sans alternative ne doit pas
+            // exister — la classe qui l'annonce ne doit donc pas être posée.
+            assert(
+                `histoire : pas de glisser-déposer sans alternative (${galerie.className})`,
+                ! galerie.classList.contains("carousel--draggable")
             );
         }
     }

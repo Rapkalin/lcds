@@ -26,6 +26,11 @@
  *   height int    Hauteur du rail en pixels. 629 pour la galerie d'intro, 494
  *                 pour les cartes inclinées — voir readme/front.md.
  *   modifier string Suffixe de classe posé sur le carrousel.
+ *   arrows   bool  Rendre les deux flèches de navigation. `true` par défaut.
+ *                  `false` retire AUSSI le glisser-déposer à la souris : les
+ *                  flèches sont l'alternative au geste qu'exige le WCAG 2.5.7,
+ *                  et un geste sans alternative ne doit pas exister. Le script
+ *                  le déduit de leur absence, il n'y a rien d'autre à passer.
  *   pinned   bool  Le rail est-il piloté par le défilement vertical de la page ?
  *                  Déclaré par la SECTION qui compose le carrousel, jamais
  *                  deviné d'un sélecteur parent : le composant sert aussi la
@@ -63,6 +68,7 @@ if ($items === []) {
 $height = isset($args['height']) ? (float) $args['height'] : 629.0;
 $modifier = isset($args['modifier']) ? (string) $args['modifier'] : '';
 $isPinned = ! empty($args['pinned']);
+$hasArrows = ! isset($args['arrows']) || (bool) $args['arrows'];
 $rows = [];
 
 foreach ($items as $item) {
@@ -129,16 +135,18 @@ foreach ($items as $item) {
             <span class="carousel__thumb" data-carousel-thumb></span>
         </div>
 
-        <div class="carousel__buttons">
-            <button class="carousel__button" type="button" data-carousel-prev>
-                <?php get_template_part('components/icon-arrow'); ?>
-                <span class="screen-reader-text"><?php esc_html_e('Précédent', 'lcds'); ?></span>
-            </button>
-            <button class="carousel__button carousel__button--next" type="button" data-carousel-next>
-                <?php get_template_part('components/icon-arrow'); ?>
-                <span class="screen-reader-text"><?php esc_html_e('Suivant', 'lcds'); ?></span>
-            </button>
-        </div>
+        <?php if ($hasArrows) : ?>
+            <div class="carousel__buttons">
+                <button class="carousel__button" type="button" data-carousel-prev>
+                    <?php get_template_part('components/icon-arrow'); ?>
+                    <span class="screen-reader-text"><?php esc_html_e('Précédent', 'lcds'); ?></span>
+                </button>
+                <button class="carousel__button carousel__button--next" type="button" data-carousel-next>
+                    <?php get_template_part('components/icon-arrow'); ?>
+                    <span class="screen-reader-text"><?php esc_html_e('Suivant', 'lcds'); ?></span>
+                </button>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 

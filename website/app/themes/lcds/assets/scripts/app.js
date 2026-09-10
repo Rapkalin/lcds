@@ -134,8 +134,17 @@ const initCarousels = () => {
 
             // Le curseur « main » ne s'affiche que s'il y a réellement quelque
             // chose à tirer : sur un rail qui tient dans la vue, il promettrait
-            // un geste sans effet.
-            carousel.classList.toggle("carousel--draggable", furthest > 1);
+            // un geste sans effet. Et sur un rail SANS FLÈCHES non plus — le
+            // glissement y est refusé, faute de l'alternative qu'exige le WCAG
+            // 2.5.7, donc le curseur promettrait un geste inopérant.
+            //
+            // La même condition qu'au `pointerdown`, et c'est voulu : une
+            // promesse visuelle qui survivrait au retrait du geste serait pire
+            // que pas de curseur du tout.
+            carousel.classList.toggle(
+                "carousel--draggable",
+                furthest > 1 && previous !== null && next !== null,
+            );
 
             // Cible atteinte : on rend la main au défilement de l'utilisateur.
             if (target !== null && Math.abs(rail.scrollLeft - target) < 2) {
@@ -144,16 +153,6 @@ const initCarousels = () => {
         };
 
         const scrollByPage = (direction) => {
-            // Rail épinglé : le rapport étant de 1:1, une page de rail vaut
-            // exactement une largeur de rail en défilement de page. Écrire
-            // `scrollLeft` ici serait écrasé à l'image suivante par
-            // l'avancement de la page.
-            if (estEpingle(carousel)) {
-                window.scrollBy({ top: direction * rail.clientWidth, behavior: behavior() });
-
-                return;
-            }
-
             const furthest = rail.scrollWidth - rail.clientWidth;
             const from = target === null ? rail.scrollLeft : target;
             target = Math.max(0, Math.min(furthest, from + direction * rail.clientWidth));
@@ -190,10 +189,20 @@ const initCarousels = () => {
             // précédent ne doit pas être avalé par celui-ci.
             aGlisse = false;
 
-            // Sur un rail épinglé la position appartient à la page : un
-            // glissement écrirait une valeur aussitôt écrasée. Les flèches
-            // restent l'alternative au geste — WCAG 2.5.7.
-            if (event.pointerType === "touch" || event.button !== 0 || estEpingle(carousel)) {
+            // Le glissement n'existe QUE là où une alternative existe, et
+            // cette alternative, ce sont les flèches — WCAG 2.5.7 exige un
+            // équivalent à tout geste de glissement. Un carrousel rendu sans
+            // flèches n'a donc pas de glissement : la règle est déduite de leur
+            // absence plutôt que passée en argument, ce qui rend les deux
+            // impossibles à désynchroniser.
+            //
+            // Sur un rail épinglé, le glissement n'aurait de toute façon aucun
+            // effet : la position appartient au défilement de la page, qui la
+            // réécrirait à l'image suivante.
+            const sansAlternative = previous === null || next === null;
+
+            if (event.pointerType === "touch" || event.button !== 0
+                || sansAlternative || estEpingle(carousel)) {
                 return;
             }
 

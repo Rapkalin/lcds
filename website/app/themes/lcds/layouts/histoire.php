@@ -44,5 +44,9 @@ get_template_part('components/block-intro', null, [
         // carrousel des technologies partage le composant et garde le
         // défilement natif.
         'pinned' => true,
+        // Pas de flèches : la galerie avance avec le défilement de la page.
+        // Leur retrait emporte le glisser-déposer, dont elles étaient
+        // l'alternative — voir components/carousel.php.
+        'arrows' => false,
     ],
 ]);

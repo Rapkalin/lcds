@@ -31,6 +31,10 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 
 ### Corrigé
 
+- **La galerie de « l'histoire » n'a plus de flèches.** Elle avance avec le
+  défilement de la page. Le glisser-déposer à la souris disparaît avec elles :
+  les flèches en étaient l'alternative accessible, et un geste sans alternative
+  ne doit pas exister. L'indicateur d'avancement, lui, reste.
 - **Les carrousels ne s'arrêtent plus au bord gauche.** La première image garde
   sa place à l'arrivée, mais au défilement les visuels sortent par le bord de la
   page comme ils le font déjà à droite. Vaut pour la galerie de « l'histoire »

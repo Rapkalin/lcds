@@ -1286,6 +1286,52 @@ côtés reçoivent `$page-outside`.
 > derrière, là où `$blue-pale` aurait effacé la limite sur les sections pâles.
 > Un seul jeton à changer.
 
+### La galerie de l'histoire n'a plus de flèches — ni de glissement
+
+Retour client : retirer les flèches en bas à droite du carrousel de l'histoire.
+Elle avance désormais avec le défilement de la page, et rien d'autre.
+
+**Le glisser-déposer part avec elles, et ce n'est pas un choix.** Les flèches
+étaient l'alternative au geste qu'exige le WCAG 2.5.7. Les retirer seules aurait
+laissé, en mode de repli — mouvement réduit, sans JavaScript — un glissement à
+la souris sans aucun équivalent, sur un rail dont la barre de défilement est
+masquée.
+
+La règle est **déduite de l'absence des flèches**, pas passée en argument :
+
+```js
+const sansAlternative = previous === null || next === null;
+```
+
+Deux endroits l'appliquent, et il le faut : le `pointerdown`, qui refuse le
+geste, et la classe `carousel--draggable`, qui pose le curseur « main ». Le
+premier jet n'avait traité que le premier — le rail promettait encore un geste
+inopérant, ce qu'une assertion a immédiatement attrapé. **Une promesse visuelle
+qui survit au retrait du geste est pire qu'une absence de curseur.**
+
+Ce qui reste pour avancer : le défilement de la page en mode épinglé ; au repli,
+la molette, le geste tactile et le clavier, le rail gardant son `tabindex`.
+L'indicateur d'avancement reste lui aussi : il dit où l'on en est.
+
+> **Une branche est devenue morte et a été retirée.** `scrollByPage` portait un
+> cas « rail épinglé → piloter la page ». Le seul rail épinglé n'ayant plus de
+> flèches, il était inatteignable. Rajouter des flèches à un rail épinglé
+> demanderait de le rétablir : sans lui, elles écriraient `scrollLeft`, aussitôt
+> écrasé par l'avancement de la page.
+
+#### Ce que ça a demandé côté recette
+
+Le bloc de comportement prenait « le premier rail » et « le premier bouton
+précédent », soit désormais le rail de l'histoire apparié aux boutons des
+technologies — un attelage qui n'existe pas. Il vise maintenant le carrousel
+**qui a des flèches**.
+
+Le découpage qui en résulte vaut d'être gardé : **géométrie côté histoire,
+contrôles côté technologies**. Les cotes de la maquette — course du rail,
+respiration de fin — ne supportent pas le rail des cartes inclinées : la boîte
+englobante d'une carte pivotée gonflait la somme attendue de 69px, et son débord
+de 12px ramenait la respiration finale de 36 à 24.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page
