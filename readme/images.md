@@ -85,6 +85,20 @@ echo lcds_render_image($image, ['class' => 'ma-classe', 'alt' => $alt]);
   `wp_get_attachment_image()` : `srcset` responsive servi en WebP,
   `width`/`height`, `loading="lazy"`, `decoding="async"` et texte alternatif de
   la médiathèque.
+
+> **`loading="lazy"` est posé par le HELPER, et ce n'est pas une redondance.**
+> `wp_get_loading_optimization_attributes()` ne décide de `loading` que **dans
+> la boucle** — la condition est `in_the_loop()`, lue dans le cœur. Les
+> sections de l'accueil sont rendues depuis une boucle ACF de contenu
+> flexible, qui n'en est pas une : les images repartaient **sans aucun
+> attribut**, et le navigateur les téléchargeait toutes d'emblée. Mesuré :
+> **833 Ko pour 20 visuels**, tous sous la ligne de flottaison.
+>
+> L'appelant garde la main. Une image réellement visible au chargement passe
+> `'loading' => 'eager'` — c'est le cas du visuel du hero, qui ajoute
+> `fetchpriority => high`, et de la vignette de sa carte. Différer le plus
+> grand visuel de la page retarderait le plus gros élément de contenu affiché.
+> Deux assertions de recette éprouvent les deux bords.
 - **Chaîne URL** (placeholder, ressource externe) → `<img>` simple : il n'y a
   rien à convertir.
 

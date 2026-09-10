@@ -7,6 +7,32 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.18.2
+
+Audit performance et RGAA de la page d'accueil. Aucune couleur n'a été touchée.
+
+### Corrigé
+
+- **833 Ko d'images ne sont plus téléchargés à l'ouverture de la page.** Vingt
+  visuels situés sous la ligne de flottaison — carrousel, parcours de soin,
+  technologies, informations pratiques — partaient sans consigne de chargement
+  différé, et le navigateur les récupérait tous d'emblée. Seuls la bannière et
+  la vignette de sa carte, réellement visibles au chargement, restent
+  prioritaires.
+- **Les cinq sections de l'accueil sont désormais des régions nommées.** Une
+  section sans nom accessible n'apparaît pas dans la navigation par régions
+  d'un lecteur d'écran : on n'y trouvait que l'en-tête, la navigation, le
+  contenu et le pied de page. Chacune est maintenant annoncée par son titre.
+- **Le focus ne se pose plus sur une commande invisible.** Une section figée
+  par le volet est entièrement recouverte par les suivantes, mais ses liens et
+  ses boutons restaient accessibles au clavier : la tabulation y menait sans
+  que rien ne s'affiche. Mesuré : six commandes concernées sur la section des
+  traitements. La page revient maintenant sur la section avant que le focus s'y
+  pose.
+- **Ce que le navigateur amène dans la vue ne passe plus sous l'en-tête fixe.**
+  Une ancre, un lien d'évitement ou une commande qui prend le focus se posait
+  derrière lui. Vaut aussi pour les ancres à venir.
+
 ## 2.18.1
 
 ### Corrigé

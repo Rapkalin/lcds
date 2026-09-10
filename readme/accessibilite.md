@@ -115,6 +115,34 @@ n'avait aucun titre.
 > classes portent maintenant `font-size: $fs-h2`. Vérifié : 48px / interligne
 > 58px / boîte 553×116 avant comme après, au pixel.
 
+**Chaque section porte un NOM ACCESSIBLE.** Une `<section>` sans nom n'est pas
+exposée comme région : la navigation par régions s'arrêtait aux quatre repères
+de la page. Les cinq sections à étiquette se nomment par leur `h2`, via
+`aria-labelledby` et un identifiant produit par `wp_unique_id()` — jamais écrit
+en dur, deux sections du même type pouvant coexister sur une page. Le hero, qui
+n'a pas de titre, reste sans nom : c'est juste, il n'est pas une région.
+
+**Le focus ne doit pas se poser derrière un volet.** Une section figée par le
+volet est entièrement recouverte par les suivantes, mais ses commandes restent
+dans l'ordre de tabulation, et le navigateur ne les fait pas défiler : leur
+rectangle est déjà dans la vue, il n'a aucune notion de « recouvert ». Mesuré à
+12000 de défilement : **six commandes** de la section des traitements étaient
+focalisables et masquées. `initVolets` écoute `focusin` et ramène la page dans
+la course de la section avant que le focus s'y pose — WCAG 2.4.11.
+
+> Cela suppose de connaître la position de FLUX de la section, que plus rien ne
+> donne une fois qu'elle est collée : son rectangle porte le décalage, et
+> `offsetTop` aussi — vérifié. Elle est donc relevée à chaque mesure, mais
+> retenue **seulement quand la section n'est pas collée**.
+
+**L'en-tête fixe ne doit rien recouvrir de ce que le navigateur amène dans la
+vue.** `html { scroll-padding-top: var(--header-height) }`. Sans cette réserve,
+une ancre, un lien d'évitement ou une commande révélée au focus se pose
+**sous** l'en-tête : mesuré, la commande révélée arrivait à y=42 derrière un
+en-tête de 128. `scroll-padding` sur le conteneur de défilement, et non un
+`scroll-margin` par élément : une seule déclaration, valable aussi pour les
+ancres que le thème ne connaît pas.
+
 **Le texte alternatif vit dans la médiathèque.** Voir
 [`images.md`](images.md) : ne jamais repasser `'alt' => ''` depuis un composant.
 

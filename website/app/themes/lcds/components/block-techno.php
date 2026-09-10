@@ -64,13 +64,25 @@ foreach ($cards as $index => $card) {
 if ($items === []) {
     return;
 }
+
+// Une `<section>` sans nom accessible n'est PAS exposée comme région : la
+// navigation par régions s'arrêterait aux quatre repères de la page. Son
+// titre visible la nomme, d'où l'identifiant posé sur l'étiquette.
+//
+// `wp_unique_id` et non un identifiant écrit en dur : les sections sont un
+// contenu flexible, deux du même type peuvent coexister sur une page, et deux
+// `id` identiques feraient pointer les deux `aria-labelledby` au même endroit.
+//
+// Vide quand le libellé l'est : `tag` ne rend alors rien, et un
+// `aria-labelledby` qui ne désigne aucun élément ne nomme pas la section.
+$headingId = $label === '' ? '' : wp_unique_id('section-titre-');
 ?>
 
 <?php /* Le groupe d'exclusivité des cartes : une seule dépliée à la fois, */ ?>
 <?php /* et refermer une carte ne touche pas l'accordéon des traitements. */ ?>
-<section class="block-techno" data-disclosure-group>
+<section class="block-techno" data-disclosure-group<?php echo $headingId === '' ? '' : ' aria-labelledby="' . esc_attr($headingId) . '"'; ?>>
     <div class="block-techno__header">
-        <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2']); ?>
+        <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2', 'id' => $headingId]); ?>
         <?php get_template_part('components/cta', null, $cta); ?>
     </div>
 

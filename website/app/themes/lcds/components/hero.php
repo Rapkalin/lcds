@@ -32,8 +32,12 @@ $background = $image === 0 ? '' : lcds_render_image($image, [
     'fetchpriority' => 'high',
 ], 'full');
 
+// `eager` comme le visuel de fond : la carte est posée DANS le hero, donc
+// au-dessus de la ligne de flottaison. Le repli du thème est `lazy`, et il
+// retarderait une image que le visiteur voit tout de suite.
 $vignette = $thumbnail === 0 ? '' : lcds_render_image($thumbnail, [
     'class' => 'hero__thumbnail-image',
+    'loading' => 'eager',
 ], 'medium');
 
 $card_tag = $url === '' ? 'div' : 'a';

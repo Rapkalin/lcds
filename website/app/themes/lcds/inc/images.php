@@ -41,7 +41,18 @@ function lcds_render_image(int|array|string $image, array $attr = [], string $si
     }
 
     if ($attachment_id > 0) {
-        return wp_get_attachment_image($attachment_id, $size, false, $attr);
+        // Le chargement différé est posé ICI, et il n'est pas redondant avec
+        // celui de WordPress. `wp_get_loading_optimization_attributes()` ne
+        // décide de `loading` que DANS la boucle — `in_the_loop()`. Les
+        // sections de la page d'accueil sont rendues depuis une boucle ACF de
+        // contenu flexible, qui n'en est pas une : les images repartaient donc
+        // SANS aucun attribut `loading`, et le navigateur les téléchargeait
+        // toutes d'emblée. Mesuré sur l'accueil : 833 Ko pour 20 visuels tous
+        // situés sous la ligne de flottaison.
+        //
+        // L'appelant garde la main : le visuel du hero et la vignette de sa
+        // carte passent `eager`, étant au-dessus de la ligne de flottaison.
+        return wp_get_attachment_image($attachment_id, $size, false, $attr + ['loading' => 'lazy']);
     }
 
     $url = is_array($image) ? (string) ($image['url'] ?? '') : (string) $image;

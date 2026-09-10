@@ -10,6 +10,10 @@
  *                   c'est lui qui doit apparaître dans le plan de titres. Sans
  *                   ça, un utilisateur qui navigue par titres reçoit les titres
  *                   d'items en vrac, sans regroupement. `p` par défaut.
+ *   id    string  Identifiant posé sur la balise. Sert aux sections à se
+ *                 nommer par `aria-labelledby` : une `<section>` sans nom
+ *                 accessible n'est pas exposée comme région, et le plan de
+ *                 navigation par régions s'arrête aux quatre repères de page.
  *   dot   string  Couleur de la puce, parmi les valeurs de LcdsDotColor.
  *                 Elle change d'une section à l'autre dans la maquette. Les
  *                 libellés vus par le contributeur (« Vert », « Rouge ») ne
@@ -35,9 +39,10 @@ $element = isset($args['element']) && in_array($args['element'], ['h2', 'h3', 'p
     : 'p';
 
 $dot = LcdsDotColor::fromValue($args['dot'] ?? '', LcdsDotColor::Turquoise);
+$id = isset($args['id']) ? (string) $args['id'] : '';
 ?>
 
-<<?php echo $element; ?> class="tag tag--<?php echo esc_attr($dot->value); ?>">
+<<?php echo $element; ?> class="tag tag--<?php echo esc_attr($dot->value); ?>"<?php echo $id === '' ? '' : ' id="' . esc_attr($id) . '"'; ?>>
     <span class="tag__dot" aria-hidden="true"></span>
     <?php echo esc_html($label); ?>
 </<?php echo $element; ?>>

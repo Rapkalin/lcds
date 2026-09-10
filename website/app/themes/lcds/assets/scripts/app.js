@@ -1086,18 +1086,58 @@ const initVolets = () => {
         sections.push(noeud);
     }
 
+    // Position de FLUX de chaque section, relevée seulement quand elle n'est
+    // pas collée. Une fois collée, plus rien ne la donne : son rectangle porte
+    // le décalage, et `offsetTop` aussi — vérifié. La dernière valeur connue
+    // reste juste tant que rien au-dessus d'elle ne change de hauteur, et
+    // c'est exactement ce que l'observateur ci-dessous rappelle.
+    const positions = new Map();
+
     // Aucun test de mouvement réduit ici : la règle qui colle les sections vit
     // déjà sous `prefers-reduced-motion: no-preference`. Le redoubler en
     // JavaScript ferait deux sources pour une même décision.
     const mesurer = () => {
         for (const section of sections) {
-            section.style.setProperty(
-                "--volet-top",
-                `${window.innerHeight - section.offsetHeight}px`,
-            );
+            const decalage = window.innerHeight - section.offsetHeight;
+
+            section.style.setProperty("--volet-top", `${decalage}px`);
+
+            if (section.getBoundingClientRect().top > decalage + 1) {
+                positions.set(section, section.getBoundingClientRect().top + window.scrollY);
+            }
         }
 
         page.classList.add("front-page--volet");
+    };
+
+    // Une section figée est INVISIBLE — les volets suivants la recouvrent
+    // entièrement — mais ses liens et ses boutons restent dans l'ordre de
+    // tabulation. Le navigateur ne les fait pas défiler : leur rectangle est
+    // déjà dans la vue, il n'a aucune notion de « recouvert ». Mesuré à 12000
+    // de défilement : les six commandes de la section des traitements étaient
+    // focalisables et masquées.
+    //
+    // On ramène donc la page dans la course de la section avant que le focus
+    // s'y pose. WCAG 2.4.11.
+    const revelerAuFocus = (event) => {
+        const section = sections.find((noeud) => noeud.contains(event.target));
+        const haut = section === undefined ? undefined : positions.get(section);
+
+        if (haut === undefined) {
+            return;
+        }
+
+        const fin = haut + section.offsetHeight - window.innerHeight;
+
+        if (window.scrollY <= fin) {
+            return;
+        }
+
+        // Deux temps : le premier décolle la section, le second amène la
+        // commande elle-même dans la vue. Tant que la section est collée, sa
+        // géométrie est fausse et `scrollIntoView` seul ne mènerait nulle part.
+        window.scrollTo({ top: fin, behavior: "instant" });
+        event.target.scrollIntoView({ block: "nearest", behavior: "instant" });
     };
 
     // Une section change de hauteur sans que la fenêtre bouge : un accordéon
@@ -1113,6 +1153,7 @@ const initVolets = () => {
     }
 
     window.addEventListener("resize", mesurer);
+    document.addEventListener("focusin", revelerAuFocus);
     mesurer();
 };
 

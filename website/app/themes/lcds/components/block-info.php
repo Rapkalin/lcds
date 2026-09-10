@@ -58,12 +58,24 @@ if ($rows === []) {
 }
 
 $visual = $image === 0 ? '' : lcds_render_image($image, ['class' => 'block-info__image'], 'large');
+
+// Une `<section>` sans nom accessible n'est PAS exposée comme région : la
+// navigation par régions s'arrêterait aux quatre repères de la page. Son
+// titre visible la nomme, d'où l'identifiant posé sur l'étiquette.
+//
+// `wp_unique_id` et non un identifiant écrit en dur : les sections sont un
+// contenu flexible, deux du même type peuvent coexister sur une page, et deux
+// `id` identiques feraient pointer les deux `aria-labelledby` au même endroit.
+//
+// Vide quand le libellé l'est : `tag` ne rend alors rien, et un
+// `aria-labelledby` qui ne désigne aucun élément ne nomme pas la section.
+$headingId = $label === '' ? '' : wp_unique_id('section-titre-');
 ?>
 
-<section class="block-info">
+<section class="block-info"<?php echo $headingId === '' ? '' : ' aria-labelledby="' . esc_attr($headingId) . '"'; ?>>
     <div class="block-info__inner">
         <div class="block-info__aside">
-            <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2']); ?>
+            <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2', 'id' => $headingId]); ?>
 
             <div class="block-info__media">
                 <?php if ($visual !== '') : ?>

@@ -535,6 +535,63 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * Chargement différé des visuels.
+     *
+     * WordPress ne pose `loading` que DANS la boucle
+     * (`wp_get_loading_optimization_attributes`, condition `in_the_loop()`).
+     * Les sections viennent d'une boucle ACF de contenu flexible, qui n'en est
+     * pas une : les images repartaient SANS aucun attribut, et le navigateur
+     * téléchargeait tout d'emblée. Mesuré sur l'accueil : 833 Ko pour 20
+     * visuels, tous sous la ligne de flottaison.
+     *
+     * Éprouvé sur les DEUX bords. Seuls le visuel du hero et la vignette de sa
+     * carte restent `eager` : différer le plus grand visuel de la page
+     * retarderait le plus gros élément de contenu affiché.
+     * --------------------------------------------------------------------- */
+    const visuels = [...doc.querySelectorAll("img")];
+
+    if (visuels.length > 0 && win.innerWidth === 1440) {
+        const pressees = visuels.filter((image) => image.getAttribute("loading") !== "lazy");
+        const attendues = ["hero__image", "hero__thumbnail-image"];
+        const noms = pressees.map((image) => image.className.split(" ")[0]).sort();
+
+        assert(
+            `visuels : ${visuels.length - pressees.length} sur ${visuels.length} en chargement différé,`
+            + ` seuls ${noms.join(" et ") || "aucun"} restent immédiats`,
+            noms.length === attendues.length && noms.every((nom, rang) => nom === attendues.slice().sort()[rang])
+        );
+
+        const hero = doc.querySelector(".hero__image");
+
+        assert(
+            `visuels : le visuel du hero est priorisé (${hero === null ? "absent" : hero.getAttribute("loading")}`
+            + ` / ${hero === null ? "-" : hero.getAttribute("fetchpriority")})`,
+            hero !== null
+                && hero.getAttribute("loading") === "eager"
+                && hero.getAttribute("fetchpriority") === "high"
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * L'en-tête fixe ne doit rien recouvrir de ce que le navigateur amène.
+     *
+     * Une ancre, un lien d'évitement, une commande qui prend le focus : sans
+     * réserve haute sur le conteneur de défilement, tout se pose SOUS
+     * l'en-tête. Mesuré : une commande révélée arrivait à y=42 derrière un
+     * en-tête de 128.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        const reserve = parseFloat(styleOf(doc.documentElement).scrollPaddingTop);
+        const enTete = doc.getElementById("site-header");
+        const hauteur = enTete === null ? 0 : enTete.offsetHeight;
+
+        assert(
+            `défilement : réserve haute égale à l'en-tête (${reserve} / ${hauteur})`,
+            Number.isFinite(reserve) && Math.abs(reserve - hauteur) < 2
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
      * Coins hauts des sections empilées.
      *
      * Le rayon seul ne suffit pas : sans le CHEVAUCHEMENT de la même valeur,
@@ -622,6 +679,31 @@ window.runFrontQa = async (win) => {
                 debord === 48
             );
         }
+
+        /* ----------------------------------------------------------------- *
+         * Chaque section porte un NOM ACCESSIBLE.
+         *
+         * Une `<section>` sans nom n'est pas exposée comme région : la
+         * navigation par régions s'arrêterait aux quatre repères de la page.
+         * Le titre visible la nomme, par `aria-labelledby`.
+         *
+         * La cible est vérifiée, pas seulement l'attribut : un identifiant qui
+         * ne désigne rien ne nomme pas davantage la section, et rien ne le
+         * signale.
+         * ----------------------------------------------------------------- */
+        const nommables = panneaux.filter((noeud) => noeud.querySelector("h2") !== null);
+        const sansNom = nommables.filter((noeud) => {
+            const cible = noeud.getAttribute("aria-labelledby");
+            const titre = cible === null ? null : doc.getElementById(cible);
+
+            return titre === null || titre.textContent.trim() === "";
+        });
+
+        assert(
+            `sections : les ${nommables.length} sections à titre sont nommées par lui`
+            + ` (${sansNom.length === 0 ? "toutes" : sansNom.map((n) => n.className.split(" ")[0]).join(", ")})`,
+            nommables.length > 0 && sansNom.length === 0
+        );
 
         // Les suivantes chevauchent : c'est ce qui met la section précédente
         // derrière leurs épaules, à la place du blanc du conteneur.

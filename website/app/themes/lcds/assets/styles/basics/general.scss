@@ -12,6 +12,19 @@
   box-sizing: border-box;
 }
 
+// L'en-tête est FIXE sur une page qui porte un hero : sans cette réserve, tout
+// ce que le navigateur amène dans la vue — une ancre, un lien d'évitement, une
+// commande qui prend le focus — se pose SOUS lui et reste invisible. Constaté
+// en corrigeant le focus masqué par les volets : la commande révélée arrivait
+// à y=42, derrière un en-tête de 128.
+//
+// `scroll-padding` et non un `scroll-margin` par élément : c'est le conteneur
+// de défilement qui porte la contrainte, une seule fois, et elle vaut aussi
+// pour les ancres que le thème ne connaît pas.
+html {
+  scroll-padding-top: var(--header-height, #{fn.toRem(128)});
+}
+
 // Le défilement fluide est retiré quand l'utilisateur demande à réduire les
 // animations : la préférence est posée au niveau du système, pas du site.
 @media (prefers-reduced-motion: no-preference) {
