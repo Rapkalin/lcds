@@ -453,6 +453,21 @@ window.runFrontQa = async (win) => {
          * c'est le contrat de la garde.
          * ------------------------------------------------------------------ */
         await aller(0);
+        // L'état DÉSACTIVÉ des flèches est posé par `update()`, qui écoute le
+        // `scroll` DU RAIL. `aller(1)` a mené le rail au bout et désactivé la
+        // flèche ; `aller(0)` l'a ramené à zéro, mais l'évènement qui la
+        // réactiverait n'est pas délivré sous `--virtual-time-budget` — même
+        // piège que pour la page, plus haut. Sans cette émission, le clic
+        // portait sur un bouton désactivé et ne faisait RIEN : ni appel à
+        // `scrollBy`, ni écriture du rail. Constaté deux fois de suite.
+        railPin.dispatchEvent(new win.Event("scroll"));
+
+        // Éprouvé avant de cliquer : un échec dit alors POURQUOI, au lieu de
+        // laisser croire que la garde ne délègue pas.
+        assert(
+            `épinglage : la flèche suivante est active avant le clic (désactivée : ${suivant.disabled})`,
+            suivant.disabled === false
+        );
 
         const appels = [];
         const scrollByOrigine = win.scrollBy;
@@ -574,6 +589,72 @@ window.runFrontQa = async (win) => {
             `sections : les suivantes chevauchent la précédente de 48 (${[...new Set(chevauchements)].join(", ")})`,
             chevauchements.length > 0 && chevauchements.every((m) => m === "-48px")
         );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Un seul panneau ouvert à la fois, PAR GROUPE.
+     *
+     * Éprouvé sur les deux groupes de la page — l'accordéon des traitements et
+     * les cartes de technologie — et sur leur INDÉPENDANCE : ouvrir une carte
+     * ne doit pas refermer l'accordéon. C'est la seule chose qu'un groupe posé
+     * au mauvais niveau casserait sans rien signaler.
+     * --------------------------------------------------------------------- */
+    const groupes = [...doc.querySelectorAll("[data-disclosure-group]")];
+
+    if (groupes.length > 0 && win.innerWidth === 1440) {
+        const ouverts = (racine) => [...racine.querySelectorAll("[data-disclosure]")]
+            .filter((noeud) => noeud.getAttribute("aria-expanded") === "true");
+
+        assert(
+            `panneaux : ${groupes.length} groupes déclarés (${groupes.map((n) => n.className.split(" ")[0]).join(", ")})`,
+            groupes.length === 2
+        );
+
+        // AU CHARGEMENT déjà : le champ « ouvert » est contribuable, deux
+        // panneaux cochés ne doivent pas donner deux panneaux ouverts.
+        //
+        // CETTE ASSERTION NE PEUT PAS ÉCHOUER SUR LE CONTENU SEMÉ, et c'est
+        // déclaré plutôt que tu : le contenu de démonstration ne coche qu'un
+        // panneau par groupe, donc l'invariant tient même sans le code qui
+        // l'applique. Vérifié — l'application au chargement retirée, elle reste
+        // VERTE. Elle est gardée comme garde-fou pour un contenu futur, pas
+        // comme preuve du dispositif d'aujourd'hui.
+        assert(
+            `panneaux : au plus un ouvert par groupe au chargement (${groupes.map((g) => ouverts(g).length).join(", ")})`,
+            groupes.every((g) => ouverts(g).length <= 1)
+        );
+
+        const accordeon = doc.querySelector(".accordion");
+
+        if (accordeon !== null) {
+            const boutons = [...accordeon.querySelectorAll("[data-disclosure]")];
+            const techno = doc.querySelector(".block-techno");
+            const ouvertsTechnoAvant = techno === null ? 0 : ouverts(techno).length;
+
+            boutons[0].click();
+            const apresPremier = ouverts(accordeon);
+
+            boutons[1].click();
+            const apresSecond = ouverts(accordeon);
+
+            assert(
+                `accordéon : ouvrir un panneau referme l'autre (${apresSecond.length} ouvert)`,
+                apresPremier.length === 1 && apresSecond.length === 1
+                    && apresSecond[0] === boutons[1]
+            );
+            // Un clic sur un panneau OUVERT le referme : l'exclusivité ne doit
+            // pas transformer l'accordéon en sélecteur à choix obligatoire.
+            boutons[1].click();
+            assert(
+                `accordéon : un second clic referme (${ouverts(accordeon).length} ouvert)`,
+                ouverts(accordeon).length === 0
+            );
+            // Et les deux groupes sont INDÉPENDANTS.
+            assert(
+                `panneaux : les groupes n'interfèrent pas (${techno === null ? "aucun" : ouverts(techno).length} côté technologies, inchangé)`,
+                techno === null || ouverts(techno).length === ouvertsTechnoAvant
+            );
+        }
     }
 
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.

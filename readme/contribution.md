@@ -133,6 +133,48 @@ glyphe, sans erreur.
 - **Informations pratiques** : les filets se posent entre les entrées, jamais
   avant la première ni après la dernière.
 
+## Réutiliser une section sur une autre page
+
+Les sections sont des **composants importables**, et rien ne les attache à la
+page d'accueil. La séparation qui le permet est déjà en place :
+
+| Couche | Rôle | Lit ACF ? |
+| --- | --- | --- |
+| `layouts/<nom>.php` | Lit les sous-champs du contenu flexible et normalise | **oui** |
+| `components/block-<nom>.php` | Rend le balisage à partir de ses `$args` | **non** |
+
+Vérifié sur les seize fichiers de `components/` : **aucun n'appelle ACF**. Poser
+une section ailleurs ne demande donc qu'un appel avec les bons arguments, sans
+toucher au composant :
+
+```php
+get_template_part('components/block-intro', null, [
+    'label' => __('L\'histoire', 'lcds'),
+    'dot' => 'turquoise',
+    'text' => $texte,
+    'cta' => ['label' => …, 'url' => …],
+]);
+```
+
+La source des données est libre : un champ ACF de la nouvelle page, une requête,
+ou des valeurs en dur. C'est le rôle du gabarit appelant, pas du composant.
+
+> **À faire avec le gabarit, pas avec le composant.** Si une nouvelle page a
+> besoin d'une section pilotée par ACF, on écrit son propre gabarit sur le
+> modèle de `layouts/` — on n'ajoute pas de lecture de champ dans le composant,
+> sinon il cesse d'être réutilisable et la page suivante devra le contourner.
+
+### Le cas de l'accordéon
+
+`components/accordion.php` prend `items` — une entrée par panneau, avec `id`,
+`title`, `text` et `open` — et un `heading` facultatif. **Ce dernier compte** :
+un accordéon posé directement sous le `h1` d'une page prend `h2`, sinon la
+hiérarchie des titres saute un niveau et le critère RGAA 9.1 tombe.
+
+L'exclusivité — un seul panneau ouvert — vient de `data-disclosure-group`, que
+le composant pose lui-même sur sa liste. Deux accordéons sur la même page sont
+donc **indépendants** l'un de l'autre, chacun exclusif chez lui.
+
 ## D'où viennent les visuels de démonstration
 
 L'amorçage ne fabrique aucune image : il lit la correspondance

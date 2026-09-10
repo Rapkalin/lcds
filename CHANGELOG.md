@@ -31,6 +31,13 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 
 ### Corrigé
 
+- **Un seul panneau dépliable reste ouvert à la fois.** Déplier une entrée de
+  l'accordéon des traitements referme la précédente, et les cartes de
+  technologie se comportent de même entre elles. Les deux ensembles restent
+  indépendants : ouvrir une carte ne ferme pas l'accordéon. La règle s'applique
+  aussi à l'ouverture de la page, si plusieurs panneaux sont cochés « ouvert »
+  dans l'administration.
+
 - **Le parcours de soin repart plus vite d'une étape à l'autre.** Après une
   bascule, le défilement en trop était absorbé pendant trop longtemps avant
   qu'on puisse passer à l'étape suivante : l'attente tombe de 1,6 à 1,2 seconde

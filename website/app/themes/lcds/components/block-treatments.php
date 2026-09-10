@@ -56,30 +56,7 @@ if ($rows === []) {
         </div>
 
         <div class="block-treatments__content">
-            <ul class="accordion">
-                <?php foreach ($rows as $row) : ?>
-                    <li class="accordion__item">
-                        <h3 class="accordion__heading">
-                            <button
-                                class="accordion__trigger"
-                                type="button"
-                                data-disclosure
-                                aria-expanded="<?php echo $row['open'] ? 'true' : 'false'; ?>"
-                                aria-controls="<?php echo esc_attr($row['id']); ?>"
-                            >
-                                <span class="accordion__title"><?php echo esc_html($row['title']); ?></span>
-                                <span class="accordion__icon">
-                                    <?php get_template_part('components/icon-plus'); ?>
-                                </span>
-                            </button>
-                        </h3>
-
-                        <div class="accordion__panel" id="<?php echo esc_attr($row['id']); ?>" <?php echo $row['open'] ? '' : 'hidden'; ?>>
-                            <?php echo wp_kses_post($row['text']); ?>
-                        </div>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <?php get_template_part('components/accordion', null, ['items' => $rows]); ?>
 
             <div class="block-treatments__cta">
                 <?php get_template_part('components/cta', null, $cta); ?>

@@ -183,6 +183,16 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   l'encoche des coins laisse voir le blanc du conteneur, soit deux oreilles
   claires à chaque épaule.
 
+- **Panneaux dépliables** : deux groupes déclarés sur la page, au plus un
+  ouvert par groupe, ouvrir un panneau referme son voisin, un second clic
+  referme tout, et surtout les deux groupes **n'interfèrent pas** — c'est ce
+  qu'un `data-disclosure-group` posé au mauvais niveau casserait en silence.
+
+> L'assertion « au plus un ouvert au chargement » **ne peut pas échouer sur le
+> contenu semé**, qui ne coche qu'un panneau par groupe : vérifié, elle reste
+> verte quand on retire le code qui l'applique. Gardée comme garde-fou pour un
+> contenu futur, et déclarée comme telle dans son commentaire.
+
 - **Contribution de la page d'accueil** : un gabarit de `layouts/` par layout
   déclaré et réciproquement, le catalogue porte bien ses six sections, la page
   porte des rangées, `post_content` est vide, et l'éditeur de blocs est coupé

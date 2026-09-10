@@ -290,23 +290,72 @@ const initCarousels = () => {
  * that reads as a demonstration of the open state rather than a rule — and
  * closing a panel the visitor did not ask to close is worse than a long page.
  */
-const initAccordions = () => {
-    document.querySelectorAll("[data-disclosure]").forEach((trigger) => {
-        const panel = document.getElementById(trigger.getAttribute("aria-controls"));
+/**
+ * Panneaux dépliables : UN SEUL ouvert à la fois par groupe.
+ *
+ * Le groupe est déclaré par `data-disclosure-group` sur un ancêtre, et jamais
+ * deviné : la liste de l'accordéon le porte, la section des technologies aussi.
+ * Deux conséquences voulues — replier une carte de technologie ne touche pas
+ * l'accordéon des traitements, et un panneau posé hors de tout groupe reste
+ * indépendant plutôt que de fermer le reste de la page par surprise.
+ *
+ * La règle est appliquée AU CHARGEMENT autant qu'au clic. Le champ « ouvert »
+ * est contribuable : rien n'empêche d'en cocher deux dans l'administration, et
+ * la page s'ouvrirait alors dans un état que le premier clic ne rattraperait
+ * pas.
+ */
+const basculerPanneau = (trigger, ouvrir) => {
+    const panel = document.getElementById(trigger.getAttribute("aria-controls"));
 
-        if (panel === null) {
-            return;
+    if (panel === null) {
+        return;
+    }
+
+    trigger.setAttribute("aria-expanded", String(ouvrir));
+    panel.hidden = ! ouvrir;
+    // La carte de technologie masque son titre quand le panneau est ouvert :
+    // l'état vit sur la carte, pas sur le bouton.
+    trigger.closest(".tech-card")?.classList.toggle("tech-card--open", ouvrir);
+};
+
+// Referme les voisins du même groupe. Hors groupe, il n'y a personne à
+// refermer : le panneau vit seul.
+const replierVoisins = (trigger) => {
+    const groupe = trigger.closest("[data-disclosure-group]");
+
+    if (groupe === null) {
+        return;
+    }
+
+    for (const autre of groupe.querySelectorAll("[data-disclosure]")) {
+        if (autre !== trigger && autre.getAttribute("aria-expanded") === "true") {
+            basculerPanneau(autre, false);
+        }
+    }
+};
+
+const initAccordions = () => {
+    const declencheurs = [...document.querySelectorAll("[data-disclosure]")];
+
+    for (const trigger of declencheurs) {
+        if (document.getElementById(trigger.getAttribute("aria-controls")) === null) {
+            continue;
+        }
+
+        if (trigger.getAttribute("aria-expanded") === "true") {
+            replierVoisins(trigger);
         }
 
         trigger.addEventListener("click", () => {
-            const isOpen = trigger.getAttribute("aria-expanded") === "true";
-            trigger.setAttribute("aria-expanded", String(!isOpen));
-            panel.hidden = isOpen;
-            // La carte de technologie masque son titre quand le panneau est
-            // ouvert : l'état vit sur la carte, pas sur le bouton.
-            trigger.closest(".tech-card")?.classList.toggle("tech-card--open", !isOpen);
+            const estOuvert = trigger.getAttribute("aria-expanded") === "true";
+
+            if (! estOuvert) {
+                replierVoisins(trigger);
+            }
+
+            basculerPanneau(trigger, ! estOuvert);
         });
-    });
+    }
 };
 
 /**

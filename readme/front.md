@@ -1185,6 +1185,47 @@ Le rayon vit dans `$radius-section`, distinct de `--footer-radius` qui vaut 64 e
 arrondit les coins BAS du panneau de pied de page. Deux rôles, deux valeurs :
 les confondre ferait bouger l'un en corrigeant l'autre.
 
+### Un seul panneau ouvert à la fois, par GROUPE
+
+Retour client : « pour les accordéons sur le site de manière globale, un seul
+accordéon ne peut être ouvert à la fois ».
+
+**Le groupe est déclaré, jamais deviné.** `data-disclosure-group` sur un
+ancêtre — la liste de `components/accordion.php`, la section des technologies —
+et le script referme les voisins de ce groupe-là. Trois conséquences voulues :
+
+- replier une carte de technologie **ne touche pas** l'accordéon des
+  traitements, alors que les deux coexistent sur la page d'accueil ;
+- un panneau posé hors de tout groupe reste **indépendant**, plutôt que de
+  fermer le reste de la page par surprise ;
+- déplacer la règle d'un cran — la porter sur `.main-content` — suffirait à
+  rendre l'exclusivité globale à la page, si le besoin change.
+
+> **Lecture retenue de « de manière globale »** : la règle vaut partout, elle
+> ne ferme pas tout partout. La différence est observable dès la page d'accueil,
+> qui porte les deux groupes. À renverser si l'intention était l'autre.
+
+**La règle s'applique aussi au CHARGEMENT.** Le champ « ouvert » est
+contribuable : rien n'empêche d'en cocher deux dans l'administration, et la page
+s'ouvrirait alors dans un état que le premier clic ne rattraperait pas.
+
+Et **tout peut être refermé** : un second clic sur un panneau ouvert le replie.
+L'exclusivité ne devait pas transformer l'accordéon en sélecteur à choix
+obligatoire.
+
+### L'accordéon est un composant
+
+`components/accordion.php`, extrait de `block-treatments.php` où il vivait en
+dur. Il prend `items` et un `heading` — un accordéon posé directement sous un
+`h1` prend `h2`, sinon la hiérarchie saute un niveau sur la nouvelle page.
+
+C'était le seul balisage de section encore écrit sur place. **Tout le reste
+l'était déjà** : vérifié sur les seize fichiers de `components/`, aucun ne lit
+ACF. Ce sont les `layouts/*.php` qui lisent les sous-champs et délèguent. Poser
+une section sur une autre page ne demande donc rien de plus qu'un
+`get_template_part` avec les bons arguments — voir
+[`contribution.md`](contribution.md).
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page

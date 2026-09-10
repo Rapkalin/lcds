@@ -66,7 +66,9 @@ if ($items === []) {
 }
 ?>
 
-<section class="block-techno">
+<?php /* Le groupe d'exclusivité des cartes : une seule dépliée à la fois, */ ?>
+<?php /* et refermer une carte ne touche pas l'accordéon des traitements. */ ?>
+<section class="block-techno" data-disclosure-group>
     <div class="block-techno__header">
         <?php get_template_part('components/tag', null, ['label' => $label, 'dot' => $dot, 'element' => 'h2']); ?>
         <?php get_template_part('components/cta', null, $cta); ?>
