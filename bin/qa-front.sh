@@ -806,7 +806,11 @@ printf(
 // enregistre, get_field rend NULL et c est le repli PHP qui decide. Les deux
 // doivent donner la MEME couleur, sinon la puce change de teinte au premier
 // enregistrement sans que personne ait rien choisi.
-$repli = LcdsDotColor::fromValue(get_field("puce_page_courante", "option"), LcdsDotColor::Orange);
+//
+// On lit le repli, PAS le reglage enregistre : sur un site ou un contributeur
+// a deja choisi une couleur, get_field rend son choix et l assertion
+// recetterait le contenu de la base au lieu du code.
+$repli = lcds_nav_dot_fallback();
 
 printf(
     "%s|le repli du theme et le defaut ACF concordent|%s\n",

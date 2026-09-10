@@ -389,15 +389,14 @@ const initAccordions = () => {
  */
 // Durée pendant laquelle le défilement est absorbé après une bascule d'étape.
 //
-// PLANCHER DUR : la transition CSS du rail, 0,45s. En dessous, l'étape suivante
-// partirait avant que la précédente soit posée. Les 50ms qui restent sont la
-// marge, et c'est tout ce qui séparait 600 de ce plancher.
+// PLANCHER DUR : la transition CSS du rail, désormais 0,35s. En dessous,
+// l'étape suivante partirait avant que la précédente soit posée. Les 50ms qui
+// restent sont la marge.
 //
-// Ramenée de 600 à 500 sur retour client : l'absorption durait trop longtemps
-// et il fallait attendre pour repartir. Descendre plus bas exige de raccourcir
-// d'abord la transition dans block-journey.scss — les deux ne peuvent pas
-// diverger.
-const JOURNEY_CADENCE = 500;
+// Ramenée de 600 à 500 sur un premier retour client, puis à 400 en raccourcissant
+// la transition — c'était le seul levier restant à la molette, et il fallait
+// bouger les deux ENSEMBLE : elles ne peuvent pas diverger.
+const JOURNEY_CADENCE = 400;
 
 // Silence au-delà duquel un évènement de molette ouvre un geste NEUF.
 //
@@ -462,10 +461,18 @@ const initJourneys = () => {
 
         // Le défilement peut émettre bien plus souvent que le navigateur ne
         // peint : on ne recalcule qu'une fois par image.
+        //
+        // On ANNULE l'image en attente et on en redemande une, plutôt que de
+        // renoncer quand il y en a déjà une. Renoncer suppose que celle-ci sera
+        // rendue : une image jamais produite — onglet en arrière-plan, budget
+        // de temps virtuel épuisé — bloquait alors la mise à jour POUR DE BON,
+        // sans rien signaler. Constaté sur le rail épinglé, qui portait le même
+        // motif : six évènements de défilement pour deux mises à jour.
+        //
+        // Le coalescement est identique, une seule image reste demandée.
         const schedule = () => {
-            if (frame === null) {
-                frame = window.requestAnimationFrame(update);
-            }
+            window.cancelAnimationFrame(frame);
+            frame = window.requestAnimationFrame(update);
         };
 
         const apply = () => {

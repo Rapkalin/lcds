@@ -17,6 +17,19 @@ if (! defined('ABSPATH')) {
 }
 
 /**
+ * Teinte de la puce de page courante quand aucun réglage n'est enregistré.
+ *
+ * Source unique du repli, parce qu'il vit en deux autres exemplaires : le
+ * `default_value` du champ ACF et le repli de `var(--nav-dot, …)`. Les trois
+ * doivent donner la MÊME couleur, sinon la puce change de teinte au premier
+ * enregistrement sans que personne ait rien choisi. La recette le verrouille.
+ */
+function lcds_nav_dot_fallback(): LcdsDotColor
+{
+    return LcdsDotColor::Orange;
+}
+
+/**
  * Navigation principale de l'en-tête.
  *
  * `depth` vaut 1 : la maquette ne prévoit aucun déroulant. Un second niveau
@@ -25,9 +38,8 @@ if (! defined('ABSPATH')) {
 function lcds_header_nav(): void
 {
     // La couleur de la puce de la page courante vient des réglages du site :
-    // c'est un choix de contribution, pas une constante de thème. Le repli est
-    // « Rouge » — l'orange du système de design, voir LcdsDotColor.
-    $dot = LcdsDotColor::fromValue(lcds_option('puce_page_courante'), LcdsDotColor::Orange);
+    // c'est un choix de contribution, pas une constante de thème.
+    $dot = LcdsDotColor::fromValue(lcds_option('puce_page_courante'), lcds_nav_dot_fallback());
 
     wp_nav_menu([
         'theme_location' => LcdsMenuLocation::Header->value,

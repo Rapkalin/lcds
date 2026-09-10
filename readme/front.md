@@ -285,7 +285,7 @@ le script qui la porte d'une étape à la suivante. Deux effets voulus :
 - **seul le SENS du geste compte, pas son amplitude** — une roulette lâchée d'un
   coup avance d'une étape, pas de quatre ;
 - **tout ce qui arrive pendant la cadence est absorbé** (`JOURNEY_CADENCE`,
-  500ms — elle couvre la transition CSS de 450ms), donc plusieurs crans
+  400ms — elle couvre la transition CSS de 350ms), donc plusieurs crans
   rapprochés valent un seul.
 
 C'est **un chrono qui règle le rythme, plus une distance**. Chaque carte est donc
@@ -304,7 +304,7 @@ seconde bascule. D'où :
 
 | | rôle |
 | --- | --- |
-| `JOURNEY_CADENCE` (500ms) | plancher après une bascule ; couvre la transition CSS |
+| `JOURNEY_CADENCE` (400ms) | plancher après une bascule ; couvre la transition CSS |
 | `JOURNEY_REPOS` (150ms) | **silence** au-delà duquel un évènement ouvre un geste NEUF |
 | `JOURNEY_PLAFOND` (1200ms) | sortie de secours, comptée depuis la dernière bascule |
 
@@ -319,7 +319,8 @@ seconde carte.
 
 Retour client : « quand j'arrive sur une étape, si je scroll plusieurs fois
 c'est bloqué […] c'est absorbé pendant trop longtemps ». La cadence est passée
-de 600 à **500ms**, le plafond de 1600 à **1200ms**.
+de 600 à **500ms**, le plafond de 1600 à **1200ms**, puis la cadence à
+**400ms** en raccourcissant d'abord la transition — voir plus bas.
 
 Lequel agit dépend du périphérique, et c'est ce qui rend le réglage
 contre-intuitif : à la molette, avec des crans espacés de plus de
@@ -331,7 +332,7 @@ Ni l'un ni l'autre ne peut descendre plus bas sans casser quelque chose :
 
 | Constante | Plancher | Ce qui casse en dessous |
 | --- | --- | --- |
-| `JOURNEY_CADENCE` | **450ms** | La transition CSS du rail. L'étape suivante partirait avant que la précédente soit posée. |
+| `JOURNEY_CADENCE` | **350ms** | La transition CSS du rail. L'étape suivante partirait avant que la précédente soit posée. |
 | `JOURNEY_PLAFOND` | **1000ms** | La traîne d'un pavé tactile. Elle franchirait le plafond seule, et un geste passerait deux cartes. |
 
 > **Le second plancher est mesuré, pas supposé.** Plafond ramené à 900 : deux
@@ -339,9 +340,33 @@ Ni l'un ni l'autre ne peut descendre plus bas sans casser quelque chose :
 > — « une traîne d'une seconde ne vaut qu'une étape » et « l'arrivée n'emporte
 > pas la première carte ». Il reste 200ms de marge à 1200.
 
-Le seul levier restant serait de **raccourcir la transition CSS**, ce qui
-abaisserait mécaniquement le plancher de la cadence. Ça change le glissement
-lui-même, donc le ressenti du bloc : écarté pour cette raison.
+Le seul levier restant était de **raccourcir la transition CSS**, ce qui
+abaisse mécaniquement le plancher de la cadence. Il a fini par être actionné :
+la transition du rail est passée de 0,45 s à **0,35 s** (`$journey-glide`), et
+la cadence de 500 à **400ms** dans le même mouvement. Les deux ne peuvent pas
+diverger — une cadence sous la transition ferait partir l'étape suivante avant
+que la précédente soit posée. Ça change le glissement lui-même, donc le ressenti
+du bloc : c'était le prix à payer pour repartir plus vite.
+
+#### Étrangler par `requestAnimationFrame` : ANNULER, pas renoncer
+
+Le motif naïf — « s'il y a déjà une image demandée, ne rien faire » — suppose
+que cette image sera rendue. Quand elle ne l'est pas (onglet en arrière-plan,
+budget de temps virtuel épuisé sous Chrome sans interface), le drapeau reste
+armé et la mise à jour ne repart **jamais**, sans rien signaler.
+
+```js
+const schedule = () => {
+    window.cancelAnimationFrame(frame);
+    frame = window.requestAnimationFrame(update);
+};
+```
+
+Le regroupement est identique — une seule image reste demandée — mais aucun
+état ne peut se coincer. Constaté sur le rail épinglé, qui portait le premier
+motif : **six évènements de défilement pour deux mises à jour**. Le parcours de
+soin a été aligné dessus.
+
 
 Le plafond n'est pas décoratif : sans lui, un défilement **continu** — deux
 doigts qui ne se lèvent pas — n'ouvrirait jamais de geste neuf et la section
@@ -1160,23 +1185,29 @@ maquette montre un recouvrement à cet endroit pour dire l'intention de volet,
 pas pour être reproduit. Le volet reste entier de toute façon — c'est le hero
 collé qui le produit au défilement, pas ce décalage de 48px.
 
-Là, l'encoche n'a pas besoin du chevauchement : c'est **le hero** qu'elle laisse
-voir, puisqu'il est collé derrière. Vérifié par sondage du point exact de
-l'encoche, sur toute sa hauteur, à sept positions de défilement — seuls `hero`
-et la section elle-même y apparaissent.
+Et c'est pour cela que **ce bloc-là n'a pas de rayon du tout**. Sans
+chevauchement, ses épaules n'ont rien au-dessus d'elles au repos : l'encoche
+laisse voir le blanc de `.main-content`, exactement le défaut que le
+chevauchement évite ailleurs.
 
-> **Une exception mesurée, et non corrigée.** Sur une vue PLUS HAUTE que le hero
-> — donc au-delà de 900px, où celui-ci est plafonné et ne remplit plus l'écran —
-> le blanc de `.main-content` apparaît dans l'encoche pendant les **48 premiers
-> pixels de défilement**, le temps que le hero collé vienne se placer derrière.
-> Deux petites encoches claires aux épaules, transitoires.
->
-> Reproduit en réduisant la hauteur du hero à 500 sur une vue de 797 : à
-> défilement 0, l'encoche montre `main-content` ; à 60, elle ne montre plus que
-> `hero`. Deux remèdes possibles si ça gêne — supprimer le rayon sur le seul
-> bloc qui suit le hero, ce que la maquette dessine d'ailleurs ; ou étendre la
-> surface peinte du hero de 48px sous lui, ce qui touche au cadrage de son
-> visuel.
+Mesuré sur la page réelle, à 1440 × 1100, avec le hero collé : le point (3, 904)
+— quatre pixels sous le bas du hero, trois pixels du bord gauche — peint
+`rgb(255, 255, 255)` à défilement 0 et 20, puis le bleu pâle du bloc à partir de
+47. Le défaut ne durait donc que les **48 premiers pixels de défilement**, et
+seulement sur une vue plus haute que le hero : à 900px de haut, l'encoche est
+hors de l'écran et personne ne la voit.
+
+**Remède retenu : le bord franc.** C'est ce que la maquette dessine à cet
+endroit (jonction nette relevée à y=900), et c'est le seul bord de section qui
+ne borde jamais une autre section — il n'est jamais vu que contre le hero.
+L'autre remède, étendre de 48px la surface peinte du hero pour qu'elle passe
+derrière les épaules, exigeait de grandir sa boîte ET de remonter d'autant la
+carte « Prendre RDV », qui est posée en bas : il touche au cadrage du visuel
+pour un gain qui ne se voit que sur les grands écrans. Écarté.
+
+Deux assertions solidaires le verrouillent : le bloc sous le hero a
+`0px/0px/0px`, les suivantes `48px/48px/0px`. Rétablir le rayon ici ramène les
+oreilles claires.
 
 > C'est le même piège que le volet du hero, pris par l'autre bout — là, il
 > fallait un fond PROPRE à chaque section ; ici, il faut que ce fond DÉBORDE

@@ -210,14 +210,14 @@
     );
     // L'avancement arrive par paliers d'une étape : c'est cette transition qui
     // fait le glissement. Sans elle, la carte sauterait d'un coup.
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform var.$journey-glide;
     will-change: transform;
   }
 
   // La barre suit le même palier, avec la même courbe : les deux ne peuvent pas
   // se désynchroniser.
   .journey__progress-fill {
-    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: width var.$journey-glide;
   }
 
   .journey__step {

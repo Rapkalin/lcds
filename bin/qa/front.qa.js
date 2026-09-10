@@ -501,8 +501,8 @@ window.runFrontQa = async (win) => {
         });
 
         assert(
-            `sections : coins hauts arrondis à 48, bas francs (${[...new Set(rayons)].join(", ")})`,
-            panneaux.length > 0 && rayons.every((r) => r === "48px/48px/0px")
+            `sections : coins hauts arrondis à 48, bas francs (${[...new Set(rayons.slice(1))].join(", ")})`,
+            panneaux.length > 1 && rayons.slice(1).every((r) => r === "48px/48px/0px")
         );
 
         // Le bloc qui suit le hero ARRIVE APRÈS lui : aucun recouvrement.
@@ -513,9 +513,18 @@ window.runFrontQa = async (win) => {
             styleOf(panneaux[0]).marginTop === "0px"
         );
 
-        // Les suivantes, si : sans ce chevauchement l'encoche de leurs coins
-        // laisserait voir le blanc du conteneur, deux oreilles claires par
-        // épaule. Sous le hero c'est lui qu'on voit, d'où la différence.
+        // Et c'est POUR CELA qu'il n'a pas de rayon : sans rien au-dessus de
+        // ses épaules, l'encoche des deux coins laisserait voir le blanc de
+        // `.main-content`. Mesuré à 1440 × 1100, défilement 0 : le point
+        // (3, 904) peignait rgb(255, 255, 255). Les deux assertions sont
+        // solidaires — rétablir le rayon ici ramène les oreilles claires.
+        assert(
+            `sections : le bloc sous le hero a un bord franc (${rayons[0]})`,
+            rayons[0] === "0px/0px/0px"
+        );
+
+        // Les suivantes chevauchent : c'est ce qui met la section précédente
+        // derrière leurs épaules, à la place du blanc du conteneur.
         const chevauchements = panneaux.slice(1).map((noeud) => styleOf(noeud).marginTop);
 
         assert(
@@ -2176,12 +2185,19 @@ window.runFrontQa = async (win) => {
             };
             const rouge = teinteDe("orange");
             const vert = teinteDe("turquoise");
+            // Repli de la feuille de style : réglages vides ou ACF absent, la
+            // classe de teinte manque et la puce doit rester « Rouge ».
+            //
+            // C'est CE repli qui est éprouvable, pas la teinte peinte sur la
+            // page : celle-ci vient de la base de données du site visité, et
+            // l'affirmer reviendrait à recetter un contenu.
+            nav.className = "site-nav";
+            const repli = styleOf(lien, "::after").backgroundColor;
             nav.className = classeNav;
 
             assert(
-                `navigation : puce « Rouge » par défaut (${puce.backgroundColor})`,
-                puce.backgroundColor === "rgb(226, 83, 4)"
-                    && classeNav.includes("site-nav--dot-orange")
+                `navigation : repli « Rouge » sans classe de teinte (${repli})`,
+                repli === "rgb(226, 83, 4)"
             );
             assert(
                 `navigation : le réglage pilote la teinte (rouge ${rouge} / vert ${vert})`,

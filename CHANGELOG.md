@@ -7,6 +7,37 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.16.2
+
+### Corrigé
+
+- **Plus d'oreilles blanches sous la bannière d'accueil.** La section qui la
+  suit portait des coins hauts arrondis alors qu'elle n'a rien au-dessus
+  d'elle : sur une vue plus haute que la bannière, ses deux épaules laissaient
+  voir le blanc de la page pendant les 48 premiers pixels de défilement.
+  Mesuré à 1440 × 1100 : le point situé quatre pixels sous la bannière peignait
+  du blanc. Cette section garde désormais un bord franc — c'est d'ailleurs ce
+  que la maquette dessine à cet endroit, et c'est le seul bord de section qui
+  ne borde jamais une autre section. Les suivantes gardent leurs coins
+  arrondis.
+- **Le parcours de soin repart plus vite d'une étape à l'autre** : le
+  défilement n'est plus absorbé que 400 ms au lieu de 500, la transition du
+  rail passant de 0,45 s à 0,35 s. Les deux vont ensemble — l'absorption ne
+  peut pas descendre sous la durée de la transition sans que l'étape suivante
+  parte avant que la précédente soit posée.
+- **Le parcours de soin ne peut plus rester figé** quand une image d'animation
+  n'est jamais produite — onglet en arrière-plan, par exemple. La mise à jour
+  est redemandée au lieu d'être abandonnée, sans changer le regroupement des
+  évènements.
+
+### Pour les contributeurs
+
+- **Le repli de la couleur de puce de la page courante vit à un seul endroit**,
+  `lcds_nav_dot_fallback()`. La recette éprouve désormais sa concordance avec
+  le défaut du champ ACF, au lieu de lire le réglage enregistré : elle passait
+  au rouge dès qu'un contributeur avait choisi « Vert », alors que rien n'était
+  cassé.
+
 ## 2.16.1
 
 ### Corrigé

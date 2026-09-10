@@ -38,7 +38,6 @@ $blue-hover: color.adjust($blue, $lightness: -6%);
 // aussi absent des variables de bibliothèque Figma.
 $blue-separator: #d9e4f1;
 $white: #ffffff;
-$black: #000000;
 
 $font-color: $blue;
 
@@ -120,7 +119,6 @@ $ls-cta: 0.08em;
 // Maquette dessinée sur 1440. La gouttière de 12px est constante partout.
 $gutter: fn.toRem(12);
 $content-width: fn.toRem(1118);
-$content-padding: fn.toRem(161);
 // Marge minimale sur petit écran, et largeur EXTERNE d'un conteneur centré.
 // `box-sizing: border-box` fait entrer le rembourrage dans la largeur : sans
 // cette addition, un conteneur à `max-width: $content-width` ne laisse que
@@ -209,6 +207,14 @@ $fade: $fade-duration ease;
 // les boutons d'action primaires. Deux courbes DISTINCTES selon le sens,
 // relevées sur floema.com : la sortie se pose vite et net, l'entrée dépasse
 // légèrement avant de revenir. C'est ce dépassement qui donne le ressort.
+// Le glissement d'une étape du parcours. Porté par le rail ET par la barre de
+// progression, qui ne peuvent pas diverger : elles décriraient deux avancements
+// différents.
+//
+// PLAFOND : `JOURNEY_CADENCE` doit rester au-dessus de cette durée, sinon
+// l'étape suivante part avant que la précédente soit posée. Raccourcir l'une
+// sans l'autre casse la mécanique — voir assets/scripts/app.js.
+$journey-glide: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 $spread-out: 0.3s cubic-bezier(0.19, 1, 0.22, 1);
 $spread-in: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 // Écart ouvert par le survol. Fixe la taille du collet : au-delà, les poignées
