@@ -117,6 +117,27 @@ $content-padding: fn.toRem(161);
 // 1078px de contenu et décale tout de 20px vers l'intérieur.
 $gutter-min: fn.toRem(20);
 $content-outer: calc(#{fn.toRem(1118)} + 2 * #{fn.toRem(20)});
+// Retrait latéral du contenu : l'axe centré de 1118px, qui redonne exactement
+// les marges de 161px de la maquette à 1440 sans écrire 161 nulle part.
+//
+// PIÈGE : le `50%` se résout sur la largeur du CONTENANT de l'élément qui
+// l'emploie. Ce jeton n'est juste que sur un élément PLEINE LARGEUR — posé sur
+// un enfant déjà en retrait, il compterait la moitié d'une largeur réduite et
+// le contenu se décalerait vers l'intérieur.
+$content-inset: max(#{fn.toRem(20)}, calc(50% - #{$content-width} / 2));
+// Largeur maximale de la PAGE. Au-delà, tout est centré et les côtés reçoivent
+// `$page-outside`. Sans elle, le rail des carrousels — plein-bord des deux
+// côtés depuis le retour client — s'étalait sans fin sur un écran très large.
+$page-max: fn.toRem(1920);
+// Débord d'une carte inclinée hors de sa boîte : 471,5 × 470 pivotée de 2,88°
+// englobe 494,5, soit 11,5 de chaque côté. Le rail impose `overflow-x` et
+// rognerait ce débord sur la première carte.
+$tilt-bleed: fn.toRem(12);
+// Teinte des côtés au-delà de `$page-max`. ARBITRÉE, aucune maquette ne couvre
+// ce cas : le bleu du système se lit comme « hors de la page » quelle que soit
+// la section derrière. `$blue-pale` aurait effacé la limite sur les sections
+// pâles et l'aurait accentuée sur les blanches. Un seul jeton à changer.
+$page-outside: $blue;
 $header-padding: fn.toRem(48);
 $logo-size: fn.toRem(80);
 $logo-size-mobile: fn.toRem(56);

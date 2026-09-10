@@ -37,10 +37,14 @@
 // exactement ce qu'on demande ici. Le fond du `body`, lui, ne conviendrait pas :
 // il est propagé au CANEVAS, donc peint SOUS le visuel.
 .main-content {
+  max-width: var.$page-max;
+  margin-inline: auto;
   background: var.$white;
 }
 
 .footer-reveal {
+  max-width: var.$page-max;
+  margin-inline: auto;
   --reveal-height: #{fn.toRem(513)};
   // Rayon des coins bas du panneau, ET hauteur dont le visuel remonte sous lui.
   // Une seule valeur pour les deux : elles ne peuvent pas diverger, et c'est
@@ -81,6 +85,11 @@
   .footer-reveal__media {
     position: fixed;
     z-index: -1;
+    // Un élément FIXÉ se cale sur la fenêtre, pas sur son conteneur : borner
+    // `.footer-reveal` ne le borne pas. `left: 0; right: 0` plus des marges
+    // automatiques le recentrent dans la largeur de page.
+    max-width: var.$page-max;
+    margin-inline: auto;
   }
 }
 

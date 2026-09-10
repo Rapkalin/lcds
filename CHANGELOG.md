@@ -31,6 +31,14 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 
 ### Corrigé
 
+- **Les carrousels ne s'arrêtent plus au bord gauche.** La première image garde
+  sa place à l'arrivée, mais au défilement les visuels sortent par le bord de la
+  page comme ils le font déjà à droite. Vaut pour la galerie de « l'histoire »
+  et pour les cartes de technologies.
+- **La page est bornée à 1920 px de large**, centrée, avec les côtés au bleu du
+  cabinet sur les écrans plus larges. Sans cette borne, les carrousels
+  s'étalaient sans fin.
+
 - **Un seul panneau dépliable reste ouvert à la fois.** Déplier une entrée de
   l'accordéon des traitements referme la précédente, et les cartes de
   technologie se comportent de même entre elles. Les deux ensembles restent

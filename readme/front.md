@@ -1226,6 +1226,66 @@ une section sur une autre page ne demande donc rien de plus qu'un
 `get_template_part` avec les bons arguments — voir
 [`contribution.md`](contribution.md).
 
+### Les rails filent jusqu'aux DEUX bords, et la page est bornée à 1920
+
+Retour client : le rail s'arrêtait à gauche, alors qu'à droite les images
+sortaient de la page. Au repos la première vignette garde son retrait ; au
+défilement, elle doit sortir par le bord comme à droite.
+
+**Le retrait n'est plus porté par la section, mais par le REMBOURRAGE DU RAIL.**
+Porté par la section, il bornait le conteneur de défilement : les images y
+disparaissaient à 161 du bord. Chaque enfant de la section reçoit donc le
+retrait à sa charge — en-tête, contrôles, rail — et le rail, lui, le porte en
+`padding-left`, ce qui laisse la vignette à sa place sans borner la course.
+
+Mesuré à 1440 : rail de 0 à 1440, première vignette à 161 au repos, à −239
+après 400px de défilement. Le carrousel des technologies suit la même règle.
+
+> **Piège du jeton `$content-inset`** : son `50%` se résout sur la largeur du
+> CONTENANT de l'élément qui l'emploie. Il n'est juste que sur un élément
+> PLEINE LARGEUR — posé sur un enfant déjà en retrait, il compterait la moitié
+> d'une largeur réduite.
+
+#### Le débord des cartes inclinées s'AJOUTE au retrait
+
+Une carte pivotée de 2,88° déborde de 12px hors de sa boîte, et
+`.carousel--cards` compensait par un couple `margin-left: -12` /
+`padding-left: 12` — sur un rail qui commençait alors au bord de la section.
+La section n'ayant plus de retrait à donner, le premier jet a **écrasé** cette
+compensation et posé la carte 12px trop à gauche, à 164 au lieu de 176. Les
+deux valeurs s'additionnent désormais explicitement, et le débord est un jeton,
+`$tilt-bleed`.
+
+#### La page est bornée à 1920
+
+Sans cela, un rail plein-bord des deux côtés s'étale sans fin sur un écran très
+large. `$page-max` borne l'en-tête, `main` et le pied de page ; au-delà, les
+côtés reçoivent `$page-outside`.
+
+**Trois pièges, tous rencontrés :**
+
+- **Un élément FIXÉ se cale sur la fenêtre, pas sur son conteneur.** Borner
+  `.footer-reveal` ne bornait pas son visuel révélé, ni l'en-tête au-dessus du
+  hero. Les deux portent leur propre borne et des marges automatiques.
+- **La teinte des côtés va sur `html`, jamais sur `body`.** Un fond sur `html`
+  est propagé au canevas, donc il couvre la fenêtre entière. Et surtout : un
+  `body` coloré a fait tomber le contrôle de contraste de la campagne à
+  **1,00:1 sur 26 éléments**. Le panneau du pied de page porte son fond sur un
+  pseudo-élément, qu'un contrôleur remontant les ancêtres ne voit pas — il
+  atterrissait sur le `body`. Blanc, il passait par chance ; coloré, il
+  annonçait du bleu sur bleu. Le `body` reste donc l'aplat blanc, borné lui
+  aussi.
+- **Une flèche parcourt maintenant presque toute la course.** Le rail montre
+  plus d'images d'un coup, donc il en reste moins à parcourir : à 1440, une
+  page vaut 1440 pour une course de 1407. Les assertions bornent l'attendu au
+  lieu de maquiller l'écart. **À revalider en recette** — faire défiler d'une
+  largeur de vignette plutôt que d'une pleine page reste possible.
+
+> `$page-outside` vaut `$blue`, **arbitré** : aucune maquette ne couvre ce cas.
+> Le bleu du système se lit comme « hors de la page » quelle que soit la section
+> derrière, là où `$blue-pale` aurait effacé la limite sur les sections pâles.
+> Un seul jeton à changer.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page

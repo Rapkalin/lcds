@@ -1,13 +1,19 @@
 @use "../basics/variables" as var;
 @use "../basics/functions" as fn;
 
-// Le fond court sur toute la largeur, le contenu est calé sur un axe centré de
-// 1118px : à 1440 cela redonne exactement les marges de 161px de la maquette,
-// sans écrire 161 nulle part. Le retrait n'est posé qu'à gauche pour que le rail
-// du carrousel puisse filer jusqu'au bord droit.
+// Le fond court sur toute la largeur. Le retrait du contenu n'est PAS porté par
+// la section : il est posé sur chacun de ses enfants, pour que le rail du
+// carrousel puisse filer jusqu'aux DEUX bords.
+//
+// Porté par la section, il bornait le conteneur de défilement à gauche : les
+// images y disparaissaient à 161px du bord au lieu de sortir de la page, alors
+// qu'à droite elles filaient jusqu'au bord. Le retrait est donc devenu le
+// REMBOURRAGE DU RAIL — au repos la première photo garde sa place, et au
+// défilement les images sortent par le bord comme elles le font à droite.
+//
+// Chaque enfant est pleine largeur, ce que le `50%` de `$content-inset` exige.
 .block-intro {
   padding: var.$section-padding 0;
-  padding-left: max(#{fn.toRem(20)}, calc(50% - #{var.$content-width} / 2));
   background: var.$blue-pale;
   color: var.$blue;
 
@@ -17,11 +23,20 @@
     margin-top: var.$block-gap;
   }
 
+  .carousel__rail {
+    padding-left: var.$content-inset;
+  }
+
+  .carousel__controls {
+    margin-left: var.$content-inset;
+  }
+
   &__header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var.$gutter;
-    max-width: var.$content-width;
+    max-width: calc(#{var.$content-width} + var.$content-inset);
+    padding-left: var.$content-inset;
   }
 
   &__content {

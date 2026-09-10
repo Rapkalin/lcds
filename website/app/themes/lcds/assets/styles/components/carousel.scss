@@ -162,8 +162,8 @@
   // Le retrait rend le débord visible ; la marge négative le compense, pour que
   // la carte reste posée à 161 comme la maquette l'exige.
   .carousel__rail {
-    margin-left: fn.toRem(-12);
-    padding-left: fn.toRem(12);
+    margin-left: calc(-1 * #{var.$tilt-bleed});
+    padding-left: var.$tilt-bleed;
   }
 }
 

@@ -191,10 +191,17 @@ window.runFrontQa = async (win) => {
         assert("précédent désactivé au repos", previous.disabled === true);
         assert(`curseur à l'origine (${offset().toFixed(1)}%)`, offset() < 0.1);
 
+        // Une « page » vaut la largeur VISIBLE du rail, et celui-ci est désormais
+        // plein-bord des deux côtés : à 1440, une page (1440) dépasse la course
+        // restante (1407). Le clic est donc BORNÉ par la fin de course, et
+        // l'attendu doit l'être aussi — sinon l'assertion mesure une page
+        // théorique que le rail ne peut pas parcourir.
+        const pageBornee = Math.min(page, furthest);
+
         next.click();
         await tick();
-        assert(`un clic défile d'une page (${Math.round(rail.scrollLeft)}/${page})`,
-            Math.abs(rail.scrollLeft - page) < 2);
+        assert(`un clic défile d'une page (${Math.round(rail.scrollLeft)}/${Math.round(pageBornee)})`,
+            Math.abs(rail.scrollLeft - pageBornee) < 2);
         assert("précédent réactivé après un clic", previous.disabled === false);
 
         // Deux clics rapprochés doivent s'ajouter, non se remplacer.
@@ -208,7 +215,7 @@ window.runFrontQa = async (win) => {
         previous.click();
         await tick();
         assert(`précédent recule d'une page (${Math.round(rail.scrollLeft)})`,
-            Math.abs(rail.scrollLeft - (furthest - page)) < 2);
+            Math.abs(rail.scrollLeft - Math.max(0, furthest - page)) < 2);
 
         // La course doit valoir la somme des visuels, et rien ne doit plafonner
         // leur nombre : plus il y a d'images, plus on défile.
@@ -217,6 +224,9 @@ window.runFrontQa = async (win) => {
         const attendu =
             largeurs.reduce((total, largeur) => total + largeur, 0) +
             (cadres.length - 1) * 12 +
+            // Les DEUX rembourrages : celui de gauche porte le retrait de la
+            // première vignette depuis que le rail est plein-bord à gauche.
+            parseFloat(win.getComputedStyle(rail).paddingLeft) +
             parseFloat(win.getComputedStyle(rail).paddingRight);
 
         assert(
@@ -653,6 +663,70 @@ window.runFrontQa = async (win) => {
             assert(
                 `panneaux : les groupes n'interfèrent pas (${techno === null ? "aucun" : ouverts(techno).length} côté technologies, inchangé)`,
                 techno === null || ouverts(techno).length === ouvertsTechnoAvant
+            );
+        }
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Les rails filent jusqu'aux DEUX bords, et la page est bornée à 1920.
+     *
+     * Les deux vont ensemble : c'est parce que le rail n'est plus arrêté à
+     * gauche qu'il faut une largeur de page maximale, sinon il s'étale sans fin
+     * sur un écran très large.
+     *
+     * Le bornage est éprouvé sur la RÈGLE : la campagne joue à 1440 et 320, le
+     * plafond de 1920 n'y est donc jamais atteint et la largeur rendue ne dirait
+     * rien. Vérifié à la main en abaissant le plafond à 1200 — en-tête, `main`,
+     * pied de page ET le visuel FIXÉ du pied de page se centrent tous dans la
+     * largeur, et les côtés montrent le fond de page.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        for (const nom of [".main-content", ".site-header", ".footer-reveal"]) {
+            assert(
+                `page : ${nom} est bornée à 1920`,
+                trouverRegle(doc, nom, (regle) => (
+                    regle.style.maxWidth === "120rem" ? true : null
+                )) === true
+            );
+        }
+
+        // Le retrait de la première vignette est un REMBOURRAGE du rail, pas un
+        // retrait de la section : c'est ce qui laisse les images sortir par le
+        // bord gauche au défilement, comme elles le font à droite.
+        const inset = Math.round((win.innerWidth - 1118) / 2);
+
+        for (const [nom, section] of [["histoire", ".block-intro"], ["technologies", ".block-techno"]]) {
+            const rail = doc.querySelector(`${section} .carousel__rail`);
+
+            if (rail === null) {
+                continue;
+            }
+
+            const cadre = rail.getBoundingClientRect();
+            const premier = rail.querySelector(".carousel__item");
+            const avant = Math.round(premier.getBoundingClientRect().left);
+
+            rail.scrollLeft = 400;
+            const apres = Math.round(premier.getBoundingClientRect().left);
+            rail.scrollLeft = 0;
+
+            // Plein-bord À DROITE, comme avant, et désormais À GAUCHE aussi.
+            // Le rail des cartes inclinées déborde de 12px par compensation du
+            // pivot : la tolérance les couvre.
+            assert(
+                `${nom} : le rail touche les deux bords (${Math.round(cadre.left)} → ${Math.round(cadre.right)} / ${win.innerWidth})`,
+                cadre.left <= 0.5 && cadre.left >= -13 && Math.round(cadre.right) === win.innerWidth
+            );
+            // La boîte englobante d'une carte inclinée déborde de 12 : on
+            // compare donc à 12 près, ce qui reste bien plus serré que l'écart
+            // que la régression produisait.
+            assert(
+                `${nom} : la première vignette garde son retrait au repos (${avant} / ${inset})`,
+                Math.abs(avant - inset) <= 12
+            );
+            assert(
+                `${nom} : au défilement, elle sort par le bord gauche (${apres})`,
+                apres < 0
             );
         }
     }

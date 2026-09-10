@@ -22,8 +22,24 @@
 
 // `width: 100vw` incluait la largeur de la barre de défilement et provoquait un
 // débordement horizontal de quelques pixels sur toute page assez haute.
+// La teinte des côtés est posée sur `html`, PAS sur `body`, et le `body` est
+// borné comme le reste. Deux raisons :
+//
+// - un fond posé sur `html` est propagé au CANEVAS, donc il couvre toute la
+//   fenêtre quelles que soient les largeurs en dessous ;
+// - un `body` bleu faisait tomber le contrôle de contraste de la campagne à
+//   1,00:1 sur 26 éléments. Le panneau du pied de page porte son fond sur un
+//   PSEUDO-ÉLÉMENT : un contrôleur qui remonte les ancêtres ne le voit pas et
+//   atterrit sur le `body`. Blanc, il passait par chance ; bleu, il annonçait
+//   du bleu sur bleu. Le `body` reste donc l'aplat de la page.
+html {
+  background: var.$page-outside;
+}
+
 body {
   margin: 0;
+  max-width: var.$page-max;
+  margin-inline: auto;
   background: var.$white;
   color: var.$font-color;
   font-family: var.$font-body;

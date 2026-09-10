@@ -23,6 +23,8 @@
 // au pixel sur le PDF — #BEDAFF (le ciel) au-dessus du header, #FFFFFF
 // seulement derrière les liens.
 .site-header {
+  max-width: var.$page-max;
+  margin-inline: auto;
   // Collé, et donc visible sur toute la hauteur de la page. `sticky` plutôt que
   // `fixed` : il reste dans le flux, donc il réserve lui-même sa hauteur sur une
   // page sans hero. En `fixed`, il aurait fallu rendre cette hauteur à la page
@@ -73,6 +75,10 @@ body:has(.hero) .site-header {
   top: 0;
   right: 0;
   left: 0;
+  // Fixé, donc calé sur la FENÊTRE : les marges automatiques le ramènent dans
+  // la largeur de page, sinon le logo et la navigation se colleraient aux bords
+  // de l'écran pendant que le contenu, lui, est centré.
+  margin-inline: auto;
 }
 
 .site-logo {
