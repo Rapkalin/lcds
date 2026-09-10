@@ -1013,6 +1013,62 @@ const initScrollRails = () => {
  * Aucun fond n'est posé au défilement : arbitré ainsi, il n'y a donc rien à
  * suivre et aucun gestionnaire de défilement ici.
  */
+/**
+ * Le volet : chaque section se fige une fois lue, et la suivante remonte
+ * par-dessus elle.
+ *
+ * Le décalage de collage vaut « hauteur de la vue moins hauteur DE CETTE
+ * section ». Aucune unité CSS ne désigne la hauteur de l'élément qui la porte,
+ * d'où ce calcul en JavaScript — voir hero.scss pour les deux écritures CSS
+ * essayées et pourquoi aucune ne convient.
+ *
+ * Une section plus haute que la vue reçoit une valeur NÉGATIVE : elle se fige
+ * sur son dernier écran, ce qui est le comportement voulu.
+ */
+const initVolets = () => {
+    const page = document.querySelector(".front-page");
+    const hero = page === null ? null : page.querySelector(":scope > .hero");
+
+    if (hero === null) {
+        return;
+    }
+
+    const sections = [];
+
+    for (let noeud = hero.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+        sections.push(noeud);
+    }
+
+    // Aucun test de mouvement réduit ici : la règle qui colle les sections vit
+    // déjà sous `prefers-reduced-motion: no-preference`. Le redoubler en
+    // JavaScript ferait deux sources pour une même décision.
+    const mesurer = () => {
+        for (const section of sections) {
+            section.style.setProperty(
+                "--volet-top",
+                `${window.innerHeight - section.offsetHeight}px`,
+            );
+        }
+
+        page.classList.add("front-page--volet");
+    };
+
+    // Une section change de hauteur sans que la fenêtre bouge : un accordéon
+    // qu'on déplie, une carte de technologie qu'on ouvre. Le seul `resize` de
+    // fenêtre laisserait alors un décalage faux, et la section se figerait au
+    // mauvais endroit.
+    if (window.ResizeObserver !== undefined) {
+        const observateur = new window.ResizeObserver(mesurer);
+
+        for (const section of sections) {
+            observateur.observe(section);
+        }
+    }
+
+    window.addEventListener("resize", mesurer);
+    mesurer();
+};
+
 const initHeaderHeight = () => {
     const header = document.getElementById("site-header");
 
@@ -1047,4 +1103,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initScrollRails();
     initAccordions();
     initJourneys();
+    initVolets();
 });

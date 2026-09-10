@@ -1096,16 +1096,19 @@ partout ailleurs.
 > n'ont eu à changer — c'est le repli qu'elles mesurent. L'état épinglé est
 > forcé par la campagne pour éprouver l'association. Voir [`qa.md`](qa.md).
 
-### Le hero se fait recouvrir comme par un volet
+### Chaque section se fait recouvrir comme par un volet
 
 Quatrième retour du lot : « le premier bloc en-dessous de la home remonte et
 passe par dessus au scroll pour cacher petit à petit la hero banner ». Le hero
 **ne bouge pas** — il reste collé en haut de la vue — et c'est la section
 suivante qui remonte et le recouvre.
 
-**Aucun JavaScript.** `position: sticky` sur le hero, `position: relative` et
-`z-index: 1` sur ses frères. La géométrie de peinture suffit, comme pour la
-révélation du pied de page.
+**Deuxième passe, sur retour client :** « chaque section doit apparaître par
+dessus la précédente comme un volet […] on doit avoir ça à chaque fois ». Le
+mécanisme vaut donc à toutes les jonctions, pas seulement sous le hero.
+
+Le hero, lui, garde son collage `top: 0` : il est en haut de page et fait
+exactement une vue de haut.
 
 Mesuré sur le site, hero de 900 :
 
@@ -1115,6 +1118,60 @@ Mesuré sur le site, hero de 900 :
 | 300 | **0** | 600 |
 | 600 | **0** | 300 |
 | 900 | **0** | 0 — hero entièrement couvert |
+
+#### Le décalage de collage ne s'écrit pas en CSS
+
+Une section doit se figer quand son bord **bas** atteint le bas de la vue —
+c'est-à-dire une fois lue — et non quand son bord haut arrive. Le décalage vaut
+donc « hauteur de la vue moins hauteur **de cette** section », et aucune unité
+CSS ne désigne la hauteur de l'élément qui la porte. `initVolets` le pose en
+propriété personnalisée `--volet-top`, et pose la classe `.front-page--volet`
+qui active la règle. Sans script, les sections restent simplement empilées.
+
+**Les deux écritures purement CSS ont été essayées et mesurées, aucune ne
+convient :**
+
+| Écriture | Ce qui se passe |
+| --- | --- |
+| `top: 0` | La section se fige dès son premier pixel. L'intro fait 3074px et le parcours de soin 5500 sur une vue de 1100 : leur fin devient inatteignable. |
+| `bottom: 0` | Contre-intuitif : la contrainte tire la section vers le HAUT pour la garder dans la vue, et elle s'applique dès le premier pixel puisque le bloc conteneur est toute la page. Mesuré à 1440 × 900, défilement 0 : les technologies, qui commencent à y=9313, étaient peintes de −27 à 900, empilées en bas de l'écran avec toutes les autres. |
+
+Une section plus haute que la vue reçoit un décalage **négatif** — −4400px pour
+le parcours de soin — et se fige sur son dernier écran. C'est le comportement
+voulu.
+
+**Et aucune ne peut être plus courte qu'un écran** : `min-height: 100svh` sur
+chaque section. Sans ce plancher, une section courte se fige en laissant voir
+la précédente au-dessus d'elle et ne la recouvre jamais — mesuré, les
+technologies faisaient 927 pour une vue de 1100, soit 173px de la section
+d'avant restés visibles. Le plancher ramène leur décalage à 0 et le volet
+couvre tout l'écran.
+
+`min-height` et non `height` : l'intro fait 3074 et le parcours de soin 5500,
+et les figer à une vue rendrait leur fin inatteignable. `svh` et non `vh`,
+comme le hero : sur mobile, la barre d'adresse ne doit pas faire déborder la
+section d'un écran.
+
+> Le surplus de place d'une section courte tombe **en bas**, sous son contenu.
+> Le centrer verticalement changerait la composition de toutes les sections :
+> non fait, à trancher avec le designer.
+
+**Le décalage suit la hauteur, qui bouge.** Un accordéon qu'on déplie change la
+hauteur de sa section sans qu'aucun `resize` ne se produise : un `ResizeObserver`
+est posé sur chacune, faute de quoi la section se figerait au mauvais endroit
+après la première ouverture.
+
+Mesuré, vue de 1100, sections de 3074 / 1186 / 5500 / 927 / 1456 :
+
+| Défilement | Ce qui est figé | Ce qui monte |
+| --- | --- | --- |
+| 3200 | intro (bas à 1100) | traitements |
+| 4600 | + traitements | parcours de soin |
+| 10500 | + parcours de soin | technologies |
+| 12200 | + technologies | informations pratiques |
+
+La **dernière** section n'a aucune course — son bas est celui du conteneur — et
+défile donc normalement. C'est ce qui rend la fin de page normale.
 
 #### La règle porte sur les FRÈRES, jamais sur une section nommée
 
@@ -1185,29 +1242,52 @@ maquette montre un recouvrement à cet endroit pour dire l'intention de volet,
 pas pour être reproduit. Le volet reste entier de toute façon — c'est le hero
 collé qui le produit au défilement, pas ce décalage de 48px.
 
-Et c'est pour cela que **ce bloc-là n'a pas de rayon du tout**. Sans
-chevauchement, ses épaules n'ont rien au-dessus d'elles au repos : l'encoche
-laisse voir le blanc de `.main-content`, exactement le défaut que le
-chevauchement évite ailleurs.
+Sans chevauchement, les épaules de ce bloc n'ont pourtant rien au-dessus
+d'elles au repos : l'encoche laissait voir le blanc de `.main-content`,
+exactement le défaut que le chevauchement évite ailleurs.
 
-Mesuré sur la page réelle, à 1440 × 1100, avec le hero collé : le point (3, 904)
-— quatre pixels sous le bas du hero, trois pixels du bord gauche — peint
-`rgb(255, 255, 255)` à défilement 0 et 20, puis le bleu pâle du bloc à partir de
-47. Le défaut ne durait donc que les **48 premiers pixels de défilement**, et
-seulement sur une vue plus haute que le hero : à 900px de haut, l'encoche est
-hors de l'écran et personne ne la voit.
+Mesuré sur la page réelle, à 1440 × 1100 : le point (3, 904) — quatre pixels
+sous le bas du hero, trois pixels du bord gauche — peignait `rgb(255, 255, 255)`
+à défilement 0 et 20, puis le bleu pâle du bloc à partir de 47. Le défaut ne
+durait que les **48 premiers pixels de défilement**, et seulement sur une vue
+plus haute que le hero.
 
-**Remède retenu : le bord franc.** C'est ce que la maquette dessine à cet
-endroit (jonction nette relevée à y=900), et c'est le seul bord de section qui
-ne borde jamais une autre section — il n'est jamais vu que contre le hero.
-L'autre remède, étendre de 48px la surface peinte du hero pour qu'elle passe
-derrière les épaules, exigeait de grandir sa boîte ET de remonter d'autant la
-carte « Prendre RDV », qui est posée en bas : il touche au cadrage du visuel
-pour un gain qui ne se voit que sur les grands écrans. Écarté.
+**Remède retenu : le visuel du hero déborde d'un rayon sous sa boîte.**
+`.hero__image` prend `height: calc(100% + 48px)`, et le `overflow: hidden` du
+hero disparaît — c'était lui qui coupait le débord. La hauteur de **mise en
+page** du hero ne bouge pas : la section suivante reste exactement où elle
+était, et rien ne chevauche rien. Seule la boîte d'`object-fit` grandit de 48,
+ce que `cover` absorbe.
 
-Deux assertions solidaires le verrouillent : le bloc sous le hero a
-`0px/0px/0px`, les suivantes `48px/48px/0px`. Rétablir le rayon ici ramène les
-oreilles claires.
+Relevé de la même colonne après correction, hero de 900, défilement 0 :
+
+| y | x=1 | x=3 |
+| --- | --- | --- |
+| 899 (dans le hero) | 210,206,203 | 238,233,231 |
+| 903 (sous le hero) | 225,221,219 | 236,232,232 |
+| 925 | **29,43,52** | **22,37,45** |
+| 945 | 242,248,255 — le rayon s'est refermé | 242,248,255 |
+
+La valeur **varie** le long de l'encoche : c'est la photo, pas un aplat. Aucun
+`rgb(255, 255, 255)` n'y subsiste.
+
+> **Le bord franc avait d'abord été retenu** — la maquette dessine bien une
+> jonction nette à y=900 — puis refusé par le client : « les bords arrondis en
+> haut des volets ont disparu ». Le rayon vaut donc pour **toutes** les
+> sections, celle-ci comprise.
+
+Deux assertions solidaires le verrouillent : le débord du visuel vaut un rayon,
+et les cinq sections portent `48px/48px/0px`.
+
+#### Un arrondi ne se lit que contre une autre couleur
+
+Mesuré : quatre des cinq sections de l'accueil partagent `rgb(242, 248, 255)` —
+l'intro, les traitements, le parcours de soin et les technologies. Leur coin
+arrondi existe, mais **il ne se voit pas**, et le volet n'a alors aucune arête.
+
+`$volet-shadow` — `0 −4px 24px rgba(0, 56, 122, 0.1)` — la lui donne, sans
+dépendre des couleurs que le contributeur choisira. **AJOUT HORS MAQUETTE,
+assumé, à faire valider par le designer :** une seule déclaration à retirer.
 
 > C'est le même piège que le volet du hero, pris par l'autre bout — là, il
 > fallait un fond PROPRE à chaque section ; ici, il faut que ce fond DÉBORDE

@@ -7,6 +7,34 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.17.0
+
+### Ajouté
+
+- **Chaque section de l'accueil passe par-dessus la précédente comme un volet**,
+  et plus seulement la première sous la bannière. Une section se fige quand on
+  a fini de la lire — son bas atteint le bas de l'écran — et la suivante remonte
+  alors par-dessus elle. L'effet suit l'ordre choisi dans l'administration et
+  vaut pour n'importe quelle section. Désactivé pour qui demande à réduire les
+  animations.
+- **Chaque volet occupe au moins toute la hauteur de l'écran.** Sans ce
+  plancher, une section plus courte que la vue se figeait en laissant voir la
+  précédente au-dessus d'elle : elle ne la recouvrait jamais. Les sections plus
+  hautes qu'un écran ne sont pas touchées, leur fin reste atteignable.
+- **Une ombre porte l'arête du volet.** Sans elle l'arrondi ne se voit pas :
+  quatre des cinq sections de l'accueil ont exactement la même couleur de fond,
+  et un bord rond ne se lit que contre une autre couleur. Ajout hors maquette,
+  à faire valider par le designer.
+
+### Corrigé
+
+- **Les coins arrondis reviennent sur la section sous la bannière.** Elle les
+  avait perdus en 2.16.2, pour éviter deux oreilles blanches à ses épaules.
+  C'est maintenant le visuel de la bannière qui descend de 48px sous elle et
+  peint derrière ces épaules : l'arrondi est rétabli, les oreilles ne
+  reviennent pas, et rien ne chevauche rien — la section suivante reste
+  exactement où elle était.
+
 ## 2.16.2
 
 ### Corrigé

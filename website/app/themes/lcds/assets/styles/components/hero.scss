@@ -18,13 +18,29 @@
   aspect-ratio: 16 / 10;
   max-height: min(#{fn.toRem(900)}, 100svh);
   padding: 0 var.$header-padding fn.toRem(24);
-  overflow: hidden;
 
+  // PAS de `overflow: hidden` : le visuel doit déborder d'un rayon SOUS la
+  // boîte du hero — voir `&__image`. Rien d'autre ne dépasse, la carte est
+  // dans le flux et tient dans le remplissage.
+  //
+  // Le visuel descend d'un rayon sous le hero, et c'est ce qui peint derrière
+  // les deux épaules arrondies de la section suivante. Celle-ci ne chevauche
+  // pas le hero — décision client — donc elle n'a rien d'autre au-dessus
+  // d'elle : sans ce débord, l'encoche de ses coins laisse voir le blanc de
+  // `.main-content`, soit deux oreilles claires. Mesuré à 1440 × 1100 : le
+  // point (3, 904) peignait rgb(255, 255, 255) jusqu'à 48px de défilement.
+  //
+  // La boîte de `object-fit` grandit donc d'un rayon : le cadrage descend de
+  // quelques pixels, ce que `cover` absorbe. La hauteur de MISE EN PAGE du
+  // hero, elle, ne bouge pas — la section suivante reste à la même place.
   &__image {
     position: absolute;
-    inset: 0;
+    // `bottom: auto` : avec un haut, un bas ET une hauteur, la boîte est
+    // surcontrainte et le navigateur ignore le bas sans rien dire. Autant ne
+    // pas l'écrire.
+    inset: 0 0 auto 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% + #{var.$radius-section});
     object-fit: cover;
     // Le visuel couvre toute la surface : sans ceci il intercepterait le clic
     // destiné à la carte.
@@ -110,21 +126,21 @@
 }
 
 /* ------------------------------------------------------------------------- *
- * Le volet : ce qui suit le hero lui passe DESSUS.
+ * Le volet : CHAQUE section passe par-dessus la précédente.
  *
- * Le hero ne bouge pas, il reste collé en haut de la vue ; c'est la section
- * suivante qui remonte et le recouvre peu à peu. Aucun JavaScript — la
- * géométrie de peinture suffit, comme pour la révélation du pied de page.
+ * Demande client, deuxième passe : ce que faisait la première section sous le
+ * hero doit valoir à chaque jonction. Une section lue se fige, la suivante
+ * remonte et la recouvre peu à peu. Aucun JavaScript — la géométrie de
+ * peinture suffit, comme pour la révélation du pied de page.
  *
  * Écrit sur le hero et sur ses FRÈRES, jamais sur une section nommée. Les
  * sections sont un contenu flexible : le contributeur les réordonne, et
- * n'importe laquelle peut se retrouver sous le hero. La règle vaut donc pour
- * celle qui suit, quelle qu'elle soit — et pour la suivante si l'ordre change.
+ * n'importe laquelle peut se retrouver à n'importe quelle place.
  *
  * CE QUI REND LE VOLET OPAQUE n'est pas ici : c'est le fond propre de chaque
  * section. `.main-content` porte bien un aplat blanc, mais un fond de parent
  * peint SOUS ses enfants — il ne peut donc rien recouvrir. Une section sans
- * fond laisserait le hero transparaître. Une assertion de recette le
+ * fond laisserait la précédente transparaître. Une assertion de recette le
  * verrouille pour les sections à venir.
  * ------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
@@ -136,8 +152,33 @@
     z-index: 0;
   }
 
+  // Sans volet : simplement empilées, la suivante peignant sur la précédente.
+  // C'est aussi l'état de repli quand le script n'a pas tourné.
+  //
+  // Aucun `z-index` par section : à valeur égale, ce sont les positionnés dans
+  // l'ordre du DOM qui tranchent, et c'est exactement l'ordre voulu.
   .hero ~ * {
     position: relative;
     z-index: 1;
+  }
+
+  // Une section se fige quand son bord BAS atteint le bas de la vue —
+  // c'est-à-dire une fois lue — et la suivante remonte alors par-dessus elle.
+  // Le décalage vaut donc « hauteur de la vue moins hauteur DE CETTE
+  // section », et AUCUNE unité CSS ne désigne la hauteur de l'élément qui la
+  // porte : `--volet-top` est posée par `initVolets`, qui pose aussi la classe.
+  //
+  // `bottom: 0` ne rend PAS le même service, contrairement à ce que le nom
+  // laisse croire : il tire la section vers le haut pour la garder dans la
+  // vue, et toutes se retrouvent empilées en bas de l'écran dès le premier
+  // pixel. Mesuré à 1440 × 900, défilement 0 : les technologies, qui commencent
+  // à y=9313, étaient peintes de -27 à 900.
+  //
+  // Coller par le HAUT ne marche pas davantage : l'intro fait 2874px et le
+  // parcours de soin 4500, tous deux plus hauts que la vue. Ils se figeraient
+  // dès leur premier pixel et leur fin serait inatteignable.
+  .front-page--volet > .hero ~ * {
+    position: sticky;
+    top: var(--volet-top);
   }
 }

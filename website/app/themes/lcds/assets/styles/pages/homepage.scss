@@ -30,7 +30,21 @@
 // conteneur, et il est hors flux. Un rayon sur lui ne se voit pas, mais il
 // n'est pas une section et n'a rien à faire dans la règle.
 .front-page > *:not(.hero, .screen-reader-text) {
+  // Un volet prend TOUTE la hauteur de la vue. Sans ce plancher, une section
+  // plus courte que l'écran se fige en laissant voir la précédente au-dessus
+  // d'elle et ne la recouvre jamais — mesuré : les technologies faisaient 927
+  // pour une vue de 1100, donc 173px de la section d'avant restaient visibles.
+  //
+  // `svh` et non `vh`, comme le hero : sur mobile, la barre d'adresse ne doit
+  // pas faire déborder la section d'un écran.
+  //
+  // `min-height` et non `height` : l'intro fait 3074 et le parcours de soin
+  // 5500, et les figer à une vue rendrait leur fin inatteignable.
+  min-height: 100svh;
   border-radius: var.$radius-section var.$radius-section 0 0;
+  // Sans elle, l'arrondi ne se voit pas entre deux sections de même couleur —
+  // et elles le sont presque toutes. Voir `$volet-shadow`.
+  box-shadow: var.$volet-shadow;
 }
 
 .front-page > * + *:not(.hero, .screen-reader-text) {
@@ -42,22 +56,12 @@
 // volet, pas pour être reproduit — arbitré par le client. Le volet, lui, reste
 // entier : c'est le hero collé qui le produit au défilement, pas ce décalage.
 //
-// Ce bloc perd aussi son rayon, et c'est la conséquence du point précédent.
-// Sans chevauchement, ses deux épaules arrondies n'ont RIEN au-dessus d'elles
-// au repos : elles laissent voir le blanc de `.main-content`, soit deux
-// oreilles claires sous le hero. Mesuré à 1440 × 1100, défilement 0 : le point
-// (3, 904), quatre pixels sous le bas du hero, peint rgb(255, 255, 255) ; à
-// partir de 48px de défilement le bloc est remonté au-dessus du hero et le
-// même point peint le bloc. Le défaut ne dure donc que les 48 premiers pixels,
-// et seulement sur une vue plus haute que le hero — invisible à 900.
-//
-// La maquette dessine d'ailleurs une jonction FRANCHE à cet endroit : relevé
-// au pixel, l'image du hero court jusqu'à y=899 et le bleu pâle commence à
-// y=900. C'est le seul bord de section qui ne borde jamais une autre section.
+// Il garde son rayon comme toutes les autres. Ce qui peint DERRIÈRE ses deux
+// épaules n'est pas le chevauchement — il n'y en a pas — mais le débord du
+// visuel du hero, qui descend d'un rayon sous sa boîte. Voir hero.scss.
 //
 // Même spécificité que la règle ci-dessus, donc placée APRÈS elle : les deux se
 // valent à (0,2,0) et c'est l'ordre qui tranche.
 .front-page > .hero + * {
   margin-top: 0;
-  border-radius: 0;
 }

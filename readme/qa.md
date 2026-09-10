@@ -354,6 +354,15 @@ l'iframe : lire par `win.document` et `win.getComputedStyle`, et construire les
 Un test qui ne peut pas échouer ne vaut rien : après en avoir écrit un, casser
 volontairement le code qu'il surveille et vérifier qu'il passe au rouge.
 
+> **Et vérifier qu'il était VERT avant.** Une assertion rouge pour une autre
+> raison rougit aussi sous mutation, et la mutation semble alors concluante.
+> Cas rencontré : `trouverRegle` cherchait `.front-page > *:not(…)` quand
+> Chrome SÉRIALISE `.front-page > :not(…)` — le `*` redondant devant `:not()`
+> est retiré. L'assertion ne trouvait aucune règle, donc échouait quoi qu'on
+> fasse au CSS. **Le sélecteur passé à `trouverRegle` est celui du CSSOM, pas
+> celui de la source** : en cas de doute, lister les `selectorText` réels avant
+> d'écrire l'assertion.
+
 **Et RECONSTRUIRE après avoir restauré le code.** La campagne juge `dist/`, pas
 les sources : une épreuve qui remet la source en place sans rejouer
 `npm run build` laisse le bundle muté, et la campagne suivante condamne du code

@@ -431,17 +431,23 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
-     * Le volet : ce qui suit le hero lui passe dessus.
+     * Le volet : CHAQUE section passe par-dessus la précédente.
      *
      * L'effet est gated sous `prefers-reduced-motion: no-preference`, que la
      * campagne force à l'inverse : la POSITION rendue ne dit donc rien ici, et
      * les deux premières assertions portent sur la RÈGLE.
      *
-     * La troisième, elle, porte sur l'état réel — et c'est la seule qui protège
-     * la CONTRIBUTION. Les sections sont réordonnables : n'importe laquelle peut
-     * passer sous le hero, et une section sans fond propre le laisserait
-     * transparaître. L'aplat de `.main-content` n'y suffit pas, un fond de
-     * parent peignant sous ses enfants.
+     * Le décalage de collage est le point à VERROUILLER, et il ne s'écrit pas
+     * en CSS : il vaut « hauteur de la vue moins hauteur DE CETTE section ».
+     * Un `top: 0` figerait une section plus haute que la vue avant qu'elle
+     * soit lue, un `bottom: 0` les empilerait toutes en bas de l'écran dès le
+     * premier pixel. Ni l'un ni l'autre ne se voit sur une section courte.
+     *
+     * La troisième assertion porte sur l'état réel — et c'est la seule qui
+     * protège la CONTRIBUTION. Les sections sont réordonnables, et une section
+     * sans fond propre laisserait la précédente transparaître. L'aplat de
+     * `.main-content` n'y suffit pas, un fond de parent peignant sous ses
+     * enfants.
      * --------------------------------------------------------------------- */
     const heroVolet = doc.querySelector(".hero");
 
@@ -453,10 +459,40 @@ window.runFrontQa = async (win) => {
             )) === true
         );
         assert(
-            "volet : ce qui suit le hero est déclaré au-dessus",
+            "volet : chaque section est déclarée au-dessus de la précédente",
             trouverRegle(doc, ".hero ~ *", (regle) => (
                 regle.style.zIndex === "1" && regle.style.position === "relative" ? true : null
             )) === true
+        );
+        assert(
+            "volet : chaque section se colle sur le décalage posé par le script",
+            trouverRegle(doc, ".front-page--volet > .hero ~ *", (regle) => (
+                regle.style.position === "sticky"
+                    && regle.style.top === "var(--volet-top)" ? true : null
+            )) === true
+        );
+
+        // Le décalage lui-même : le script le pose sur CHAQUE section, et sa
+        // valeur doit être « hauteur de la vue moins hauteur de la section ».
+        // La campagne force le mouvement réduit, donc la classe est absente et
+        // rien n'est collé : c'est la seule chose mesurable ici, et elle suffit
+        // à prendre une erreur de signe ou une hauteur lue sur le mauvais nœud.
+        const decalages = [];
+
+        for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            decalages.push([
+                noeud.className.split(" ")[0],
+                noeud.style.getPropertyValue("--volet-top").trim(),
+                `${win.innerHeight - noeud.offsetHeight}px`,
+            ]);
+        }
+
+        const faux = decalages.filter(([, pose, attendu]) => pose !== attendu);
+
+        assert(
+            `volet : décalage de collage posé sur les ${decalages.length} sections`
+            + ` (${faux.length === 0 ? "toutes justes" : faux.map((f) => f.join(" ")).join(", ")})`,
+            decalages.length > 0 && faux.length === 0
         );
 
         const apresHero = [];
@@ -501,8 +537,42 @@ window.runFrontQa = async (win) => {
         });
 
         assert(
-            `sections : coins hauts arrondis à 48, bas francs (${[...new Set(rayons.slice(1))].join(", ")})`,
-            panneaux.length > 1 && rayons.slice(1).every((r) => r === "48px/48px/0px")
+            `sections : coins hauts arrondis à 48, bas francs (${[...new Set(rayons)].join(", ")})`,
+            panneaux.length > 0 && rayons.every((r) => r === "48px/48px/0px")
+        );
+
+        // Un arrondi ne se lit que contre une AUTRE couleur, et quatre des cinq
+        // sections partagent le bleu pâle. L'ombre est ce qui donne une arête
+        // au volet dans ce cas : sans elle le rayon existe sans se voir.
+        const ombres = panneaux.map((noeud) => styleOf(noeud).boxShadow);
+
+        assert(
+            `sections : arête du volet portée par une ombre (${[...new Set(ombres)].join(" | ")})`,
+            ombres.every((ombre) => ombre !== "none")
+        );
+
+        // Un volet prend toute la hauteur de la vue. Éprouvé sur la RÈGLE :
+        // rendu, le plancher ne mord que sur une section plus courte que
+        // l'écran, et la campagne ne garantit pas d'en avoir une — à 1440 × 900
+        // les technologies font déjà 927. Une assertion sur les hauteurs
+        // rendues passerait donc sans la règle.
+        //
+        // Le sélecteur est celui que Chrome SÉRIALISE, pas celui de la source :
+        // le `*` redondant devant `:not()` est retiré. Écrit tel quel dans la
+        // feuille, `.front-page > *:not(…)` ne trouve rien.
+        assert(
+            "sections : un volet ne descend pas sous une hauteur de vue",
+            trouverRegle(doc, ".front-page > :not(.hero, .screen-reader-text)", (regle) => (
+                regle.style.minHeight === "100svh" ? true : null
+            )) === true
+        );
+
+        const trop = panneaux.filter((noeud) => noeud.offsetHeight < win.innerHeight - 1);
+
+        assert(
+            `sections : les ${panneaux.length} volets couvrent la vue`
+            + ` (${trop.length === 0 ? "tous" : trop.map((n) => `${n.className.split(" ")[0]} ${n.offsetHeight}`).join(", ")})`,
+            trop.length === 0
         );
 
         // Le bloc qui suit le hero ARRIVE APRÈS lui : aucun recouvrement.
@@ -513,15 +583,23 @@ window.runFrontQa = async (win) => {
             styleOf(panneaux[0]).marginTop === "0px"
         );
 
-        // Et c'est POUR CELA qu'il n'a pas de rayon : sans rien au-dessus de
-        // ses épaules, l'encoche des deux coins laisserait voir le blanc de
-        // `.main-content`. Mesuré à 1440 × 1100, défilement 0 : le point
-        // (3, 904) peignait rgb(255, 255, 255). Les deux assertions sont
-        // solidaires — rétablir le rayon ici ramène les oreilles claires.
-        assert(
-            `sections : le bloc sous le hero a un bord franc (${rayons[0]})`,
-            rayons[0] === "0px/0px/0px"
-        );
+        // Ce qui peint derrière SES épaules à lui n'est pas un chevauchement
+        // mais le débord du visuel du hero, d'exactement un rayon. Sans ce
+        // débord, l'encoche laissait voir le blanc de `.main-content` — mesuré
+        // à 1440 × 1100, défilement 0 : le point (3, 904) peignait
+        // rgb(255, 255, 255). Les deux déclarations sont solidaires.
+        const visuel = heroVolet === null ? null : heroVolet.querySelector(".hero__image");
+
+        if (visuel !== null) {
+            const debord = Math.round(
+                visuel.getBoundingClientRect().bottom - heroVolet.getBoundingClientRect().bottom
+            );
+
+            assert(
+                `volet : le visuel du hero déborde d'un rayon sous sa boîte (${debord}px)`,
+                debord === 48
+            );
+        }
 
         // Les suivantes chevauchent : c'est ce qui met la section précédente
         // derrière leurs épaules, à la place du blanc du conteneur.

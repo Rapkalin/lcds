@@ -180,6 +180,16 @@ $radius: fn.toRem(8);
 // et arrondit les coins BAS du panneau de pied de page : deux rôles, deux
 // valeurs, et les confondre ferait bouger l'un en corrigeant l'autre.
 $radius-section: fn.toRem(48);
+// Ombre portée au-dessus d'une section empilée.
+//
+// AJOUT HORS MAQUETTE, assumé. Quatre des cinq sections de l'accueil partagent
+// le même bleu pâle — mesuré : `rgb(242, 248, 255)` pour l'intro, les
+// traitements, le parcours de soin et les technologies. Leur coin arrondi
+// existe bel et bien, mais il est invisible : un bord rond ne se lit que
+// contre une autre couleur. Cette ombre donne au volet une arête, sans
+// dépendre des couleurs que le contributeur choisira. Une seule déclaration à
+// retirer si le designer la refuse.
+$volet-shadow: 0 #{fn.toRem(-4)} #{fn.toRem(24)} rgba($blue, 0.1);
 // L'encoche entre les deux pastilles d'un bouton d'action primaire au repos.
 // C'est elle que le survol ouvre jusqu'à `$spread`.
 $notch: fn.toRem(2);
