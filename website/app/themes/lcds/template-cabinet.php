@@ -51,6 +51,25 @@ foreach ($rows as $row) {
         ],
     ];
 }
+
+$groups = [];
+
+foreach ((array) lcds_field('groupes', $page_id) as $group) {
+    $visuals = [];
+
+    foreach ((array) ($group['visuels'] ?? []) as $visual) {
+        $visuals[] = [
+            'image' => lcds_attachment_id($visual['visuel'] ?? 0),
+            'caption' => trim((string) ($visual['legende'] ?? '')),
+            'dot' => trim((string) ($visual['puce'] ?? '')) ?: 'orange',
+        ];
+    }
+
+    $groups[] = [
+        'title' => trim((string) ($group['titre'] ?? '')),
+        'visuals' => $visuals,
+    ];
+}
 ?>
 
 <main id="main-content" class="main-content page-cabinet">
@@ -63,6 +82,10 @@ foreach ($rows as $row) {
         'image' => lcds_attachment_id($locate['plan'] ?? 0),
         'entries' => $entries,
     ]); ?>
+
+    <?php foreach ($groups as $group) : ?>
+        <?php get_template_part('components/block-rooms', null, $group); ?>
+    <?php endforeach; ?>
 </main>
 
 <?php

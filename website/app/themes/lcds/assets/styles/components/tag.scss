@@ -42,6 +42,22 @@
   }
 }
 
+// Posée SUR un visuel : le contour cède la place à un aplat blanc, faute de
+// quoi la bordure se perd dans la photo. Relevé sur la maquette du cabinet :
+// 36 de haut contre 29 sur l'accueil, d'où le remboursage plus généreux.
+//
+// L'aplat est ce qui rend le libellé lisible : le bleu foncé sur une photo de
+// contributeur n'a pas de contraste mesurable, et c'est le même raisonnement
+// que le titre de la bande de l'application — sauf qu'ici un aplat opaque
+// suffit, l'étiquette étant petite.
+.tag--on-media {
+  min-height: fn.toRem(36);
+  border-color: transparent;
+  background: var.$white;
+  padding-top: fn.toRem(8);
+  padding-bottom: fn.toRem(8);
+}
+
 // Une règle par couleur, engendrée depuis la correspondance de
 // `basics/variables.scss` : la liste des couleurs n'est écrite qu'une fois.
 @each $nom, $teinte in var.$dot-colors {

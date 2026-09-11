@@ -713,6 +713,91 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * Page « Le cabinet » — le rail de visuels.
+     *
+     * Six groupes partagent un seul motif, et le rail est CONTINU de l'un à
+     * l'autre : dix visuels de 666 × 500, écart de 12 partout, de y=1419 à
+     * y=6524 sans respiration aux jonctions. C'est cette continuité qui compte
+     * — un rembourrage de section la romprait sans que rien ne le signale.
+     * --------------------------------------------------------------------- */
+    const visuelsRail = [...doc.querySelectorAll(".block-rooms__item")];
+
+    if (visuelsRail.length > 0 && win.innerWidth === 1440) {
+        const boites = visuelsRail.map((noeud) => noeud.getBoundingClientRect());
+        const formats = boites.map((b) => `${Math.round(b.width)}×${Math.round(b.height)}`);
+        const ecarts = boites.slice(1).map((b, i) => Math.round(b.top - boites[i].bottom));
+
+        assert(
+            `cabinet : les ${visuelsRail.length} visuels du rail font 666 × 500 (${[...new Set(formats)].join(", ")})`,
+            formats.every((f) => f === "666×500")
+        );
+        assert(
+            `cabinet : le rail garde 12 d'écart, jonctions de groupes comprises (${[...new Set(ecarts)].join(", ")})`,
+            ecarts.length > 0 && ecarts.every((e) => Math.abs(e - 12) <= 1)
+        );
+        assert(
+            `cabinet : le rail occupe la colonne de droite (${Math.round(boites[0].left)} → ${Math.round(boites[0].right)})`,
+            Math.abs(boites[0].left - 726) <= 1 && Math.abs(boites[0].right - 1392) <= 1
+        );
+
+        // Le premier visuel de la page tombe à 1419 : c'est lui qui valide le
+        // retrait bas de la section d'en-tête, porté là et non sur le rail.
+        assert(
+            `cabinet : le rail commence à 1419 (${Math.round(boites[0].top + win.scrollY)})`,
+            Math.abs(boites[0].top + win.scrollY - 1419) <= 2
+        );
+
+        // Chaque titre s'aligne sur le HAUT de son premier visuel, et y reste
+        // pendant que ses visuels défilent — demande client, même mécanique que
+        // les traitements de l'accueil.
+        const groupes = [...doc.querySelectorAll(".block-rooms")];
+        const desalignes = groupes.filter((groupe) => {
+            const titre = groupe.querySelector(".block-rooms__title");
+            const premier = groupe.querySelector(".block-rooms__item");
+
+            return titre !== null && premier !== null
+                && Math.abs(titre.getBoundingClientRect().top - premier.getBoundingClientRect().top) > 1;
+        });
+
+        assert(
+            `cabinet : les ${groupes.length} titres s'alignent sur leur premier visuel`
+            + ` (${desalignes.length === 0 ? "tous" : desalignes.map((g) => g.querySelector(".block-rooms__title").textContent.trim()).join(", ")})`,
+            groupes.length > 0 && desalignes.length === 0
+        );
+
+        const titreRail = doc.querySelector(".block-rooms__title");
+
+        assert(
+            `cabinet : le titre de groupe reste au même niveau`
+            + ` (${styleOf(titreRail).position}, ${styleOf(titreRail).alignSelf})`,
+            styleOf(titreRail).position === "sticky" && styleOf(titreRail).alignSelf === "start"
+        );
+
+        // La légende est l'étiquette du site, posée sur le visuel : l'aplat
+        // blanc remplace le contour, que la photo avalerait.
+        const legende = doc.querySelector(".block-rooms__caption .tag");
+
+        if (legende !== null) {
+            const visuel = legende.closest(".block-rooms__item").getBoundingClientRect();
+            const pastille = legende.getBoundingClientRect();
+
+            assert(
+                `cabinet : légende encastrée de 12 du bord gauche et du bas`
+                + ` (${Math.round(pastille.left - visuel.left)} / ${Math.round(visuel.bottom - pastille.bottom)})`,
+                Math.abs(pastille.left - visuel.left - 12) <= 1
+                    && Math.abs(visuel.bottom - pastille.bottom - 12) <= 1
+            );
+            assert(
+                `cabinet : légende en aplat blanc, sans contour`
+                + ` (${styleOf(legende).backgroundColor}, ${Math.round(pastille.height)} de haut)`,
+                styleOf(legende).backgroundColor === "rgb(255, 255, 255)"
+                    && styleOf(legende).borderTopColor === "rgba(0, 0, 0, 0)"
+                    && Math.abs(pastille.height - 36) <= 1
+            );
+        }
+    }
+
+    /* --------------------------------------------------------------------- *
      * Chargement différé des visuels.
      *
      * WordPress ne pose `loading` que DANS la boucle
@@ -3105,9 +3190,13 @@ window.runFrontQa = async (win) => {
     // On compte les étiquettes restées en <p>, et non celles passées en <h2> :
     // « au moins une en h2 » passait avec deux sections sur trois corrigées —
     // constaté en cassant volontairement une seule des trois.
+    //
+    // `tag--on-media` est EXCLUE : posée sur un visuel, c'est une légende et
+    // non le libellé d'une section. La passer en titre ajouterait au plan de
+    // la page des entrées qui ne regroupent rien.
     assert(
-        `aucune étiquette de section restée hors du plan de titres (${doc.querySelectorAll("p.tag").length} en <p>)`,
-        doc.querySelectorAll("p.tag").length === 0
+        `aucune étiquette de section restée hors du plan de titres (${doc.querySelectorAll("p.tag:not(.tag--on-media)").length} en <p>)`,
+        doc.querySelectorAll("p.tag:not(.tag--on-media)").length === 0
     );
 
     // -- Panneau mobile : la page derrière doit sortir du parcours de tabulation.

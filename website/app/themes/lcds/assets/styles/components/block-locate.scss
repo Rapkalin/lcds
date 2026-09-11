@@ -25,7 +25,12 @@
 // Le décalage de 10 entre la boîte d'une ligne et le haut des capitales est
 // MESURÉ sur le rendu, pas déduit des métriques de la police.
 .block-locate {
-  padding: fn.toRem(132) 0 fn.toRem(128);
+  // 256 en bas, soit deux fois le retrait de section : c'est l'écart relevé
+  // entre le bas de la liste (1163) et le premier visuel du rail (1419). Il est
+  // porté ICI et non par le rail, qui ne doit avoir aucun retrait vertical —
+  // ses douze pixels d'écart sont les mêmes à l'intérieur d'un groupe et entre
+  // deux groupes, et un rembourrage de section romprait cette continuité.
+  padding: fn.toRem(132) 0 fn.toRem(256);
 
   &__title {
     max-width: var.$cabinet-outer;
@@ -74,6 +79,10 @@
   // les deux listes.
   .info-list {
     --info-gutter: #{fn.toRem(90)};
+    // Filet CENTRÉ entre deux entrées, là où l'accueil le pousse vers le bas
+    // de la précédente. Relevé : 540, 741, 891, 1037.
+    --info-before: #{fn.toRem(24)};
+    --info-after: #{fn.toRem(24)};
   }
 }
 

@@ -1,0 +1,109 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Relevé au pixel sur `CABINET/LCDS_cabinet.pdf`.
+//
+// LE RAIL EST CONTINU d'un groupe à l'autre : dix visuels de 666 × 500, écart
+// de 12 partout, de y=1419 à y=6524 sans respiration aux jonctions. Les six
+// titres sont simplement posés en regard. D'où l'absence de tout retrait
+// vertical sur la section : c'est l'écart du rail qui sépare les groupes, et un
+// rembourrage de section le romprait.
+//
+//   visuels            x 726 → 1392, soit 666 de large, 500 de haut (4:3)
+//   écart              12, à l'intérieur d'un groupe comme entre deux groupes
+//   rayon              8
+//   légende            341 × 36, encastrée de 12 du bord gauche et du bas
+//   titre              x=48, sa ligne alignée sur le haut du premier visuel
+.block-rooms {
+  &__inner {
+    display: grid;
+    // Les deux colonnes en PARTS, jamais en `rem`. La maquette donne 666 à
+    // droite, et 666 en `rem` doublait avec la taille du texte : à 200 % la
+    // colonne valait 1332 et poussait la page de 84px hors de l'écran —
+    // RGAA 10.4, mesuré. Un cadre d'image n'est pas une mesure typographique.
+    //
+    // 630 à gauche : la gouttière n'est pas mesurable — aucun élément de gauche
+    // ne touche son bord — mais elle est BORNÉE. Le plus long titre d'une seule
+    // ligne, « Les salles d'attente », fait 576, donc elle ne peut pas dépasser
+    // 102. 48 reprend la marge de la page, d'où 1344 − 48 − 666 = 630.
+    grid-template-columns: minmax(0, 630fr) minmax(0, 666fr);
+    gap: fn.toRem(48);
+    align-items: start;
+    max-width: var.$cabinet-outer;
+    margin: 0 auto;
+    padding: 0 var.$cabinet-inset;
+  }
+
+  // La ligne du titre s'aligne sur le HAUT du premier visuel de son groupe.
+  // Relevé : la capitale tombe 11 sous ce haut, et la boîte d'une ligne
+  // commence 10 au-dessus de sa capitale — d'où l'alignement direct.
+  //
+  // Il reste au même niveau pendant que ses visuels défilent, comme le plan de
+  // « nous trouver ». `align-self: start` vient de la grille ci-dessus : sans
+  // lui l'élément s'étire à sa rangée et le collage est sans effet.
+  &__title {
+    position: sticky;
+    top: var.$sticky-top;
+    // Explicite, bien que la grille pose déjà `align-items: start` : c'est LA
+    // condition du collage, et la laisser implicite la rend invisible au
+    // prochain qui touchera la grille.
+    align-self: start;
+    margin: 0;
+    font-size: var.$fs-h2;
+  }
+
+  &__list {
+    display: grid;
+    gap: var.$gutter;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  // Le groupe SUIVANT reprend le rail au même écart : la marge est portée par
+  // la section, pas par le dernier visuel, pour que le dernier groupe de la
+  // page ne traîne pas 12px de vide.
+  & + & &__inner {
+    margin-top: var.$gutter;
+  }
+
+  &__item {
+    position: relative;
+    aspect-ratio: 666 / 500;
+    overflow: hidden;
+    border-radius: var.$radius;
+    // Aplat de repli : le cadre reste dessiné tant que le visuel se charge.
+    background: var.$blue-separator;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__caption {
+    position: absolute;
+    bottom: var.$gutter;
+    left: var.$gutter;
+    // Le visuel couvre toute la surface : sans ceci la légende n'intercepterait
+    // rien, mais elle doit rester au-dessus de lui.
+    max-width: calc(100% - 2 * #{var.$gutter});
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
+  .block-rooms {
+    &__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: fn.toRem(24);
+    }
+
+    &__title {
+      position: static;
+    }
+  }
+}

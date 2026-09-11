@@ -14,6 +14,8 @@
  *                 nommer par `aria-labelledby` : une `<section>` sans nom
  *                 accessible n'est pas exposée comme région, et le plan de
  *                 navigation par régions s'arrête aux quatre repères de page.
+ *   media bool    Étiquette posée SUR un visuel : aplat blanc au lieu du
+ *                 contour, que la photo avalerait.
  *   dot   string  Couleur de la puce, parmi les valeurs de LcdsDotColor.
  *                 Elle change d'une section à l'autre dans la maquette. Les
  *                 libellés vus par le contributeur (« Vert », « Rouge ») ne
@@ -40,9 +42,10 @@ $element = isset($args['element']) && in_array($args['element'], ['h2', 'h3', 'p
 
 $dot = LcdsDotColor::fromValue($args['dot'] ?? '', LcdsDotColor::Turquoise);
 $id = isset($args['id']) ? (string) $args['id'] : '';
+$onMedia = ! empty($args['media']);
 ?>
 
-<<?php echo $element; ?> class="tag tag--<?php echo esc_attr($dot->value); ?>"<?php echo $id === '' ? '' : ' id="' . esc_attr($id) . '"'; ?>>
+<<?php echo $element; ?> class="tag tag--<?php echo esc_attr($dot->value); ?><?php echo $onMedia ? ' tag--on-media' : ''; ?>"<?php echo $id === '' ? '' : ' id="' . esc_attr($id) . '"'; ?>>
     <span class="tag__dot" aria-hidden="true"></span>
     <?php echo esc_html($label); ?>
 </<?php echo $element; ?>>

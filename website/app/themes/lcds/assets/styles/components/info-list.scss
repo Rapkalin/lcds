@@ -11,6 +11,13 @@
 // plutôt qu'un second composant.
 .info-list {
   --info-gutter: #{fn.toRem(24)};
+  // L'air AVANT le filet et APRÈS lui. Les deux maquettes ne posent pas le
+  // même rythme, et le filet n'y est pas au même endroit : l'accueil le pousse
+  // vers le bas de l'entrée précédente — 96 dessus, 48 dessous — le cabinet le
+  // centre. Relevé sur le cabinet : filets à 540, 741, 891 et 1037, soit 25
+  // au-dessus du dernier contenu et 22 au-dessus du titre suivant.
+  --info-before: #{fn.toRem(96)};
+  --info-after: #{fn.toRem(48)};
 
   display: grid;
   margin: 0;
@@ -23,12 +30,13 @@
     display: grid;
     grid-template-columns: fn.toRem(24) minmax(0, 1fr);
     gap: 0 var(--info-gutter);
-    padding-bottom: fn.toRem(48);
+    // Tout l'air d'avant le filet est ICI, marge comprise : deux sources pour
+    // un seul écart se contredisent dès qu'une page en veut un autre.
+    padding-bottom: var(--info-before);
 
     & + & {
-      margin-top: fn.toRem(48);
       border-top: 1px solid var.$blue-separator;
-      padding-top: fn.toRem(48);
+      padding-top: var(--info-after);
     }
 
     &:last-child {

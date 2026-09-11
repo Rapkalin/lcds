@@ -158,6 +158,28 @@ personnalisation — ni couleurs, ni masquage des commerces alentour. Le bouton
 de la première entrée renvoie vers le plan en ligne : c'est ce que la maquette
 dessine, et ça ne coûte ni cookie ni JavaScript tiers.
 
+### Les groupes de visuels
+
+Un groupe = **un titre à gauche, ses visuels empilés à droite**. Six sur la
+maquette : les salles de soin et celles d'attente en portent trois chacune, les
+quatre autres un seul. Ajouter un groupe, en retirer un, en réordonner : c'est
+un champ répétable, le rendu suit.
+
+**Les visuels forment un rail CONTINU.** L'écart de 12 est le même à
+l'intérieur d'un groupe et entre deux groupes : rien ne marque visuellement une
+frontière de groupe, c'est le titre en regard qui la dit. Cadre de 666 × 500 —
+une image plus étroite ou plus haute est recadrée au centre.
+
+**La légende est facultative** : deux visuels sur dix en portent une sur la
+maquette. Elle s'affiche en capitales dans une pastille blanche, en bas à
+gauche du visuel, avec une puce dont la couleur se choisit comme ailleurs.
+Ce n'est pas un titre de section : elle n'entre pas dans le plan de la page.
+
+> **Pour couper un titre sur deux lignes à un endroit précis**, la maquette le
+> fait à la main : la colonne tient vingt caractères sur une ligne, et
+> « Le parking privé et gratuit » y est coupé après « privé » alors que « et »
+> y tiendrait. Le retour à la ligne naturel ne le reproduira pas.
+
 **Le `h1` est masqué visuellement.** La maquette ne dessine aucun titre de
 page ; « Nous trouver » est déjà un titre de section. Conforme au RGAA, qui
 porte sur la structure des titres et non sur leur visibilité, et indexé

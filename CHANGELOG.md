@@ -7,6 +7,35 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.22.0
+
+### Ajouté
+
+- **Les groupes de visuels de la page « Le cabinet »** : un titre à gauche, ses
+  visuels empilés à droite, autant de groupes que voulu. Les salles de soin, les
+  salles d'attente, le parking, la salle radio, le laboratoire et la salle PMR
+  tiennent dans un seul champ répétable.
+
+  Les visuels forment un **rail continu** : le même écart à l'intérieur d'un
+  groupe et entre deux groupes, c'est le titre en regard qui marque la
+  frontière. Chaque titre reste au même niveau pendant que ses visuels
+  défilent.
+
+- **Une légende peut être posée sur un visuel**, en capitales dans une pastille
+  blanche avec sa puce de couleur. Facultative, et hors du plan de titres :
+  c'est une légende, pas un titre de section.
+
+### Corrigé
+
+- **Le rythme de la liste d'informations suit désormais sa page.** La page du
+  cabinet serre ses entrées là où l'accueil les espace : le filet y est centré
+  entre deux entrées au lieu d'être poussé vers le bas de la précédente. La
+  liste du cabinet mesurait 396px de trop, ce qui décalait tout le bas de page.
+- **Plus de défilement horizontal à 200 % de taille de texte** sur la page du
+  cabinet : la colonne des visuels était exprimée en unité de texte et doublait
+  avec lui, poussant la page de 84px hors de l'écran — RGAA 10.4. Un cadre
+  d'image n'est pas une mesure typographique.
+
 ## 2.21.0
 
 ### Ajouté

@@ -219,6 +219,139 @@
                     "rows_per_page": 20
                 }
             ]
+        },
+        {
+            "key": "field_lcds_cabinet_groupes",
+            "label": "Groupes de visuels",
+            "name": "groupes",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "Un groupe par pièce du cabinet : un titre à gauche, ses visuels empilés à droite. Les groupes s'enchaînent sans respiration — les visuels forment un rail continu, quel que soit leur nombre par groupe.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "collapsed": "field_lcds_cabinet_groupe_titre",
+            "min": 0,
+            "max": 0,
+            "layout": "block",
+            "button_label": "Ajouter un groupe",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_cabinet_groupe_titre",
+                    "label": "Titre du groupe",
+                    "name": "titre",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Exemple : « Les salles de soin ». Il nomme le groupe dans le plan de la page. Pour le couper sur deux lignes à un endroit précis, la maquette le fait à la main : la colonne tient 20 caractères sur une ligne.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 60,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_cabinet_groupe_visuels",
+                    "label": "Visuels",
+                    "name": "visuels",
+                    "aria-label": "",
+                    "type": "repeater",
+                    "instructions": "Un visuel par ligne, empilés de haut en bas. Cadre de 666 × 500 sur la maquette : une image plus étroite ou plus haute est recadrée au centre. Leur texte alternatif se saisit dans la médiathèque.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "collapsed": "field_lcds_cabinet_groupe_visuel",
+                    "min": 1,
+                    "max": 0,
+                    "layout": "block",
+                    "button_label": "Ajouter un visuel",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_cabinet_groupe_visuel",
+                            "label": "Visuel",
+                            "name": "visuel",
+                            "aria-label": "",
+                            "type": "image",
+                            "instructions": "Sans visuel, la ligne n'est pas rendue.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "id",
+                            "preview_size": "medium",
+                            "library": "all",
+                            "min_width": "",
+                            "min_height": "",
+                            "min_size": "",
+                            "max_width": "",
+                            "max_height": "",
+                            "max_size": "",
+                            "mime_types": ""
+                        },
+                        {
+                            "key": "field_lcds_cabinet_groupe_legende",
+                            "label": "Légende",
+                            "name": "legende",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Facultative — deux visuels sur dix en portent une sur la maquette. Affichée en capitales dans une pastille blanche, en bas à gauche du visuel.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 60,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_cabinet_groupe_puce",
+                            "label": "Couleur de la puce",
+                            "name": "puce",
+                            "aria-label": "",
+                            "type": "button_group",
+                            "instructions": "Couleur de la puce de la légende. Le libellé affiché est celui du client ; la valeur enregistrée reste celle du système de design.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
+                            "default_value": "orange",
+                            "allow_null": 0,
+                            "other_choice": 0,
+                            "layout": "horizontal",
+                            "return_format": "value"
+                        }
+                    ]
+                }
+            ]
         }
     ],
     "location": [
