@@ -7,6 +7,31 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.20.0
+
+### Modifié
+
+- **L'application mobile se contribue avec le pied de page**, dans
+  **Réglages → Configuration**, et non plus dans le catalogue de sections de la
+  page d'accueil. Elle appartient au pied de page : elle suit donc **toutes les
+  pages du site**, et non la seule page d'accueil.
+
+  Sans visuel, sans titre et sans étiquette, la bande ne se rend pas du tout —
+  elle ne pose pas un aplat vide sur chaque page.
+
+> **À faire au déploiement, si la version 2.19.0 a été mise en ligne quelque
+> part avec cette section contribuée.** Son contenu reste en base mais devient
+> inatteignable : la section n'existe plus dans le catalogue de l'accueil. Il
+> faut le ressaisir dans « Réglages → Configuration », puis retirer la section
+> orpheline de la page d'accueil. Si 2.19.0 n'est jamais sortie de la machine
+> de développement, il n'y a rien à faire.
+
+### Corrigé
+
+- **On lit « informations pratiques » jusqu'au bout avant que le pied de page
+  ne prenne la place.** La section n'ayant plus de section après elle, elle ne
+  se fige plus : elle sort par le haut au rythme du lecteur.
+
 ## 2.19.0
 
 ### Ajouté

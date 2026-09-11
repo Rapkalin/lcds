@@ -37,6 +37,12 @@ $url = isset($args['url']) ? (string) $args['url'] : '';
 // type coexistent sur une page.
 $headingId = $label === '' ? '' : wp_unique_id('section-titre-');
 
+// Rien à montrer : ni visuel, ni titre. La bande ne se rend pas du tout plutôt
+// que de poser un aplat vide sur toutes les pages du site.
+if ($image === 0 && $title === '' && $label === '') {
+    return;
+}
+
 $visual = $image === 0 ? '' : lcds_render_image($image, [
     'class' => 'block-app__image',
 ], 'full');

@@ -31,11 +31,27 @@ $address = (string) lcds_option('adresse');
 $copyright = lcds_option_text('copyright');
 $reveal = lcds_attachment_id(lcds_option('visuel'));
 
+// La bande de l'application vit avec le pied de page et non dans les sections
+// de l'accueil : elle lui appartient, et elle doit donc suivre toutes les
+// pages qui portent ce pied de page.
+$application = lcds_option('application');
+$application = is_array($application) ? $application : [];
+$appLink = is_array($application['lien'] ?? null) ? $application['lien'] : [];
+
 $focus = LcdsFocalPoint::fromValue(lcds_option('cadrage'), LcdsFocalPoint::Center);
 $visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
     'class' => 'footer-reveal__image is-focus-' . $focus->value,
 ], 'full');
 ?>
+
+<?php get_template_part('components/block-app', null, [
+    'label' => trim((string) ($application['etiquette'] ?? '')),
+    'dot' => trim((string) ($application['puce'] ?? '')) ?: 'orange',
+    'title' => trim((string) ($application['titre'] ?? '')),
+    'image' => lcds_attachment_id($application['visuel'] ?? 0),
+    'code' => lcds_attachment_id($application['code'] ?? 0),
+    'url' => trim((string) ($appLink['url'] ?? '')),
+]); ?>
 
 <div class="footer-reveal">
     <?php if ($visual !== '') : ?>

@@ -21,7 +21,19 @@
 // boîte de bloc, il fixe la hauteur et le contenu DÉBORDE au lieu de la
 // pousser. La grille, elle, prend le maximum.
 .block-app {
+  // La bande appartient au PIED DE PAGE et non aux sections de l'accueil : la
+  // règle `.front-page > *` ne la touche plus. Elle porte donc elle-même ce
+  // que cette règle lui donnait — l'arrondi haut, l'arête, et le
+  // chevauchement de la valeur du rayon qui met la section précédente derrière
+  // ses deux épaules. Voir pages/homepage.scss, qui porte le raisonnement.
+  //
+  // `z-index` : `.main-content` est positionné avec la même valeur ; c'est
+  // l'ordre du DOM qui tranche, et la bande vient après.
   position: relative;
+  z-index: 1;
+  margin-top: calc(-1 * #{var.$radius-section});
+  border-radius: var.$radius-section var.$radius-section 0 0;
+  box-shadow: var.$volet-shadow;
   display: grid;
   // Fond PROPRE : un fond de parent peint sous ses enfants, et sans lui la
   // section précédente transparaîtrait quand celle-ci lui passe dessus. Voir

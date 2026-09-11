@@ -51,19 +51,6 @@
   margin-top: calc(-1 * #{var.$radius-section});
 }
 
-// SAUF l'app mobile : sa hauteur vient de son VISUEL, demande client. Elle
-// garde tout le reste — rayon, ombre, chevauchement — et perd le seul plancher
-// d'un écran.
-//
-// CONSÉQUENCE À CONNAÎTRE : plus courte que la vue, elle ne peut pas jouer le
-// volet. Une section collée par le bas de la vue laisse voir la précédente
-// au-dessus d'elle sur la différence — c'est exactement le défaut que le
-// plancher corrigeait. Elle est donc retirée de la pile collante juste après.
-.front-page > .block-app {
-  min-height: 0;
-}
-
-
 // SAUF le bloc qui suit le hero : il ARRIVE APRÈS lui et ne le chevauche pas.
 // La maquette montre un recouvrement à cet endroit pour dire l'intention de
 // volet, pas pour être reproduit — arbitré par le client. Le volet, lui, reste

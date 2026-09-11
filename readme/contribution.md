@@ -38,29 +38,11 @@ relevée sur les maquettes, puis **désignée comme page d'accueil du site**
 | **Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
 | **Carrousel de cartes** | Étiquette, bouton, cartes inclinées révélant leur texte |
 | **Informations pratiques** | Étiquette, visuel, entrées à icône |
-| **Application mobile** | Étiquette, titre, visuel pleine largeur, QR code |
 
 **Le catalogue est celui de la page d'accueil et de personne d'autre.** Le
 groupe est localisé par `page_type == front_page` : aucune de ces sections ne
 peut atterrir sur une autre page. C'était le principal défaut du modèle
 précédent en blocs, où les sections étaient insérables partout.
-
-### Application mobile — deux choses à savoir
-
-**Le visuel de fond prend TOUTE la largeur de l'écran**, pas celle du contenu,
-et **c'est lui qui donne sa hauteur au bloc** — c'est la seule section à ne pas
-occuper un écran entier. Le titre est écrit par-dessus, en bleu foncé, dans le
-tiers gauche : **prévoir une photo claire de ce côté**. Rien ne protège la
-lisibilité à sa place — un voile avait été ajouté, il se voyait, il a été
-retiré. Sur le visuel de la maquette, le titre est à 8,67:1 ; sur une photo
-sombre il tomberait à 1,24:1.
-
-**Le QR code demande DEUX choses.** Son texte alternatif, dans la médiathèque,
-doit dire où il mène — « Télécharger Dentapoche sur l'App Store », pas « QR
-code ». Et son champ « Lien » doit porter la même destination : **un QR code
-est inutilisable depuis l'appareil qui l'affiche**, et sans ce lien un visiteur
-au téléphone ne peut pas atteindre l'application. Renseigné, le code devient
-un lien.
 
 ### Ajouter une section
 
@@ -236,6 +218,38 @@ ne joue que dans le formulaire, et le repli du thème, qui joue tant que rien
 n'est enregistré. Une assertion de `bin/qa-front.sh` échoue si elles divergent —
 sinon la puce changerait de couleur au premier enregistrement, sans que personne
 ait rien choisi.
+
+### L'application mobile
+
+La bande « Dentapoche » vit **avec le pied de page**, pas dans les sections de
+l'accueil : elle lui appartient et suit donc toutes les pages. Elle se contribue
+au même endroit, groupe **« Application mobile »**.
+
+| Champ | Ce qu'il porte |
+| --- | --- |
+| Étiquette de section | « L'app mobile ». C'est aussi le TITRE de la section dans le plan de la page |
+| Couleur de la puce | « Vert » ou « Rouge » |
+| Titre | « Dentapoche : l'app mobile ». Il passe à la ligne tout seul |
+| Visuel de fond | La bande pleine largeur. **C'est lui qui donne sa hauteur au bloc** |
+| QR code | Le carré de 142 |
+| Lien du QR code | La même destination que le code |
+
+**Le visuel prend TOUTE la largeur de l'écran**, pas celle du contenu. Le titre
+est écrit par-dessus, en bleu foncé, dans le tiers gauche : **prévoir une photo
+claire de ce côté**. Rien ne protège la lisibilité à sa place — un voile avait
+été ajouté, il se voyait, il a été retiré. Sur le visuel de la maquette le titre
+est à 8,67:1 ; sur une photo sombre il tomberait à 1,24:1.
+
+**Le texte alternatif des deux images se saisit dans la médiathèque**, pas ici.
+Pour le QR c'est ce qui compte : il doit dire **où mène le code** — « Télécharger
+Dentapoche sur l'App Store », pas « QR code ».
+
+**Le lien du QR code n'est pas décoratif.** Un code affiché à l'écran ne peut pas
+être scanné depuis l'appareil qui l'affiche : sans lui, un visiteur au téléphone
+ne peut pas atteindre l'application. Renseigné, le code devient cliquable.
+
+Sans visuel, sans titre et sans étiquette, **la bande ne se rend pas du tout** —
+elle ne pose pas un aplat vide sur toutes les pages.
 
 ### Le pied de page
 

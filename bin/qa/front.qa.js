@@ -536,6 +536,13 @@ window.runFrontQa = async (win) => {
         // La campagne force le mouvement réduit, donc la classe est absente et
         // rien n'est collé : c'est la seule chose mesurable ici, et elle suffit
         // à prendre une erreur de signe ou une hauteur lue sur le mauvais nœud.
+        //
+        // Le décalage est posé au CHARGEMENT. La campagne a modifié des
+        // hauteurs depuis — elle déplie des accordéons, vide la réserve du
+        // rail épinglé — et comparerait sinon une valeur d'alors à une mesure
+        // de maintenant. On redemande la mesure avant de juger la formule.
+        win.dispatchEvent(new win.Event("resize"));
+
         const decalages = [];
 
         for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
@@ -1836,17 +1843,49 @@ window.runFrontQa = async (win) => {
                 );
             }
 
-            // Plus courte que la vue, elle ne peut recouvrir personne — et
-            // personne ne peut la recouvrir. Elle reste donc hors de la pile
-            // collante, ainsi que celle qui la précède. Éprouvé sur l'état
-            // rendu, pas sur une règle nommant la classe : c'est la GÉOMÉTRIE
-            // qui décide, et l'assertion générale ci-dessus la verrouille.
+            /* ------------------------------------------------------------- *
+             * La bande appartient au PIED DE PAGE, pas aux sections.
+             *
+             * Elle se contribue depuis « Réglages → Configuration » avec le
+             * reste du pied de page, et suit donc toutes les pages. Sa place
+             * dans le document le dit : sœur de `.main-content`, avant le
+             * bloc de révélation — et non enfant de `.front-page`.
+             *
+             * Conséquence éprouvée juste après : la dernière section de
+             * l'accueil n'a plus de suivante, donc elle ne se fige plus. C'est
+             * ce qui permet de lire « informations pratiques » jusqu'au bout.
+             * ------------------------------------------------------------- */
             assert(
-                `app : ni elle ni la section d'avant ne se figent`
-                + ` (${app.hasAttribute("data-volet") ? "app marquée" : "app libre"},`
-                + ` ${app.previousElementSibling.hasAttribute("data-volet") ? "avant marquée" : "avant libre"})`,
-                ! app.hasAttribute("data-volet")
-                    && ! app.previousElementSibling.hasAttribute("data-volet")
+                `app : posée entre le contenu et le pied de page`
+                + ` (${app.previousElementSibling?.className.split(" ")[0] ?? "rien"}`
+                + ` → app → ${app.nextElementSibling?.className.split(" ")[0] ?? "rien"})`,
+                app.parentElement === doc.body
+                    && app.previousElementSibling === doc.querySelector(".main-content")
+                    && app.nextElementSibling === doc.querySelector(".footer-reveal")
+            );
+
+            // La bande a quitté la règle `.front-page > *` en changeant de
+            // place : elle porte donc elle-même l'arrondi haut, l'arête et le
+            // chevauchement d'un rayon qui met la section précédente derrière
+            // ses deux épaules. Rien d'autre ne les lui donne plus.
+            const styleApp = styleOf(app);
+
+            assert(
+                `app : elle garde l'habit d'un panneau`
+                + ` (rayon ${styleApp.borderTopLeftRadius}, marge ${styleApp.marginTop},`
+                + ` ombre ${styleApp.boxShadow === "none" ? "aucune" : "posée"})`,
+                styleApp.borderTopLeftRadius === "48px"
+                    && styleApp.borderBottomLeftRadius === "0px"
+                    && styleApp.marginTop === "-48px"
+                    && styleApp.boxShadow !== "none"
+            );
+
+            const derniere = pageAccueil.lastElementChild;
+
+            assert(
+                `app : la dernière section de l'accueil ne se fige plus`
+                + ` (${derniere.className.split(" ")[0]})`,
+                derniere !== app && ! derniere.hasAttribute("data-volet")
             );
 
             /* ------------------------------------------------------------- *
