@@ -94,7 +94,10 @@ check_asset_version() {
 # Chrome plafonne la fenêtre à ~500px sur macOS, un --window-size=320 donnait
 # une vue de 500 — voir bin/qa/harness.html.
 dump_dom() {
-    local width="$1" out="$SCRATCH/dump-$width.html" pid attempts=0
+    local width="$1" page="${2:-/}" etiquette out pid attempts=0
+
+    etiquette="$(printf '%s' "$width$page" | tr -c '[:alnum:]' '-')"
+    out="$SCRATCH/dump-$etiquette.html"
 
     # --force-prefers-reduced-motion : rend le défilement du carrousel
     # instantané, donc mesurable. Sans cela rien n'est déterministe.
@@ -107,8 +110,8 @@ dump_dom() {
     "$CHROME" --headless --disable-gpu --no-first-run --no-default-browser-check \
         --force-prefers-reduced-motion \
         --window-size=1600,900 --virtual-time-budget=60000 --dump-dom \
-        --user-data-dir="$SCRATCH/profile-$width" \
-        "$SITE_URL/app/themes/lcds/dist/$HARNESS_NAME?w=${width}px" > "$out" 2>/dev/null &
+        --user-data-dir="$SCRATCH/profile-$etiquette" \
+        "$SITE_URL/app/themes/lcds/dist/$HARNESS_NAME?w=${width}px&p=${page}" > "$out" 2>/dev/null &
     pid=$!
 
     while [ "$attempts" -lt 30 ]; do
@@ -125,7 +128,7 @@ dump_dom() {
 }
 
 report() {
-    local width="$1" dump="$2" clean="$SCRATCH/clean-$width.txt"
+    local width="$1" dump="$2" clean="$SCRATCH/clean-$(basename "$2").txt"
 
     # Le dump est du HTML : on isole le bloc de résultats, on retire les balises,
     # puis on rétablit les entités — dans cet ordre, sinon un `<=` disparaît.
@@ -859,6 +862,12 @@ for width in 1440 500 320; do
     echo "== Front à ${width}px =="
     report "$width" "$(dump_dom "$width")" || FAILURES=$((FAILURES + 1))
 done
+
+# Les autres pages passent la MEME campagne : les assertions qui ne trouvent pas
+# leur noeud se taisent, celles qui sont communes — repères, contrastes, plan de
+# titres, chargement différé — valent partout.
+echo "== Page « Le cabinet » à 1440px =="
+report "1440" "$(dump_dom 1440 /le-cabinet/)" || FAILURES=$((FAILURES + 1))
 
 echo
 if [ "$FAILURES" -eq 0 ]; then

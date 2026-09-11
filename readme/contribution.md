@@ -133,6 +133,37 @@ glyphe, sans erreur.
 - **Informations pratiques** : les filets se posent entre les entrées, jamais
   avant la première ni après la dernière.
 
+## La page « Le cabinet »
+
+Elle se contribue **page par page**, et non par un catalogue de sections comme
+l'accueil : la maquette y dessine une section d'en-tête unique puis une suite
+de groupes de visuels tous bâtis pareil. Un catalogue serait de la machinerie
+pour un besoin que personne n'a.
+
+**Pour créer la page :** Pages → Ajouter, puis **Attributs de page → Modèle →
+« Le cabinet »**. Le groupe de champs apparaît alors sous le titre. Le gabarit
+se choisit, il ne se déduit pas de l'adresse : renommer la page ne le perd pas.
+
+| Champ | Ce qu'il porte |
+| --- | --- |
+| Titre principal (h1) | Le nom de la page. **Rendu masqué** — voir plus bas |
+| Nous trouver → Titre de la section | « Nous trouver » |
+| Nous trouver → Plan | Une **image**, pas une carte interactive |
+| Nous trouver → Entrées | Les mêmes qu'« informations pratiques » sur l'accueil |
+
+**Le plan est une image.** Une carte Google embarquée dépose des cookies : elle
+imposerait un bandeau de consentement, et ne s'afficherait pas pour qui refuse.
+L'API d'intégration est certes gratuite et illimitée, mais elle n'offre aucune
+personnalisation — ni couleurs, ni masquage des commerces alentour. Le bouton
+de la première entrée renvoie vers le plan en ligne : c'est ce que la maquette
+dessine, et ça ne coûte ni cookie ni JavaScript tiers.
+
+**Le `h1` est masqué visuellement.** La maquette ne dessine aucun titre de
+page ; « Nous trouver » est déjà un titre de section. Conforme au RGAA, qui
+porte sur la structure des titres et non sur leur visibilité, et indexé
+normalement — mais un titre visible pèserait davantage, et un visiteur venu
+d'un moteur verrait sur quelle page il est. **À revoir avec le designer.**
+
 ## Réutiliser une section sur une autre page
 
 Les sections sont des **composants importables**, et rien ne les attache à la
@@ -165,6 +196,14 @@ ou des valeurs en dur. C'est le rôle du gabarit appelant, pas du composant.
 > sinon il cesse d'être réutilisable et la page suivante devra le contourner.
 
 ### Le cas de l'accordéon
+
+### Le cas de la liste d'informations
+
+`components/info-list.php` est **partagée** entre « informations pratiques » de
+l'accueil et « nous trouver » du cabinet : mêmes icônes, mêmes entrées, mêmes
+filets. Les deux maquettes ne diffèrent que par la gouttière entre l'icône et
+le texte — 24 sur l'accueil, 90 sur le cabinet — et c'est une propriété
+personnalisée, `--info-gutter`, pas un second composant.
 
 `components/accordion.php` prend `items` — une entrée par panneau, avec `id`,
 `title`, `text` et `open` — et un `heading` facultatif. **Ce dernier compte** :

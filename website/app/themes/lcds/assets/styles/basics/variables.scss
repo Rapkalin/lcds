@@ -133,6 +133,12 @@ $content-outer: calc(#{fn.toRem(1118)} + 2 * #{fn.toRem(20)});
 // un enfant déjà en retrait, il compterait la moitié d'une largeur réduite et
 // le contenu se décalerait vers l'intérieur.
 $content-inset: max(#{fn.toRem(20)}, calc(50% - #{$content-width} / 2));
+// La page du cabinet respire plus large que l'accueil : 48 de marge latérale
+// là où l'accueil pose un retrait de 161. Relevé sur `LCDS_cabinet.pdf` —
+// titres et plan à x=48, colonne de droite jusqu'à 1392, soit 1344 de contenu.
+$cabinet-width: fn.toRem(1344);
+$cabinet-inset: fn.toRem(48);
+$cabinet-outer: calc(#{$cabinet-width} + 2 * #{$cabinet-inset});
 // Largeur maximale de la PAGE. Au-delà, tout est centré et les côtés reçoivent
 // `$page-outside`. Trois blocs la portent — l'en-tête, `main` et le pied de
 // page — plus le visuel FIXÉ du pied de page, qui échappe à son conteneur.

@@ -21,10 +21,14 @@
 -->
 <iframe id="qa-target" src="/"></iframe>
 <script>
-    document.documentElement.style.setProperty(
-        "--largeur",
-        new URLSearchParams(location.search).get("w") || "100%",
-    );
+    const reglages = new URLSearchParams(location.search);
+
+    document.documentElement.style.setProperty("--largeur", reglages.get("w") || "100%");
+
+    // La page visitée est un PARAMÈTRE : la campagne éprouve l'accueil, puis
+    // les autres pages du site avec les mêmes assertions. Celles qui ne
+    // concernent pas la page en cours se taisent, faute de trouver leur nœud.
+    document.getElementById("qa-target").src = reglages.get("p") || "/";
 </script>
 <script src="front.qa.js"></script>
 <script>
@@ -46,7 +50,15 @@
         try {
             out = await window.runFrontQa(frame.contentWindow);
         } catch (error) {
-            out = ["FAIL :: exception pendant la campagne :: " + error.message];
+            // La PILE, pas seulement le message : sans elle, une exception
+            // efface toute la campagne et ne dit pas où chercher. Deux fois
+            // déjà, il a fallu deviner.
+            const ou = (error.stack || "").split("\n")[1] || "";
+
+            out = [
+                "FAIL :: exception pendant la campagne :: " + error.message
+                    + (ou ? " ::" + ou.replace(/^\s*at\s*/, " ") : ""),
+            ];
         }
 
         const block = document.createElement("pre");

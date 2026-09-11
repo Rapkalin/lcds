@@ -1,0 +1,100 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Relevé au pixel sur `CABINET/LCDS_cabinet.pdf` (page de 1440 × 8526, un point
+// = un pixel).
+//
+// LA GRILLE DU CABINET N'EST PAS CELLE DE L'ACCUEIL. Elle respire plus large :
+// 48 de marge latérale là où l'accueil pose un retrait de 161. Titres et plan
+// commencent à x=48, la colonne de droite court de 726 à 1392.
+//
+//   titre de section   x=48,  y=236
+//   plan               x=48 → 600, y=394 → 909, soit 552 × 516
+//   icônes de la liste x=725, 24 de côté
+//   texte de la liste  x=839 — d'où la gouttière de 90, contre 24 sur l'accueil
+//   filets             839 → 1391
+//   bouton « voir le plan »  1261 → 1391, aligné sur la première entrée
+// Le menu n'est PAS fixe sur cette page : la règle `position: fixed` ne vaut
+// que sur une page qui porte un hero. Il occupe donc 128 de flux, et les cotes
+// de la maquette — comptées depuis le haut de la page, menu compris — se
+// traduisent en retirant ces 128.
+//
+//   titre : capitale à 270 → boîte à 260 → retrait de section 132
+//   plan  : haut à 394 → 132 + 58 de ligne + 76 d'écart
+//
+// Le décalage de 10 entre la boîte d'une ligne et le haut des capitales est
+// MESURÉ sur le rendu, pas déduit des métriques de la police.
+.block-locate {
+  padding: fn.toRem(132) 0 fn.toRem(128);
+
+  &__title {
+    max-width: var.$cabinet-outer;
+    margin: 0 auto fn.toRem(76);
+    padding: 0 var.$cabinet-inset;
+    font-size: var.$fs-h2;
+  }
+
+  // 48 → 600 puis 726 → 1392 : les parts en `fr` redonnent ces largeurs sans
+  // les écrire, et se répartissent proportionnellement ailleurs. La gouttière
+  // vaut la différence, 126.
+  &__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 552fr) minmax(0, 666fr);
+    gap: fn.toRem(126);
+    max-width: var.$cabinet-outer;
+    margin: 0 auto;
+    padding: 0 var.$cabinet-inset;
+  }
+
+  // Le plan reste au même niveau pendant que la liste défile : seule la colonne
+  // de droite bouge. Demande client, la même que sur les traitements.
+  //
+  // `align-self: start` est INDISPENSABLE : un élément de grille s'étire par
+  // défaut à la hauteur de sa rangée, il n'aurait alors aucune marge pour
+  // coller, et `sticky` serait silencieusement inopérant.
+  &__media {
+    position: sticky;
+    top: var.$sticky-top;
+    align-self: start;
+    aspect-ratio: 552 / 516;
+    overflow: hidden;
+    border-radius: fn.toRem(16);
+    // Aplat de la maquette : le cadre est vide tant que le plan n'est pas
+    // fourni.
+    background: var.$blue-separator;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // 839 − 749 = 90, contre 24 sur l'accueil. C'est la seule chose qui sépare
+  // les deux listes.
+  .info-list {
+    --info-gutter: #{fn.toRem(90)};
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
+  .block-locate {
+    padding-top: var.$section-padding;
+
+    &__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: fn.toRem(48);
+    }
+
+    &__media {
+      position: static;
+    }
+
+    .info-list {
+      --info-gutter: #{fn.toRem(24)};
+    }
+  }
+}

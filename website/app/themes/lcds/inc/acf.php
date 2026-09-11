@@ -245,7 +245,11 @@ function lcds_load_dot_colors(array $field): array
 add_filter('acf/load_field/name=puce', 'lcds_load_dot_colors');
 
 /**
- * Alimente la liste d'icônes des informations pratiques depuis LcdsInfoIcon.
+ * Alimente les listes d'icônes d'information depuis LcdsInfoIcon.
+ *
+ * Accroché sur le NOM et non sur la clé, comme les couleurs de puce : la même
+ * liste sert les informations pratiques de l'accueil et le « nous trouver » du
+ * cabinet, et la prochaine page qui la reprendra n'aura rien à brancher.
  *
  * @param array $field Définition du champ, telle qu'ACF la charge.
  */
@@ -255,7 +259,7 @@ function lcds_load_info_icons(array $field): array
 
     return $field;
 }
-add_filter('acf/load_field/key=field_lcds_infos_icone', 'lcds_load_info_icons');
+add_filter('acf/load_field/name=icone', 'lcds_load_info_icons');
 
 /**
  * Alimente la couleur de puce de la page courante depuis LcdsDotColor.

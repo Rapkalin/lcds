@@ -1,0 +1,253 @@
+{
+    "key": "group_lcds_cabinet",
+    "title": "Page « Le cabinet »",
+    "fields": [
+        {
+            "key": "field_lcds_cabinet_h1",
+            "label": "Titre principal (h1)",
+            "name": "titre_h1",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "Le titre de la page. La maquette n'en dessine aucun : il est rendu MASQUÉ visuellement, mais il reste lu par les lecteurs d'écran et par les moteurs. À revoir avec le designer — une page sans nom visible est un manque.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 80,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_cabinet_trouver",
+            "label": "Nous trouver",
+            "name": "nous_trouver",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "Première section de la page : un titre, un plan à gauche, la liste d'informations à droite.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_cabinet_trouver_titre_section",
+                    "label": "Titre de la section",
+                    "name": "titre",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Exemple : « Nous trouver ». Il nomme la section dans le plan de la page.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 60,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_cabinet_trouver_plan",
+                    "label": "Plan",
+                    "name": "plan",
+                    "aria-label": "",
+                    "type": "image",
+                    "instructions": "Capture du plan, 552 × 516 sur la maquette. C'est une IMAGE, pas une carte interactive : le bouton « voir le plan » de la première entrée renvoie vers le plan en ligne. Son texte alternatif se saisit dans la médiathèque et doit décrire le repère, pas dire « plan ».",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "return_format": "id",
+                    "preview_size": "medium",
+                    "library": "all",
+                    "min_width": "",
+                    "min_height": "",
+                    "min_size": "",
+                    "max_width": "",
+                    "max_height": "",
+                    "max_size": "",
+                    "mime_types": ""
+                },
+                {
+                    "key": "field_lcds_cabinet_trouver_entrees",
+                    "label": "Entrées",
+                    "name": "entrees",
+                    "aria-label": "",
+                    "type": "repeater",
+                    "instructions": "Une entrée par information. Ce sont les mêmes que sur la page d'accueil : icône, titre, sur-titre et contenu, séparées par un filet. Le bouton de la première entrée est le « voir le plan » de la maquette.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "collapsed": "field_lcds_cabinet_trouver_titre",
+                    "min": 1,
+                    "max": 0,
+                    "layout": "block",
+                    "button_label": "Ajouter une entrée",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_cabinet_trouver_icone",
+                            "label": "Icône",
+                            "name": "icone",
+                            "aria-label": "",
+                            "type": "select",
+                            "instructions": "La liste d’icônes est fixée par le thème.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "choices": {
+                                "pin": "Adresse",
+                                "bus": "Transports",
+                                "info": "Information",
+                                "clock": "Horaires",
+                                "user": "Contact"
+                            },
+                            "default_value": "info",
+                            "allow_null": 0,
+                            "multiple": 0,
+                            "ui": 0,
+                            "return_format": "value",
+                            "ajax": 0,
+                            "placeholder": "",
+                            "create_options": 0,
+                            "save_options": 0,
+                            "parent_repeater": "field_lcds_infos_entrees"
+                        },
+                        {
+                            "key": "field_lcds_cabinet_trouver_titre",
+                            "label": "Titre",
+                            "name": "titre",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "",
+                            "required": 1,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": "",
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": "",
+                            "parent_repeater": "field_lcds_infos_entrees"
+                        },
+                        {
+                            "key": "field_lcds_cabinet_trouver_surtitre",
+                            "label": "Sur-titre",
+                            "name": "surtitre",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Ligne courte en capitales espacées, au-dessus du contenu. Exemple : « BUS ».",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 60,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": "",
+                            "parent_repeater": "field_lcds_infos_entrees"
+                        },
+                        {
+                            "key": "field_lcds_cabinet_trouver_texte",
+                            "label": "Contenu",
+                            "name": "texte",
+                            "aria-label": "",
+                            "type": "wysiwyg",
+                            "instructions": "Adresse, lignes de bus, horaires… Un paragraphe par ligne.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "tabs": "all",
+                            "toolbar": "basic",
+                            "media_upload": 0,
+                            "delay": 0,
+                            "parent_repeater": "field_lcds_infos_entrees"
+                        },
+                        {
+                            "key": "field_lcds_cabinet_trouver_lien",
+                            "label": "Bouton d'action",
+                            "name": "lien",
+                            "aria-label": "",
+                            "type": "link",
+                            "instructions": "Bouton contourné aligné à droite du titre. Vide, il n'est pas rendu.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "array",
+                            "parent_repeater": "field_lcds_infos_entrees"
+                        }
+                    ],
+                    "rows_per_page": 20
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "page_template",
+                "operator": "==",
+                "value": "template-cabinet.php"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+        "the_content",
+        "excerpt",
+        "discussion",
+        "comments",
+        "author",
+        "format",
+        "featured_image",
+        "categories",
+        "tags",
+        "send-trackbacks"
+    ],
+    "active": true,
+    "description": "Contenu de la page « Le cabinet ». Le gabarit se choisit dans « Attributs de page ».",
+    "show_in_rest": 0
+}

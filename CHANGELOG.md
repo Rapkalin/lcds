@@ -7,6 +7,44 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.21.0
+
+### Ajouté
+
+- **La page « Le cabinet » existe**, avec sa première section « Nous trouver » :
+  un titre, un plan, et la liste d'informations. Elle se crée depuis
+  Pages → Ajouter, en choisissant le modèle « Le cabinet » dans les attributs de
+  page.
+
+  Le plan reste au même niveau pendant que la liste défile, comme les
+  traitements de l'accueil. Le plan est une **image** : le bouton « voir le
+  plan » renvoie vers le plan en ligne, ce qui évite les cookies d'une carte
+  embarquée et le bandeau de consentement qu'ils imposeraient.
+
+- **La liste d'informations est désormais un composant partagé.** L'accueil et
+  le cabinet affichent la même, aux mêmes icônes : une seule source à corriger
+  le jour où une entrée change de forme.
+
+### Corrigé
+
+- **Le bouton d'une entrée passe sous son titre quand la ligne ne les tient
+  plus.** À 200 % de taille de texte, « voir le plan » poussait la page de
+  118px hors de sa colonne et forçait un défilement horizontal — RGAA 10.4.
+- **Le haut d'une page sans bannière n'est plus barré de bleu foncé.** L'en-tête
+  n'y est pas fixé : sans fond propre, c'est la teinte des côtés qui
+  apparaissait derrière lui.
+- **Le plan est chargé en priorité** : c'est le plus grand visuel du premier
+  écran de sa page, et le repli du thème le différait.
+
+### Pour les développeurs
+
+- **La recette visite les autres pages du site**, pas seulement l'accueil : les
+  assertions communes — repères, contrastes, plan de titres, chargement différé
+  — valent partout, et celles qui ne trouvent pas leur bloc se taisent.
+- **Une exception pendant la campagne dit maintenant où elle s'est produite.**
+  Elle effaçait tous les résultats de la page sans laisser de piste ; il a fallu
+  deviner deux fois.
+
 ## 2.20.0
 
 ### Modifié

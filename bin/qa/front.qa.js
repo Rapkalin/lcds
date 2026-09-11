@@ -151,11 +151,17 @@ window.runFrontQa = async (win) => {
             hero === null ? position === "sticky" : position === "fixed"
         );
 
-        // L'en-tête reste transparent sur toute la page : la maquette le dessine
-        // ainsi, et le fond au défilement a été arbitré contre. Éprouvé, sinon
-        // rien n'empêcherait de le réintroduire.
+        // L'en-tête reste transparent SUR UNE PAGE À HERO : la maquette le
+        // dessine ainsi, et le fond au défilement a été arbitré contre.
+        // Éprouvé, sinon rien n'empêcherait de le réintroduire.
+        //
+        // Sans hero il n'est plus fixé, il occupe 128 de flux, et un en-tête
+        // sans fond y laisse voir la teinte des côtés — un bandeau bleu foncé
+        // en haut de page. Il porte alors celui de la page.
         assert(
-            `en-tête transparent (${styleOf(header).backgroundColor} / ${styleOf(header, "::before").backgroundColor})`,
+            `en-tête ${hero === null ? "opaque hors hero" : "transparent"}`
+            + ` (${styleOf(header).backgroundColor} / ${styleOf(header, "::before").backgroundColor})`,
+            hero === null ? styleOf(header).backgroundColor !== "rgba(0, 0, 0, 0)" :
             styleOf(header).backgroundColor === "rgba(0, 0, 0, 0)"
                 && styleOf(header, "::before").content === "none"
         );
@@ -626,6 +632,87 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * Page « Le cabinet » — section « nous trouver ».
+     *
+     * Relevé au pixel sur `CABINET/LCDS_cabinet.pdf`. LA GRILLE N'EST PAS CELLE
+     * DE L'ACCUEIL : 48 de marge latérale contre un retrait de 161, et une
+     * gouttière de 90 entre l'icône et le texte contre 24. C'est exactement ce
+     * que la liste partagée doit savoir faire varier.
+     *
+     * Les ordonnées de la maquette comptent le menu, qui n'est pas fixé sur
+     * cette page et occupe 128 de flux.
+     * --------------------------------------------------------------------- */
+    const cabinet = doc.querySelector(".block-locate");
+
+    if (cabinet !== null && win.innerWidth === 1440) {
+        const boiteCab = (sel) => doc.querySelector(sel)?.getBoundingClientRect() ?? null;
+        const coteCab = (nom, obtenu, attendu, tolerance = 1) => assert(
+            `cabinet : ${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
+            obtenu !== null && Math.abs(obtenu - attendu) <= tolerance
+        );
+        const titreCab = doc.querySelector(".block-locate__title");
+        const retrait = titreCab === null ? 0 : parseFloat(styleOf(titreCab).paddingLeft);
+
+        coteCab("titre, bord gauche du texte", (boiteCab(".block-locate__title")?.left ?? null) + retrait, 48);
+        coteCab("plan, bord gauche", boiteCab(".block-locate__media")?.left ?? null, 48);
+        coteCab("plan, largeur", boiteCab(".block-locate__media")?.width ?? null, 552);
+        coteCab("plan, hauteur", boiteCab(".block-locate__media")?.height ?? null, 516);
+        coteCab("icône, bord gauche", boiteCab(".info-list__icon")?.left ?? null, 726);
+        coteCab("texte, bord gauche", boiteCab(".info-list__head")?.left ?? null, 840);
+        coteCab("liste, bord droit", boiteCab(".info-list__entry")?.right ?? null, 1392);
+        coteCab("bouton, bord droit", boiteCab(".block-locate .cta")?.right ?? null, 1392);
+
+        // Le décalage de 10 entre la boîte d'une ligne et le haut des capitales
+        // est MESURÉ sur le rendu, pas déduit des métriques de la police.
+        coteCab(
+            "capitales du titre sous le haut de page",
+            (boiteCab(".block-locate__title")?.top ?? null) + win.scrollY + 10,
+            270
+        );
+        coteCab(
+            "plan sous le haut de page",
+            (boiteCab(".block-locate__media")?.top ?? null) + win.scrollY,
+            394
+        );
+
+        // Le plan reste au même niveau pendant que la liste défile. Même règle
+        // que les traitements de l'accueil, même piège : sans
+        // `align-self: start`, l'élément s'étire à sa rangée et le collage est
+        // silencieusement inopérant.
+        const plan = doc.querySelector(".block-locate__media");
+
+        assert(
+            `cabinet : le plan reste au même niveau (${styleOf(plan).position}, ${styleOf(plan).alignSelf})`,
+            styleOf(plan).position === "sticky" && styleOf(plan).alignSelf === "start"
+        );
+
+        // La liste est la MÊME que celle de l'accueil, à la gouttière près.
+        // C'est cette gouttière qui justifie un composant partagé plutôt que
+        // deux copies : la mesurer ici, c'est éprouver la mutualisation.
+        // Mesurée en PIXELS RENDUS entre l'icône et le texte, et non sur la
+        // propriété : celle-ci vaut des `rem`, et la comparer à 90 rendait 5,625.
+        const icone = boiteCab(".info-list__icon");
+        const tete = boiteCab(".info-list__head");
+        const gouttiere = icone === null || tete === null ? null : tete.left - icone.right;
+
+        assert(
+            `cabinet : la liste partagée prend la gouttière du cabinet (${gouttiere})`,
+            gouttiere !== null && Math.abs(gouttiere - 90) <= 1
+        );
+
+        // Le fond de la page est un seul aplat : la maquette ne dessine ni
+        // volet, ni coin arrondi, ni changement de teinte.
+        const contenu = doc.querySelector(".main-content");
+
+        assert(
+            `cabinet : un seul aplat, en-tête compris (${styleOf(contenu).backgroundColor}`
+            + ` / ${styleOf(doc.getElementById("site-header")).backgroundColor})`,
+            styleOf(contenu).backgroundColor === "rgb(242, 248, 255)"
+                && styleOf(doc.getElementById("site-header")).backgroundColor === "rgb(242, 248, 255)"
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
      * Chargement différé des visuels.
      *
      * WordPress ne pose `loading` que DANS la boucle
@@ -642,24 +729,31 @@ window.runFrontQa = async (win) => {
     const visuels = [...doc.querySelectorAll("img")];
 
     if (visuels.length > 0 && win.innerWidth === 1440) {
+        // La règle ne nomme plus les visuels : elle dit qu'un visuel immédiat
+        // doit être AU-DESSUS de la ligne de flottaison, et tous les autres
+        // différés. Elle vaut donc sur n'importe quelle page — l'accueil y
+        // garde son hero et sa vignette, le cabinet son plan.
         const pressees = visuels.filter((image) => image.getAttribute("loading") !== "lazy");
-        const attendues = ["hero__image", "hero__thumbnail-image"];
-        const noms = pressees.map((image) => image.className.split(" ")[0]).sort();
+        const basses = pressees.filter((image) => image.getBoundingClientRect().top >= win.innerHeight);
 
         assert(
             `visuels : ${visuels.length - pressees.length} sur ${visuels.length} en chargement différé,`
-            + ` seuls ${noms.join(" et ") || "aucun"} restent immédiats`,
-            noms.length === attendues.length && noms.every((nom, rang) => nom === attendues.slice().sort()[rang])
+            + ` ${pressees.length} immédiats et tous au-dessus de la ligne de flottaison`
+            + ` (${basses.length === 0 ? "oui" : basses.map((n) => n.className.split(" ")[0]).join(", ")})`,
+            pressees.length > 0 && basses.length === 0
         );
 
-        const hero = doc.querySelector(".hero__image");
+        // Le plus grand visuel du premier écran porte la priorité : c'est lui
+        // que le navigateur doit chercher en premier.
+        const premier = pressees
+            .slice()
+            .sort((a, b) => (b.naturalWidth * b.naturalHeight) - (a.naturalWidth * a.naturalHeight))[0] ?? null;
 
         assert(
-            `visuels : le visuel du hero est priorisé (${hero === null ? "absent" : hero.getAttribute("loading")}`
-            + ` / ${hero === null ? "-" : hero.getAttribute("fetchpriority")})`,
-            hero !== null
-                && hero.getAttribute("loading") === "eager"
-                && hero.getAttribute("fetchpriority") === "high"
+            `visuels : le plus grand visuel du premier écran est priorisé`
+            + ` (${premier === null ? "absent" : premier.className.split(" ")[0]}`
+            + ` : ${premier === null ? "-" : premier.getAttribute("fetchpriority")})`,
+            premier !== null && premier.getAttribute("fetchpriority") === "high"
         );
     }
 
@@ -1643,8 +1737,13 @@ window.runFrontQa = async (win) => {
      * « 0 / 11,4 / 23,4 » : c'étaient les boîtes englobantes de cadres
      * PIVOTÉS. Les trois cartes partagent en réalité leur centre vertical, et
      * seule leur rotation change.
+     *
+     * Gardé sur la PRÉSENCE des blocs et pas seulement sur la largeur : la
+     * campagne visite aussi les autres pages du site, et ce bloc y cherchait
+     * un carrousel de technologies qui n'existe pas. L'exception effaçait
+     * alors toute la campagne de la page.
      * --------------------------------------------------------------------- */
-    if (win.innerWidth === 1440) {
+    if (win.innerWidth === 1440 && doc.querySelector(".carousel--cards") !== null) {
         const boite = (sel, i = 0) => doc.querySelectorAll(sel)[i]?.getBoundingClientRect() ?? null;
         const cote = (nom, obtenu, attendu, tolerance = 1) => assert(
             `${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
@@ -1742,10 +1841,10 @@ window.runFrontQa = async (win) => {
         cote("infos : étiquette, bord gauche", boite(".block-info .tag")?.left ?? null, 161);
         cote("infos : visuel, largeur", boite(".block-info__media")?.width ?? null, 440);
         cote("infos : visuel, hauteur", boite(".block-info__media")?.height ?? null, 549);
-        cote("infos : colonne de droite, bord gauche", boite(".block-info__entry")?.left ?? null, 726);
-        cote("infos : colonne de droite, bord droit", boite(".block-info__entry")?.right ?? null, 1279);
-        cote("infos : icône, largeur", boite(".block-info__icon")?.width ?? null, 24);
-        cote("infos : texte, bord gauche", boite(".block-info__head")?.left ?? null, 774);
+        cote("infos : colonne de droite, bord gauche", boite(".info-list__entry")?.left ?? null, 726);
+        cote("infos : colonne de droite, bord droit", boite(".info-list__entry")?.right ?? null, 1279);
+        cote("infos : icône, largeur", boite(".info-list__icon")?.width ?? null, 24);
+        cote("infos : texte, bord gauche", boite(".info-list__head")?.left ?? null, 774);
         cote("infos : bouton contourné, bord droit", boite(".block-info .cta--outline")?.right ?? null, 1279);
 
         /* ----------------------------------------------------------------- *
@@ -2107,7 +2206,7 @@ window.runFrontQa = async (win) => {
          * c'est leur intégration — la seule chose qu'un copier-coller d'export
          * casse silencieusement.
          * ------------------------------------------------------------------ */
-        const glyphes = [...doc.querySelectorAll(".block-info__icon")];
+        const glyphes = [...doc.querySelectorAll(".info-list__icon")];
 
         if (glyphes.length > 0) {
             const debords = glyphes.map((boite) => {
@@ -2140,7 +2239,7 @@ window.runFrontQa = async (win) => {
             );
         }
 
-                const secondeEntree = doc.querySelectorAll(".block-info__entry")[1];
+                const secondeEntree = doc.querySelectorAll(".info-list__entry")[1];
         const styleEntree = styleOf(secondeEntree);
         assert(
             `infos : filet de 1px et 48px au-dessus (${styleEntree.borderTopWidth} / ${styleEntree.paddingTop})`,
@@ -2178,8 +2277,10 @@ window.runFrontQa = async (win) => {
         );
         assert(
             `le contenu porte l'aplat qui masque le visuel fixé (${principal === null ? "absent" : styleOf(principal).backgroundColor})`,
-            principal !== null && styleOf(principal).backgroundColor === "rgb(255, 255, 255)"
-        );
+            // OPAQUE, et non blanc : la page du cabinet porte le même aplat en
+            // bleu pâle. C'est l'opacité qui masque le visuel fixé, pas la
+            // teinte.
+            principal !== null && styleOf(principal).backgroundColor !== "rgba(0, 0, 0, 0)");
 
         /* ------------------------------------------------------------------ *
          * Le visuel NE BOUGE PAS.

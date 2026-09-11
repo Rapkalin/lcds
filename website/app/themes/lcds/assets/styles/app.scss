@@ -15,9 +15,12 @@
 @use "components/block-journey" as *;
 @use "components/block-techno" as *;
 @use "components/tech-card" as *;
+@use "components/info-list" as *;
 @use "components/block-info" as *;
 @use "components/block-app" as *;
+@use "components/block-locate" as *;
 
 /* PAGES */
 @use "pages/homepage" as *;
+@use "pages/cabinet" as *;
 @use "pages/404" as *;

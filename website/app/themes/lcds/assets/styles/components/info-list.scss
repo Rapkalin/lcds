@@ -1,0 +1,99 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Liste d'informations, PARTAGÉE entre « informations pratiques » de l'accueil
+// et « nous trouver » du cabinet.
+//
+// La gouttière entre l'icône et le texte est la SEULE chose qui change d'une
+// maquette à l'autre : relevé au pixel, le texte tombe à x=774 sur l'accueil
+// pour une colonne qui commence à 726, et à x=839 sur le cabinet pour une
+// colonne qui commence elle aussi à 725. D'où une propriété personnalisée
+// plutôt qu'un second composant.
+.info-list {
+  --info-gutter: #{fn.toRem(24)};
+
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // Icône en colonne propre : 24px, puis la gouttière. Sur l'accueil le texte
+  // tombe donc à 48 du bord de la colonne, comme sur la maquette.
+  &__entry {
+    display: grid;
+    grid-template-columns: fn.toRem(24) minmax(0, 1fr);
+    gap: 0 var(--info-gutter);
+    padding-bottom: fn.toRem(48);
+
+    & + & {
+      margin-top: fn.toRem(48);
+      border-top: 1px solid var.$blue-separator;
+      padding-top: fn.toRem(48);
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    grid-row: 1;
+    width: fn.toRem(24);
+    height: fn.toRem(30);
+    color: var.$turquoise;
+  }
+
+  // `min-width: 0` sur les deux enfants : un élément flex ne descend pas sous
+  // la largeur de son mot le plus long tant que `min-width` vaut `auto`, et le
+  // titre poussait alors la page à 200 % de taille de texte — RGAA 10.4.
+  // Le bouton passe SOUS le titre quand la ligne ne les tient plus. À 200 % de
+  // taille de texte, « voir le plan » ne se repliait pas et poussait la page
+  // de 118px hors de sa colonne — RGAA 10.4, mesuré sur la page du cabinet.
+  // Le retour à la ligne ne change rien tant qu'il y a la place.
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var.$gutter;
+    grid-column: 2;
+
+    > * {
+      min-width: 0;
+    }
+  }
+
+  &__title {
+    min-width: 0;
+    margin: 0;
+    color: var.$blue;
+    font-size: var.$fs-h3;
+  }
+
+  &__body {
+    grid-column: 2;
+    margin-top: fn.toRem(24);
+    color: var.$blue;
+  }
+
+  &__overline {
+    margin-bottom: fn.toRem(12);
+    font-size: var.$fs-cta;
+    font-weight: var.$fw-cta;
+    letter-spacing: var.$ls-cta;
+    text-transform: uppercase;
+  }
+
+  &__text {
+    // « contact@lacliniquedusourire.com » ne comporte aucun point de coupure :
+    // sur une vue étroite il débordait de son bloc.
+    overflow-wrap: anywhere;
+    font-weight: 600;
+
+    p + p {
+      margin-top: fn.toRem(8);
+    }
+  }
+}

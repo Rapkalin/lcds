@@ -1,0 +1,26 @@
+@use "../basics/variables" as var;
+
+/* ------------------------------------------------------------------------- *
+ * Page « Le cabinet ».
+ *
+ * Un seul aplat du haut de la page jusqu'à la bande de l'application : la
+ * maquette ne dessine ni volet, ni coin arrondi, ni changement de fond —
+ * échantillonné sur `LCDS_cabinet.pdf`, le fond vaut rgb(242, 248, 255) partout
+ * hors contenu. C'est bien plus simple que l'accueil, et il faut s'en tenir là.
+ *
+ * L'aplat est posé sur `.main-content` et sur l'EN-TÊTE, jamais sur le `body` :
+ * un fond de `body` se propage au canevas tant que `html` n'en a pas, et c'est
+ * cette propagation qui rend visible le visuel révélé du pied de page. Deux
+ * réglages anodins l'ont déjà rompue — voir partials/footer.scss.
+ * ------------------------------------------------------------------------- */
+.main-content.page-cabinet {
+  background: var.$blue-pale;
+}
+
+// L'en-tête n'est PAS fixé ici : la règle `position: fixed` ne vaut que sur une
+// page qui porte un hero. Il occupe donc 128 de flux, et sans fond propre c'est
+// la teinte des côtés qui apparaissait derrière lui — un bandeau bleu foncé en
+// haut de la page.
+.page-template-template-cabinet .site-header {
+  background: var.$blue-pale;
+}
