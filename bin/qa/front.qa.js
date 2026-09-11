@@ -487,11 +487,46 @@ window.runFrontQa = async (win) => {
             )) === true
         );
         assert(
-            "volet : chaque section se colle sur le décalage posé par le script",
-            trouverRegle(doc, ".front-page--volet > .hero ~ *", (regle) => (
+            "volet : seules les sections marquées se collent, sur le décalage posé par le script",
+            // Le `*` devant `[data-volet]` est retiré à la sérialisation, comme
+            // celui devant `:not()` — voir readme/qa.md.
+            trouverRegle(doc, ".front-page--volet > .hero ~ [data-volet]", (regle) => (
                 regle.style.position === "sticky"
                     && regle.style.top === "var(--volet-top)" ? true : null
             )) === true
+        );
+
+        /* ----------------------------------------------------------------- *
+         * Une section ne se fige que si la SUIVANTE peut la recouvrir.
+         *
+         * Faute de quoi on la lit jusqu'au bout et elle est mangée sur place,
+         * au lieu de laisser la place à ce qui suit. Mesuré avant : la
+         * dernière entrée de « informations pratiques » n'était lisible que
+         * sur 350px de défilement, à toutes les hauteurs de vue. Après : 550
+         * à 1050 selon la vue, puisqu'elle sort par le haut à son rythme.
+         *
+         * La règle est STRUCTURELLE et non nominative : la dernière section
+         * n'a personne derrière elle, et celle qui précède une section
+         * dimensionnée par son visuel n'a personne d'assez grand.
+         * ----------------------------------------------------------------- */
+        const fratrie = [];
+
+        for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            fratrie.push(noeud);
+        }
+
+        const marquees = fratrie.filter((noeud) => noeud.hasAttribute("data-volet"));
+        const fautives = fratrie.filter((noeud) => {
+            const suivante = noeud.nextElementSibling;
+            const couvrable = suivante !== null && suivante.offsetHeight >= win.innerHeight - 1;
+
+            return noeud.hasAttribute("data-volet") !== couvrable;
+        });
+
+        assert(
+            `volet : ${marquees.length} sections sur ${fratrie.length} sont recouvrables`
+            + ` (${fautives.length === 0 ? "marquage juste" : fautives.map((n) => n.className.split(" ")[0]).join(", ")})`,
+            marquees.length > 0 && marquees.length < fratrie.length && fautives.length === 0
         );
 
         // Le décalage lui-même : le script le pose sur CHAQUE section, et sa
@@ -646,12 +681,17 @@ window.runFrontQa = async (win) => {
             )) === true
         );
 
-        const trop = panneaux.filter((noeud) => noeud.offsetHeight < win.innerHeight - 1);
+        // `.block-app` est l'EXCEPTION assumée : sa hauteur vient de son visuel,
+        // demande client, et elle est retirée de la pile collante pour cette
+        // raison même — une section plus courte que la vue ne peut pas jouer
+        // le volet. Ses propres assertions sont plus bas.
+        const volets = panneaux.filter((noeud) => ! noeud.classList.contains("block-app"));
+        const trop = volets.filter((noeud) => noeud.offsetHeight < win.innerHeight - 1);
 
         assert(
-            `sections : les ${panneaux.length} volets couvrent la vue`
+            `sections : les ${volets.length} volets couvrent la vue`
             + ` (${trop.length === 0 ? "tous" : trop.map((n) => `${n.className.split(" ")[0]} ${n.offsetHeight}`).join(", ")})`,
-            trop.length === 0
+            volets.length > 0 && trop.length === 0
         );
 
         // Le bloc qui suit le hero ARRIVE APRÈS lui : aucun recouvrement.
@@ -1651,6 +1691,135 @@ window.runFrontQa = async (win) => {
         cote("infos : icône, largeur", boite(".block-info__icon")?.width ?? null, 24);
         cote("infos : texte, bord gauche", boite(".block-info__head")?.left ?? null, 774);
         cote("infos : bouton contourné, bord droit", boite(".block-info .cta--outline")?.right ?? null, 1279);
+
+        /* ----------------------------------------------------------------- *
+         * L'app mobile.
+         *
+         * Relevé sur `HP_06_Frame 54.pdf`, bande y=2851 → 3469 : pastille
+         * d'étiquette à x=161 y=2979, QR code de 142 × 142 à x=162 y=3220, et
+         * le visuel qui touche les deux bords de la page.
+         *
+         * Les ordonnées sont mesurées DEPUIS LE HAUT DE LA SECTION et jamais
+         * depuis le document : la hauteur des sections dépend de la vue depuis
+         * qu'elles portent `min-height: 100svh`.
+         * ----------------------------------------------------------------- */
+        const app = doc.querySelector(".block-app");
+
+        if (app !== null) {
+            const hautApp = app.getBoundingClientRect().top;
+            const depuisLeHaut = (sel) => {
+                const b = boite(sel);
+
+                return b === null ? null : b.top - hautApp;
+            };
+
+            cote("app : étiquette, bord gauche", boite(".block-app .tag")?.left ?? null, 161);
+            cote("app : étiquette, sous le haut de la section", depuisLeHaut(".block-app .tag"), 128);
+            cote("app : titre, bord gauche", boite(".block-app__title")?.left ?? null, 161);
+            cote("app : QR code, bord gauche", boite(".block-app__code")?.left ?? null, 161);
+            cote("app : QR code, côté", boite(".block-app__code")?.width ?? null, 142);
+            cote("app : QR code, sous le haut de la section", depuisLeHaut(".block-app__code"), 369, 2);
+
+            // Le visuel prend TOUTE la largeur de l'écran, pas celle du
+            // contenu : c'est la demande, et c'est ce qui distingue ce bloc
+            // des autres sections.
+            const visuelApp = boite(".block-app__image");
+
+            assert(
+                `app : le visuel prend toute la largeur (${visuelApp === null ? "absent" : `${Math.round(visuelApp.left)} → ${Math.round(visuelApp.right)}`} pour ${win.innerWidth})`,
+                visuelApp !== null
+                    && Math.abs(visuelApp.left) < 1
+                    && Math.abs(visuelApp.width - win.innerWidth) < 1
+            );
+
+            // Le titre est un `h3` sous le `h2` de l'étiquette, et porte la
+            // TAILLE d'un `h2`. Le niveau dit la hiérarchie, la classe dit
+            // l'apparence — même règle que les entrées d'accordéon.
+            const titreApp = doc.querySelector(".block-app__title");
+
+            assert(
+                `app : titre en h3 à la taille d'un h2 (${titreApp === null ? "absent" : `${titreApp.tagName} ${styleOf(titreApp).fontSize}`})`,
+                titreApp !== null
+                    && titreApp.tagName === "H3"
+                    && parseFloat(styleOf(titreApp).fontSize) === 48
+            );
+
+            /* ------------------------------------------------------------- *
+             * LA HAUTEUR VIENT DU VISUEL, pas de la vue.
+             *
+             * Demande client : ce bloc n'occupe pas un écran entier comme les
+             * autres volets. La règle éprouvée est celle de la grille — la
+             * rangée vaut le plus grand des deux, le visuel à sa hauteur
+             * naturelle en pleine largeur ou le contenu.
+             *
+             * Exprimée ainsi plutôt qu'avec une hauteur écrite en dur : celle
+             * du contenu dépend des polices, et la campagne tourne sur la pile
+             * de secours.
+             * ------------------------------------------------------------- */
+            const visuelHaut = doc.querySelector(".block-app__image");
+            const contenuApp = doc.querySelector(".block-app__inner");
+
+            if (visuelHaut !== null && contenuApp !== null && visuelHaut.naturalWidth > 0) {
+                const hauteurApp = app.getBoundingClientRect().height;
+                const naturelle = visuelHaut.naturalHeight
+                    * (app.getBoundingClientRect().width / visuelHaut.naturalWidth);
+                const attendue = Math.max(naturelle, contenuApp.getBoundingClientRect().height);
+
+                assert(
+                    `app : la hauteur vient du visuel ou du contenu, le plus grand`
+                    + ` (${Math.round(hauteurApp)} pour visuel ${Math.round(naturelle)}`
+                    + ` et contenu ${Math.round(contenuApp.getBoundingClientRect().height)})`,
+                    Math.abs(hauteurApp - attendue) < 2
+                );
+
+                // Et surtout PAS celle de la vue : c'est ce qui distingue ce
+                // bloc des autres sections, qui portent `min-height: 100svh`.
+                assert(
+                    `app : la hauteur n'est pas celle de la vue (${Math.round(hauteurApp)} / ${win.innerHeight})`,
+                    Math.abs(hauteurApp - win.innerHeight) > 2
+                );
+
+                // Le visuel REMPLIT la bande : plus court que le contenu, il
+                // laissait sinon une bande de fond sous lui — mesuré 256px.
+                assert(
+                    `app : le visuel remplit la bande (${Math.round(visuelHaut.getBoundingClientRect().height)} / ${Math.round(hauteurApp)})`,
+                    Math.abs(visuelHaut.getBoundingClientRect().height - hauteurApp) < 2
+                );
+            }
+
+            // Plus courte que la vue, elle ne peut recouvrir personne — et
+            // personne ne peut la recouvrir. Elle reste donc hors de la pile
+            // collante, ainsi que celle qui la précède. Éprouvé sur l'état
+            // rendu, pas sur une règle nommant la classe : c'est la GÉOMÉTRIE
+            // qui décide, et l'assertion générale ci-dessus la verrouille.
+            assert(
+                `app : ni elle ni la section d'avant ne se figent`
+                + ` (${app.hasAttribute("data-volet") ? "app marquée" : "app libre"},`
+                + ` ${app.previousElementSibling.hasAttribute("data-volet") ? "avant marquée" : "avant libre"})`,
+                ! app.hasAttribute("data-volet")
+                    && ! app.previousElementSibling.hasAttribute("data-volet")
+            );
+
+            /* ------------------------------------------------------------- *
+             * La RÉSERVE de course ne doit pas se VOIR.
+             *
+             * Le pied de page vient juste après la dernière section, sans
+             * réserve ni décalage : c'est le comportement arbitré par le
+             * client. Une tentative de garder l'avant-dernière collée plus
+             * longtemps y ouvrait 281px de clair — cette assertion la
+             * rattraperait.
+             * ------------------------------------------------------------- */
+            const revele = doc.querySelector(".footer-reveal");
+
+            if (revele !== null) {
+                const ecart = revele.getBoundingClientRect().top - app.getBoundingClientRect().bottom;
+
+                assert(
+                    `app : le pied de page suit la section sans écart (${ecart.toFixed(1)}px)`,
+                    Math.abs(ecart) < 1
+                );
+            }
+        }
 
         /* ------------------------------------------------------------------ *
          * Les deux variantes de bouton d'action, éprouvées SÉPARÉMENT.

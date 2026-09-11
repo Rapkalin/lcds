@@ -1,0 +1,135 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Relevé au pixel sur `HP_06_Frame 54.pdf` (page de 1440 × 4724, un point = un
+// pixel) : bande de y=2851 à y=3469, soit 618 de haut, sur TOUTE la largeur —
+// le visuel touche x=0 et x=1439. Contenu calé sur le retrait de section :
+// pastille d'étiquette à x=161 y=2979, titre à x=161, QR code de 142 × 142 à
+// x=162 y=3220. La maquette dessine un coin franc ; le rayon de 48 vient de la
+// règle générale des sections, demandée après.
+//
+// 2979 − 2851 = 128, soit `$section-padding` exactement.
+//
+// LA HAUTEUR VIENT DU VISUEL, demande client : ce bloc n'occupe pas un écran
+// entier comme les autres volets. Les trois enfants partagent une seule
+// cellule de grille, et c'est le VISUEL qui est dans le flux — pas en position
+// absolue. La rangée vaut donc le plus grand des deux : la hauteur naturelle
+// du visuel à pleine largeur, ou celle du contenu. Un visuel court ne rogne
+// jamais le texte, un visuel haut n'est jamais recadré.
+//
+// `aspect-ratio` sur la section aurait été plus court et il est faux : sur une
+// boîte de bloc, il fixe la hauteur et le contenu DÉBORDE au lieu de la
+// pousser. La grille, elle, prend le maximum.
+.block-app {
+  position: relative;
+  display: grid;
+  // Fond PROPRE : un fond de parent peint sous ses enfants, et sans lui la
+  // section précédente transparaîtrait quand celle-ci lui passe dessus. Voir
+  // le volet dans hero.scss.
+  background: var.$blue-pale;
+  overflow: hidden;
+  color: var.$blue;
+
+  > * {
+    grid-area: 1 / 1;
+  }
+
+  &__image {
+    // Deux rôles à la fois, et c'est la grille qui les concilie.
+    //
+    // DIMENSIONNER : une hauteur en pourcentage se résout sur une rangée
+    // indéfinie, donc elle vaut `auto` au moment de calculer la rangée. Le
+    // visuel y pèse alors de sa hauteur naturelle à pleine largeur.
+    //
+    // REMPLIR : la rangée une fois connue, `stretch` étire le visuel dessus.
+    // Sans cela, un visuel plus court que le contenu laissait une bande de
+    // fond sous lui — mesuré 256px avec le visuel de la maquette, qui ne fait
+    // que 363 de haut pour un contenu de 619.
+    align-self: stretch;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    // Le visuel couvre toute la surface : sans ceci il intercepterait le clic
+    // destiné au QR code.
+    pointer-events: none;
+
+    &--placeholder {
+      // Aucun visuel : la grille n'a plus que le contenu pour se dimensionner,
+      // et la maquette dessine une bande de 618.
+      min-height: fn.toRem(618);
+      background: var.$blue-pale;
+    }
+  }
+
+  // Le rembourrage vit ICI et non sur la section : posé sur elle, il
+  // s'ajouterait à la hauteur du visuel au lieu de se superposer, et la bande
+  // dépasserait son propre visuel de 235px.
+  &__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    // En HAUT, et non centré : le relevé pose l'étiquette à 128 du bord de la
+    // bande, et cette cote doit tenir quel que soit le visuel. Centré, elle
+    // descendait à 298 dès qu'un visuel plus haut que le contenu allongeait la
+    // section — mesuré sur un visuel de 960.
+    justify-content: flex-start;
+    // La colonne fait 440 sur la maquette : c'est elle qui fait passer le
+    // titre à la ligne, pas une coupure écrite dans le contenu.
+    max-width: calc(#{var.$content-inset} + #{fn.toRem(440)});
+    padding: var.$section-padding 0 fn.toRem(107);
+    padding-left: var.$content-inset;
+  }
+
+  // 3043 − 3007 = 36 entre le bas de la pastille et le haut des lettres du
+  // titre. La boîte de ligne commence plus haut que les lettres : l'écart de
+  // mise en page vaut 28, le reste est le demi-interligne.
+  &__title {
+    margin-top: fn.toRem(28);
+    font-size: var.$fs-h2;
+  }
+
+  // 3220 − 3151 = 69 sous la boîte de la seconde ligne du titre.
+  &__code {
+    display: block;
+    width: fn.toRem(142);
+    height: fn.toRem(142);
+    margin-top: fn.toRem(69);
+    border-radius: var.$radius;
+    background: var.$white;
+    overflow: hidden;
+  }
+
+  &__code-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+// Le QR code est un lien quand il mène quelque part : même voile que les
+// boutons d'action secondaires, pour que le survol et le focus se voient.
+a.block-app__code {
+  transition: box-shadow var.$fade;
+
+  &:hover,
+  &:focus-visible {
+    box-shadow: 0 0 0 fn.toRem(4) var.$blue-veil;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-mobile) {
+  .block-app {
+    &__inner {
+      padding-bottom: var.$section-padding;
+    }
+
+    &__title {
+      font-size: var.$fs-h2;
+    }
+  }
+}

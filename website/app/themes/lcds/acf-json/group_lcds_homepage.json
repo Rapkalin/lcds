@@ -1124,6 +1124,146 @@
                     ],
                     "min": "",
                     "max": ""
+                },
+                "layout_lcds_application": {
+                    "key": "layout_lcds_application",
+                    "name": "application",
+                    "label": "Application mobile",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_application_etiquette",
+                            "label": "Étiquette de section",
+                            "name": "etiquette",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Libellé court, affiché en capitales. Exemple : « L'app mobile ». C'est aussi le TITRE de la section dans le plan de la page.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 40,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_application_puce",
+                            "label": "Couleur de la puce",
+                            "name": "puce",
+                            "aria-label": "",
+                            "type": "button_group",
+                            "instructions": "Le libellé affiché est celui du client ; la valeur enregistrée reste celle du système de design.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
+                            "default_value": "orange",
+                            "allow_null": 0,
+                            "other_choice": 0,
+                            "layout": "horizontal",
+                            "return_format": "value"
+                        },
+                        {
+                            "key": "field_lcds_application_titre",
+                            "label": "Titre",
+                            "name": "titre",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Exemple : « Dentapoche : l'app mobile ». Il passe à la ligne tout seul, la colonne fait 440 sur la maquette.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 60,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_application_visuel",
+                            "label": "Visuel de fond",
+                            "name": "visuel",
+                            "aria-label": "",
+                            "type": "image",
+                            "instructions": "Bande de 1440 × 618 sur la maquette, affichée sur TOUTE la largeur de l'écran. Prévoir une zone claire à gauche : le titre y est écrit en bleu foncé. Vide, la bande reste un aplat.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "id",
+                            "preview_size": "medium",
+                            "library": "all",
+                            "min_width": "",
+                            "min_height": "",
+                            "min_size": "",
+                            "max_width": "",
+                            "max_height": "",
+                            "max_size": "",
+                            "mime_types": ""
+                        },
+                        {
+                            "key": "field_lcds_application_code",
+                            "label": "QR code",
+                            "name": "code",
+                            "aria-label": "",
+                            "type": "image",
+                            "instructions": "Carré de 142 sur la maquette. Renseigner son texte alternatif dans la médiathèque : il doit dire OÙ mène le code, pas « QR code ».",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "id",
+                            "preview_size": "medium",
+                            "library": "all",
+                            "min_width": "",
+                            "min_height": "",
+                            "min_size": "",
+                            "max_width": "",
+                            "max_height": "",
+                            "max_size": "",
+                            "mime_types": ""
+                        },
+                        {
+                            "key": "field_lcds_application_lien",
+                            "label": "Lien du QR code",
+                            "name": "lien",
+                            "aria-label": "",
+                            "type": "link",
+                            "instructions": "Même destination que le code. Un QR code est inutilisable depuis l'appareil qui l'affiche : sans ce lien, un visiteur au téléphone ne peut pas atteindre l'application.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "array"
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
                 }
             },
             "min": "",

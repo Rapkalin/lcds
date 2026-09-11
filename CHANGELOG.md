@@ -7,6 +7,46 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.19.0
+
+### Ajouté
+
+- **Une section « Application mobile »**, disponible dans le catalogue de la
+  page d'accueil comme les autres : le contributeur la place où il veut dans
+  l'ordre des sections. Elle porte une étiquette, un titre, un visuel qui
+  occupe **toute la largeur de l'écran** et un QR code.
+
+  **On lit « informations pratiques » jusqu'au bout avant qu'elle ne laisse la
+  place.** Une section ne se fige désormais que si la suivante peut la
+  recouvrir : la dernière entrée de la section restait sinon lisible 350px
+  seulement, quelle que soit la hauteur de l'écran, l'image venant la manger
+  sur place. Elle l'est maintenant sur 550 à 1050px selon l'écran, et sort par
+  le haut à son rythme.
+
+  **Sa hauteur vient de son visuel**, et non de l'écran comme les autres
+  sections : elle vaut la hauteur naturelle du visuel en pleine largeur, ou
+  celle du contenu si celui-ci est plus haut. Le visuel remplit la bande dans
+  les deux cas. Conséquence assumée : plus courte qu'un écran, elle ne joue pas
+  le volet — elle défile, et c'est la section suivante qui vient la recouvrir.
+
+  Le QR code accepte un lien, et c'est ce qui le rend utilisable : un code
+  affiché à l'écran ne peut pas être scanné depuis l'appareil qui l'affiche.
+  Renseigné, le code devient un lien vers la même destination. Il reste
+  facultatif : un contributeur dont la photo intègre déjà le code laisse le
+  champ vide.
+
+  Le titre est écrit en bleu foncé sur la photo : **prévoir une zone claire à
+  gauche**. Mesuré sur le visuel de la maquette, le pire endroit du titre est à
+  8,67:1. Un voile de protection avait été ajouté puis retiré sur retour
+  client — il se voyait.
+
+### Corrigé
+
+- **La recette ne compte plus les sections en dur.** Elle exigeait « six
+  sections » : elle rougissait donc mécaniquement à chaque section ajoutée,
+  sans rien dire de plus que la comparaison entre le catalogue et les gabarits
+  qui la précède.
+
 ## 2.18.2
 
 Audit performance et RGAA de la page d'accueil. Aucune couleur n'a été touchée.

@@ -174,7 +174,11 @@
   // Coller par le HAUT ne marche pas davantage : l'intro fait 2874px et le
   // parcours de soin 4500, tous deux plus hauts que la vue. Ils se figeraient
   // dès leur premier pixel et leur fin serait inatteignable.
-  .front-page--volet > .hero ~ * {
+  // `data-volet` est posé par `initVolets` sur les seules sections que la
+  // SUIVANTE peut recouvrir. Sans lui, une section se fige sans que rien ne
+  // vienne prendre sa place : on la lit jusqu'au bout et elle est mangée là où
+  // elle est, au lieu de laisser le pied de page arriver.
+  .front-page--volet > .hero ~ *[data-volet] {
     position: sticky;
     top: var(--volet-top);
   }

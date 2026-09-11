@@ -169,6 +169,83 @@ ni faire déborder le hero d'un écran.
 > positions **absolues** de tout ce qui suit aussi. Mesurer depuis le haut de la
 > section concernée, jamais depuis celui du document.
 
+## L'app mobile prend la hauteur de son visuel
+
+**Seule section à ne pas occuper un écran entier**, demande client. Les trois
+enfants — visuel, voile, contenu — partagent **une seule cellule de grille**, et
+c'est le visuel qui est dans le flux. La rangée vaut donc le plus grand des
+deux, mesuré dans les deux sens :
+
+| Visuel | Hauteur naturelle à 1440 | Hauteur de la section |
+| --- | --- | --- |
+| Dentapoche, 4096 × 1032 | 363 | **619** — le contenu l'emporte |
+| gallery-1, 2000 × 1336 | 960 | **960** — le visuel l'emporte |
+
+Le visuel joue **deux rôles à la fois**, et c'est la grille qui les concilie :
+
+- **dimensionner** — `height: 100%` se résout sur une rangée indéfinie, donc
+  vaut `auto` au moment de calculer la rangée, et le visuel y pèse de sa
+  hauteur naturelle ;
+- **remplir** — la rangée connue, `align-self: stretch` l'étire dessus. Sans
+  cela, un visuel plus court que le contenu laissait une bande de fond sous
+  lui : **256px** mesurés avec le visuel de la maquette.
+
+> `aspect-ratio` sur la section aurait été plus court, et il est faux : sur une
+> boîte de bloc il fixe la hauteur et le contenu **déborde** au lieu de la
+> pousser. La grille, elle, prend le maximum.
+
+Le rembourrage vit sur `&__inner` et non sur la section : posé sur elle, il
+s'ajouterait à la hauteur du visuel au lieu de se superposer. Et le contenu est
+calé **en haut**, pas centré : le relevé pose l'étiquette à 128 du bord, et
+cette cote doit tenir quel que soit le visuel — centrée, elle descendait à 298
+sur un visuel de 960.
+
+### Conséquence : elle sort de la pile collante
+
+Une section plus courte que la vue **ne peut pas jouer le volet**. Collée par
+le bas de la vue, elle laisserait voir la précédente au-dessus d'elle sur toute
+la différence — exactement le défaut que `min-height: 100svh` corrige pour les
+autres. Elle défile donc normalement, et c'est le **pied de page** qui vient la
+recouvrir : ensemble, l'app mobile et lui font 1336 pour une vue de 900.
+
+### Une section ne se fige que si la SUIVANTE peut la recouvrir
+
+C'est la règle, et elle est **structurelle** : `initVolets` pose `data-volet`
+sur les seules sections dont la suivante fait au moins une hauteur d'écran, et
+la feuille de style ne colle que celles-là.
+
+Deux ne la remplissent pas : la **dernière**, qui n'a personne derrière elle,
+et **celle qui précède l'app mobile**, dimensionnée par son visuel. Les figer
+se retournait contre le lecteur : on arrivait au bas de « informations
+pratiques » et l'image la mangeait sur place, au lieu de la laisser partir.
+
+| Vue | « Contact » lisible, avant | après |
+| --- | --- | --- |
+| 700 | 350px de défilement | **550** |
+| 900 | 350px | **750** |
+| 1200 | 350px | **1050** |
+
+Avant, la fenêtre ne dépendait pas de la vue : l'image arrivait à 48px du bord
+à l'instant même où la section se figeait, quelle que soit sa hauteur. Après,
+la section sort par le haut à son rythme et le pied de page prend sa place.
+
+> **Ne pas nommer les sections dans la règle.** Une première version excluait
+> `.block-app` par sa classe : elle traitait le symptôme d'un seul bloc, et
+> laissait « informations pratiques » se figer pour rien. C'est la géométrie
+> qui décide, et une assertion compare le marquage à cette géométrie plutôt
+> qu'à une liste.
+
+> **Une réserve de course a été essayée puis retirée.** L'avant-dernière
+> section se décolle 281px avant la fin — sa course collante vaut la hauteur
+> de la dernière, moins le chevauchement, soit 571 pour 852 nécessaires. Une
+> marge sous la dernière section, reprise en négatif par `.footer-reveal`, la
+> gardait figée jusqu'au bout.
+>
+> **Arbitré par le client : le pied de page n'est pas un volet.** La dernière
+> section défile et passe sous le visuel révélé, comme avant l'ajout de l'app
+> mobile. Vérifié au balayage : sur les 1800 derniers pixels, à trois colonnes,
+> aucune section ne réapparaît une fois recouverte.
+
 ## Grilles : toujours `minmax(0, Nfr)`
 
 Une piste `fr` ne descend jamais sous la largeur minimale de son contenu. Avec

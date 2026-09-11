@@ -187,10 +187,14 @@ printf(
     )),
 );
 
-// Un catalogue vide passerait la comparaison ci-dessus : on exige le compte.
+// Un catalogue vide passerait la comparaison ci-dessus : on exige qu il ne le
+// soit pas. Le NOMBRE, lui, n est plus verrouille : il a change a chaque
+// section ajoutee, un compte ecrit en dur rougissait a chaque livraison sans
+// rien apprendre que la comparaison ci-dessus ne dise deja.
 printf(
-    "%s|le catalogue porte les six sections|%s\n",
-    count($declares) === 6 ? "PASS" : "FAIL",
+    "%s|le catalogue n est pas vide|%d sections : %s\n",
+    $declares !== array() ? "PASS" : "FAIL",
+    count($declares),
     implode(", ", $declares),
 );
 

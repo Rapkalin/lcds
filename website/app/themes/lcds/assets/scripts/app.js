@@ -1096,10 +1096,26 @@ const initVolets = () => {
     // Aucun test de mouvement réduit ici : la règle qui colle les sections vit
     // déjà sous `prefers-reduced-motion: no-preference`. Le redoubler en
     // JavaScript ferait deux sources pour une même décision.
+    // Une section ne joue le volet que si la SUIVANTE peut la recouvrir, donc
+    // si celle-ci fait au moins une hauteur d'écran.
+    //
+    // Deux cas ne la remplissent pas : la DERNIÈRE, qui n'a personne derrière
+    // elle, et celle qui précède une section dimensionnée par son visuel —
+    // l'app mobile. Les figer se retournait contre le lecteur : on arrivait au
+    // bas de « informations pratiques », et l'image la mangeait sur place au
+    // lieu de la laisser partir. Mesuré : la dernière entrée n'était lisible
+    // que sur 350px de défilement, à toutes les hauteurs de vue.
+    const couvrable = (section) => {
+        const suivante = section.nextElementSibling;
+
+        return suivante !== null && suivante.offsetHeight >= window.innerHeight - 1;
+    };
+
     const mesurer = () => {
         for (const section of sections) {
             const decalage = window.innerHeight - section.offsetHeight;
 
+            section.toggleAttribute("data-volet", couvrable(section));
             section.style.setProperty("--volet-top", `${decalage}px`);
 
             if (section.getBoundingClientRect().top > decalage + 1) {

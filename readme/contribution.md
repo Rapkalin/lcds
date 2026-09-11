@@ -38,11 +38,29 @@ relevée sur les maquettes, puis **désignée comme page d'accueil du site**
 | **Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
 | **Carrousel de cartes** | Étiquette, bouton, cartes inclinées révélant leur texte |
 | **Informations pratiques** | Étiquette, visuel, entrées à icône |
+| **Application mobile** | Étiquette, titre, visuel pleine largeur, QR code |
 
 **Le catalogue est celui de la page d'accueil et de personne d'autre.** Le
 groupe est localisé par `page_type == front_page` : aucune de ces sections ne
 peut atterrir sur une autre page. C'était le principal défaut du modèle
-précédent en blocs, où les six sections étaient insérables partout.
+précédent en blocs, où les sections étaient insérables partout.
+
+### Application mobile — deux choses à savoir
+
+**Le visuel de fond prend TOUTE la largeur de l'écran**, pas celle du contenu,
+et **c'est lui qui donne sa hauteur au bloc** — c'est la seule section à ne pas
+occuper un écran entier. Le titre est écrit par-dessus, en bleu foncé, dans le
+tiers gauche : **prévoir une photo claire de ce côté**. Rien ne protège la
+lisibilité à sa place — un voile avait été ajouté, il se voyait, il a été
+retiré. Sur le visuel de la maquette, le titre est à 8,67:1 ; sur une photo
+sombre il tomberait à 1,24:1.
+
+**Le QR code demande DEUX choses.** Son texte alternatif, dans la médiathèque,
+doit dire où il mène — « Télécharger Dentapoche sur l'App Store », pas « QR
+code ». Et son champ « Lien » doit porter la même destination : **un QR code
+est inutilisable depuis l'appareil qui l'affiche**, et sans ce lien un visiteur
+au téléphone ne peut pas atteindre l'application. Renseigné, le code devient
+un lien.
 
 ### Ajouter une section
 
