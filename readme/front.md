@@ -208,6 +208,31 @@ la différence — exactement le défaut que `min-height: 100svh` corrige pour l
 autres. Elle défile donc normalement, et c'est le **pied de page** qui vient la
 recouvrir : ensemble, l'app mobile et lui font 1336 pour une vue de 900.
 
+### Le décalage de collage est borné par le menu
+
+Le menu est **fixe** sur une page qui porte un hero : il recouvre les 128
+premiers pixels de la vue, et c'est exactement le rembourrage haut d'une
+section. L'en-tête d'une section posée à 0 affleure donc juste sous lui — c'est
+ce que le rembourrage de la maquette calcule.
+
+Une section à peine plus haute que la vue se figeait quelques pixels trop haut,
+et ces pixels passaient **entièrement sous le menu** : l'étiquette et le bouton
+d'action des technologies y disparaissaient sans qu'on ait rien gagné à lire.
+
+Mesuré à 1440, sur « les technologies » (927 de haut) :
+
+| Vue | Débord | `--volet-top` | Étiquette figée | |
+| --- | --- | --- | --- | --- |
+| 1200 | 0 | 0 | 128 | dégagée |
+| 900 | 27 | **−27 → 0** | **101 → 128** | corrigé |
+| 700 | 227 | −227 | −99 | la course sert vraiment |
+
+L'invariant : **un décalage vaut 0, ou bien il dépasse la hauteur du menu.**
+Entre les deux, il ne sert qu'à cacher l'en-tête. Au-delà, l'en-tête s'en va
+parce qu'on a défilé dans la section, pas parce qu'elle se fige — et les 27px
+perdus à 900 sont du rembourrage : le contenu s'arrête à y=799 pour une vue de
+900, rien n'est coupé.
+
 ### Une section ne se fige que si la SUIVANTE peut la recouvrir
 
 C'est la règle, et elle est **structurelle** : `initVolets` pose `data-volet`

@@ -16,6 +16,12 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
   l'ordre des sections. Elle porte une étiquette, un titre, un visuel qui
   occupe **toute la largeur de l'écran** et un QR code.
 
+  **L'étiquette et le bouton d'une section ne passent plus derrière le menu.**
+  Une section à peine plus haute que l'écran se figeait quelques pixels trop
+  haut, et ces pixels disparaissaient entièrement sous le menu fixe : le bouton
+  « voir toutes les technologies » s'y cachait. Le collage s'arrête maintenant
+  avant, et rien n'est perdu — ces pixels étaient du rembourrage.
+
   **On lit « informations pratiques » jusqu'au bout avant qu'elle ne laisse la
   place.** Une section ne se fige désormais que si la suivante peut la
   recouvrir : la dernière entrée de la section restait sinon lisible 350px

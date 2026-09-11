@@ -529,19 +529,68 @@ window.runFrontQa = async (win) => {
             marquees.length > 0 && marquees.length < fratrie.length && fautives.length === 0
         );
 
-        // Le décalage lui-même : le script le pose sur CHAQUE section, et sa
-        // valeur doit être « hauteur de la vue moins hauteur de la section ».
+        // Le décalage lui-même : le script le pose sur CHAQUE section. Sa
+        // valeur est « hauteur de la vue moins hauteur de la section », BORNÉE
+        // par la hauteur du menu — voir l'invariant plus bas.
+        //
         // La campagne force le mouvement réduit, donc la classe est absente et
         // rien n'est collé : c'est la seule chose mesurable ici, et elle suffit
         // à prendre une erreur de signe ou une hauteur lue sur le mauvais nœud.
         const decalages = [];
 
         for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            const course = win.innerHeight - noeud.offsetHeight;
+
             decalages.push([
                 noeud.className.split(" ")[0],
                 noeud.style.getPropertyValue("--volet-top").trim(),
-                `${win.innerHeight - noeud.offsetHeight}px`,
+                `${course > -(doc.getElementById("site-header")?.offsetHeight ?? 0) ? 0 : course}px`,
             ]);
+        }
+
+        /* ----------------------------------------------------------------- *
+         * Le décalage est BORNÉ par la hauteur du menu fixe.
+         *
+         * Une section à peine plus haute que la vue se figeait quelques pixels
+         * trop haut, et ces pixels passaient entièrement sous le menu :
+         * l'étiquette et le bouton d'action des technologies y disparaissaient
+         * sans qu'on ait rien gagné à lire. Mesuré à 1440 × 900 : 27px de
+         * course, étiquette figée à 101 pour un menu de 128.
+         *
+         * L'invariant : un décalage vaut 0, ou bien il dépasse la hauteur du
+         * menu. Entre les deux, il ne sert qu'à cacher l'en-tête.
+         * ----------------------------------------------------------------- */
+        const barre = doc.getElementById("site-header");
+        const garde = barre === null ? 0 : barre.offsetHeight;
+        const mordus = [];
+
+        for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            const pose = parseFloat(noeud.style.getPropertyValue("--volet-top"));
+
+            if (Number.isFinite(pose) && pose < 0 && pose > -garde) {
+                mordus.push(`${noeud.className.split(" ")[0]} ${Math.round(pose)}`);
+            }
+        }
+
+        assert(
+            `volet : aucun décalage ne mord sur le menu de ${garde}`
+            + ` (${mordus.length === 0 ? "aucun" : mordus.join(", ")})`,
+            garde > 0 && mordus.length === 0
+        );
+
+        // Et l'effet rendu, sur la section qui portait le défaut : son
+        // étiquette reste sous le menu, jamais derrière.
+        const technos = doc.querySelector(".block-techno");
+        const etiquetteTechno = technos === null ? null : technos.querySelector(".tag");
+
+        if (etiquetteTechno !== null) {
+            const dans = etiquetteTechno.getBoundingClientRect().top - technos.getBoundingClientRect().top;
+            const figee = (parseFloat(technos.style.getPropertyValue("--volet-top")) || 0) + dans;
+
+            assert(
+                `technos : l'étiquette figée reste sous le menu (${Math.round(figee)} >= ${garde})`,
+                figee >= garde - 1
+            );
         }
 
         const faux = decalages.filter(([, pose, attendu]) => pose !== attendu);

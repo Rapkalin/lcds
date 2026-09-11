@@ -1111,9 +1111,29 @@ const initVolets = () => {
         return suivante !== null && suivante.offsetHeight >= window.innerHeight - 1;
     };
 
+    // Le menu est FIXE sur une page qui porte un hero : il recouvre les 128
+    // premiers pixels de la vue, et c'est exactement le rembourrage haut d'une
+    // section — l'en-tête d'une section posée à 0 affleure donc sous lui.
+    // `initHeaderHeight` publie la même mesure en CSS ; c'est le même nœud.
+    const menu = document.getElementById("site-header");
+
     const mesurer = () => {
+        const garde = menu === null ? 0 : menu.offsetHeight;
+
         for (const section of sections) {
-            const decalage = window.innerHeight - section.offsetHeight;
+            // Le décalage est BORNÉ par la hauteur du menu.
+            //
+            // Une section à peine plus haute que la vue se fige quelques
+            // pixels trop haut, et ces pixels-là passent entièrement sous le
+            // menu : son étiquette et son bouton d'action y disparaissent sans
+            // qu'on ait rien gagné à lire. Mesuré sur les technologies, vue de
+            // 900 : 27px de course, étiquette figée à 101 pour un menu de 128.
+            //
+            // Au-delà de la hauteur du menu, la course sert vraiment : l'en-
+            // tête s'en va parce qu'on a défilé dans la section, pas parce
+            // qu'elle se fige.
+            const course = window.innerHeight - section.offsetHeight;
+            const decalage = course > -garde ? 0 : course;
 
             section.toggleAttribute("data-volet", couvrable(section));
             section.style.setProperty("--volet-top", `${decalage}px`);
