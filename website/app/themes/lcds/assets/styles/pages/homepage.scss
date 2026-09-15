@@ -51,6 +51,33 @@
   margin-top: calc(-1 * #{var.$radius-section});
 }
 
+/* ------------------------------------------------------------------------- *
+ * Le RETARD du volet suivant.
+ *
+ * Une cale vide en fin de section, qui repousse la suivante d'autant dans le
+ * flux. Le recouvrement de l'écran ne dépend que de cette position-là : il vaut
+ * « hauteur de vue moins distance restante », une formule où le collage de la
+ * section précédente n'entre pas. Retarder le collage n'aurait donc rien donné.
+ *
+ * UNE CALE, ET NON `padding-bottom`. Chaque section pose son propre rembourrage,
+ * et ce sélecteur l'emporterait sur le sien : elles perdraient toutes leur
+ * retrait bas au lieu d'en gagner dix pixels.
+ *
+ * NI un `margin-bottom` : le conteneur est une colonne flex, où les marges ne
+ * fusionnent pas. Les dix pixels s'ajouteraient au `-48` ci-dessus et
+ * RÉDUIRAIENT le chevauchement à 38, rouvrant les deux oreilles claires que ce
+ * chevauchement est là pour fermer.
+ *
+ * La cale tombe dans les derniers pixels de la section, que la suivante
+ * recouvre de toute façon : rien n'est repoussé à l'écran, seul le flux
+ * s'allonge.
+ * ------------------------------------------------------------------------- */
+.front-page > *:not(.hero, .screen-reader-text)::after {
+  display: block;
+  height: var.$volet-retard;
+  content: "";
+}
+
 // SAUF le bloc qui suit le hero : il ARRIVE APRÈS lui et ne le chevauche pas.
 // La maquette montre un recouvrement à cet endroit pour dire l'intention de
 // volet, pas pour être reproduit — arbitré par le client. Le volet, lui, reste

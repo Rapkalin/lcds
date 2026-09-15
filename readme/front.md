@@ -208,7 +208,7 @@ la différence — exactement le défaut que `min-height: 100svh` corrige pour l
 autres. Elle défile donc normalement, et c'est le **pied de page** qui vient la
 recouvrir : ensemble, l'app mobile et lui font 1336 pour une vue de 900.
 
-### Le décalage de collage est borné par le menu
+### Le décalage de collage est borné par le menu ET par l'en-tête de section
 
 Le menu est **fixe** sur une page qui porte un hero : il recouvre les 128
 premiers pixels de la vue, et c'est exactement le rembourrage haut d'une
@@ -219,19 +219,38 @@ Une section à peine plus haute que la vue se figeait quelques pixels trop haut,
 et ces pixels passaient **entièrement sous le menu** : l'étiquette et le bouton
 d'action des technologies y disparaissaient sans qu'on ait rien gagné à lire.
 
-Mesuré à 1440, sur « les technologies » (927 de haut) :
+#### La hauteur du menu, seule, ne suffisait pas comme borne
 
-| Vue | Débord | `--volet-top` | Étiquette figée | |
+C'est le piège, et il s'est refermé une deuxième fois. **Juste au-delà de la
+hauteur du menu se trouve le PIRE cas** : la section se fige d'un poil plus
+qu'un menu, et son étiquette se range exactement derrière lui.
+
+Mesuré à 1440, sur « les technologies », avec la seule borne du menu :
+
+| Vue | Hauteur section | `--volet-top` | Étiquette figée | |
 | --- | --- | --- | --- | --- |
-| 1200 | 0 | 0 | 128 | dégagée |
-| 900 | 27 | **−27 → 0** | **101 → 128** | corrigé |
-| 700 | 227 | −227 | −99 | la course sert vraiment |
+| 813 | 927 | 0 | 128 | dégagée — mais à **1px** du basculement |
+| 813 | 942 | −129 | **−1** | rangée derrière le menu |
+| 743 | 927 | −184 | **−56** | idem, **sans aucune cale** |
+| 713 | 927 | −214 | **−86** | idem |
 
-L'invariant : **un décalage vaut 0, ou bien il dépasse la hauteur du menu.**
-Entre les deux, il ne sert qu'à cacher l'en-tête. Au-delà, l'en-tête s'en va
-parce qu'on a défilé dans la section, pas parce qu'elle se fige — et les 27px
-perdus à 900 sont du rembourrage : le contenu s'arrête à y=799 pour une vue de
-900, rien n'est coupé.
+Les deux dernières lignes datent d'avant la cale de retard : **le défaut existait
+déjà** sur toute vue un peu courte, et la recette ne le voyait pas parce qu'elle
+tourne à 813, à un pixel de la bascule. Quinze pixels de cale ont suffi à la
+faire basculer — ils ont révélé le défaut, ils ne l'ont pas créé.
+
+L'étiquette vit dans le **rembourrage haut** de la section. La borne vaut donc
+désormais `hauteur du menu + rembourrage haut`, et l'invariant devient :
+
+> **Un décalage vaut 0, ou bien il dépasse le menu d'au moins une hauteur
+> d'en-tête.** En deçà, la section ne se fige pas du tout ; au-delà, l'étiquette
+> est franchement partie — parce qu'on a défilé dans la section, pas parce
+> qu'elle s'est figée.
+
+Vérifié de 620 à 900 de fenêtre : plus aucune vue ne range l'étiquette derrière
+le menu. Et le volet reste entier — quatre sections sur cinq se figent encore à
+900, les cinq à 700. Une assertion l'exige, parce que l'invariant ci-dessus se
+satisfait aussi, bêtement, en ne figeant plus rien du tout.
 
 ### Une section ne se fige que si la SUIVANTE peut la recouvrir
 
@@ -872,6 +891,67 @@ Trois décisions de mise en œuvre, chacune pour une raison :
 Ce n'est **pas le seul repère** : WordPress pose `aria-current="page"` sur ce
 lien, et l'entrée reste écartée en permanence. Un repère de couleur seule aurait
 échoué au WCAG 1.4.1.
+
+## Le retard des volets
+
+Retour de recette : « les volets arrivent un peu vite et recouvrent trop tôt
+l'écran quand on arrive à la fin d'une section ». Chaque volet part désormais
+**quinze pixels plus bas** que le précédent — dix au premier passage, puis cinq
+de plus au second.
+
+### Le collage n'est PAS le levier — c'est la position de flux
+
+C'est le raisonnement qui a fait tout le travail, et il est contre-intuitif.
+
+La part de l'écran mangée par la section suivante vaut, à tout instant :
+
+```
+hauteur de vue − (position de flux de la suivante − défilement)
+```
+
+**Le collage de la précédente n'entre pas dans cette formule.** Tant que les deux
+sections défilent ensemble, leur écart ne change pas : retarder le collage ne
+retarde donc rien du tout. Le seul levier est la position de flux de la section
+suivante.
+
+D'où une cale vide en fin de section, qui la repousse d'autant. Mesuré à 1440 ×
+900, défilement auquel chaque section commence à manger l'écran :
+
+| Section | Sans cale | Cale de 10 | Cale de 15 | Écart final |
+| --- | --- | --- | --- | --- |
+| Les différents traitements | 1230 | 1240 | 1245 | +15 |
+| Le parcours de soin | 2431 | 2451 | 2461 | +30 |
+| Les technologies | 6467 | 6497 | 6512 | +45 |
+| Informations pratiques | 7346 | 7386 | 7406 | +60 |
+
+Quinze pixels par jonction, cumulés — « à chaque fois », comme demandé. La valeur
+vit dans le seul jeton `$volet-retard` : c'est le nombre à bouger si le rythme
+doit encore changer, et rien d'autre.
+
+### Une cale, et surtout pas une marge
+
+Trois écritures paraissent équivalentes. Deux sont fausses :
+
+| Écriture | Ce qui se passe |
+| --- | --- |
+| `::after` vide | **la bonne** : la section grandit, le chevauchement reste à 48 |
+| `padding-bottom` | le sélecteur l'emporte sur celui de chaque section : elles **perdent** leur retrait bas au lieu d'en gagner dix pixels |
+| `margin-bottom` | le conteneur est une colonne flex, où les marges **ne fusionnent pas** : la cale s'ajoute au `-48` et ramène le chevauchement à **33**, rouvrant les deux oreilles claires |
+
+La troisième est éprouvée : une assertion de recette mesure le chevauchement et
+le voit tomber sous 48 dès qu'on écrit la marge. Voir [`qa.md`](qa.md).
+
+### Deux limites assumées
+
+- **Le hero n'est pas retardé.** Il est exclu de la règle, et il le restera :
+  il fait exactement une hauteur d'écran — exigence explicite — donc une cale y
+  serait absorbée par son `min-height` sans rien décaler. La première jonction,
+  du hero vers l'intro, garde son rythme d'avant. C'est aussi pourquoi le retard
+  est CUMULATIF : la section d'intro en gagne quinze, la suivante trente, et
+  ainsi de suite.
+- **Une section calée sur `min-height` n'est pas retardée non plus.** Sa hauteur
+  vaut alors `100svh` quoi qu'on ajoute. C'est sans conséquence : une section
+  d'exactement un écran n'a pas de « fin de lecture » à protéger.
 
 ## Le logo qui se réduit au défilement
 

@@ -247,6 +247,23 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   de la page derrière le panneau mobile qui reste tabulable.
 - **Accessibilité côté serveur** : aucun composant ne force `'alt' => ''`, et
   aucun gabarit de titre Yoast n'est resté en anglais.
+- **Le retard des volets** : chaque section porte sa cale, et le chevauchement
+  vaut **toujours le rayon de section**. La seconde assertion est la vraie : la
+  cale écrite en `margin-bottom` paraît équivalente et rogne le chevauchement
+  d'autant, rouvrant les oreilles claires. Éprouvé — la mutation le mesure.
+- **La borne du décalage de collage**, dans les deux sens : aucun décalage ne
+  range une étiquette derrière le menu, ET des sections se figent encore. La
+  seconde est indispensable — la première se satisfait aussi d'un volet
+  entièrement désactivé, ce qu'une borne élargie d'un cran de trop produirait
+  sans que rien d'autre ne bronche.
+
+> Cette famille d'assertions a rougi sur du code juste avant de rougir sur un
+> vrai défaut. L'ancienne version exigeait que l'étiquette des technologies reste
+> **toujours** sous le menu : elle tenait tant que cette section restait bornée,
+> et tombait dès qu'une vue courte la faisait légitimement se figer — mesuré à
+> 700, étiquette à −201 alors que rien n'était caché. Elle vérifie désormais
+> qu'on n'est pas dans la ZONE interdite, au lieu d'exiger une seule des deux
+> issues acceptables.
 - **Conversion WebP**, éprouvée sur les deux moitiés parce qu'elles peuvent
   diverger : côté **serveur**, le module chargé, chaque format source mappé, le
   GIF et le SVG laissés dehors, la qualité visant le WebP seul, et surtout un

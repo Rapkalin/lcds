@@ -1121,19 +1121,30 @@ const initVolets = () => {
         const garde = menu === null ? 0 : menu.offsetHeight;
 
         for (const section of sections) {
-            // Le décalage est BORNÉ par la hauteur du menu.
-            //
-            // Une section à peine plus haute que la vue se fige quelques
-            // pixels trop haut, et ces pixels-là passent entièrement sous le
-            // menu : son étiquette et son bouton d'action y disparaissent sans
-            // qu'on ait rien gagné à lire. Mesuré sur les technologies, vue de
-            // 900 : 27px de course, étiquette figée à 101 pour un menu de 128.
-            //
-            // Au-delà de la hauteur du menu, la course sert vraiment : l'en-
-            // tête s'en va parce qu'on a défilé dans la section, pas parce
-            // qu'elle se fige.
+            /*
+             * Le décalage est BORNÉ par le menu ET par l'en-tête de la section.
+             *
+             * Une section à peine plus haute que la vue se fige quelques pixels
+             * trop haut, et ces pixels-là passent entièrement sous le menu : son
+             * étiquette et son bouton d'action y disparaissent sans qu'on ait
+             * rien gagné à lire. Mesuré sur les technologies, vue de 900 : 27px
+             * de course, étiquette figée à 101 pour un menu de 128.
+             *
+             * LE SEUL MENU NE SUFFIT PAS comme borne. Juste au-delà de sa
+             * hauteur se trouvait le PIRE cas : la section se figeait d'un
+             * poil plus qu'un menu, et son étiquette se rangeait exactement
+             * derrière lui. Mesuré, et sans aucun rapport avec la cale de
+             * retard — vue de 743, étiquette figée à -56 ; vue de 713, à -86.
+             *
+             * L'étiquette vit dans le rembourrage haut de la section : on exige
+             * donc que la course dépasse le menu D'AU MOINS ce rembourrage. En
+             * deçà, la section ne se fige pas du tout ; au-delà, l'étiquette est
+             * franchement partie — parce qu'on a défilé dans la section, pas
+             * parce qu'elle s'est figée.
+             */
+            const entete = parseFloat(window.getComputedStyle(section).paddingTop) || 0;
             const course = window.innerHeight - section.offsetHeight;
-            const decalage = course > -garde ? 0 : course;
+            const decalage = course > -(garde + entete) ? 0 : course;
 
             section.toggleAttribute("data-volet", couvrable(section));
             section.style.setProperty("--volet-top", `${decalage}px`);

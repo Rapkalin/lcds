@@ -233,6 +233,79 @@ window.runFrontQa = async (win) => {
         }
     }
 
+    /* --------------------------------------------------------------------- *
+     * Le RETARD du volet, et le chevauchement qu'il ne doit pas entamer.
+     *
+     * Retour de recette : « les volets arrivent un peu vite et recouvrent trop
+     * tôt l'écran ». Ce qui décide de ce moment est la POSITION DE FLUX de la
+     * section suivante, et elle seule — une cale vide en fin de section la
+     * repousse d'autant.
+     *
+     * La campagne force `prefers-reduced-motion`, sous lequel le collage des
+     * sections est désactivé : les rectangles lus ici sont donc bien ceux du
+     * FLUX, ce qui est exactement ce qu'il faut mesurer.
+     * --------------------------------------------------------------------- */
+    const pageVolets = doc.querySelector(".front-page");
+
+    if (pageVolets !== null) {
+        const heroVolet = pageVolets.querySelector(":scope > .hero");
+        const voletsSuivants = [];
+
+        for (
+            let noeud = heroVolet === null ? null : heroVolet.nextElementSibling;
+            noeud !== null;
+            noeud = noeud.nextElementSibling
+        ) {
+            if (!noeud.classList.contains("screen-reader-text")) {
+                voletsSuivants.push(noeud);
+            }
+        }
+
+        if (voletsSuivants.length >= 2) {
+            const cale = (section) => parseFloat(
+                win.getComputedStyle(section, "::after").height
+            );
+            const cales = voletsSuivants.map(cale);
+            const sansCale = cales.filter((valeur) => !(valeur > 0));
+
+            assert(
+                `volet : chaque section porte sa cale de retard (${cales.map((v) => v.toFixed(0)).join(", ")})`,
+                sansCale.length === 0
+            );
+
+            /*
+             * ET LE CHEVAUCHEMENT RESTE ENTIER.
+             *
+             * C'est le vrai risque de cette cale : la poser en `margin-bottom`
+             * paraît équivalent et ne l'est pas. Le conteneur est une colonne
+             * flex, où les marges ne fusionnent pas — les dix pixels
+             * s'ajouteraient au `-48` et ramèneraient le chevauchement à 38,
+             * rouvrant les deux oreilles claires qu'il est là pour fermer.
+             *
+             * Le chevauchement est lu, pas écrit : il doit valoir le rayon de
+             * section, et c'est ce rayon qui sert de référence.
+             */
+            const rayon = parseFloat(
+                win.getComputedStyle(voletsSuivants[1]).borderTopLeftRadius
+            );
+            const ecarts = [];
+
+            for (let rang = 1; rang < voletsSuivants.length; rang += 1) {
+                const haut = voletsSuivants[rang].getBoundingClientRect().top;
+                const basPrecedent = voletsSuivants[rang - 1].getBoundingClientRect().bottom;
+
+                ecarts.push(Math.round((basPrecedent - haut) * 10) / 10);
+            }
+
+            const horsClous = ecarts.filter((valeur) => Math.abs(valeur - rayon) > 1);
+
+            assert(
+                `volet : le chevauchement vaut toujours le rayon de section (${rayon.toFixed(0)} attendu, mesuré ${ecarts.join(", ")})`,
+                rayon > 0 && horsClous.length === 0
+            );
+        }
+    }
+
     // Un débordement horizontal ne se voit pas sur une capture : il se mesure.
     const root = doc.documentElement;
     assert(
@@ -707,11 +780,16 @@ window.runFrontQa = async (win) => {
 
         for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
             const course = win.innerHeight - noeud.offsetHeight;
+            // La borne vaut le menu PLUS le rembourrage haut de la section,
+            // où vit son étiquette. Le seul menu laissait un pire cas juste
+            // au-delà de lui — voir initVolets.
+            const borne = (doc.getElementById("site-header")?.offsetHeight ?? 0)
+                + (parseFloat(styleOf(noeud).paddingTop) || 0);
 
             decalages.push([
                 noeud.className.split(" ")[0],
                 noeud.style.getPropertyValue("--volet-top").trim(),
-                `${course > -(doc.getElementById("site-header")?.offsetHeight ?? 0) ? 0 : course}px`,
+                `${course > -borne ? 0 : course}px`,
             ]);
         }
 
@@ -733,30 +811,67 @@ window.runFrontQa = async (win) => {
 
         for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
             const pose = parseFloat(noeud.style.getPropertyValue("--volet-top"));
+            // La zone interdite va de 0 au menu PLUS le rembourrage haut de la
+            // section : c'est là que l'étiquette se range derrière le menu au
+            // lieu d'être franchement partie.
+            const interdit = garde + (parseFloat(styleOf(noeud).paddingTop) || 0);
 
-            if (Number.isFinite(pose) && pose < 0 && pose > -garde) {
-                mordus.push(`${noeud.className.split(" ")[0]} ${Math.round(pose)}`);
+            if (Number.isFinite(pose) && pose < 0 && pose > -interdit) {
+                mordus.push(`${noeud.className.split(" ")[0]} ${Math.round(pose)} > ${-interdit}`);
             }
         }
 
         assert(
-            `volet : aucun décalage ne mord sur le menu de ${garde}`
+            `volet : aucun décalage ne range une étiquette derrière le menu de ${garde}`
             + ` (${mordus.length === 0 ? "aucun" : mordus.join(", ")})`,
             garde > 0 && mordus.length === 0
         );
 
-        // Et l'effet rendu, sur la section qui portait le défaut : son
-        // étiquette reste sous le menu, jamais derrière.
+        /*
+         * ET L'EFFET EXISTE ENCORE. L'assertion ci-dessus est satisfaite de la
+         * façon la plus bête qui soit : en ne figeant plus AUCUNE section. Une
+         * borne élargie d'un cran de trop désactiverait le volet partout sans
+         * qu'aucune autre assertion ne bronche. On exige donc qu'il en reste.
+         */
+        const figees = [];
+
+        for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            if (parseFloat(noeud.style.getPropertyValue("--volet-top")) < 0) {
+                figees.push(noeud.className.split(" ")[0]);
+            }
+        }
+
+        assert(
+            `volet : des sections se figent encore (${figees.length === 0 ? "AUCUNE" : figees.join(", ")})`,
+            figees.length > 0
+        );
+
+        /*
+         * Et l'EFFET RENDU, sur la section qui portait le défaut.
+         *
+         * Deux issues sont bonnes, et une seule est mauvaise :
+         *   — l'étiquette reste SOUS le menu, la section ne s'étant pas figée ;
+         *   — ou elle est franchement PARTIE, d'au moins une hauteur d'en-tête
+         *     au-dessus de la vue, parce qu'on a défilé dans la section.
+         * Entre les deux se trouve le défaut : rangée juste derrière le menu.
+         *
+         * La version précédente exigeait la seule première issue. Elle tenait
+         * tant que cette section restait bornée, et rougissait sur du code juste
+         * dès qu'une vue courte la faisait légitimement se figer — mesuré à 700,
+         * étiquette à -201 alors que rien n'était caché.
+         */
         const technos = doc.querySelector(".block-techno");
         const etiquetteTechno = technos === null ? null : technos.querySelector(".tag");
 
         if (etiquetteTechno !== null) {
             const dans = etiquetteTechno.getBoundingClientRect().top - technos.getBoundingClientRect().top;
             const figee = (parseFloat(technos.style.getPropertyValue("--volet-top")) || 0) + dans;
+            const entete = parseFloat(styleOf(technos).paddingTop) || 0;
 
             assert(
-                `technos : l'étiquette figée reste sous le menu (${Math.round(figee)} >= ${garde})`,
-                figee >= garde - 1
+                `technos : l'étiquette figée n'est jamais rangée derrière le menu`
+                + ` (${Math.round(figee)} : sous le menu à partir de ${garde}, partie en deçà de ${-entete})`,
+                figee >= garde - 1 || figee <= -entete
             );
         }
 

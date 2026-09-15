@@ -7,6 +7,30 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.23.1
+
+### Modifié
+
+- **Les volets laissent quinze pixels de plus avant de recouvrir l'écran**, et
+  cela se cumule à chaque jonction : quinze pixels à la première, trente à la
+  suivante, et ainsi de suite. On arrive donc au bout d'une section avec un peu
+  plus de marge avant que la suivante ne la mange.
+
+  > La bannière, elle, garde son rythme : elle fait exactement une hauteur
+  > d'écran et ne peut pas être décalée sans renier cette exigence.
+
+### Corrigé
+
+- **L'étiquette d'une section ne se range plus derrière le menu** quand la
+  section se fige. Le défaut touchait toute fenêtre un peu courte — mesuré dès
+  830px de haut — et n'était pas lié aux quinze pixels ci-dessus : ceux-ci l'ont
+  seulement amené à la hauteur de fenêtre que la recette éprouve.
+
+  > Une section se fige désormais soit pas du tout, soit franchement : le
+  > décalage doit dépasser le menu d'au moins une hauteur d'en-tête de section.
+  > Entre les deux, il ne servait qu'à cacher cet en-tête. Vérifié de 620 à 900
+  > de fenêtre.
+
 ## 2.23.0
 
 ### Ajouté

@@ -218,6 +218,22 @@ $radius: fn.toRem(8);
 // et arrondit les coins BAS du panneau de pied de page : deux rôles, deux
 // valeurs, et les confondre ferait bouger l'un en corrigeant l'autre.
 $radius-section: fn.toRem(48);
+/* ---------------------------------------------------------------------------
+ * Retard donné à chaque volet avant qu'il ne commence à recouvrir le précédent.
+ *
+ * Ce qui décide du moment où un volet mange l'écran, c'est la POSITION DE FLUX
+ * de la section suivante, et elle seule. Le collage de la précédente n'y change
+ * rien : tant que les deux défilent ensemble, leur écart ne bouge pas. Allonger
+ * cet écart est donc le seul levier — retour de recette : « les volets arrivent
+ * un peu vite et recouvrent trop tôt l'écran ». Posé à 10, puis porté à 15 sur
+ * un second passage de recette.
+ *
+ * PAS EN `rem`. C'est une distance de défilement, pas une mesure typographique :
+ * la doubler avec la taille du texte doublerait aussi le retard, alors que le
+ * geste de défilement, lui, ne change pas. Même raisonnement que pour les cadres
+ * d'image — voir block-rooms.scss.
+ * ------------------------------------------------------------------------- */
+$volet-retard: 15px;
 // Ombre portée au-dessus d'une section empilée.
 //
 // AJOUT HORS MAQUETTE, assumé. Quatre des cinq sections de l'accueil partagent
