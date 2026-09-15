@@ -251,6 +251,10 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   vaut **toujours le rayon de section**. La seconde assertion est la vraie : la
   cale écrite en `margin-bottom` paraît équivalente et rogne le chevauchement
   d'autant, rouvrant les oreilles claires. Éprouvé — la mutation le mesure.
+- **Aucun défilement mort après un rail épinglé** : entre le bas de la réserve
+  et le bas de la section, il ne reste que le chevauchement. Éprouvé par les deux
+  mutations — l'exception retirée rend les 110px signalés en recette, la cale
+  seule réintroduite en rend 30.
 - **La borne du décalage de collage**, dans les deux sens : aucun décalage ne
   range une étiquette derrière le menu, ET des sections se figent encore. La
   seconde est indispensable — la première se satisfait aussi d'un volet
@@ -440,6 +444,25 @@ un tracé à sa maquette : deux blocs de 24 lignes côte à côte disent en un c
 d'œil ce qu'aucune cote isolée ne montre.
 
 ## Ce qui n'est pas automatisé
+
+### Le figeage d'une section qui se termine par un rail épinglé
+
+Une telle section doit se figer **à la fin de son rail**, pas au bas de sa boîte.
+Le calcul vit dans `initVolets` et ne tourne que sur `resize` — or
+`initScrollRails` écoute le MÊME évènement et y désactive l'épinglage, puisque la
+campagne force `prefers-reduced-motion`. Émettre un `resize` démonte donc
+l'échafaudage avant que le calcul ne le voie ; essayé, et deux assertions du rail
+passaient au rouge.
+
+L'`ResizeObserver` serait le seul déclencheur propre à `initVolets`, mais il ne
+délivre rien sous `--virtual-time-budget` : la section grandit de 1308 à 2707 et
+le rappel ne vient jamais, même après plusieurs ticks. Mesuré.
+
+**La moitié CSS est couverte** — « aucun défilement mort après le rail » vérifie
+qu'il ne reste que le chevauchement entre le bas de la réserve et le bas de la
+section. La moitié JavaScript est vérifiée **hors campagne**, au relevé :
+figeage et fin du rail à `scrollY 2746` tous les deux, écart nul.
+
 
 - **La conformité visuelle à la maquette.** Elle se contrôle en comparant une
   capture Figma et le rendu, position par position. Utile de mesurer plutôt que

@@ -934,6 +934,60 @@ encore changer, et rien d'autre.
 > plus un défaut — la borne élargie ci-dessous s'en charge — mais c'est un
 > changement de comportement, et il se REMESURE, il ne se suppose pas.
 
+### L'exception : une section qui se TERMINE par un rail épinglé
+
+Elle n'a **aucun retard**, et elle perd même son rembourrage bas.
+
+Un rail épinglé consomme le défilement vertical pour avancer horizontalement. Il
+atteint son terme quand le bas de sa réserve atteint le bas de la vue — et à cet
+instant précis, la section est finie de lire. Tout ce qui suit est du
+**défilement mort** : on défile, et plus rien n'avance.
+
+Mesuré sur « l'histoire », vue de 900 :
+
+| | Avant | Après |
+| --- | --- | --- |
+| Fin du rail | `scrollY` 2746 | 2746 |
+| Apparition du volet | `scrollY` 2856 | **2746** |
+| Défilement mort | **110px** | **0** |
+
+Les 110 pixels étaient le rembourrage bas (128) plus la cale (30) moins le
+chevauchement (48). Il ne reste que ce chevauchement, qui n'est pas du vide mais
+la structure du volet — la section suivante remonte dessus, et le rembourrage
+ainsi ramené n'est **jamais visible**.
+
+### Et la section doit se figer À LA FIN DU RAIL
+
+C'est la seconde moitié, et elle a demandé un second passage de recette : « le
+volet semble monter en même temps que la section galerie ».
+
+Le volet ne recouvre vraiment qu'une fois la section **figée** — tant que les
+deux défilent ensemble, leur écart ne bouge pas. Or `initVolets` fige une section
+sur le bas de sa BOÎTE, soit 48px après la fin du rail. Sur ces 48px, la galerie
+et le volet montaient ensemble sans que rien ne soit recouvert.
+
+Le décalage de collage se calcule donc sur le bas de la RÉSERVE :
+
+| | Avant | Après |
+| --- | --- | --- |
+| Fin du rail | `scrollY` 2746 | 2746 |
+| Figeage de la section | `scrollY` 2794 | **2746** |
+| Recouvrement à la fin du rail | 0, mais tout bouge | **0, section figée** |
+
+Les deux moitiés vont ensemble et ne se séparent pas : c'est parce que le
+rembourrage bas vaut exactement le chevauchement que les deux instants
+coïncident. Avec le rembourrage d'origine (128), la section se figerait à la fin
+du rail mais le volet n'apparaîtrait que 80px plus loin.
+
+Deux détails qui ne sont pas de la décoration :
+
+- **`:last-child`** : la règle ne vaut que si le rail est bien la dernière chose
+  de la section. Ailleurs, ce qui le suit se lit, et il est normal de défiler
+  pour y arriver.
+- **La règle est isolée** parce qu'elle porte `:has()` : un navigateur qui
+  l'ignore jette la règle entière et retombe sur le comportement d'avant, au lieu
+  de perdre aussi les déclarations voisines.
+
 ### Une cale, et surtout pas une marge
 
 Trois écritures paraissent équivalentes. Deux sont fausses :

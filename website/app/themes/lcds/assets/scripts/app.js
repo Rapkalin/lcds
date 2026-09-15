@@ -1143,7 +1143,30 @@ const initVolets = () => {
              * parce qu'elle s'est figée.
              */
             const entete = parseFloat(window.getComputedStyle(section).paddingTop) || 0;
-            const course = window.innerHeight - section.offsetHeight;
+            /*
+             * UNE SECTION QUI SE TERMINE PAR UN RAIL ÉPINGLÉ est finie de lire
+             * quand le bas de sa RÉSERVE atteint le bas de la vue : c'est là que
+             * le rail arrive à son terme, pas au bas de la section.
+             *
+             * Se figer sur le bas de la section laissait les deux monter
+             * ENSEMBLE sur la hauteur du rembourrage restant — mesuré à 48px.
+             * Le volet ne recouvrait rien pendant ce temps, il ACCOMPAGNAIT la
+             * galerie. Retour de recette : « le volet semble monter en même
+             * temps que la section galerie ».
+             *
+             * La feuille de style ramène déjà ce rembourrage au chevauchement,
+             * pour que les deux instants coïncident exactement : le rail se
+             * termine, la section se fige, et le volet part de zéro. Les deux
+             * moitiés vont ensemble — voir pages/homepage.scss.
+             */
+            const dernier = section.lastElementChild;
+            const epingle = dernier !== null
+                && dernier.classList.contains("carousel-pin--active");
+            const utile = epingle
+                ? section.offsetHeight
+                    - (parseFloat(window.getComputedStyle(section).paddingBottom) || 0)
+                : section.offsetHeight;
+            const course = window.innerHeight - utile;
             const decalage = course > -(garde + entete) ? 0 : course;
 
             section.toggleAttribute("data-volet", couvrable(section));

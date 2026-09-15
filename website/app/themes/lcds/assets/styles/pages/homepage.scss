@@ -78,6 +78,39 @@
   content: "";
 }
 
+/* ------------------------------------------------------------------------- *
+ * SAUF une section qui se TERMINE par un rail épinglé : elle n'a aucun retard.
+ *
+ * Un rail épinglé consomme le défilement vertical pour avancer horizontalement,
+ * et il atteint son terme quand le bas de sa réserve atteint le bas de la vue.
+ * À cet instant précis, la section est finie de lire — tout ce qui suit est du
+ * défilement MORT, pendant lequel il ne se passe plus rien.
+ *
+ * Mesuré sur « l'histoire », vue de 900 : 110px entre la fin du rail et
+ * l'apparition du volet, soit le rembourrage bas (128) plus la cale (30) moins
+ * le chevauchement (48). Retour de recette : « il y a un petit scroll vertical
+ * avant que le volet n'apparaisse ».
+ *
+ * Il ne reste donc que le chevauchement, qui n'est pas du vide mais la
+ * structure même du volet — la section suivante remonte dessus. Le rembourrage
+ * ainsi ramené n'est JAMAIS visible : il vit entièrement sous elle.
+ *
+ * `:last-child` n'est pas décoratif : la règle ne vaut que si le rail est bien
+ * la DERNIÈRE chose de la section. Ailleurs, le contenu qui le suit se lit, et
+ * le supprimer du flux le rendrait inatteignable.
+ *
+ * Règle ISOLÉE parce qu'elle porte `:has()` : un navigateur qui l'ignore jette
+ * la règle entière, et retombe alors sur le comportement d'avant plutôt que de
+ * perdre aussi les déclarations voisines.
+ * ------------------------------------------------------------------------- */
+.front-page > *:has(> .carousel-pin--active:last-child) {
+  padding-bottom: var.$radius-section;
+
+  &::after {
+    height: 0;
+  }
+}
+
 // SAUF le bloc qui suit le hero : il ARRIVE APRÈS lui et ne le chevauche pas.
 // La maquette montre un recouvrement à cet endroit pour dire l'intention de
 // volet, pas pour être reproduit — arbitré par le client. Le volet, lui, reste

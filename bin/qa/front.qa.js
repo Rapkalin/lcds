@@ -644,6 +644,41 @@ window.runFrontQa = async (win) => {
             win.getComputedStyle(railPin).overflowX === "hidden"
         );
 
+        /*
+         * AUCUN DÉFILEMENT MORT après le rail.
+         *
+         * Le rail atteint son terme quand le BAS DE SA RÉSERVE atteint le bas de
+         * la vue. Si la section continue au-delà, ces pixels-là ne font plus rien
+         * avancer : on défile dans le vide avant que le volet n'arrive. Retour de
+         * recette — 110px mesurés sur « l'histoire », soit le rembourrage bas de
+         * la section plus sa cale de retard, moins le chevauchement.
+         *
+         * L'invariant : entre le bas de la réserve et le bas de la section, il ne
+         * doit rester QUE le chevauchement, qui n'est pas du vide mais la
+         * structure du volet — la section suivante remonte dessus.
+         *
+         * Ne vaut que si la réserve est la DERNIÈRE chose de la section : sinon
+         * ce qui la suit se lit, et il est normal de défiler pour y arriver.
+         */
+        const sectionPin = reservePin.parentElement;
+        const estDerniere = sectionPin !== null
+            && sectionPin.lastElementChild === reservePin
+            && sectionPin.parentElement !== null
+            && sectionPin.parentElement.classList.contains("front-page");
+
+        if (estDerniere) {
+            const rayonSection = parseFloat(styleOf(sectionPin).borderTopLeftRadius) || 0;
+            const mort = sectionPin.getBoundingClientRect().bottom
+                - reservePin.getBoundingClientRect().bottom
+                - rayonSection;
+
+            assert(
+                `épinglage : aucun défilement mort après le rail (${Math.round(mort)}px au-delà du chevauchement de ${Math.round(rayonSection)})`,
+                Math.abs(mort) < 1
+            );
+
+        }
+
         const hautReserve = reservePin.getBoundingClientRect().top + win.scrollY;
         // Le défilement est provoqué, PUIS l'évènement est émis à la main —
         // même contournement que pour l'en-tête plus haut : sous
@@ -779,7 +814,14 @@ window.runFrontQa = async (win) => {
         const decalages = [];
 
         for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
-            const course = win.innerHeight - noeud.offsetHeight;
+            // Une section qui se TERMINE par un rail épinglé est finie de lire
+            // au bas de sa réserve, pas au bas de la section — voir initVolets.
+            const epingle = noeud.lastElementChild !== null
+                && noeud.lastElementChild.classList.contains("carousel-pin--active");
+            const utile = epingle
+                ? noeud.offsetHeight - (parseFloat(styleOf(noeud).paddingBottom) || 0)
+                : noeud.offsetHeight;
+            const course = win.innerHeight - utile;
             // La borne vaut le menu PLUS le rembourrage haut de la section,
             // où vit son étiquette. Le seul menu laissait un pire cas juste
             // au-delà de lui — voir initVolets.

@@ -7,6 +7,24 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.23.3
+
+### Corrigé
+
+- **Le volet arrive sans attendre après la galerie de « l'histoire ».** Une fois
+  le défilement horizontal terminé, il restait 110 pixels de défilement vertical
+  pendant lesquels il ne se passait plus rien. La section s'arrête désormais là
+  où le rail se termine.
+
+  > Ces 110 pixels étaient le rembourrage bas de la section et sa cale de retard,
+  > moins le chevauchement. La règle est générale : toute section qui se TERMINE
+  > par un rail épinglé perd son retard, parce que son rail a déjà consommé le
+  > défilement.
+
+- **Et le volet ne monte plus en même temps que la galerie.** La section se fige
+  désormais à la fin de son rail, et non 48 pixels plus loin : le volet part donc
+  de zéro sur une galerie immobile, au lieu de l'accompagner sans rien recouvrir.
+
 ## 2.23.2
 
 ### Modifié
