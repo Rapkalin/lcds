@@ -225,15 +225,21 @@ $radius-section: fn.toRem(48);
  * de la section suivante, et elle seule. Le collage de la précédente n'y change
  * rien : tant que les deux défilent ensemble, leur écart ne bouge pas. Allonger
  * cet écart est donc le seul levier — retour de recette : « les volets arrivent
- * un peu vite et recouvrent trop tôt l'écran ». Posé à 10, puis porté à 15 sur
- * un second passage de recette.
+ * un peu vite et recouvrent trop tôt l'écran ». Monté par paliers successifs en
+ * recette : 10, puis 15, puis 30.
+ *
+ * IL RESTE BORNÉ PAR LE CLAMP DE COLLAGE. Grandir les sections les rapproche du
+ * seuil au-delà duquel elles se figent, et une section qui franchit ce seuil
+ * range son étiquette derrière le menu. Le clamp couvre le cas — voir
+ * `initVolets` — mais tout nouveau palier doit être REMESURÉ, pas supposé : à
+ * 15 déjà, les technologies étaient passées à un pixel du basculement.
  *
  * PAS EN `rem`. C'est une distance de défilement, pas une mesure typographique :
  * la doubler avec la taille du texte doublerait aussi le retard, alors que le
  * geste de défilement, lui, ne change pas. Même raisonnement que pour les cadres
  * d'image — voir block-rooms.scss.
  * ------------------------------------------------------------------------- */
-$volet-retard: 15px;
+$volet-retard: 30px;
 // Ombre portée au-dessus d'une section empilée.
 //
 // AJOUT HORS MAQUETTE, assumé. Quatre des cinq sections de l'accueil partagent

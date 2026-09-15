@@ -896,8 +896,8 @@ lien, et l'entrée reste écartée en permanence. Un repère de couleur seule au
 
 Retour de recette : « les volets arrivent un peu vite et recouvrent trop tôt
 l'écran quand on arrive à la fin d'une section ». Chaque volet part désormais
-**quinze pixels plus bas** que le précédent — dix au premier passage, puis cinq
-de plus au second.
+**trente pixels plus bas** que le précédent. La valeur a été montée par paliers
+en recette : 10, puis 15, puis 30.
 
 ### Le collage n'est PAS le levier — c'est la position de flux
 
@@ -917,16 +917,22 @@ suivante.
 D'où une cale vide en fin de section, qui la repousse d'autant. Mesuré à 1440 ×
 900, défilement auquel chaque section commence à manger l'écran :
 
-| Section | Sans cale | Cale de 10 | Cale de 15 | Écart final |
+| Section | Sans cale | Cale de 10 | Cale de 15 | Cale de 30 |
 | --- | --- | --- | --- | --- |
-| Les différents traitements | 1230 | 1240 | 1245 | +15 |
-| Le parcours de soin | 2431 | 2451 | 2461 | +30 |
-| Les technologies | 6467 | 6497 | 6512 | +45 |
-| Informations pratiques | 7346 | 7386 | 7406 | +60 |
+| Les différents traitements | 1230 | 1240 | 1245 | **+30** |
+| Le parcours de soin | 2431 | 2451 | 2461 | **+60** |
+| Les technologies | 6467 | 6497 | 6512 | **+90** |
+| Informations pratiques | 7346 | 7386 | 7406 | **+120** |
 
-Quinze pixels par jonction, cumulés — « à chaque fois », comme demandé. La valeur
-vit dans le seul jeton `$volet-retard` : c'est le nombre à bouger si le rythme
-doit encore changer, et rien d'autre.
+La cale par jonction, cumulée — « à chaque fois », comme demandé. La valeur vit
+dans le seul jeton `$volet-retard` : c'est le nombre à bouger si le rythme doit
+encore changer, et rien d'autre.
+
+> **Elle n'est pas libre pour autant.** Grandir les sections les rapproche du
+> seuil au-delà duquel elles se figent. À 30, « les technologies » n'a plus que
+> **douze pixels de marge** avant ce seuil sur une vue de 713. Le franchir n'est
+> plus un défaut — la borne élargie ci-dessous s'en charge — mais c'est un
+> changement de comportement, et il se REMESURE, il ne se suppose pas.
 
 ### Une cale, et surtout pas une marge
 
@@ -947,7 +953,7 @@ le voit tomber sous 48 dès qu'on écrit la marge. Voir [`qa.md`](qa.md).
   il fait exactement une hauteur d'écran — exigence explicite — donc une cale y
   serait absorbée par son `min-height` sans rien décaler. La première jonction,
   du hero vers l'intro, garde son rythme d'avant. C'est aussi pourquoi le retard
-  est CUMULATIF : la section d'intro en gagne quinze, la suivante trente, et
+  est CUMULATIF : la section d'intro en gagne une cale, la suivante deux, et
   ainsi de suite.
 - **Une section calée sur `min-height` n'est pas retardée non plus.** Sa hauteur
   vaut alors `100svh` quoi qu'on ajoute. C'est sans conséquence : une section

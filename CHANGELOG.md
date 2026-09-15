@@ -7,6 +7,20 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.23.2
+
+### Modifié
+
+- **Les volets prennent encore plus de temps à remonter** : la marge laissée
+  avant qu'un volet ne recouvre l'écran passe de quinze à trente pixels, toujours
+  cumulée à chaque jonction — trente à la première, soixante à la suivante, et
+  ainsi de suite jusqu'à cent vingt.
+
+  > La marge avant le seuil de collage se resserre d'autant : sur une vue de
+  > 713, « les technologies » n'en a plus que douze. Un palier de plus changerait
+  > le comportement de cette section sur les écrans courts — sans défaut, mais
+  > il faudra le remesurer.
+
 ## 2.23.1
 
 ### Modifié
