@@ -236,6 +236,22 @@ L'exclusivité — un seul panneau ouvert — vient de `data-disclosure-group`, 
 le composant pose lui-même sur sa liste. Deux accordéons sur la même page sont
 donc **indépendants** l'un de l'autre, chacun exclusif chez lui.
 
+### Réamorcer la page
+
+`bin/seed-cabinet.php` remplit la page avec la copie de la maquette et les
+visuels de démonstration. **Il est idempotent** : une page déjà en place n'est
+jamais réécrite, pour que le contenu saisi survive à un redémarrage de
+conteneur. Pour la recréer volontairement :
+
+```bash
+docker compose exec php wp eval-file bin/seed-cabinet.php force
+```
+
+Il pose les **dix cadres** de la maquette, dont quatre sans image : ce sont des
+emplacements à remplir, et un cadre vide reste un cadre — c'est ce qui garde le
+rail continu. Le plan reste vide lui aussi, la maquette n'y dessinant qu'un
+aplat.
+
 ## D'où viennent les visuels de démonstration
 
 L'amorçage ne fabrique aucune image : il lit la correspondance

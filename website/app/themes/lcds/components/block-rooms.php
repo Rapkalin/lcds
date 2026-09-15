@@ -31,14 +31,11 @@ $visuals = isset($args['visuals']) && is_array($args['visuals']) ? $args['visual
 
 $rows = [];
 
+// Une ligne SANS image reste un cadre : c'est ce que la maquette dessine, et
+// c'est ce qui garde le rail continu. Le retirer creusait un trou de 82px entre
+// deux groupes là où l'écart doit valoir 12 — la recette l'a pris.
 foreach ($visuals as $visual) {
     $image = isset($visual['image']) ? (int) $visual['image'] : 0;
-
-    // Sans visuel il n'y a rien à montrer : la maquette dessine des cadres
-    // vides, mais ce sont des emplacements à remplir, pas un état à rendre.
-    if ($image === 0) {
-        continue;
-    }
 
     $rows[] = [
         'image' => $image,
@@ -66,7 +63,9 @@ $headingId = $title === '' ? '' : wp_unique_id('section-titre-');
             <ul class="block-rooms__list">
                 <?php foreach ($rows as $row) : ?>
                     <li class="block-rooms__item">
-                        <?php echo lcds_render_image($row['image'], ['class' => 'block-rooms__image'], 'large'); ?>
+                        <?php if ($row['image'] !== 0) : ?>
+                            <?php echo lcds_render_image($row['image'], ['class' => 'block-rooms__image'], 'large'); ?>
+                        <?php endif; ?>
 
                         <?php if ($row['caption'] !== '') : ?>
                             <div class="block-rooms__caption">

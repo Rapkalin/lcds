@@ -182,6 +182,7 @@ client changera de visuel.
 | Turquoise `#048B8C` sur blanc | 4,14:1 | **échec** pour du texte < 24px |
 | Orange `#E25304` sur blanc | 3,84:1 | **échec** pour du texte < 24px |
 | Blanc sur `$orange-on-text` `#C43F04` | 5,17:1 | conforme |
+| Blanc sur `$orange-hover` `#D84900` | 4,31:1 | **échec** pour du texte < 24px |
 | `#A8BED6` sur blanc | 1,91:1 | bordures et pistes seulement |
 | `#D9E4F1` sur blanc | 1,29:1 | filets seulement |
 
@@ -193,6 +194,26 @@ client changera de visuel.
 > un compromis, pas une cible : idéalement la bibliothèque Figma porte les deux
 > teintes. Même remarque pour le turquoise, qui ne doit jamais recevoir du texte
 > blanc de moins de 24px.
+
+### L'écart connu : le survol du bouton « Prendre RDV »
+
+`$orange-hover` `#D84900` est une **teinte imposée**, demandée en recette. Elle
+mesure 4,31:1 contre du blanc : conforme pour un objet graphique (seuil 3), en
+**échec de 0,19** pour du texte de 13px (seuil 4,5). L'état au repos, lui, est
+conforme — l'écart ne concerne que le survol.
+
+C'est un arbitrage, pas un oubli. Trois portes de sortie, si le design veut le
+refermer :
+
+| Piste | Effet |
+| --- | --- |
+| `#D04600` | 4,61:1, conforme — l'œil ne distingue pas les deux |
+| Survol plus SOMBRE que le repos | la direction d'avant (`#9C3203`, 7,31:1) |
+| Bouton à 24px ou plus | seuil abaissé à 3, mais la maquette dit 13px |
+
+La recette **verrouille le seuil 3** sur ce couple et écrit le rapport mesuré
+dans son libellé à chaque passage : l'écart ne peut pas se creuser sans qu'on le
+voie, et il ne peut pas non plus s'oublier.
 
 ## Ce qui n'est PAS un défaut, et pourquoi
 

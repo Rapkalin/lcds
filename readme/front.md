@@ -880,10 +880,11 @@ d'accessibilité et de l'ordre de tabulation, et rien ne le remplace. Ce qui a �
 ajouté, c'est une transition qui **survit à la bascule de `display`** :
 
 ```css
-transition: grid-template-rows .3s, opacity .25s, display .3s allow-discrete;
+transition:
+  grid-template-rows .3s, padding-top .3s, opacity .25s, display .3s allow-discrete;
 ```
 
-Quatre points, tous nécessaires :
+Six points, tous nécessaires :
 
 - **`allow-discrete`** : `display` est une propriété discrète, elle saute d'un
   coup. Sans elle la fermeture n'a pas lieu du tout — le panneau disparaît avant
@@ -896,11 +897,61 @@ Quatre points, tous nécessaires :
 - **`display: grid` sur l'état OUVERT seulement.** Déclaré sur les deux, il
   l'emporte sur le `display: none` de la feuille du navigateur et le panneau ne
   se ferme plus jamais — éprouvé, l'assertion passe au rouge.
+- **Le retrait s'anime AVEC la rangée.** Posé en dur, il survit au repliement :
+  la hauteur descend en douceur jusqu'à 24, puis tombe à 0 d'un coup au passage
+  à `display: none`, et tout ce qui suit remonte de 24px en une image. C'est le
+  saut signalé en recette.
+
+  Le déplacer sur l'enfant ne change **rien** : le retrait d'un élément de
+  grille compte dans sa contribution minimale, et la rangée ne peut pas
+  descendre sous lui. Mesuré à 24 dans les deux dispositions. Il n'y a que
+  l'animer qui le fasse disparaître.
+- **Une enveloppe, enfant UNIQUE de la grille.** `grid-template-rows` ne décrit
+  qu'une rangée : des enfants directs multiples — deux paragraphes saisis par un
+  contributeur suffisent — tombent dans des rangées implicites en `auto`, qui ne
+  se replient jamais. Mesuré : 18px de texte restaient visibles panneau fermé.
+  `components/accordion.php` et `components/tech-card.php` posent donc chacun un
+  `__body` autour du contenu contribué. **Ce n'est pas une enveloppe de
+  décoration : la retirer rouvre le défaut.**
 
 Sans prise en charge d'`allow-discrete`, tout ceci est ignoré et la bascule reste
 instantanée : c'est le comportement d'avant. Et sous `prefers-reduced-motion`,
 la transition est neutralisée — un contenu qui s'ouvre et pousse ce qui suit est
 du mouvement.
+
+### La carte de technologie : la même mécanique, deux mouvements
+
+Le panneau d'une carte de technologie suit le même contrat — `hidden` réel,
+`allow-discrete`, `@starting-style` — mais il ne pousse rien : il recouvre la
+carte. Il ne se déplie donc pas, il se **révèle**, et en deux temps distincts :
+
+| Ce qui bouge | Durée | Pourquoi |
+| --- | --- | --- |
+| Le voile, en opacité | `$reveal-fade` 0,35s | il se pose vite, sinon la photo reste lisible sous le texte |
+| Le texte, en translation de 24px | `$reveal-rise` 0,6s | il arrive après, et c'est ce retard qui fait la douceur |
+
+**C'est l'écart entre les deux durées qui porte l'effet.** Les aligner rend la
+révélation plate — la recette le verrouille.
+
+Recette relevée sur `buildcover.com` (`.hotspots-item-details`), donnée en
+référence en recette : 0,25s d'opacité pour 0,5s de translation. Allongé d'un
+cran ici, sa bulle faisant 300px de large là où notre panneau couvre la carte
+entière.
+
+Deux conséquences qu'on ne devine pas :
+
+- **`display` est mené par la PLUS LONGUE des deux durées.** Réglé sur le fondu,
+  `display: none` s'applique pendant que le texte redescend encore, et la
+  fermeture se coupe net.
+- **`[hidden]` matche déjà pendant la sortie** — c'est le passage à
+  `display: none` qui est différé, pas la pose de l'attribut. Il sert donc à
+  rendre le panneau inerte dès le premier instant de la fermeture, pour que le
+  bouton redevienne cliquable sans attendre la fin.
+
+Le titre de la carte se **croise** avec le panneau au lieu de sauter :
+`visibility` est transitionnée sans être interpolée, elle bascule donc à la fin
+vers `hidden` et au début vers `visible`. Le titre a le temps de s'effacer avant
+de quitter l'arbre, et il revient dès que le panneau part.
 
 ## Deux relevés qui ont corrigé une interprétation
 

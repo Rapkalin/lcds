@@ -9,6 +9,11 @@
  * `hidden`. Sans le `hidden`, le texte resterait dans l'arbre d'accessibilité
  * et tabulable alors qu'il est invisible.
  *
+ * L'ENVELOPPE `__body` n'est pas décorative : le voile se fond SUR PLACE, le
+ * texte REMONTE. Sans elle les deux partagent la même boîte, et la translation
+ * ferait glisser le voile en découvrant le bord de la carte. Voir
+ * assets/styles/components/tech-card.scss.
+ *
  * La maquette dessine la première carte OUVERTE. Ça se lit comme une
  * démonstration de l'état ouvert, pas comme une règle — d'où le champ.
  *
@@ -57,7 +62,9 @@ $classes .= $is_open ? ' tech-card--open' : '';
 
     <?php if ($text !== '') : ?>
         <div class="tech-card__panel" id="<?php echo esc_attr($id); ?>" <?php echo $is_open ? '' : 'hidden'; ?>>
-            <?php echo wp_kses_post($text); ?>
+            <div class="tech-card__body">
+                <?php echo wp_kses_post($text); ?>
+            </div>
         </div>
 
         <button

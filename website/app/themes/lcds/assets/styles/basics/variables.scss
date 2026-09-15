@@ -15,6 +15,12 @@ $orange: #e25304;
 // À FAIRE ARBITRER PAR LE DESIGN : idéalement la bibliothèque Figma porte les
 // deux teintes, l'une pour les aplats, l'autre pour les fonds de texte.
 $orange-on-text: #c43f04;
+// Survol du bouton d'action de l'en-tête. Teinte DEMANDÉE par le client, plus
+// claire que le repos : le bouton s'éclaire au survol au lieu de s'assombrir.
+// Elle mesure 4,31:1 contre du blanc, sous le seuil 4,5 des textes de moins de
+// 24px — le repos, lui, est conforme. À arbitrer avec le design en même temps
+// que `$orange-on-text`.
+$orange-hover: #d84900;
 $blue-pale: #f2f8ff;
 // Bordures et pistes inactives. Relevé au pixel sur les maquettes PDF.
 //
@@ -232,6 +238,23 @@ $fade: $fade-duration ease;
 // sans l'autre casse la mécanique — voir assets/scripts/app.js.
 $journey-glide: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 $spread-out: 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+// Révélation du texte d'une carte de technologie. Recette relevée sur
+// buildcover.com — `.hotspots-item-details`, donnée en référence par le
+// client : le voile se FOND, et le texte REMONTE pendant près du double du
+// temps, sur une courbe très décélérée. Ce sont deux durées distinctes, et
+// c'est l'écart entre elles qui donne l'impression de douceur ; les aligner
+// rendrait la révélation plate.
+//
+// La référence donne 0,25 et 0,5. Allongé d'un cran ici : sa bulle fait 300px
+// de large, notre panneau couvre la carte entière et demande plus de temps
+// pour se poser.
+//
+// PLANCHER : `$reveal-rise` mène la bascule de `display`, elle ne peut donc pas
+// descendre sous `$reveal-fade` — le panneau disparaîtrait avant d'avoir fini
+// de s'effacer.
+$reveal-fade: 0.35s ease;
+$reveal-rise: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+$reveal-offset: fn.toRem(24);
 $spread-in: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 // Écart ouvert par le survol. Fixe la taille du collet : au-delà, les poignées
 // de Bézier plafonnent et le collet cesse de s'allonger — voir PILL_POIGNEE_MAX

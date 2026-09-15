@@ -70,15 +70,29 @@
     overflow-y: auto;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.5));
     font-weight: var.$fw-p;
+  }
 
+  &__body {
     p + p {
       margin-top: fn.toRem(16);
     }
   }
 
   // Le titre disparaît quand le panneau est ouvert : la maquette montre l'un ou
-  // l'autre, jamais les deux.
+  // l'autre, jamais les deux. Il se CROISE avec le panneau au lieu de sauter.
+  //
+  // `visibility` est transitionnée sans être interpolée : elle bascule à la FIN
+  // vers `hidden` et au DÉBUT vers `visible`. Le titre a donc le temps de
+  // s'effacer avant de quitter l'arbre, et il revient dès que le panneau part.
+  // Sans elle, l'opacité seule laisserait un titre invisible mais cliquable.
+  &__title {
+    transition:
+      opacity var.$reveal-fade,
+      visibility var.$reveal-fade;
+  }
+
   &--open &__title {
+    opacity: 0;
     visibility: hidden;
   }
 
@@ -109,5 +123,71 @@
   // l'ouverture, comme dans l'accordéon.
   &__trigger[aria-expanded="true"] .icon-plus__bar {
     display: none;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Révélation ADOUCIE du texte.
+ *
+ * Même mécanique que l'accordéon des traitements — panneau réellement `hidden`,
+ * `display` rendue transitionnable par `allow-discrete`, état de départ fourni
+ * par `@starting-style` — mais deux mouvements au lieu d'un : le VOILE se fond
+ * sur place, le TEXTE remonte. Voir le commentaire de block-treatments.scss
+ * pour le détail de chacun de ces trois ingrédients.
+ *
+ * C'est `$reveal-rise`, la plus longue des deux durées, qui mène la bascule de
+ * `display` : réglée sur le fondu, `display: none` s'appliquerait pendant que le
+ * texte redescend encore, et la fermeture se couperait net.
+ *
+ * `[hidden]` matche DÉJÀ pendant la sortie — c'est le passage à `display: none`
+ * qui est différé, pas la pose de l'attribut. Il sert donc à rendre le panneau
+ * inerte dès le premier instant de la fermeture, pour que le bouton redevienne
+ * cliquable sans attendre la fin.
+ * ------------------------------------------------------------------------- */
+.tech-card__panel {
+  opacity: 0;
+  transition:
+    opacity var.$reveal-fade,
+    display var.$reveal-rise allow-discrete;
+
+  &[hidden] {
+    pointer-events: none;
+  }
+
+  &:not([hidden]) {
+    opacity: 1;
+  }
+}
+
+.tech-card__body {
+  transform: translate3d(0, var.$reveal-offset, 0);
+  transition: transform var.$reveal-rise;
+
+  .tech-card__panel:not([hidden]) & {
+    transform: none;
+  }
+}
+
+@starting-style {
+  .tech-card__panel:not([hidden]) {
+    opacity: 0;
+  }
+
+  .tech-card__panel:not([hidden]) .tech-card__body {
+    transform: translate3d(0, var.$reveal-offset, 0);
+  }
+}
+
+// Une apparition qui glisse EST du mouvement : qui demande à le réduire
+// retrouve la bascule instantanée d'avant.
+@media (prefers-reduced-motion: reduce) {
+  .tech-card__panel,
+  .tech-card__body,
+  .tech-card__title {
+    transition: none;
+  }
+
+  .tech-card__body {
+    transform: none;
   }
 }

@@ -1,4 +1,3 @@
-@use "sass:color";
 @use "sass:map";
 @use "../basics/variables" as var;
 @use "../basics/functions" as fn;
@@ -306,7 +305,7 @@ body:has(.hero) .site-header {
 
   &:hover,
   &:focus-visible {
-    background: color.adjust(var.$orange-on-text, $lightness: -8%);
+    background: var.$orange-hover;
   }
 }
 

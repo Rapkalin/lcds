@@ -55,9 +55,17 @@ foreach ($rows as $row) {
 $groups = [];
 
 foreach ((array) lcds_field('groupes', $page_id) as $group) {
+    if (! is_array($group)) {
+        continue;
+    }
+
     $visuals = [];
 
-    foreach ((array) ($group['visuels'] ?? []) as $visual) {
+    // `is_array` et non `?? []` : ACF rend `false` pour un répéteur sans
+    // ligne, et `(array) false` vaut `[false]` — une ligne fantôme.
+    $rows = is_array($group['visuels'] ?? null) ? $group['visuels'] : [];
+
+    foreach ($rows as $visual) {
         $visuals[] = [
             'image' => lcds_attachment_id($visual['visuel'] ?? 0),
             'caption' => trim((string) ($visual['legende'] ?? '')),

@@ -7,6 +7,55 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.22.2
+
+### Corrigé
+
+- **Plus de saut de titre en refermant un traitement.** Le retrait du panneau
+  survivait au repliement : la hauteur descendait en douceur jusqu'à 24px, puis
+  tombait à zéro d'un coup, et tout ce qui suit remontait en une image. Il
+  s'anime désormais avec le panneau.
+- **Un panneau d'accordéon de plusieurs paragraphes se referme entièrement.**
+  Seul le premier se repliait ; les suivants laissaient 18px de texte visible
+  panneau fermé.
+
+### Modifié
+
+- **Le bouton « Prendre RDV » s'éclaircit au survol** au lieu de s'assombrir,
+  sur la teinte demandée en recette `#D84900`.
+
+  > Elle mesure 4,31:1 contre du blanc, sous le seuil de 4,5 d'un texte de 13px.
+  > L'écart est assumé et consigné dans
+  > [`readme/accessibilite.md`](readme/accessibilite.md), avec trois pistes pour
+  > le refermer si le design le souhaite.
+
+- **Le texte d'une carte de technologie apparaît en douceur** : le voile se fond
+  pendant que le texte remonte, plus lentement. C'est l'écart entre les deux
+  durées qui fait la douceur, pas leur longueur.
+
+  Sous `prefers-reduced-motion`, les deux révélations restent instantanées.
+
+## 2.22.1
+
+### Corrigé
+
+- **Les visuels de démonstration retrouvent leur texte alternatif.** La commande
+  qui le posait cassait sur toute apostrophe, en silence : la médiathèque
+  repartait entièrement sans alternatives à chaque réamorçage. La recette exige
+  désormais un texte alternatif NON VIDE, là où elle se contentait de
+  l'attribut.
+- **Le réamorçage des visuels réamorce aussi les réglages.** Ils retiennent des
+  identifiants de médias — le visuel révélé du pied de page, la bande de
+  l'application — et pointaient sur des pièces jointes supprimées.
+- **Un cadre sans image reste un cadre** dans les groupes de visuels du cabinet.
+  Le retirer creusait un trou de 82px dans le rail là où l'écart doit valoir 12.
+
+### Pour les contributeurs
+
+- **La page « Le cabinet » s'amorce avec des données de démonstration**, comme
+  la page d'accueil : la copie de la maquette, les six photos qu'elle contient,
+  et les quatre emplacements qu'elle laisse à remplir.
+
 ## 2.22.0
 
 ### Ajouté

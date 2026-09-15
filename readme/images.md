@@ -108,6 +108,28 @@ champ ACF image ou identifiant, jamais une URL en dur.
 Pas de repli `<picture>`/JPEG : le WebP est pris en charge par tous les
 navigateurs actuels.
 
+## Le texte alternatif se pose avec `wp post meta update`
+
+`bin/seed-demo.sh` l'écrivait par `wp eval`, et le titre y traversait trois
+niveaux de guillemets : la chaîne PHP cassait dès qu'il portait une apostrophe.
+L'erreur partait dans `/dev/null`, et **toute la médiathèque repartait sans
+texte alternatif** — quatorze visuels, sans que rien ne le signale.
+
+Deux leçons, toutes deux appliquées :
+
+- la commande dédiée prend la valeur en ARGUMENT, sans passer par une chaîne à
+  échapper ; l'échec y est désormais compté comme les autres ;
+- **la recette exige un `alt` NON VIDE** sur les visuels de contenu. Sa
+  présence ne suffisait pas : `alt=""` porte bien l'attribut. Le thème ne
+  produit aucune image décorative, un alt vide y signale donc une donnée
+  manquante et non un choix.
+
+> Même piège, même famille : `bin/seed-demo.sh --force` supprime les pièces
+> jointes et les réimporte sous de nouveaux identifiants. Tout ce qui en retient
+> un doit être réamorcé DERRIÈRE — les pages, mais aussi **les réglages**, qui
+> portent le visuel révélé du pied de page et la bande de l'application. Oublié,
+> quatorze assertions de recette se sont tues d'un coup sans qu'aucune rougisse.
+
 ## Médias déjà en base
 
 Les images téléversées **avant** l'activation du module n'ont pas de sous-tailles

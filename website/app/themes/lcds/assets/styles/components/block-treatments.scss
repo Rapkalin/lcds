@@ -111,9 +111,6 @@
     background: var.$blue-veil;
   }
 
-  &__panel {
-    padding-top: fn.toRem(24);
-  }
 }
 
 /* ------------------------------------------------------------------------- *
@@ -145,13 +142,29 @@
  * ------------------------------------------------------------------------- */
 .accordion__panel {
   grid-template-rows: 0fr;
+  // Le retrait s'anime AVEC la rangée. Posé en dur, il survivait au repliement
+  // et donnait le saut signalé en recette : la hauteur descendait en douceur
+  // jusqu'à 24, puis tombait à 0 d'un coup au passage à `display: none`, et
+  // tout ce qui suit remontait de 24px en une image.
+  //
+  // Le déplacer sur l'enveloppe ne change rien : le retrait d'un élément de
+  // grille compte dans sa contribution minimale, et la rangée ne peut pas
+  // descendre sous lui. Mesuré à 24 dans les DEUX dispositions. Il n'y a que
+  // l'animer qui le fasse disparaître.
+  padding-top: 0;
   opacity: 0;
   overflow: hidden;
   transition:
     grid-template-rows 0.3s ease,
+    padding-top 0.3s ease,
     opacity 0.25s ease,
     display 0.3s allow-discrete;
 
+  // L'enveloppe est l'enfant UNIQUE de cette grille, et c'est toute sa raison
+  // d'être : `grid-template-rows` ne décrit qu'UNE rangée, et des enfants
+  // directs multiples — deux paragraphes saisis par un contributeur suffisent —
+  // tomberaient dans des rangées implicites en `auto`, qui ne se replient
+  // jamais. Mesuré : 18px de texte restaient visibles panneau fermé.
   > * {
     min-height: 0;
   }
@@ -159,6 +172,7 @@
   &:not([hidden]) {
     display: grid;
     grid-template-rows: 1fr;
+    padding-top: fn.toRem(24);
     opacity: 1;
   }
 }
@@ -166,6 +180,7 @@
 @starting-style {
   .accordion__panel:not([hidden]) {
     grid-template-rows: 0fr;
+    padding-top: 0;
     opacity: 0;
   }
 }

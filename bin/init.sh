@@ -178,6 +178,10 @@ echo "==> [init] Page d'accueil"
 wp eval-file "$APP_DIR/bin/seed-homepage.php" --allow-root || \
     echo "!!! [init] Amorçage de la page d'accueil échoué (ignoré)."
 
+echo "==> [init] Page « Le cabinet »"
+wp eval-file "$APP_DIR/bin/seed-cabinet.php" --allow-root || \
+    echo "!!! [init] Amorçage de la page du cabinet échoué (ignoré)."
+
 # -----------------------------------------------------------------------------
 # 8) Cache pleine page (WP Super Cache) : réconcilié avec WP_CACHE à chaque
 #    démarrage. Livré désactivé. L'activation génère le drop-in

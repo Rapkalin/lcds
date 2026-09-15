@@ -72,4 +72,26 @@ if (isset($media_map['gallery-5'])) {
 
 update_field('cadrage', LcdsFocalPoint::Center->value, 'option');
 
-WP_CLI::log('==> [init] Réglages du pied de page amorcés (3 blocs d’appel).');
+/**
+ * La bande de l'application, qui vit avec le pied de page et suit donc toutes
+ * les pages. Relevée sur `CABINET/LCDS_cabinet.pdf`.
+ *
+ * Le QR code de la maquette pointe vers une destination inconnue : le lien
+ * reste un `#`, à remplacer par l'adresse réelle de l'application.
+ *
+ * DEUX MAQUETTES, DEUX TEXTES pour la même bande : `HP_06` écrit « Dentapoche :
+ * l'app mobile » sur deux lignes, `LCDS_cabinet` « Dentapoche : l'application
+ * mobile » sur trois. C'est la version de l'accueil qui est retenue — les cotes
+ * du bloc ont été relevées sur elle, et la troisième ligne descend le QR code
+ * de 58px. À trancher avec le designer.
+ */
+update_field('application', [
+    'etiquette' => 'l’app mobile',
+    'puce' => 'orange',
+    'titre' => 'Dentapoche : l’app mobile',
+    'visuel' => $media_map['app-visuel'] ?? '',
+    'code' => $media_map['app-qr'] ?? '',
+    'lien' => ['title' => 'Télécharger Dentapoche', 'url' => $stub, 'target' => ''],
+], 'option');
+
+WP_CLI::log('==> [init] Réglages du pied de page amorcés (3 blocs d’appel, bande application).');

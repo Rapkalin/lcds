@@ -821,11 +821,14 @@ window.runFrontQa = async (win) => {
         const pressees = visuels.filter((image) => image.getAttribute("loading") !== "lazy");
         const basses = pressees.filter((image) => image.getBoundingClientRect().top >= win.innerHeight);
 
+        // Aucun visuel immédiat est LÉGITIME : la page du cabinet n'en a aucun
+        // au-dessus de la ligne de flottaison tant que son plan n'est pas
+        // fourni. Ce qui ne l'est pas, c'est un visuel immédiat posé plus bas.
         assert(
             `visuels : ${visuels.length - pressees.length} sur ${visuels.length} en chargement différé,`
             + ` ${pressees.length} immédiats et tous au-dessus de la ligne de flottaison`
             + ` (${basses.length === 0 ? "oui" : basses.map((n) => n.className.split(" ")[0]).join(", ")})`,
-            pressees.length > 0 && basses.length === 0
+            basses.length === 0
         );
 
         // Le plus grand visuel du premier écran porte la priorité : c'est lui
@@ -834,12 +837,13 @@ window.runFrontQa = async (win) => {
             .slice()
             .sort((a, b) => (b.naturalWidth * b.naturalHeight) - (a.naturalWidth * a.naturalHeight))[0] ?? null;
 
-        assert(
-            `visuels : le plus grand visuel du premier écran est priorisé`
-            + ` (${premier === null ? "absent" : premier.className.split(" ")[0]}`
-            + ` : ${premier === null ? "-" : premier.getAttribute("fetchpriority")})`,
-            premier !== null && premier.getAttribute("fetchpriority") === "high"
-        );
+        if (premier !== null) {
+            assert(
+                `visuels : le plus grand visuel du premier écran est priorisé`
+                + ` (${premier.className.split(" ")[0]} : ${premier.getAttribute("fetchpriority")})`,
+                premier.getAttribute("fetchpriority") === "high"
+            );
+        }
     }
 
     /* --------------------------------------------------------------------- *
@@ -2570,6 +2574,38 @@ window.runFrontQa = async (win) => {
             `accordéon : mouvement réduit, bascule instantanée (${styleOf(doc.querySelector(".accordion__panel")).transitionDuration})`,
             parseFloat(styleOf(doc.querySelector(".accordion__panel")).transitionDuration) === 0
         );
+
+        /*
+         * AUCUN SAUT à la toute fin du repliement.
+         *
+         * La dernière image du repliement est l'état fermé ENCORE AFFICHÉ :
+         * l'attribut `hidden` est posé — les règles de l'état fermé
+         * s'appliquent donc — mais `display: none` est différé par
+         * `allow-discrete`. Ce qui reste de hauteur à cet instant précis
+         * disparaît d'un coup à l'image suivante, et c'est exactement le saut
+         * signalé en recette.
+         *
+         * L'état est reconstitué ici plutôt qu'attendu : la campagne force
+         * `prefers-reduced-motion`, la transition n'a donc pas lieu et il n'y a
+         * rien à observer au fil du temps. Un `display` en ligne suffit à
+         * remettre la boîte de rendu que `[hidden]` lui retire.
+         *
+         * Mesuré à 24 — le retrait du panneau — avant correction, dans les deux
+         * dispositions essayées : retrait sur le panneau, puis sur l'enveloppe.
+         */
+        const panneauSaut = doc.querySelector(".accordion__panel");
+        const etatSaut = { hidden: panneauSaut.hidden, display: panneauSaut.style.display };
+
+        panneauSaut.hidden = true;
+        panneauSaut.style.display = "grid";
+        const residu = panneauSaut.getBoundingClientRect().height;
+        panneauSaut.hidden = etatSaut.hidden;
+        panneauSaut.style.display = etatSaut.display;
+
+        assert(
+            `accordéon : rien ne reste à replier au passage à display:none (${residu.toFixed(2)}px)`,
+            residu === 0
+        );
     }
 
     // Le panneau de la carte de technologie suit le MÊME contrat que
@@ -2591,6 +2627,108 @@ window.runFrontQa = async (win) => {
         assert(
             "carte de technologie : le second clic retire le texte de l'arbre",
             carte.getAttribute("aria-expanded") === "false" && panneauCarte.hasAttribute("hidden")
+        );
+
+        /*
+         * RÉVÉLATION ADOUCIE. Deux mouvements distincts, et c'est leur ÉCART
+         * qui fait la douceur : le voile se fond, le texte remonte pendant
+         * près du double du temps. Les aligner rendrait la révélation plate.
+         *
+         * Comme pour l'accordéon, la campagne force `prefers-reduced-motion` :
+         * on lit la RÈGLE, et on éprouve à côté que la neutralisation est bien
+         * celle qui s'applique ici.
+         */
+        const dureeVoile = trouverRegle(doc, ".tech-card__panel", (regle) => {
+            const valeur = regle.style.transition;
+
+            return valeur !== "" && valeur !== "none" && valeur.includes("opacity") ? valeur : null;
+        });
+        const dureeTexte = trouverRegle(doc, ".tech-card__body", (regle) => {
+            const valeur = regle.style.transition;
+
+            return valeur !== "" && valeur !== "none" && valeur.includes("transform") ? valeur : null;
+        });
+        const secondes = (valeur, propriete) => {
+            const trouve = new RegExp(propriete + "\\s+([\\d.]+)s").exec(valeur || "");
+
+            return trouve === null ? 0 : parseFloat(trouve[1]);
+        };
+
+        assert(
+            `carte de technologie : le voile se fond (${dureeVoile})`,
+            secondes(dureeVoile, "opacity") > 0
+        );
+        // `display` mène la sortie : réglée sur le fondu, elle couperait net la
+        // remontée du texte, qui dure plus longtemps.
+        assert(
+            "carte de technologie : display différé au moins aussi longtemps que la remontée",
+            secondes(dureeVoile, "display") >= secondes(dureeTexte, "transform")
+                && secondes(dureeVoile, "display") > 0
+        );
+        assert(
+            `carte de technologie : le texte remonte plus lentement que le voile (${dureeTexte})`,
+            secondes(dureeTexte, "transform") > secondes(dureeVoile, "opacity")
+        );
+        /*
+         * Sans décalage de départ il n'y a pas de remontée du tout, seulement
+         * un fondu : c'est le décalage qui porte le mouvement demandé.
+         *
+         * Le sélecteur doit être lu EXACTEMENT. `trouverRegle` cherche par
+         * inclusion, et trouvait alors le décalage dans la règle
+         * `@starting-style`, dont le sélecteur contient lui aussi
+         * `.tech-card__body` : l'assertion restait verte alors que l'état fermé
+         * n'avait plus aucun décalage. Éprouvé — la mutation a survécu.
+         *
+         * Le DOM ne peut pas répondre à sa place : la campagne force
+         * `prefers-reduced-motion`, où le décalage est neutralisé exprès.
+         */
+        const decalage = (() => {
+            const fouiller = (liste) => {
+                for (const regle of Array.from(liste || [])) {
+                    if (typeof regle.selectorText === "string"
+                        && regle.selectorText.trim() === ".tech-card__body"
+                        && regle.style.transform !== ""
+                        && regle.style.transform !== "none") {
+                        return regle.style.transform;
+                    }
+
+                    if (regle.cssRules !== undefined) {
+                        const imbrique = fouiller(regle.cssRules);
+
+                        if (imbrique !== null) {
+                            return imbrique;
+                        }
+                    }
+                }
+
+                return null;
+            };
+
+            for (const feuille of Array.from(doc.styleSheets)) {
+                let trouve = null;
+
+                try {
+                    trouve = fouiller(feuille.cssRules);
+                } catch (erreur) {
+                    trouve = null;
+                }
+
+                if (trouve !== null) {
+                    return trouve;
+                }
+            }
+
+            return null;
+        })();
+        assert(
+            `carte de technologie : le texte part décalé vers le bas (${decalage})`,
+            typeof decalage === "string" && /[1-9]/.test(decalage)
+        );
+        assert(
+            `carte de technologie : mouvement réduit, révélation instantanée (${styleOf(panneauCarte).transitionDuration})`,
+            parseFloat(styleOf(panneauCarte).transitionDuration) === 0
+                && panneauCarte.querySelector(".tech-card__body") !== null
+                && styleOf(panneauCarte.querySelector(".tech-card__body")).transform === "none"
         );
     }
 
@@ -3153,6 +3291,40 @@ window.runFrontQa = async (win) => {
         insuffisants.length === 0
     );
 
+    /* --------------------------------------------------------------------- *
+     * Le SURVOL du bouton d'action, que la boucle ci-dessus ne voit pas :
+     * `getComputedStyle` ne rend que l'état au repos.
+     *
+     * La teinte est IMPOSÉE par le design (#D84900, retour client). Elle mesure
+     * 4,31:1 contre du blanc, sous le seuil 4,5 d'un texte de 13px : l'écart
+     * est connu, arbitré, et consigné dans readme/accessibilite.md. Ce qui est
+     * verrouillé ici, c'est qu'il ne se creuse pas davantage sans qu'on le
+     * voie — le rapport est écrit dans le libellé, à chaque passage.
+     * --------------------------------------------------------------------- */
+    const ctaSurvol = doc.querySelector(".site-header__cta a");
+
+    if (ctaSurvol !== null) {
+        const fondSurvol = couleur(trouverRegle(doc, ".site-header__cta a:hover", (regle) => {
+            const valeur = regle.style.backgroundColor || regle.style.background;
+
+            return valeur !== "" ? valeur : null;
+        }));
+        const texteCta = couleur(styleOf(ctaSurvol).color);
+        const rapport = fondSurvol === null || texteCta === null
+            ? 0
+            : contraste(fondSurvol.rgb, texteCta.rgb);
+
+        assert(
+            `bouton d'action : survol sur la teinte arbitrée par le design (${fondSurvol === null ? "RÈGLE INTROUVABLE" : fondSurvol.rgb.join(", ")})`,
+            fondSurvol !== null
+                && fondSurvol.rgb[0] === 216 && fondSurvol.rgb[1] === 73 && fondSurvol.rgb[2] === 0
+        );
+        assert(
+            `bouton d'action : contraste au survol (${rapport.toFixed(2)}:1, sous le seuil 4,5 — écart assumé, seuil 3 verrouillé)`,
+            rapport >= 3
+        );
+    }
+
     // -- Prise de focus : chaque contrôle affiché doit apparier :focus-visible.
     const focusables = Array.from(doc.querySelectorAll(
         'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex^="-"])'
@@ -3176,6 +3348,22 @@ window.runFrontQa = async (win) => {
     assert(
         `attribut alt présent sur les ${images.length} images`,
         images.every((image) => image.hasAttribute("alt"))
+    );
+
+    // Et il ne doit pas être VIDE sur un visuel de contenu. Un `alt=""` déclare
+    // une image décorative : le thème n'en produit aucune, il les rend toutes
+    // depuis la médiathèque. Un alt vide y signale donc une donnée manquante,
+    // pas un choix.
+    //
+    // L'assertion de présence ci-dessus ne l'attrapait pas : `alt=""` porte
+    // bien l'attribut. Constaté en réamorçant la médiathèque — les quatorze
+    // visuels en étaient repartis sans, et rien ne l'avait signalé.
+    const muettes = images.filter((image) => (image.getAttribute("alt") ?? "").trim() === "");
+
+    assert(
+        `aucun visuel de contenu sans texte alternatif`
+        + ` (${muettes.length === 0 ? "aucun" : muettes.map((n) => n.className.split(" ")[0] || n.src.split("/").pop()).join(", ")})`,
+        muettes.length === 0
     );
 
     // -- Plan de titres : un seul h1, aucun saut de niveau.

@@ -16,6 +16,12 @@
  *                  À ajuster selon la page : un accordéon posé directement sous
  *                  le `h1` prend `h2`, sinon la hiérarchie saute un niveau.
  *
+ * L'ENVELOPPE `__body` n'est pas décorative : `grid-template-rows` ne décrit
+ * qu'une rangée, et des enfants directs multiples — deux paragraphes saisis par
+ * un contributeur suffisent — tomberaient dans des rangées implicites en `auto`,
+ * qui ne se replient jamais. Mesuré : 18px de texte restaient visibles panneau
+ * fermé. La retirer rouvre le défaut. Voir block-treatments.scss.
+ *
  * L'EXCLUSIVITÉ est portée par `data-disclosure-group` sur la liste, et le
  * script s'en sert pour refermer les voisins. Sans cet attribut, les panneaux
  * seraient indépendants : c'est donc le conteneur qui déclare la règle, pas le
@@ -63,7 +69,9 @@ $heading = in_array($heading, ['h2', 'h3', 'h4'], true) ? $heading : 'h3';
             </<?php echo $heading; ?>>
 
             <div class="accordion__panel" id="<?php echo esc_attr($id); ?>" <?php echo $isOpen ? '' : 'hidden'; ?>>
-                <?php echo wp_kses_post($text); ?>
+                <div class="accordion__body">
+                    <?php echo wp_kses_post($text); ?>
+                </div>
             </div>
         </li>
     <?php endforeach; ?>
