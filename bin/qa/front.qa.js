@@ -262,15 +262,31 @@ window.runFrontQa = async (win) => {
         }
 
         if (voletsSuivants.length >= 2) {
+            /*
+             * LA CALE PORTE LE RETARD **ET** LE DÉLAI.
+             *
+             * Les deux s'y ajoutent, et pour des raisons différentes : le retard
+             * allonge la section, le délai descend la SUIVANTE — `hauteurUtile`
+             * le déduit de son côté, si bien que la course utile ne bouge pas.
+             *
+             * C'est cette addition qu'on vérifie, en retranchant le délai de
+             * chaque cale : il doit rester le MÊME retard partout. Un délai
+             * déduit sans être ajouté donnerait le même écart à l'écran — et
+             * rapprocherait chaque section du seuil de collage sans que rien ne
+             * le dise. Éprouvé : sans ce retranchement, la mutation survivait.
+             */
             const cale = (section) => parseFloat(
                 win.getComputedStyle(section, "::after").height
             );
             const cales = voletsSuivants.map(cale);
-            const sansCale = cales.filter((valeur) => !(valeur > 0));
+            const retards = voletsSuivants.map((section, rang) => Math.round(
+                cales[rang] - (parseFloat(styleOf(section).getPropertyValue("--volet-delai")) || 0)
+            ));
+            const memeRetard = retards.every((valeur) => valeur === retards[0]);
 
             assert(
-                `volet : chaque section porte sa cale de retard (${cales.map((v) => v.toFixed(0)).join(", ")})`,
-                sansCale.length === 0
+                `volet : chaque section porte le même retard, délai déduit (${retards.join(", ")} pour des cales de ${cales.map((v) => v.toFixed(0)).join(", ")})`,
+                retards[0] > 0 && memeRetard
             );
 
             /*
@@ -814,13 +830,12 @@ window.runFrontQa = async (win) => {
         const decalages = [];
 
         for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
-            // Une section qui se TERMINE par un rail épinglé est finie de lire
-            // au bas de sa réserve, pas au bas de la section — voir initVolets.
-            const epingle = noeud.lastElementChild !== null
-                && noeud.lastElementChild.classList.contains("carousel-pin--active");
-            const utile = epingle
-                ? noeud.offsetHeight - (parseFloat(styleOf(noeud).paddingBottom) || 0)
-                : noeud.offsetHeight;
+            // La hauteur UTILE : la boîte, moins le chevauchement, moins le
+            // délai. Une section figée sur sa boîte laisse voir 48px du volet
+            // avant d'avoir fini — voir `hauteurUtile` dans app.js.
+            const utile = noeud.offsetHeight
+                - (parseFloat(styleOf(noeud).borderTopLeftRadius) || 0)
+                - (parseFloat(styleOf(noeud).getPropertyValue("--volet-delai")) || 0);
             const course = win.innerHeight - utile;
             // La borne vaut le menu PLUS le rembourrage haut de la section,
             // où vit son étiquette. Le seul menu laissait un pire cas juste
@@ -886,6 +901,74 @@ window.runFrontQa = async (win) => {
         assert(
             `volet : des sections se figent encore (${figees.length === 0 ? "AUCUNE" : figees.join(", ")})`,
             figees.length > 0
+        );
+
+        /*
+         * LE VOLET ENTRE PILE QUAND LA SECTION SE FIGE — aucun bout visible
+         * avant.
+         *
+         * C'est la propriété que voit le lecteur, et elle a été demandée trois
+         * fois, sur trois sections. Le chevauchement place le haut de la
+         * suivante 48px au-dessus du bas de celle-ci ; si le figeage se cale sur
+         * la boîte, ces 48px sont à l'écran avant que la section soit finie.
+         *
+         * Le figeage tombe à `docTop − pose` et l'entrée du volet à
+         * `docSuivant − vue` : les deux coïncident si et seulement si l'écart
+         * des deux hauts vaut `vue − pose`. C'est ce qui est vérifié, sans
+         * refaire le calcul de `hauteurUtile` — une assertion qui le recopierait
+         * ne verrait pas une erreur commune aux deux.
+         */
+        const tardifs = [];
+
+        for (let noeud = heroVolet.nextElementSibling; noeud !== null; noeud = noeud.nextElementSibling) {
+            const pose = parseFloat(noeud.style.getPropertyValue("--volet-top"));
+            const suivant = noeud.nextElementSibling;
+
+            if (! Number.isFinite(pose) || pose >= 0 || suivant === null) {
+                continue;
+            }
+
+            const ecart = suivant.getBoundingClientRect().top - noeud.getBoundingClientRect().top;
+            // Négatif : le volet est SOUS la vue au moment du figeage, et il lui
+            // reste ce nombre de pixels avant d'attaquer. C'est le délai
+            // demandé, nul sur les sections dont le défilement pilote déjà
+            // quelque chose.
+            const attendu = -Math.round(parseFloat(styleOf(noeud).getPropertyValue("--volet-delai")) || 0);
+            const visible = Math.round(win.innerHeight - pose - ecart);
+
+            if (Math.abs(visible - attendu) > 1) {
+                tardifs.push(`${noeud.className.split(" ")[0]} ${visible} au lieu de ${attendu}`);
+            }
+        }
+
+        assert(
+            `volet : le suivant démarre pile après le délai, jamais avant`
+            + ` (${tardifs.length === 0 ? "toutes justes" : tardifs.join(", ")})`,
+            tardifs.length === 0
+        );
+
+        /*
+         * AUCUN DÉLAI là où le défilement PILOTE déjà quelque chose.
+         *
+         * L'assertion ci-dessus ne peut pas le voir : elle compare le délai
+         * DÉCLARÉ à celui qu'on mesure, donc les deux bougent ensemble. Éprouvé
+         * — la mutation qui étend le délai aux sections pilotées y survivait.
+         *
+         * C'est une DÉCISION qu'on verrouille ici, et elle vient de deux retours
+         * de recette : sur la galerie et sur le parcours, ce même écart après la
+         * fin de l'animation avait été signalé comme un défaut.
+         */
+        const pilotees = Array.from(
+            doc.querySelectorAll(".front-page > .journey, .front-page > :has(> [data-carousel-pin]:last-child)")
+        );
+        const avecDelai = pilotees.filter(
+            (noeud) => (parseFloat(styleOf(noeud).getPropertyValue("--volet-delai")) || 0) !== 0
+        );
+
+        assert(
+            `volet : aucun délai sur les ${pilotees.length} sections pilotées par le défilement`
+            + ` (${avecDelai.length === 0 ? "aucune" : avecDelai.map((n) => n.className.split(" ")[0]).join(", ")})`,
+            pilotees.length >= 2 && avecDelai.length === 0
         );
 
         /*

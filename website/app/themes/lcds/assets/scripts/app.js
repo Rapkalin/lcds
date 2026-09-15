@@ -368,34 +368,43 @@ const initAccordions = () => {
 };
 
 /**
- * Hauteur UTILE d'une section : celle sur laquelle son défilement fait un travail.
+ * Hauteur UTILE d'une section : celle au bout de laquelle le volet suivant doit
+ * commencer à la recouvrir.
  *
- * Une section dont le défilement PILOTE quelque chose — un rail qui avance, des
- * étapes qui glissent — est finie quand ce travail est fini, pas quand sa boîte
- * l'est. Son dernier rembourrage n'est alors pas de la course : c'est l'amorce
- * que le volet vient occuper, et la feuille de style la fixe EXACTEMENT au
- * chevauchement de section pour que les deux instants coïncident.
+ * Elle vaut la boîte MOINS LE CHEVAUCHEMENT. Chaque section chevauche la
+ * précédente de son rayon — sans quoi l'encoche des coins arrondis laisserait
+ * voir deux oreilles claires. Le haut de la suivante est donc toujours 48px
+ * au-dessus du bas de celle-ci, et une section figée sur sa BOÎTE laissait voir
+ * ces 48px avant même d'avoir fini. Retour de recette, trois fois, sur trois
+ * sections différentes : la galerie, le parcours, puis les traitements.
+ *
+ * Ces 48px ne sont pas du contenu : ils vivent dans le rembourrage bas, que la
+ * section suivante recouvre de toute façon. Les déduire ne cache rien — ça
+ * avance seulement le figeage du moment où le volet ENTRE dans la vue, si bien
+ * qu'il part de zéro sur une section immobile.
+ *
+ * LE RAYON, et non une constante : c'est la même valeur qui sert de marge
+ * négative entre deux sections. Les écrire deux fois les laisserait diverger, et
+ * le volet réapparaîtrait au premier changement d'arrondi.
+ *
+ * Deux sections y ajoutent un rembourrage bas EXPLICITE de la même valeur — la
+ * galerie épinglée et le parcours de soin — pour que leur fin de course tombe
+ * elle aussi sur ce point. Voir pages/homepage.scss et block-journey.scss.
+ *
+ * S'y ajoute `--volet-delai`, qui fait partir le volet de PLUS BAS ENCORE : la
+ * section se fige, et il reste ce nombre de pixels avant qu'il n'attaque. La
+ * feuille de style le met à zéro sur les sections dont le défilement pilote déjà
+ * quelque chose — là, ce même écart avait été signalé comme un défaut.
  *
  * TROIS mécaniques lisent cette hauteur et ne peuvent pas diverger : l'avancement
- * du parcours, son verrou de molette, et le décalage de collage des volets. Les
- * trois répondaient à `offsetHeight` et la section se finissait donc 48px après
- * son dernier écran — le volet apparaissait pendant la dernière étape.
- *
- * Les deux marqueurs sont posés par le script, jamais par le gabarit : c'est
- * l'épinglage EFFECTIF qui compte, pas l'intention. Sous mouvement réduit ou en
- * dessous de la tablette, rien n'est épinglé et la boîte fait foi.
+ * du parcours, son verrou de molette, et le décalage de collage des volets.
  */
 const hauteurUtile = (section) => {
-    const dernier = section.lastElementChild;
-    const amorce = section.classList.contains("journey--pinned")
-        || (dernier !== null && dernier.classList.contains("carousel-pin--active"));
-
-    if (! amorce) {
-        return section.offsetHeight;
-    }
+    const style = window.getComputedStyle(section);
 
     return section.offsetHeight
-        - (parseFloat(window.getComputedStyle(section).paddingBottom) || 0);
+        - (parseFloat(style.borderTopLeftRadius) || 0)
+        - (parseFloat(style.getPropertyValue("--volet-delai")) || 0);
 };
 
 /**

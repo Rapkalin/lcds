@@ -7,6 +7,37 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.24.0
+
+### Ajouté
+
+- **Le volet marque un temps avant de recouvrir la section.** Il part désormais
+  de 80 pixels sous l'écran : quand on arrive au bas d'une section, elle se fige,
+  et il reste ce chemin avant que le volet n'attaque.
+
+  > Sauf sur « l'histoire » et « le parcours de soin », où le défilement pilote
+  > déjà une animation : là, le volet prend le relais sans temps mort — ce même
+  > écart y avait été signalé comme un défaut.
+
+  Le réglage vit dans un seul jeton, `$volet-delai`, distinct de `$volet-retard`
+  qui allonge la section elle-même.
+
+## 2.23.5
+
+### Corrigé
+
+- **On ne voit plus un bout du volet avant d'avoir fini une section**, et cette
+  fois sur TOUTES les sections. Le volet part désormais de zéro, au moment précis
+  où la section se fige, et il n'entame sa remontée qu'ensuite.
+
+  > Les 48 pixels qu'on apercevait sont le chevauchement que chaque section a
+  > avec la précédente. La règle posée ponctuellement sur la galerie puis sur le
+  > parcours est devenue générale : une section est finie quand son travail
+  > l'est, pas quand sa boîte l'est.
+
+  Le délai avant que le volet ne recouvre, lui, vient du rembourrage bas de la
+  section et de sa cale de retard — 110 pixels sur « les différents traitements ».
+
 ## 2.23.4
 
 ### Corrigé

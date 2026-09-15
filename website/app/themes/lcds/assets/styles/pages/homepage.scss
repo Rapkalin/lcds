@@ -42,6 +42,11 @@
   // 5500, et les figer à une vue rendrait leur fin inatteignable.
   min-height: 100svh;
   border-radius: var.$radius-section var.$radius-section 0 0;
+  // Lu par le script pour savoir de combien le volet part sous l'écran — voir
+  // `hauteurUtile` dans app.js. Déclaré ici plutôt qu'écrit dans le script :
+  // les deux sections qui l'annulent le font déjà en CSS, à côté du reste de
+  // leur géométrie.
+  --volet-delai: #{var.$volet-delai};
   // Sans elle, l'arrondi ne se voit pas entre deux sections de même couleur —
   // et elles le sont presque toutes. Voir `$volet-shadow`.
   box-shadow: var.$volet-shadow;
@@ -74,7 +79,14 @@
  * ------------------------------------------------------------------------- */
 .front-page > *:not(.hero, .screen-reader-text)::after {
   display: block;
-  height: var.$volet-retard;
+  // DEUX cales en une, et elles ne font pas la même chose :
+  //   — le RETARD allonge la section, donc le chemin jusqu'à sa fin ;
+  //   — le DÉLAI descend la section SUIVANTE sans toucher à la fin de celle-ci,
+  //     parce que `hauteurUtile` le déduit de son côté.
+  // C'est ce qui permet au délai de ne pas rapprocher la section du seuil de
+  // collage : sa course utile ne bouge pas. Mesuré — déduit sans être ajouté,
+  // il faisait perdre son volet aux traitements dès 826px de vue.
+  height: calc(#{var.$volet-retard} + var(--volet-delai, 0px));
   content: "";
 }
 
@@ -103,6 +115,29 @@
  * la règle entière, et retombe alors sur le comportement d'avant plutôt que de
  * perdre aussi les déclarations voisines.
  * ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- *
+ * AUCUN DÉLAI sur une section dont le défilement pilote déjà quelque chose.
+ *
+ * On vient d'y finir une animation — le rail horizontal, la dernière étape — et
+ * on attend la suite. Le même écart y avait été signalé comme un DÉFAUT, deux
+ * fois. Ailleurs il est demandé : voir `$volet-delai`.
+ *
+ * Les deux exceptions vivent ICI, et non dans la feuille de chaque composant :
+ * la règle qu'elles renversent est juste au-dessus, à spécificité égale, et
+ * c'est l'ordre qui tranche. Posée dans `block-journey.scss`, l'exception du
+ * parcours PERDAIT — mesuré, le délai s'y appliquait quand même.
+ *
+ * Accrochées à des marqueurs STRUCTURELS — la classe du gabarit, l'attribut du
+ * composant — et non aux classes que le script pose à l'épinglage. Celles-ci
+ * n'existent ni avant que le script ne tourne, ni sous mouvement réduit : la
+ * recette voyait alors ces sections avec le délai des autres, et n'aurait pas
+ * vu l'exception disparaître.
+ * ------------------------------------------------------------------------- */
+.front-page > .journey,
+.front-page > *:has(> [data-carousel-pin]:last-child) {
+  --volet-delai: 0px;
+}
+
 .front-page > *:has(> .carousel-pin--active:last-child) {
   padding-bottom: var.$radius-section;
 

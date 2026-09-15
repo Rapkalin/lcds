@@ -240,6 +240,30 @@ $radius-section: fn.toRem(48);
  * d'image — voir block-rooms.scss.
  * ------------------------------------------------------------------------- */
 $volet-retard: 30px;
+/* ---------------------------------------------------------------------------
+ * Délai entre le moment où la section est FINIE et celui où le volet commence à
+ * la recouvrir.
+ *
+ * À NE PAS CONFONDRE avec `$volet-retard` ci-dessus, même si les deux « donnent
+ * du temps » :
+ *   — le RETARD allonge la section, donc le chemin jusqu'à sa fin ;
+ *   — le DÉLAI creuse un écart APRÈS sa fin, la section étant déjà figée.
+ *
+ * Il fait donc partir le volet de plus bas : il remonte depuis sous l'écran au
+ * lieu d'attaquer aussitôt. Retour de recette : « quand le scroll touche le
+ * bottom d'une section, le volet démarre directement ».
+ *
+ * CE DÉLAI EST DU DÉFILEMENT STATIQUE. La section est figée, le volet est encore
+ * sous la vue : rien ne bouge à l'écran pendant ces pixels. C'est voulu ici, et
+ * c'est pourquoi la valeur reste modeste — au-delà, ça ne se lit plus comme une
+ * respiration mais comme un défilement qui ne répond pas.
+ *
+ * NUL sur une section dont le défilement PILOTE déjà quelque chose — la galerie
+ * épinglée, le parcours de soin. Là, le même écart avait été signalé comme un
+ * défaut : on venait de finir une animation et on attendait la suite. Ces
+ * sections posent `--volet-delai: 0`.
+ * ------------------------------------------------------------------------- */
+$volet-delai: 80px;
 // Ombre portée au-dessus d'une section empilée.
 //
 // AJOUT HORS MAQUETTE, assumé. Quatre des cinq sections de l'accueil partagent

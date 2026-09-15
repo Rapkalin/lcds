@@ -251,6 +251,15 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   vaut **toujours le rayon de section**. La seconde assertion est la vraie : la
   cale écrite en `margin-bottom` paraît équivalente et rogne le chevauchement
   d'autant, rouvrant les oreilles claires. Éprouvé — la mutation le mesure.
+- **Le délai du volet**, sur trois assertions complémentaires : il démarre pile
+  après le délai déclaré ; les sections pilotées par le défilement n'en ont
+  AUCUN ; et la cale porte le même retard partout une fois le délai retranché.
+  Les deux premières ne suffisaient pas — la première compare le déclaré au
+  mesuré, donc les deux bougent ensemble, et deux mutations y survivaient.
+- **Rien du volet suivant n'est visible quand une section se fige** — la
+  propriété que voit le lecteur, demandée trois fois. Vérifiée sans refaire le
+  calcul de `hauteurUtile` : une assertion qui le recopierait ne verrait pas une
+  erreur commune aux deux.
 - **Le volet du parcours entre au bout de la course, pas avant** : le haut de la
   section suivante tombe exactement à la fin de la course, et l'amorce vaut le
   chevauchement. L'assertion vérifie la CONSÉQUENCE, pas la recette — une amorce

@@ -936,10 +936,9 @@ encore changer, et rien d'autre.
 
 ### L'amorce du volet : une notion, trois lectures
 
-Une section dont le défilement **pilote quelque chose** — un rail qui avance, des
-étapes qui glissent — est finie quand ce travail est fini, **pas quand sa boîte
-l'est**. C'est `hauteurUtile()` dans `app.js`, et elle est lue à trois endroits
-qui ne peuvent pas diverger :
+**Une section est finie quand son travail l'est, pas quand sa boîte l'est.**
+C'est `hauteurUtile()` dans `app.js`, et elle est lue à trois endroits qui ne
+peuvent pas diverger :
 
 | Lecteur | Ce qu'il en fait |
 | --- | --- |
@@ -947,16 +946,32 @@ qui ne peuvent pas diverger :
 | Le verrou de molette | quand rendre la main, et où ancrer |
 | Le décalage de collage des volets | quand la section se fige |
 
-Les trois répondaient à `offsetHeight`. Deux retours de recette en sont venus.
+Les trois répondaient à `offsetHeight`. **Trois retours de recette en sont
+venus**, sur trois sections différentes — la galerie, le parcours, puis les
+traitements — avant que la règle ne soit posée une fois pour toutes.
 
-Le second : **« sur la dernière slide du parcours, le volet est déjà là »**. Chaque
-section chevauche la précédente de son rayon, donc le haut de la suivante est
-toujours 48px au-dessus du bas de celle-ci. Sans amorce, elle entrait dans la vue
-48px avant que la dernière étape ne soit posée.
+La cause est la même à chaque fois : chaque section chevauche la précédente de
+son rayon, donc le haut de la suivante est **toujours** 48px au-dessus du bas de
+celle-ci. Une section figée sur sa boîte laisse donc voir ces 48px avant même
+d'avoir fini.
 
-La section porte donc **48px d'amorce**, ajoutés à sa hauteur ET repris en
-rembourrage bas — `box-sizing: border-box` retrancherait sinon le rembourrage du
-budget de défilement. Résultat mesuré à 1440 × 900 :
+> **`hauteurUtile()` vaut la boîte MOINS LE RAYON, pour TOUTE section.** Et c'est
+> bien le rayon qui est lu, pas une constante : c'est la même valeur qui sert de
+> marge négative entre deux sections. Les écrire deux fois les laisserait
+> diverger, et le volet réapparaîtrait au premier changement d'arrondi.
+
+Ces 48px ne sont pas du contenu : ils vivent dans le rembourrage bas, que la
+section suivante recouvre de toute façon. Les déduire ne cache rien — ça avance
+seulement le figeage au moment où le volet ENTRE dans la vue, si bien qu'il part
+de zéro sur une section immobile.
+
+Deux sections y ajoutent un rembourrage bas **explicite** de la même valeur — la
+galerie épinglée et le parcours — pour que leur fin de course tombe elle aussi
+sur ce point. Le cas du parcours, mesuré :
+
+Elle porte **48px d'amorce**, ajoutés à sa hauteur ET repris en rembourrage bas —
+`box-sizing: border-box` retrancherait sinon le rembourrage du budget de
+défilement. Résultat à 1440 × 900 :
 
 | | Avant | Après |
 | --- | --- | --- |
@@ -966,7 +981,52 @@ budget de défilement. Résultat mesuré à 1440 × 900 :
 | Écran recouvert à la dernière étape | 48px | **0** |
 
 > **L'amorce vaut EXACTEMENT le chevauchement.** C'est ce qui fait coïncider les
-> trois instants ; une autre valeur les décale à nouveau.
+> trois instants ; une autre valeur les décale à nouveau. Éprouvé dans les deux
+> sens : sans amorce, 48px du volet sont à l'écran avant la fin ; avec 20px de
+> trop, le volet arrive en retard.
+
+### Le DÉLAI : le volet part de plus bas encore
+
+Retour de recette : « quand le scroll touche le bottom d'une section, le volet
+démarre directement ». Il part désormais **80px sous l'écran** : la section se
+fige, et il reste ce chemin avant qu'il n'attaque.
+
+**À ne pas confondre avec le retard**, même si les deux « donnent du temps » :
+
+| | Ce qu'il fait | Où il agit |
+| --- | --- | --- |
+| `$volet-retard` (30) | allonge la section | avant sa fin |
+| `$volet-delai` (80) | creuse un écart après sa fin | section déjà figée |
+
+> **Ce délai est du défilement STATIQUE.** La section est figée, le volet est
+> encore sous la vue : rien ne bouge à l'écran pendant ces pixels. C'est voulu,
+> et c'est pourquoi la valeur reste modeste — au-delà, ça ne se lit plus comme
+> une respiration mais comme un défilement qui ne répond pas.
+
+**Nul sur une section dont le défilement pilote déjà quelque chose** — la galerie
+épinglée, le parcours. Là, ce même écart avait été signalé comme un DÉFAUT, deux
+fois : on vient de finir une animation et on attend la suite.
+
+#### Le délai est une CALE, pas seulement une déduction
+
+C'est le piège, et il a coûté un aller-retour. Déduit de la hauteur utile sans
+être ajouté à la boîte, il donne le même écart à l'écran — mais il **raccourcit
+la course utile**, donc il rapproche chaque section du seuil de collage. Mesuré :
+les traitements perdaient leur volet dès 826px de vue.
+
+Il est donc **ajouté à la cale ET déduit de la hauteur utile**. Les deux
+opérations s'annulent sur la course, et seule la section suivante descend :
+
+```
+boîte   = contenu + rembourrage + retard + délai
+utile   = boîte − chevauchement − délai      →  la course ne bouge pas
+suivante = bas de boîte − chevauchement      →  elle descend du délai
+```
+
+> Les traitements restent tout de même la section la plus juste : 114px de marge
+> avant le seuil de collage à 813px de vue, 32px à 913. Elle cesse de faire
+> volet au-delà — **et c'était déjà le cas avant le délai**, seulement un peu
+> plus haut. Remesurer avant de toucher à l'une de ces deux valeurs.
 
 Un piège rencontré en chemin : la condition « la vue épinglée occupe l'écran »
 du verrou de molette lisait `cadre.bottom`, donc le bas de la BOÎTE. Allongée de
