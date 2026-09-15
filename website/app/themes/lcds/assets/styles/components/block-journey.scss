@@ -193,7 +193,28 @@
   // section se décolle, soit deux crans de molette. Elle en a 360 ici.
   --journey-step-scroll: 80svh;
 
-  height: calc(100svh + (var(--journey-steps, 6) - 1) * var(--journey-step-scroll));
+  /*
+   * L'AMORCE DU VOLET, ajoutée à la hauteur ET reprise en rembourrage bas.
+   *
+   * Chaque section chevauche la précédente de son rayon : le haut de la suivante
+   * est donc toujours 48px au-dessus du bas de celle-ci. Sans amorce, elle
+   * entrait dans la vue 48px AVANT que la dernière étape ne soit posée — le
+   * volet apparaissait pendant la dernière slide. Retour de recette.
+   *
+   * Ces 48px ne sont pas de la course : `hauteurUtile` les déduit, si bien que
+   * l'avancement, le verrou de molette et le collage du volet tombent tous les
+   * trois au même pixel. Ajoutés à la hauteur ET repris en rembourrage, ils
+   * laissent la course inchangée — `box-sizing: border-box` retrancherait sinon
+   * le rembourrage du budget de défilement.
+   *
+   * Le rembourrage vaut EXACTEMENT le chevauchement : c'est ce qui fait
+   * coïncider les instants. Une autre valeur les décale à nouveau.
+   */
+  height: calc(
+    100svh + (var(--journey-steps, 6) - 1) * var(--journey-step-scroll)
+      + #{var.$radius-section}
+  );
+  padding-bottom: var.$radius-section;
 
   .journey__viewport {
     position: sticky;

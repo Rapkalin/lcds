@@ -934,6 +934,46 @@ encore changer, et rien d'autre.
 > plus un défaut — la borne élargie ci-dessous s'en charge — mais c'est un
 > changement de comportement, et il se REMESURE, il ne se suppose pas.
 
+### L'amorce du volet : une notion, trois lectures
+
+Une section dont le défilement **pilote quelque chose** — un rail qui avance, des
+étapes qui glissent — est finie quand ce travail est fini, **pas quand sa boîte
+l'est**. C'est `hauteurUtile()` dans `app.js`, et elle est lue à trois endroits
+qui ne peuvent pas diverger :
+
+| Lecteur | Ce qu'il en fait |
+| --- | --- |
+| L'avancement du parcours | où en est le rail |
+| Le verrou de molette | quand rendre la main, et où ancrer |
+| Le décalage de collage des volets | quand la section se fige |
+
+Les trois répondaient à `offsetHeight`. Deux retours de recette en sont venus.
+
+Le second : **« sur la dernière slide du parcours, le volet est déjà là »**. Chaque
+section chevauche la précédente de son rayon, donc le haut de la suivante est
+toujours 48px au-dessus du bas de celle-ci. Sans amorce, elle entrait dans la vue
+48px avant que la dernière étape ne soit posée.
+
+La section porte donc **48px d'amorce**, ajoutés à sa hauteur ET repris en
+rembourrage bas — `box-sizing: border-box` retrancherait sinon le rembourrage du
+budget de défilement. Résultat mesuré à 1440 × 900 :
+
+| | Avant | Après |
+| --- | --- | --- |
+| Dernière étape posée | `scrollY` 8387 | 8387 |
+| Section figée | 8387 | 8387 |
+| Volet dans la vue | **8339** | **8387** |
+| Écran recouvert à la dernière étape | 48px | **0** |
+
+> **L'amorce vaut EXACTEMENT le chevauchement.** C'est ce qui fait coïncider les
+> trois instants ; une autre valeur les décale à nouveau.
+
+Un piège rencontré en chemin : la condition « la vue épinglée occupe l'écran »
+du verrou de molette lisait `cadre.bottom`, donc le bas de la BOÎTE. Allongée de
+l'amorce, elle gardait le verrou actif sur une section qui n'avance plus — le
+cran restait confisqué sous la section, et l'ancrage d'arrivée par le bas
+repartait 390px trop loin. Elle lit désormais le bas utile.
+
 ### L'exception : une section qui se TERMINE par un rail épinglé
 
 Elle n'a **aucun retard**, et elle perd même son rembourrage bas.

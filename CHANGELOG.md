@@ -7,6 +7,19 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.23.4
+
+### Corrigé
+
+- **Le volet n'apparaît plus pendant la dernière étape du parcours de soin.** Il
+  entrait dans la vue 48 pixels avant que la dernière carte ne soit posée ; il
+  attend désormais qu'elle le soit.
+
+  > Ces 48 pixels sont le chevauchement que chaque section a avec la précédente.
+  > La section porte maintenant une amorce de la même valeur, ce qui fait
+  > coïncider trois instants au même pixel : la dernière étape posée, le figeage
+  > de la section, et l'entrée du volet.
+
 ## 2.23.3
 
 ### Corrigé

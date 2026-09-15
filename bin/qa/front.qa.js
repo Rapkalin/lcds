@@ -1770,12 +1770,49 @@ window.runFrontQa = async (win) => {
         // La section ne mesure plus un écran PAR ÉTAPE : un écran, plus un
         // budget de défilement par transition. C'est ce qui rend le rail
         // réactif à la molette. Le mesurer, et non le lire, couvre l'addition.
+        //
+        // La COURSE, pas la boîte : celle-ci porte en plus l'amorce du volet,
+        // qui ne fait rien avancer. Confondre les deux ferait rougir cette
+        // assertion sur du code juste — ou, pire, laisserait l'amorce entamer le
+        // budget de défilement sans que rien ne le signale.
         const budget = 0.8;
         const attenduHaut = win.innerHeight * (1 + 5 * budget);
+        const amorceParcours = parseFloat(styleOf(journey).paddingBottom) || 0;
+        const courseParcours = journey.offsetHeight - amorceParcours;
         assert(
-            `section : ${(1 + 5 * budget).toFixed(2)} écrans — un pour la vue collée, le reste pour les cinq transitions (${round(journey.offsetHeight)} / ${round(attenduHaut)})`,
-            Math.abs(journey.offsetHeight - attenduHaut) < 4
+            `section : ${(1 + 5 * budget).toFixed(2)} écrans de course — un pour la vue collée, le reste pour les cinq transitions (${round(courseParcours)} / ${round(attenduHaut)})`,
+            Math.abs(courseParcours - attenduHaut) < 4
         );
+
+        /*
+         * L'AMORCE DU VOLET vaut EXACTEMENT le chevauchement de section.
+         *
+         * Chaque section chevauche la précédente de son rayon : le haut de la
+         * suivante est donc toujours 48px au-dessus du bas de celle-ci. Sans
+         * amorce, elle entrait dans la vue 48px AVANT que la dernière étape ne
+         * soit posée, et le volet apparaissait pendant la dernière slide.
+         * Retour de recette : « sur la dernière slide, le volet est déjà là ».
+         *
+         * Ce qui est vérifié est la CONSÉQUENCE, pas la recette : le haut de la
+         * section suivante doit tomber exactement au bout de la course. Une
+         * amorce d'une autre valeur — ou un chevauchement modifié — décale les
+         * deux à nouveau, et cette assertion le voit.
+         */
+        const suivanteParcours = journey.nextElementSibling;
+
+        if (suivanteParcours !== null) {
+            const rayonParcours = parseFloat(styleOf(journey).borderTopLeftRadius) || 0;
+            const ecartParcours = Math.round(
+                suivanteParcours.getBoundingClientRect().top
+                - journey.getBoundingClientRect().top
+                - courseParcours
+            );
+
+            assert(
+                `parcours : le volet entre au bout de la course, pas avant (${ecartParcours}px d'écart, amorce ${round(amorceParcours)} pour un chevauchement de ${round(rayonParcours)})`,
+                Math.abs(ecartParcours) < 2 && Math.abs(amorceParcours - rayonParcours) < 1
+            );
+        }
 
         // La translation est désormais ANIMÉE : sans cette neutralisation, les
         // trois mesures ci-dessous liraient le rail en cours de route.
@@ -1838,7 +1875,11 @@ window.runFrontQa = async (win) => {
          * seul moyen d'éprouver un geste sans périphérique.
          * ----------------------------------------------------------------- */
         const haut = journey.getBoundingClientRect().top + win.scrollY;
-        const course = journey.offsetHeight - win.innerHeight;
+        // La COURSE, amorce du volet déduite — la même hauteur que lit le
+        // verrou lui-même. Calculée sur la boîte, elle valait 48px de trop et
+        // l'étape attendue dérivait de 10px : l'assertion rougissait sur un
+        // verrou pourtant inchangé. Voir `hauteurUtile` dans app.js.
+        const course = courseParcours - win.innerHeight;
         const etape = course / 5;
         const cran = (delta) => {
             const evenement = new win.WheelEvent("wheel", {

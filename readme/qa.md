@@ -251,6 +251,10 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   vaut **toujours le rayon de section**. La seconde assertion est la vraie : la
   cale écrite en `margin-bottom` paraît équivalente et rogne le chevauchement
   d'autant, rouvrant les oreilles claires. Éprouvé — la mutation le mesure.
+- **Le volet du parcours entre au bout de la course, pas avant** : le haut de la
+  section suivante tombe exactement à la fin de la course, et l'amorce vaut le
+  chevauchement. L'assertion vérifie la CONSÉQUENCE, pas la recette — une amorce
+  d'une autre valeur, ou un chevauchement modifié, la font rougir.
 - **Aucun défilement mort après un rail épinglé** : entre le bas de la réserve
   et le bas de la section, il ne reste que le chevauchement. Éprouvé par les deux
   mutations — l'exception retirée rend les 110px signalés en recette, la cale

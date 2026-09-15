@@ -368,6 +368,37 @@ const initAccordions = () => {
 };
 
 /**
+ * Hauteur UTILE d'une section : celle sur laquelle son défilement fait un travail.
+ *
+ * Une section dont le défilement PILOTE quelque chose — un rail qui avance, des
+ * étapes qui glissent — est finie quand ce travail est fini, pas quand sa boîte
+ * l'est. Son dernier rembourrage n'est alors pas de la course : c'est l'amorce
+ * que le volet vient occuper, et la feuille de style la fixe EXACTEMENT au
+ * chevauchement de section pour que les deux instants coïncident.
+ *
+ * TROIS mécaniques lisent cette hauteur et ne peuvent pas diverger : l'avancement
+ * du parcours, son verrou de molette, et le décalage de collage des volets. Les
+ * trois répondaient à `offsetHeight` et la section se finissait donc 48px après
+ * son dernier écran — le volet apparaissait pendant la dernière étape.
+ *
+ * Les deux marqueurs sont posés par le script, jamais par le gabarit : c'est
+ * l'épinglage EFFECTIF qui compte, pas l'intention. Sous mouvement réduit ou en
+ * dessous de la tablette, rien n'est épinglé et la boîte fait foi.
+ */
+const hauteurUtile = (section) => {
+    const dernier = section.lastElementChild;
+    const amorce = section.classList.contains("journey--pinned")
+        || (dernier !== null && dernier.classList.contains("carousel-pin--active"));
+
+    if (! amorce) {
+        return section.offsetHeight;
+    }
+
+    return section.offsetHeight
+        - (parseFloat(window.getComputedStyle(section).paddingBottom) || 0);
+};
+
+/**
  * Journey section: vertical scroll drives a horizontal rail, one step per notch.
  *
  * Two mechanisms, and they answer two different questions.
@@ -441,8 +472,9 @@ const initJourneys = () => {
                 return;
             }
 
-            // La course utile : tout ce qui dépasse de la hauteur de la vue.
-            const course = journey.offsetHeight - window.innerHeight;
+            // La course utile : tout ce qui dépasse de la hauteur de la vue,
+            // amorce du volet déduite — voir `hauteurUtile`.
+            const course = hauteurUtile(journey) - window.innerHeight;
 
             if (course <= 0) {
                 journey.style.setProperty("--journey-progress", "0");
@@ -522,7 +554,10 @@ const initJourneys = () => {
             }
 
             const cadre = journey.getBoundingClientRect();
-            const course = journey.offsetHeight - window.innerHeight;
+            // La MÊME hauteur que l'avancement ci-dessus : le verrou doit rendre
+            // la main exactement quand la dernière étape est posée, sinon il
+            // confisque la molette sur une section qui n'avance plus.
+            const course = hauteurUtile(journey) - window.innerHeight;
             const sens = Math.sign(event.deltaY);
 
             // La section a FINI sa course : le volet la colle en place, son
@@ -575,7 +610,14 @@ const initJourneys = () => {
             // `collee` : la vue épinglée occupe exactement l'écran. Hors de cet
             // intervalle, la section entre ou sort, et le défilement lui
             // appartient.
-            const collee = cadre.top <= 1 && cadre.bottom >= window.innerHeight - 1;
+            //
+            // Le bas UTILE, pas celui de la boîte : l'amorce du volet prolonge
+            // la boîte de 48px au-delà de la course, et les y inclure gardait le
+            // verrou actif sur une section qui n'avance plus. Mesuré — le cran
+            // restait confisqué sous la section, et l'ancrage d'arrivée par le
+            // bas repartait 390px trop loin.
+            const basUtile = cadre.top + hauteurUtile(journey);
+            const collee = cadre.top <= 1 && basUtile >= window.innerHeight - 1;
 
             if (! collee) {
                 etaitCollee = false;
@@ -1143,30 +1185,11 @@ const initVolets = () => {
              * parce qu'elle s'est figée.
              */
             const entete = parseFloat(window.getComputedStyle(section).paddingTop) || 0;
-            /*
-             * UNE SECTION QUI SE TERMINE PAR UN RAIL ÉPINGLÉ est finie de lire
-             * quand le bas de sa RÉSERVE atteint le bas de la vue : c'est là que
-             * le rail arrive à son terme, pas au bas de la section.
-             *
-             * Se figer sur le bas de la section laissait les deux monter
-             * ENSEMBLE sur la hauteur du rembourrage restant — mesuré à 48px.
-             * Le volet ne recouvrait rien pendant ce temps, il ACCOMPAGNAIT la
-             * galerie. Retour de recette : « le volet semble monter en même
-             * temps que la section galerie ».
-             *
-             * La feuille de style ramène déjà ce rembourrage au chevauchement,
-             * pour que les deux instants coïncident exactement : le rail se
-             * termine, la section se fige, et le volet part de zéro. Les deux
-             * moitiés vont ensemble — voir pages/homepage.scss.
-             */
-            const dernier = section.lastElementChild;
-            const epingle = dernier !== null
-                && dernier.classList.contains("carousel-pin--active");
-            const utile = epingle
-                ? section.offsetHeight
-                    - (parseFloat(window.getComputedStyle(section).paddingBottom) || 0)
-                : section.offsetHeight;
-            const course = window.innerHeight - utile;
+            // Une section pilotée par le défilement se fige quand son TRAVAIL
+            // est fini, pas quand sa boîte l'est — voir `hauteurUtile`. Se figer
+            // sur la boîte laissait le volet et la section monter ENSEMBLE sur
+            // les 48px de l'amorce, sans que rien ne soit recouvert.
+            const course = window.innerHeight - hauteurUtile(section);
             const decalage = course > -(garde + entete) ? 0 : course;
 
             section.toggleAttribute("data-volet", couvrable(section));
