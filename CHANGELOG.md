@@ -7,6 +7,41 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.23.0
+
+### Ajouté
+
+- **Le logo de la page d'accueil se réduit au défilement.** La marque passe de
+  128 à 80 pendant que la partie écrite — « Orthodontie St. Maurice / la clinique
+  du sourire » — glisse vers la gauche et s'efface, avec un petit rebond à
+  l'arrivée. L'animation est propre à la page d'accueil ; les autres pages
+  gardent la marque telle qu'elle était.
+
+  > L'état d'ARRIVÉE est exactement celui de la maquette : marque de 80 posée en
+  > (48, 24). Sans JavaScript, sous `prefers-reduced-motion`, sur mobile ou sur
+  > les autres pages, c'est cet état qui s'affiche — le grand logo est un
+  > enrichissement, jamais un prérequis.
+
+  **La partie écrite n'apparaît qu'au-delà d'environ 1430px de large.** En
+  dessous elle recouvrirait la navigation — 148px de recouvrement mesurés à
+  1280 — et le site la retire donc, en mesurant la place réellement disponible.
+  La réduction de la marque, elle, a lieu à toutes les largeurs de bureau. Voir
+  [`readme/front.md`](readme/front.md) : refermer cet écart demande un arbitrage
+  de design.
+
+## 2.22.3
+
+### Pour les développeurs
+
+- **La conversion WebP est désormais surveillée par la recette**, sur ses deux
+  moitiés : l'encodage côté serveur — jusqu'à relire les octets du fichier
+  produit — et la livraison côté front, `srcset` compris.
+
+  > Cette panne est **silencieuse** : sans support WebP dans la bibliothèque
+  > d'images, WordPress retombe sur du JPEG sans rien signaler. Rien ne s'en
+  > apercevait, à part le poids des pages. Voir
+  > [`readme/images.md`](readme/images.md).
+
 ## 2.22.2
 
 ### Corrigé

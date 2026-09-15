@@ -247,6 +247,18 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   de la page derrière le panneau mobile qui reste tabulable.
 - **Accessibilité côté serveur** : aucun composant ne force `'alt' => ''`, et
   aucun gabarit de titre Yoast n'est resté en anglais.
+- **Conversion WebP**, éprouvée sur les deux moitiés parce qu'elles peuvent
+  diverger : côté **serveur**, le module chargé, chaque format source mappé, le
+  GIF et le SVG laissés dehors, la qualité visant le WebP seul, et surtout un
+  **encodage réel** dont les octets produits commencent par `RIFF`/`WEBP` ; côté
+  **front**, chaque `src` et **chaque piste de `srcset`** d'un visuel de
+  médiathèque servi en `.webp`, sur les deux pages visitées.
+
+> Cette panne-là est **silencieuse** : sans support WebP dans la bibliothèque
+> d'images, WordPress retombe sur du JPEG sans rien signaler. Le type MIME qu'il
+> annonce ne suffit donc pas — c'est le fichier produit qu'il faut relire. Et
+> des filtres corrects ne prouvent pas que les médias en base ont été
+> régénérés : d'où les deux moitiés. Voir [`images.md`](images.md).
 
 - **Cotes des blocs de fin, à 1440** : étiquettes, boutons, rail plein-bord,
   largeurs et inclinaisons des cartes, colonnes et filets des informations
@@ -312,6 +324,21 @@ réellement produites. Ni une attente fixe ni un sondage ne sont fiables.
 Vérifier la **déclaration** (`transitionProperty`, `transitionDelay`) plutôt que
 son aboutissement — c'est ce que le code doit garantir, la fin de l'animation
 étant l'affaire du navigateur.
+
+### Le profil Chrome doit être NEUF à chaque passage
+
+`bin/qa-front.sh` crée son profil sous un `mktemp -d` renouvelé à chaque
+exécution, et ce n'est pas une précaution d'hygiène : **`front.qa.js` est servi
+avec un `Expires` à un mois**, comme tout le JavaScript du site. Un profil
+réutilisé rejoue donc l'ancien pilote, et les assertions qu'on vient d'écrire
+n'existent tout simplement pas.
+
+Constaté en montant un lanceur rapide à une seule largeur, profil fixe : une
+assertion ajoutée ne s'affichait pas, alors qu'elle était bien dans le fichier.
+Les feuilles et le script du THÈME, eux, passaient — leur URL porte un `?ver=`
+dérivé du `mtime`, qui casse le cache. Le pilote de recette, non.
+
+> À retenir pour tout lanceur ponctuel : `--user-data-dir="$(mktemp -d)"`.
 
 ### Trois pièges du temps virtuel, tous rencontrés
 

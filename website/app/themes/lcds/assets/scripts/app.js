@@ -1193,6 +1193,200 @@ const initVolets = () => {
     mesurer();
 };
 
+/**
+ * Logo de la page d'accueil : la marque se réduit, l'écrit s'efface, au fil du
+ * défilement.
+ *
+ * MÊME PARTAGE QUE LE PARCOURS DE SOIN : ce code publie UN SEUL NOMBRE, et le
+ * CSS en tire l'échelle, le glissement et l'opacité. Les tailles et les
+ * distances vivent donc dans la feuille de style, à un seul endroit ; les
+ * réécrire ici aurait créé une seconde source qui aurait fini par diverger.
+ *
+ * Le nombre DÉPASSE 1 en fin de course, et c'est le rebond : la courbe remonte
+ * jusqu'à ~1,058 avant de redescendre exactement à 1. L'échelle passe donc sous
+ * sa valeur d'arrivée — la marque se pose à 77 avant de revenir à 80 — ce qui
+ * se lit comme un petit ressort. C'est le CSS qui borne l'opacité, seule
+ * propriété qui ne supporte pas le dépassement.
+ *
+ * L'accroche est posée par le gabarit, jamais devinée ici : sans
+ * `data-logo-scroll`, il n'y a rien à animer. Voir header.php.
+ */
+// Course de défilement sur laquelle l'animation se joue entièrement.
+//
+// La référence fournie donnait 260, jugée trop rapide en recette. Portée à 420,
+// soit un peu moins d'un demi-écran : l'animation se termine largement avant que
+// la bannière ne quitte la vue, elle ne déborde donc pas sur la première section.
+const LOGO_COURSE = 420;
+
+// Courbe du défilement, avec DÉPASSEMENT en fin de course.
+//
+// La référence donnait `cubic-bezier(0.65, 0, 0.35, 1)`, dont le départ est un
+// temps mort suivi d'un rattrapage d'un coup. Celle-ci démarre plus tôt — c'est
+// le « plus fluide » demandé — tout en restant plus LENTE en absolu, ce qui est
+// le vrai sujet. Comparé en pixels de défilement, seule mesure qui ait un sens
+// puisque la course a changé elle aussi :
+//
+//              mi-course     90 %
+//   référence    130px      186px
+//   celle-ci     170px      244px      soit environ 30 % plus lent
+//
+// La première version essayée, `(0.3, 0, 0.25, 1.35)`, était plus RAPIDE que la
+// référence au départ — 50 % dès 119px — alors qu'elle paraissait plus douce à
+// la lecture. Mesurer a tranché ; l'œil se serait trompé.
+//
+// Le quatrième nombre, au-delà de 1, produit le rebond : sommet mesuré à 1,0449
+// pour x = 0,82, retour exact à 1. C'est lui qui le gouverne — le monter creuse
+// le rebond, le ramener à 1 le supprime.
+const LOGO_COURBE = [0.5, 0, 0.35, 1.3];
+
+/**
+ * Évalue un `cubic-bezier` comme le fait une fonction de transition CSS.
+ *
+ * Newton-Raphson sur x pour retrouver le paramètre, puis évaluation sur y. Le
+ * résultat n'est PAS borné entre les extrémités : c'est ce qui laisse passer le
+ * dépassement.
+ */
+const courbeVersFonction = ([x1, y1, x2, y2]) => {
+    const a = (u, v) => 1 - 3 * v + 3 * u;
+    const b = (u, v) => 3 * v - 6 * u;
+    const c = (u) => 3 * u;
+    const valeur = (t, u, v) => ((a(u, v) * t + b(u, v)) * t + c(u)) * t;
+    const pente = (t, u, v) => 3 * a(u, v) * t * t + 2 * b(u, v) * t + c(u);
+
+    return (x) => {
+        if (x <= 0) {
+            return 0;
+        }
+
+        if (x >= 1) {
+            return 1;
+        }
+
+        let t = x;
+
+        for (let essai = 0; essai < 8; essai += 1) {
+            const p = pente(t, x1, x2);
+
+            if (p === 0) {
+                break;
+            }
+
+            t -= (valeur(t, x1, x2) - x) / p;
+        }
+
+        return valeur(t, y1, y2);
+    };
+};
+
+const initLogoScroll = () => {
+    const lockup = document.querySelector("[data-logo-scroll]");
+
+    if (lockup === null) {
+        return;
+    }
+
+    // C'EST LA FEUILLE DE STYLE QUI DÉCIDE. Elle coupe l'animation sous le point
+    // de rupture tablette et sous mouvement réduit, et publie `--logo-anime` au
+    // même endroit. Le script se contente de la lire : le point de rupture reste
+    // écrit une seule fois, dans les variables SCSS.
+    //
+    // Relu sur redimensionnement seulement, jamais par image : `getComputedStyle`
+    // force un recalcul de style, et le payer à chaque cran de molette se verrait.
+    const lireDrapeau = () => window
+        .getComputedStyle(lockup)
+        .getPropertyValue("--logo-anime")
+        .trim() !== "0";
+
+    /*
+     * L'ÉCRIT NE TIENT PAS À TOUTES LES LARGEURS, et c'est mesuré, pas deviné.
+     *
+     * Il n'a pas de point de rupture propre : ce qui décide, c'est le bord
+     * gauche de la navigation, qui dépend de la longueur des entrées du menu.
+     * Un contributeur qui ajoute une entrée déplace la limite — un nombre écrit
+     * en dur ici serait faux le jour même.
+     *
+     * La mesure se fait AVEC LE PROGRÈS REMIS À ZÉRO, c'est-à-dire à la place
+     * que l'écrit occupe déployé : le lire tel quel donnerait sa position
+     * glissée, et le test dépendrait alors de l'endroit où l'on a défilé. Rien
+     * n'est peint entre les deux, tout tient dans le même appel.
+     *
+     * `offsetLeft` / `offsetWidth` auraient évité ce détour en ignorant les
+     * transformations — mais ce sont des propriétés de `HTMLElement`, et l'écrit
+     * est un SVG. Elles y valent `undefined`, la comparaison portait sur `NaN`
+     * et restait FAUSSE partout : le verrou ne se posait jamais. Mesuré.
+     */
+    const ecrit = lockup.querySelector(".site-logo__word");
+    const nav = document.querySelector(".site-header__nav");
+
+    const manqueDePlace = () => {
+        if (ecrit === null || nav === null) {
+            return false;
+        }
+
+        lockup.style.setProperty("--logo-progress", "0");
+
+        return ecrit.getBoundingClientRect().right > nav.getBoundingClientRect().left;
+    };
+
+    const adoucir = courbeVersFonction(LOGO_COURBE);
+    let actif = lireDrapeau();
+    let image = 0;
+
+    const mesurer = () => {
+        if (! actif) {
+            // On RETIRE la propriété au lieu d'y écrire 1 : la feuille de style
+            // reprend alors la main, et c'est elle qui porte la valeur de repli.
+            lockup.style.removeProperty("--logo-progress");
+
+            return;
+        }
+
+        const brut = Math.min(1, Math.max(0, window.scrollY / LOGO_COURSE));
+
+        lockup.style.setProperty("--logo-progress", String(adoucir(brut)));
+    };
+
+    const relire = () => {
+        actif = lireDrapeau();
+        // Retiré AVANT de mesurer : l'écrit doit être rendu pour qu'on puisse
+        // lire sa largeur, et il ne l'est plus une fois l'attribut posé.
+        lockup.removeAttribute("data-logo-serre");
+        lockup.toggleAttribute("data-logo-serre", manqueDePlace());
+        // `mesurer` repose la valeur du moment — ou retire la propriété et rend
+        // la main à la feuille de style. C'est lui qui défait le zéro posé par
+        // la mesure ci-dessus.
+        mesurer();
+    };
+
+    // Le défilement émet bien plus souvent que le navigateur ne peint. On ANNULE
+    // l'image en attente et on en redemande une, plutôt que de renoncer quand il
+    // y en a déjà une : renoncer suppose qu'elle sera rendue, et une image jamais
+    // produite bloquait alors la mise à jour pour de bon. Voir initJourneys, qui
+    // portait exactement ce défaut.
+    const planifier = () => {
+        window.cancelAnimationFrame(image);
+        image = window.requestAnimationFrame(mesurer);
+    };
+
+    window.addEventListener("scroll", planifier, { passive: true });
+    window.addEventListener("resize", relire);
+    // Le mouvement réduit n'est pas un point de rupture du projet mais un réglage
+    // du système : le suivre ici ne duplique aucune valeur de maquette.
+    window.matchMedia("(prefers-reduced-motion: reduce)")
+        .addEventListener("change", relire);
+
+    // La largeur de la navigation dépend de la POLICE : mesurer avant qu'elle
+    // soit chargée donne un menu trop étroit, donc une place disponible
+    // surestimée, et l'écrit restait posé sur les liens. Constaté à 1280 —
+    // l'attribut ne se posait pas alors que le recouvrement valait 148px.
+    // `initHeaderHeight` porte le même garde-fou, pour la même raison.
+    if (document.fonts !== undefined) {
+        document.fonts.ready.then(relire);
+    }
+
+    relire();
+};
+
 const initHeaderHeight = () => {
     const header = document.getElementById("site-header");
 
@@ -1221,6 +1415,7 @@ const initHeaderHeight = () => {
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initHeaderHeight();
+    initLogoScroll();
     initNavShape();
     initCtaShapes();
     initCarousels();

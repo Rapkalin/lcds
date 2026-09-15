@@ -79,6 +79,160 @@ window.runFrontQa = async (win) => {
     assert("navigation rendue", doc.querySelectorAll(".site-nav__list a").length > 0);
     assert("bouton d'action rendu", doc.querySelector(".site-header__cta a") !== null);
 
+    /* --------------------------------------------------------------------- *
+     * Le verrouillage du logo animé au défilement — PAGE D'ACCUEIL SEULEMENT.
+     *
+     * La campagne force `prefers-reduced-motion` : le verrouillage y est donc
+     * FIGÉ sur son état d'arrivée, celui de la maquette. C'est déjà le cas le
+     * plus important à garder — mais il ne dit rien des états intermédiaires.
+     * Ceux-ci sont éprouvés en posant `--logo-progress` à la main, ce qui est
+     * exactement ce que publierait le script.
+     * --------------------------------------------------------------------- */
+    const lockup = doc.querySelector(".site-logo-lockup");
+
+    if (lockup !== null) {
+        const marque = lockup.querySelector(".site-logo");
+        const entete = doc.getElementById("site-header");
+        const progres = (valeur) => {
+            if (valeur === null) {
+                lockup.style.removeProperty("--logo-progress");
+
+                return;
+            }
+
+            lockup.style.setProperty("--logo-progress", String(valeur));
+        };
+        const largeurMarque = () => marque.getBoundingClientRect().width;
+        const coin = () => {
+            const boite = marque.getBoundingClientRect();
+
+            return `${boite.left.toFixed(0)},${boite.top.toFixed(0)}`;
+        };
+
+        // L'accroche du script vit sur la PAGE D'ACCUEIL et nulle part ailleurs.
+        // C'est le gabarit qui décide — `is_front_page()` dans header.php.
+        const accueil = doc.body.classList.contains("home");
+
+        assert(
+            `logo animé : accroche posée sur la page d'accueil seulement (accueil ${accueil}, accroche ${lockup.hasAttribute("data-logo-scroll")})`,
+            lockup.hasAttribute("data-logo-scroll") === accueil
+        );
+
+        // Sous mouvement réduit, la feuille coupe l'animation et rend l'état
+        // d'arrivée. Le script lit ce même drapeau et ne publie alors rien.
+        assert(
+            `logo animé : mouvement réduit, animation coupée (--logo-anime ${styleOf(lockup).getPropertyValue("--logo-anime").trim()})`,
+            styleOf(lockup).getPropertyValue("--logo-anime").trim() === "0"
+        );
+
+        /*
+         * LA BOÎTE NE BOUGE JAMAIS, quoi que fasse l'animation.
+         *
+         * `--header-height` alimente le collage des étiquettes, le
+         * `scroll-padding` et la garde des volets. Une marque qui grandirait la
+         * boîte les ferait tous bouger au défilement. La mise à l'échelle passe
+         * donc par `transform`, qui ne participe pas à la mise en page — et
+         * c'est ce que cette assertion vérifie, en poussant l'animation à son
+         * état le plus grand.
+         */
+        const hauteurAuRepos = entete === null ? 0 : entete.offsetHeight;
+        progres(0);
+        const hauteurDeployee = entete === null ? 0 : entete.offsetHeight;
+        const marqueDeployee = largeurMarque();
+        const coinDeploye = coin();
+        progres(null);
+
+        assert(
+            `logo animé : l'en-tête garde sa hauteur quel que soit l'état (${hauteurAuRepos} puis ${hauteurDeployee})`,
+            hauteurAuRepos === hauteurDeployee && hauteurAuRepos > 0
+        );
+
+        /*
+         * ET LA BOÎTE VAUT L'ÉTAT D'ARRIVÉE, pas celui de départ.
+         *
+         * L'assertion ci-dessus ne compare que deux états entre eux : une boîte
+         * dimensionnée sur le grand logo les rend tous les deux ÉGAUX, donc
+         * verte, alors que l'en-tête est devenu 48px trop haut pour la maquette.
+         * Éprouvé — la mutation a survécu, et c'est celle-ci qui l'attrape.
+         *
+         * La comparaison se fait contre la marque à son arrivée plutôt que
+         * contre un nombre : la taille change au point de rupture mobile, et un
+         * 80 écrit ici aurait rougi à 500px sur du code juste.
+         */
+        const boiteLockup = lockup.getBoundingClientRect();
+        const boiteArrivee = marque.getBoundingClientRect();
+
+        assert(
+            `logo animé : la boîte réservée vaut l'état d'arrivée (${boiteLockup.width.toFixed(0)}x${boiteLockup.height.toFixed(0)} contre ${boiteArrivee.width.toFixed(0)}x${boiteArrivee.height.toFixed(0)})`,
+            Math.abs(boiteLockup.width - boiteArrivee.width) < 0.5
+                && Math.abs(boiteLockup.height - boiteArrivee.height) < 0.5
+        );
+
+        // La maquette cale la marque en (48, 24) et c'est le seul point qui doit
+        // rester immobile : c'est l'origine de la mise à l'échelle. Relevé au
+        // pixel sur HP_01_LCDS_hp full.pdf.
+        const coinArrivee = coin();
+
+        assert(
+            `logo animé : le coin haut-gauche ne bouge pas (${coinArrivee} déployé ${coinDeploye})`,
+            coinArrivee === coinDeploye
+        );
+
+        // Déployée, la marque est PLUS GRANDE ; à l'arrivée elle vaut exactement
+        // la taille de la maquette. Le rapport des deux est le token
+        // `$logo-scale-start`, soit 128 / 80.
+        assert(
+            `logo animé : la marque se réduit vers la taille de maquette (${marqueDeployee.toFixed(0)} puis ${largeurMarque().toFixed(0)})`,
+            marqueDeployee > largeurMarque() + 1
+        );
+
+        /*
+         * LE REBOND. La courbe dépasse 1 en fin de course — sommet mesuré à
+         * 1,0449 — et l'échelle passe alors SOUS sa valeur d'arrivée avant d'y
+         * revenir. Sans ce dépassement il n'y a plus de ressort, seulement un
+         * freinage. On pose la valeur du sommet à la main : c'est la seule
+         * façon de l'éprouver quand le mouvement est coupé.
+         */
+        const tailleArrivee = largeurMarque();
+        progres(1.0449);
+        const tailleSommet = largeurMarque();
+        progres(null);
+
+        assert(
+            `logo animé : le dépassement fait passer la marque sous sa taille d'arrivée (${tailleSommet.toFixed(1)} < ${tailleArrivee.toFixed(1)})`,
+            tailleSommet < tailleArrivee - 0.5
+        );
+
+        /*
+         * L'ÉCRIT NE TOUCHE JAMAIS LA NAVIGATION.
+         *
+         * Il mesure 449 pour une marque de 128 : à 1440 l'ensemble tient à douze
+         * pixels près, en dessous il recouvre le menu — 148px mesurés à 1280. Le
+         * script mesure la place et le retire quand elle manque ; cette
+         * assertion vérifie le RÉSULTAT, à la largeur en cours, quelle qu'elle
+         * soit.
+         */
+        const ecrit = lockup.querySelector(".site-logo__word");
+        const navigation = doc.querySelector(".site-header__nav");
+
+        if (ecrit !== null && navigation !== null) {
+            progres(0);
+            const affiche = styleOf(ecrit).display !== "none";
+            const boiteEcrit = ecrit.getBoundingClientRect();
+            const boiteNav = navigation.getBoundingClientRect();
+            const touche = affiche
+                && boiteEcrit.right > boiteNav.left
+                && boiteEcrit.bottom > boiteNav.top
+                && boiteEcrit.top < boiteNav.bottom;
+            progres(null);
+
+            assert(
+                `logo animé : l'écrit ne touche pas la navigation (affiché ${affiche}${affiche ? `, ${boiteEcrit.right.toFixed(0)} contre ${boiteNav.left.toFixed(0)}` : ""})`,
+                !touche
+            );
+        }
+    }
+
     // Un débordement horizontal ne se voit pas sur une capture : il se mesure.
     const root = doc.documentElement;
     assert(
@@ -3364,6 +3518,62 @@ window.runFrontQa = async (win) => {
         `aucun visuel de contenu sans texte alternatif`
         + ` (${muettes.length === 0 ? "aucun" : muettes.map((n) => n.className.split(" ")[0] || n.src.split("/").pop()).join(", ")})`,
         muettes.length === 0
+    );
+
+    /* --------------------------------------------------------------------- *
+     * Ce que reçoit réellement le visiteur : du WebP, sur TOUTES les pistes.
+     *
+     * La conversion tombe en SILENCE — sans support WebP dans la bibliothèque
+     * d'images, WordPress retombe sur du JPEG sans rien signaler, et un import
+     * de médias antérieur au module laisse ses sous-tailles dans leur format
+     * d'origine. Rien ne le dit, à part le poids des pages.
+     *
+     * `bin/qa-front.sh` éprouve l'ENCODAGE côté serveur ; ce bloc-ci éprouve la
+     * LIVRAISON. Les deux sont nécessaires : des filtres corrects ne prouvent
+     * pas que les fichiers en base ont été régénérés.
+     *
+     * Le `srcset` compte autant que le `src` : c'est lui que le navigateur
+     * choisit en pratique, et une seule piste restée en JPEG suffit à servir du
+     * JPEG à une partie des visiteurs.
+     * --------------------------------------------------------------------- */
+    const RASTER_CONVERTI = /\.(jpe?g|png)(\?|$)/i;
+
+    // Un seul et même test pour les deux attributs : le `srcset` est une liste
+    // de « URL largeur », dont on ne garde que les URL.
+    const pistes = (image) => [
+        image.getAttribute("src") ?? "",
+        ...(image.getAttribute("srcset") ?? "")
+            .split(",")
+            .map((piste) => piste.trim().split(/\s+/)[0] ?? ""),
+    ].filter((url) => url !== "");
+
+    // Les visuels de la médiathèque SEULEMENT : une image du thème, un SVG ou
+    // un GIF n'entrent pas dans le périmètre du module, qui les exclut à
+    // dessein. Les mêler rendrait l'assertion rouge sur du code correct.
+    const televersees = images.filter((image) =>
+        pistes(image).some((url) => url.includes("/uploads/")));
+    // Les PISTES fautives, pas les images : le défaut vit souvent dans le seul
+    // `srcset`, et nommer le `src` — resté en WebP — rendait l'échec illisible.
+    // Constaté en mutant le srcset seul.
+    const nonConverties = televersees
+        .flatMap((image) => pistes(image))
+        .filter((url) => RASTER_CONVERTI.test(url))
+        .map((url) => url.split("/").pop());
+
+    // La médiathèque peut être vide sur un environnement neuf : l'assertion se
+    // tairait alors au lieu d'échouer, et c'est précisément le trou que les
+    // gardes de compte ferment ailleurs dans cette campagne.
+    assert(
+        `des visuels de médiathèque sont rendus (${televersees.length} sur ${images.length} images)`,
+        televersees.length > 0
+    );
+    assert(
+        `tous servis en WebP, src et srcset compris`
+        + ` (${nonConverties.length === 0
+            ? televersees.reduce((total, image) => total + pistes(image).length, 0) + " pistes"
+            : nonConverties.length + " piste(s) en JPEG/PNG : "
+                + [...new Set(nonConverties)].slice(0, 6).join(", ")})`,
+        nonConverties.length === 0
     );
 
     // -- Plan de titres : un seul h1, aucun saut de niveau.

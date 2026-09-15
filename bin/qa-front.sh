@@ -351,6 +351,144 @@ printf(
     return 0
 }
 
+# La conversion WebP est de l'INFRASTRUCTURE, et elle tombe en SILENCE : sans
+# support WebP dans la bibliothèque d'images, WordPress retombe sur du JPEG sans
+# rien signaler — ni erreur, ni avertissement, ni trace. Le Dockerfile porte
+# déjà l'avertissement sur `--with-webp` ; ceci le rend mesurable.
+#
+# Les filtres sont lus, mais surtout ÉPROUVÉS : un encodage réel est demandé à
+# la bibliothèque, sur une image fabriquée pour l'occasion et retirée ensuite.
+# Lire la table de correspondance ne prouve rien de la capacité à encoder.
+check_webp() {
+    local out
+
+    out="$(cd "$ROOT" && docker compose exec -T php wp eval '
+printf(
+    "%s|le module WebP est charge|%s\n",
+    defined("LCDS_WEBP_QUALITY") && defined("LCDS_WEBP_SOURCE_FORMATS") ? "PASS" : "FAIL",
+    defined("LCDS_WEBP_QUALITY") ? "qualite " . LCDS_WEBP_QUALITY : "CONSTANTES ABSENTES",
+);
+
+if (! defined("LCDS_WEBP_SOURCE_FORMATS")) {
+    return;
+}
+
+$formats = apply_filters("image_editor_output_format", array());
+$non_mappes = array();
+
+foreach (LCDS_WEBP_SOURCE_FORMATS as $mime) {
+    if (($formats[$mime] ?? "") !== "image/webp") {
+        $non_mappes[] = $mime;
+    }
+}
+
+printf(
+    "%s|chaque format source declare sort en WebP|%d format(s)%s\n",
+    $non_mappes === array() ? "PASS" : "FAIL",
+    count(LCDS_WEBP_SOURCE_FORMATS),
+    $non_mappes === array() ? " : " . implode(", ", LCDS_WEBP_SOURCE_FORMATS) : " — NON MAPPES : " . implode(", ", $non_mappes),
+);
+
+// L exclusion compte autant que l inclusion : le vectoriel et l anime ne se
+// pretent pas a ce traitement, et les convertir casserait l animation des GIF
+// comme le redimensionnement libre des SVG.
+$convertis_a_tort = array();
+
+foreach (array("image/gif", "image/svg+xml") as $mime) {
+    if (isset($formats[$mime])) {
+        $convertis_a_tort[] = $mime . " -> " . $formats[$mime];
+    }
+}
+
+printf(
+    "%s|le GIF et le SVG restent hors du traitement|%s\n",
+    $convertis_a_tort === array() ? "PASS" : "FAIL",
+    $convertis_a_tort === array() ? "aucun des deux mappe" : "CONVERTIS : " . implode(", ", $convertis_a_tort),
+);
+
+// La qualite doit viser le WebP SEUL : appliquee a tous les formats, elle
+// recompresserait aussi les JPEG servis par ailleurs.
+$sur_webp = (int) apply_filters("wp_editor_set_quality", 90, "image/webp");
+$sur_jpeg = (int) apply_filters("wp_editor_set_quality", 90, "image/jpeg");
+
+printf(
+    "%s|la qualite ne vise que le WebP|webp %d, jpeg %d\n",
+    $sur_webp === LCDS_WEBP_QUALITY && $sur_jpeg === 90 ? "PASS" : "FAIL",
+    $sur_webp,
+    $sur_jpeg,
+);
+
+/*
+ * L EPREUVE REELLE : une image est fabriquee, redimensionnee et enregistree par
+ * le meme chemin que celui d un televersement. Ce qui est verifie, c est le
+ * fichier PRODUIT — son type MIME, son extension, et le fait qu il soit
+ * reellement decodable comme du WebP.
+ *
+ * Sans support WebP dans la bibliotheque, WordPress retombe ici sur du JPEG
+ * sans rien dire. C est la seule assertion qui s en apercoit.
+ */
+$dossier = get_temp_dir();
+$source = $dossier . "lcds-qa-webp-source.jpg";
+$toile = imagecreatetruecolor(120, 90);
+imagefilledrectangle($toile, 0, 0, 119, 89, imagecolorallocate($toile, 200, 80, 20));
+imagejpeg($toile, $source);
+imagedestroy($toile);
+
+$editeur = wp_get_image_editor($source);
+
+if (is_wp_error($editeur)) {
+    printf("FAIL|une sous-taille est reellement encodee en WebP|aucun editeur : %s\n", $editeur->get_error_message());
+    @unlink($source);
+
+    return;
+}
+
+$editeur->resize(60, 45, true);
+$ecrit = $editeur->save();
+$produit = is_wp_error($ecrit) ? null : ($ecrit["path"] ?? "");
+$signature = $produit !== null && is_readable($produit) ? file_get_contents($produit, false, null, 0, 12) : "";
+// Un fichier WebP commence par « RIFF », taille sur 4 octets, puis « WEBP ».
+$est_webp = strlen($signature) === 12 && substr($signature, 0, 4) === "RIFF" && substr($signature, 8, 4) === "WEBP";
+
+printf(
+    "%s|une sous-taille est reellement encodee en WebP|%s, %s, entete %s\n",
+    $est_webp && ! is_wp_error($ecrit) && ($ecrit["mime-type"] ?? "") === "image/webp" ? "PASS" : "FAIL",
+    is_wp_error($ecrit) ? "ECHEC : " . $ecrit->get_error_message() : ($ecrit["mime-type"] ?? "sans type"),
+    is_wp_error($ecrit) ? "-" : ($ecrit["file"] ?? "sans nom"),
+    $est_webp ? "RIFF/WEBP" : "NON RECONNU",
+);
+
+// La campagne ne laisse rien derriere elle.
+@unlink($source);
+
+if ($produit !== null && $produit !== "") {
+    @unlink($produit);
+}
+' --allow-root 2>/dev/null | tr -d '\r')"
+
+    # Le compte est VERROUILLÉ : un `return` anticipé du bloc PHP ci-dessus — la
+    # constante absente, l'éditeur introuvable — n'émet qu'une partie des
+    # assertions. Sans ce garde-fou, le bloc se tairait au lieu d'échouer.
+    local attendues=5
+    local obtenues
+
+    obtenues="$(printf '%s\n' "$out" | grep -cE '^(PASS|FAIL)\|')"
+
+    if [ "$obtenues" != "$attendues" ]; then
+        printf '  FAIL :: conversion WebP (%s assertion(s) sur %s — le bloc ne teste plus ce qu%s il prétend)\n' \
+            "$obtenues" "$attendues" "'"
+        printf '%s\n' "$out" | sed 's/^/    /'
+        return 1
+    fi
+
+    printf '%s\n' "$out" | while IFS='|' read -r verdict label detail; do
+        printf '  %s :: %s (%s)\n' "$verdict" "$label" "$detail"
+    done
+
+    printf '%s' "$out" | grep -q '^FAIL' && return 1
+    return 0
+}
+
 # Deux vérifications qui ne se voient pas depuis le navigateur.
 check_a11y_serveur() {
     local echecs=0 forces titres
@@ -857,6 +995,9 @@ check_a11y_serveur || FAILURES=$((FAILURES + 1))
 
 echo "== Navigation amorcée =="
 check_menus || FAILURES=$((FAILURES + 1))
+
+echo "== Conversion WebP =="
+check_webp || FAILURES=$((FAILURES + 1))
 
 for width in 1440 500 320; do
     echo "== Front à ${width}px =="

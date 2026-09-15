@@ -873,6 +873,115 @@ Ce n'est **pas le seul repère** : WordPress pose `aria-current="page"` sur ce
 lien, et l'entrée reste écartée en permanence. Un repère de couleur seule aurait
 échoué au WCAG 1.4.1.
 
+## Le logo qui se réduit au défilement
+
+**Page d'accueil seulement.** La marque passe de 128 à 80 pendant que la partie
+écrite glisse vers la gauche et s'efface. C'est `is_front_page()` qui décide,
+dans `header.php` : ailleurs, ni partie écrite ni accroche `data-logo-scroll`,
+et le script ne trouve rien.
+
+### L'état d'ARRIVÉE est celui de la maquette
+
+Relevé au pixel sur `HP_01_LCDS_hp full.pdf` : marque de **80 × 80 posée en
+(48, 24)**, exactement `$logo-size` et le rembourrage d'en-tête actuels. La
+maquette ne dessine donc **que la fin** de l'animation — ni le grand logo, ni la
+partie écrite n'y figurent, ils viennent de la référence d'animation fournie.
+
+D'où le choix de la valeur par défaut : `--logo-progress` vaut **1**, c'est-à-dire
+l'arrivée. Sans script, sous mouvement réduit, en dessous de la tablette ou sur
+les autres pages, c'est la maquette qui s'affiche. **Le grand logo est un
+enrichissement, jamais un prérequis.**
+
+### La boîte ne bouge pas, et c'est non négociable
+
+`--header-height` alimente le collage des étiquettes, le `scroll-padding` et la
+garde des volets. Une marque qui grandirait sa boîte les ferait **tous** bouger
+au défilement.
+
+La boîte du verrouillage vaut donc l'état d'arrivée, en dur, et la marque grandit
+par `transform: scale()` depuis son coin haut-gauche — une transformation ne
+participe pas à la mise en page. Mesuré : l'en-tête reste à 128 du début à la fin.
+
+### Le script publie UN nombre, le CSS fait le reste
+
+Même partage que le parcours de soin. Les tailles, la distance de glissement et
+le calage vivent dans la feuille de style ; `app.js` ne publie que
+`--logo-progress`. Les réécrire des deux côtés aurait créé deux sources.
+
+Le nombre **dépasse 1** en fin de course, et c'est le rebond : l'échelle passe
+sous sa valeur d'arrivée — la marque se pose à 78 avant de revenir à 80 — ce qui
+se lit comme un petit ressort. Seule l'opacité ne supporte pas le dépassement,
+le CSS la borne.
+
+### Ralentir se mesure en pixels, pas à l'œil
+
+La référence fournie était jugée trop rapide. La course est passée de 260 à 420,
+mais **allonger la course ne suffit pas** : la courbe compte autant.
+
+La première essayée, `cubic-bezier(0.3, 0, 0.25, 1.35)`, paraissait plus douce à
+la lecture et s'est révélée **plus rapide** que la référence — la moitié du
+chemin dès 119px, contre 130 pour la référence. Comparées en pixels de
+défilement, seule mesure qui ait un sens quand la course change :
+
+| | mi-course | 90 % |
+| --- | --- | --- |
+| Référence, course 260 | 130px | 186px |
+| Première essayée | 119px | 201px |
+| Retenue, course 420 | 170px | 244px |
+
+Retenue : `cubic-bezier(0.5, 0, 0.35, 1.3)`, environ 30 % plus lente que la
+référence, avec un départ moins mort — c'est le « plus fluide ». Son quatrième
+nombre gouverne le rebond : sommet mesuré à 1,0449 pour x = 0,82, retour exact
+à 1.
+
+### La partie écrite se retire quand elle n'a plus la place
+
+Elle mesure 449 pour une marque de 128 : le verrouillage entier fait 577, et la
+navigation occupe 761 de plus.
+
+| Largeur | Ce qui se passe |
+| --- | --- |
+| 1440 (maquette) | tout tient, **à douze pixels près** |
+| 1280 | l'écrit recouvrirait le menu de 148px |
+| 1025 | recouvrement complet |
+
+La référence d'animation ne dessinait **aucune navigation** : elle ne pouvait pas
+rencontrer le cas. Le script mesure donc la place réellement disponible et pose
+`data-logo-serre`, qui retire l'écrit. **La marque, elle, tient partout et
+continue de s'animer** — seul l'écrit se retire.
+
+> **Conséquence à connaître** : la partie écrite n'apparaît qu'au-delà d'environ
+> 1430px. Sur un portable en 1366, on ne voit que la réduction de la marque.
+> Refermer cet écart demande un arbitrage de design — réduire l'écrit, raccourcir
+> le menu, ou l'accepter.
+
+Deux pièges rencontrés, tous deux invisibles à la lecture :
+
+- **La mesure doit attendre les polices.** La largeur du menu en dépend ;
+  mesurée trop tôt, la place disponible est surestimée et l'écrit reste posé sur
+  les liens. `initHeaderHeight` porte le même garde-fou.
+- **`offsetLeft` et `offsetWidth` n'existent pas sur un SVG.** Ce sont des
+  propriétés de `HTMLElement` : sur la partie écrite elles valaient `undefined`,
+  la comparaison portait sur `NaN` et restait **fausse partout**. Le verrou ne se
+  posait jamais. La mesure passe désormais par `getBoundingClientRect()`, prise
+  avec le progrès remis à zéro pour lire la place déployée.
+
+### L'export fourni a demandé deux retouches
+
+1. **Les `style` en ligne ont été retirés.** Chaque tracé en portait un, et une
+   déclaration `fill` en ligne l'emporte sur l'attribut de présentation :
+   recolorer le seul attribut n'aurait **rien changé à l'écran**. Ils portaient
+   en outre une valeur `color(display-p3 …)` qui l'emportait encore sur le `fill`
+   hexadécimal du même `style`.
+2. **Les teintes ont été ramenées sur celles du site** — `#303887` vers
+   `#00387A`, `#0CABA6` vers `#048B8C`. L'export venait d'un profil de couleurs
+   différent, et un écrit violet à côté d'une marque bleu marine se voit.
+
+> La partie écrite commence à « rthodontie » : le **« O » manquant est l'anneau
+> orange de la marque**, qui se trouve exactement à sa place dans le
+> verrouillage. Décaler l'écrit casse le mot — le calage horizontal n'est pas un
+> réglage esthétique.
+
 ## L'ouverture des panneaux d'accordéon
 
 Le panneau reste un vrai `hidden` — c'est ce qui le retire de l'arbre

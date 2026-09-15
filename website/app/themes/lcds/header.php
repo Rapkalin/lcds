@@ -12,6 +12,18 @@
 if (! defined('ABSPATH')) {
     exit;
 }
+
+/**
+ * Le logo animé au défilement ne vit QUE sur la page d'accueil.
+ *
+ * L'attribut `data-logo-scroll` est le seul point d'accroche du script : sans
+ * lui il ne cherche rien, et l'en-tête des autres pages garde la marque à sa
+ * taille de maquette, sans partie écrite. Le gabarit décide, pas le script.
+ *
+ * `is_front_page()` plutôt qu'une classe de `body` : la classe dépend des
+ * réglages de lecture, l'appel répond à la question posée.
+ */
+$lcds_logo_anime = is_front_page();
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -27,7 +39,12 @@ if (! defined('ABSPATH')) {
 
 <header id="site-header" class="site-header">
     <a class="site-header__logo" href="<?php echo esc_url(home_url('/')); ?>" rel="home">
-        <?php get_template_part('components/site-logo'); ?>
+        <span class="site-logo-lockup"<?php echo $lcds_logo_anime ? ' data-logo-scroll' : ''; ?>>
+            <?php get_template_part('components/site-logo'); ?>
+            <?php if ($lcds_logo_anime) : ?>
+                <?php get_template_part('components/site-logo-word'); ?>
+            <?php endif; ?>
+        </span>
         <span class="screen-reader-text"><?php echo esc_html(get_bloginfo('name')); ?></span>
     </a>
 

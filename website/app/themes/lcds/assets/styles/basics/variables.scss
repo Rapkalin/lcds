@@ -1,3 +1,4 @@
+@use "sass:math";
 @use 'sass:color';
 @use 'functions' as fn;
 
@@ -177,6 +178,31 @@ $sticky-top: calc(var(--header-height, #{fn.toRem(128)}) + #{fn.toRem(24)});
 $header-padding: fn.toRem(48);
 $logo-size: fn.toRem(80);
 $logo-size-mobile: fn.toRem(56);
+/* ---------------------------------------------------------------------------
+ * Verrouillage du logo animé au défilement — PAGE D'ACCUEIL SEULEMENT.
+ *
+ * `$logo-size` est l'état d'ARRIVÉE, et c'est lui que dessine la maquette :
+ * marque de 80 posée en (48, 24), relevé au pixel sur `HP_01_LCDS_hp full.pdf`.
+ * La taille ci-dessous est l'état de DÉPART, que la maquette ne montre pas —
+ * elle vient de la référence d'animation fournie, elle-même issue de Figma.
+ *
+ * La marque ne change JAMAIS de taille de boîte : elle est mise à l'échelle par
+ * `transform`, depuis son coin haut-gauche. La hauteur de l'en-tête doit rester
+ * stable — `--header-height` alimente le collage des étiquettes, le
+ * `scroll-padding` et la garde des volets. Une boîte qui grandit au défilement
+ * les ferait tous bouger avec elle.
+ * ------------------------------------------------------------------------- */
+$logo-size-start: fn.toRem(128);
+// Le rapport des deux tailles, donc l'échelle de départ. Écrit en division pour
+// qu'il suive les tailles : une valeur en dur mentirait au premier ajustement.
+$logo-scale-start: math.div(128, 80);
+// L'écrit ne change pas de taille, il GLISSE et s'efface. Sa hauteur et son
+// décalage viennent de la référence.
+$logo-word-height: fn.toRem(78);
+$logo-word-top: fn.toRem(8);
+// Il glisse plus loin que la marque ne rétrécit (128 - 80 = 48) : il passe donc
+// DERRIÈRE elle en s'effaçant, au lieu de s'arrêter à son bord.
+$logo-word-slide: fn.toRem(110);
 // Boutons ronds, pastilles et piste de progression des carrousels.
 $module: fn.toRem(52);
 // Retrait vertical d'une section, et rythme interne entre ses blocs.

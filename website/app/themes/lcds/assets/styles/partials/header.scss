@@ -86,6 +86,84 @@ body:has(.hero) .site-header {
   height: var.$logo-size;
 }
 
+/* --------------------------------------------------------------------------- *
+ * Le verrouillage du logo, animé au défilement — PAGE D'ACCUEIL SEULEMENT.
+ *
+ * Le script ne publie QU'UN NOMBRE, `--logo-progress`, et laisse toute la
+ * géométrie ici : les tailles, la distance de glissement et le calage vivent
+ * donc à un seul endroit. Même partage que le parcours de soin.
+ *
+ * SA VALEUR PAR DÉFAUT EST 1, c'est-à-dire l'état d'ARRIVÉE — la marque à 80,
+ * l'écrit effacé, exactement ce que dessine la maquette. Sans script, sous
+ * mouvement réduit ou sur les autres pages, c'est donc la maquette qui s'affiche
+ * et non un état intermédiaire. Le grand logo est un ENRICHISSEMENT, jamais un
+ * prérequis.
+ *
+ * Le nombre DÉPASSE 1 en fin de course — environ 1,058 — et c'est voulu : c'est
+ * le petit rebond. Il fait passer l'échelle sous sa valeur d'arrivée avant
+ * qu'elle y revienne. D'où le `clamp` sur l'opacité, seule propriété qui ne
+ * supporte pas le dépassement.
+ * --------------------------------------------------------------------------- */
+.site-logo-lockup {
+  // La BOÎTE ne bouge jamais : elle vaut l'état d'arrivée. La marque grandit par
+  // `transform`, qui ne participe pas à la mise en page. L'en-tête garde donc sa
+  // hauteur, et avec elle `--header-height`, dont dépendent le collage des
+  // étiquettes, le `scroll-padding` et la garde des volets.
+  position: relative;
+  display: block;
+  width: var.$logo-size;
+  height: var.$logo-size;
+
+  --logo-progress: 1;
+  // Repli commun aux deux enfants, borné pour l'opacité.
+  --logo-visible: clamp(0, calc(1 - var(--logo-progress)), 1);
+  // Le drapeau que LIT le script pour savoir s'il doit publier quoi que ce soit.
+  // Il est posé par les mêmes règles que le repli, donc les deux ne peuvent pas
+  // diverger — et le point de rupture reste écrit une seule fois, ici.
+  --logo-anime: 1;
+
+  .site-logo {
+    position: relative;
+    // Depuis le coin haut-gauche : c'est lui que la maquette cale en (48, 24),
+    // et c'est le seul point qui doit rester immobile pendant la réduction.
+    transform-origin: 0 0;
+    transform: scale(
+      calc(#{var.$logo-scale-start} + (1 - #{var.$logo-scale-start}) * var(--logo-progress))
+    );
+    // La marque passe DEVANT l'écrit, qui se glisse derrière elle en s'effaçant.
+    z-index: 1;
+  }
+
+  // L'ÉCRIT SE RETIRE QUAND IL N'A PLUS LA PLACE.
+  //
+  // Il mesure 449 pour une marque de 128 : le verrouillage entier fait 577, et
+  // la navigation occupe 761 de plus. À 1440 — la largeur de la maquette —
+  // l'ensemble tient, mais à DOUZE PIXELS près. En dessous il recouvre le menu :
+  // mesuré, 148px de recouvrement à 1280.
+  //
+  // La référence d'animation ne dessinait aucune navigation, elle ne pouvait pas
+  // rencontrer le cas. La marque, elle, tient partout et continue de s'animer :
+  // seul l'écrit se retire. L'attribut est posé par le script, qui mesure la
+  // place réellement disponible plutôt que de la deviner d'un point de rupture.
+  &[data-logo-serre] .site-logo__word {
+    display: none;
+  }
+
+  .site-logo__word {
+    position: absolute;
+    top: var.$logo-word-top;
+    // Calé sur le bord droit de la marque à son état de DÉPART : c'est là que
+    // l'anneau orange tient lieu du « O » d'« Orthodontie ». Voir
+    // components/site-logo-word.php — décaler l'écrit casse le mot.
+    left: var.$logo-size-start;
+    width: auto;
+    height: var.$logo-word-height;
+    transform: translateX(calc(-1 * #{var.$logo-word-slide} * var(--logo-progress)));
+    opacity: var(--logo-visible);
+    z-index: 0;
+  }
+}
+
 /* Navigation et bouton d'action partagent la pastille : seul le fond change. */
 .site-nav__list,
 .site-header__cta {
@@ -414,6 +492,22 @@ body:has(.hero) .site-header {
     height: var.$logo-size-mobile;
   }
 
+  // L'écrit fait 449 de large pour une marque de 128 : le verrouillage entier
+  // mesure 577, il ne tient sur aucune de ces largeurs. Aucune maquette ne le
+  // dessine d'ailleurs en mobile. On revient donc à l'état d'arrivée, qui EST
+  // la maquette — et le script, qui lit la même requête, ne s'accroche pas.
+  .site-logo-lockup {
+    width: var.$logo-size-mobile;
+    height: var.$logo-size-mobile;
+
+    --logo-progress: 1;
+    --logo-anime: 0;
+  }
+
+  .site-logo__word {
+    display: none;
+  }
+
   .is-menu-open {
     overflow: hidden;
 
@@ -422,5 +516,15 @@ body:has(.hero) .site-header {
       opacity: 1;
       transition: opacity var.$fade, visibility 0s;
     }
+  }
+}
+
+// Le grandissement du logo au défilement EST du mouvement : qui demande à le
+// réduire reçoit directement l'état d'arrivée, celui de la maquette. Le script
+// lit la même requête et ne pose alors aucun écouteur.
+@media (prefers-reduced-motion: reduce) {
+  .site-logo-lockup {
+    --logo-progress: 1;
+    --logo-anime: 0;
   }
 }

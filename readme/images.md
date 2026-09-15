@@ -52,6 +52,34 @@ c'est le cas de l'image Docker du projet. **Aucun plugin, aucun service externe.
 > Ajouter une clé de réglage = la déclarer dans `config.php`, jamais en dur dans
 > `conversion.php`.
 
+### La panne est SILENCIEUSE — d'où sept assertions
+
+Sans support WebP dans la bibliothèque d'images, WordPress **retombe sur du
+JPEG sans rien signaler** : ni erreur, ni avertissement, ni trace. Rien ne le dit
+à part le poids des pages. Trois manières d'y arriver sans s'en apercevoir :
+
+- `--with-webp` retiré de la compilation de GD dans `docker/php/Dockerfile` ;
+- un environnement dont l'image PHP n'a pas été reconstruite ;
+- un import de médias antérieur au module, jamais régénéré.
+
+`bin/qa-front.sh` ferme les trois. **La conversion et la livraison sont
+éprouvées séparément** — des filtres corrects ne prouvent pas que les fichiers
+en base ont été régénérés :
+
+| Bloc | Ce qu'il éprouve |
+| --- | --- |
+| `check_webp` (serveur) | le module est chargé ; chaque format source sort en WebP ; le GIF et le SVG restent dehors ; la qualité ne vise que le WebP ; **un encodage réel aboutit à un fichier dont l'entête est `RIFF`/`WEBP`** |
+| Campagne front | chaque `src` **et chaque piste de `srcset`** d'un visuel de médiathèque est en `.webp`, sur les deux pages visitées |
+
+La dernière assertion serveur est la seule qui s'aperçoive d'une bibliothèque
+sans WebP : elle fabrique une image, la fait redimensionner et enregistrer par
+le chemin exact d'un téléversement, puis **lit les octets produits**. Le type
+MIME annoncé ne suffit pas.
+
+Côté front, le `srcset` compte autant que le `src` : c'est lui que le navigateur
+choisit en pratique, et une seule piste restée en JPEG sert du JPEG à une partie
+des visiteurs. Éprouvé en ne mutant *que* le `srcset` — l'assertion rougit.
+
 ### Ce qui existe réellement sur le disque
 
 Mesuré sur un JPEG de test de 1600×1200 (108 Ko) :
