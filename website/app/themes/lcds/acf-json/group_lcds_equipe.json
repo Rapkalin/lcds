@@ -1,0 +1,179 @@
+{
+    "key": "group_lcds_equipe",
+    "title": "Page « L'équipe »",
+    "fields": [
+        {
+            "key": "field_lcds_equipe_apropos",
+            "label": "À propos",
+            "name": "a_propos",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "Première section de la page : le titre, puis son visuel en pleine largeur.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_equipe_apropos_titre",
+                    "label": "Titre principal (h1)",
+                    "name": "titre",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Le titre de la page, affiché en tête. Exemple : « À propos de la Clinique du Sourire ». C'est le SEUL titre de page de la maquette : les libellés des sections suivantes lui sont subordonnés.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 80,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_equipe_apropos_visuel",
+                    "label": "Visuel",
+                    "name": "visuel",
+                    "aria-label": "",
+                    "type": "image",
+                    "instructions": "Cadre de 1344 × 672 sur la maquette, soit un rapport de 2:1. Une image d'un autre rapport est RECADRÉE AU CENTRE, jamais déformée : cadrer large et haut se perd. Son texte alternatif se saisit dans la médiathèque.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "return_format": "id",
+                    "preview_size": "medium",
+                    "library": "all",
+                    "min_width": "",
+                    "min_height": "",
+                    "min_size": "",
+                    "max_width": "",
+                    "max_height": "",
+                    "max_size": "",
+                    "mime_types": ""
+                }
+            ]
+        },
+        {
+            "key": "field_lcds_equipe_equipe",
+            "label": "L'équipe",
+            "name": "equipe",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "Deuxième section : une étiquette à gauche, le texte de présentation à droite. Même composant que « l'histoire » sur la page d'accueil.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_equipe_equipe_etiquette",
+                    "label": "Étiquette de section",
+                    "name": "etiquette",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Libellé court, affiché en capitales. Exemple : « l'équipe ». Il nomme la section dans le plan de la page.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 40,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_equipe_equipe_puce",
+                    "label": "Couleur de la puce",
+                    "name": "puce",
+                    "aria-label": "",
+                    "type": "button_group",
+                    "instructions": "Le petit point coloré de l'étiquette.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "choices": {
+                        "turquoise": "Vert",
+                        "orange": "Rouge"
+                    },
+                    "default_value": "turquoise",
+                    "return_format": "value",
+                    "allow_null": 0,
+                    "layout": "horizontal"
+                },
+                {
+                    "key": "field_lcds_equipe_equipe_texte",
+                    "label": "Texte",
+                    "name": "texte",
+                    "aria-label": "",
+                    "type": "wysiwyg",
+                    "instructions": "Paragraphes de présentation. Une ligne vide entre deux paragraphes suffit.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "tabs": "all",
+                    "toolbar": "basic",
+                    "media_upload": 0,
+                    "delay": 0
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "page_template",
+                "operator": "==",
+                "value": "template-equipe.php"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+        "the_content",
+        "excerpt",
+        "discussion",
+        "comments",
+        "author",
+        "format",
+        "featured_image",
+        "categories",
+        "tags",
+        "send-trackbacks"
+    ],
+    "active": true,
+    "description": "Contenu de la page « L'équipe ». Le gabarit se choisit dans « Attributs de page ».",
+    "show_in_rest": 0
+}

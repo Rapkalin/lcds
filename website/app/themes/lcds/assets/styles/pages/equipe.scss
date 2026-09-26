@@ -1,0 +1,68 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+/* ------------------------------------------------------------------------- *
+ * Page « L'équipe ».
+ *
+ * Même fond que « Le cabinet », et pour la même raison : la maquette ne dessine
+ * ni volet, ni coin arrondi, ni changement de fond — échantillonné sur
+ * `LCDS_equipe.pdf`, rgb(242, 248, 255) partout hors contenu.
+ *
+ * L'aplat est posé sur `.main-content`, jamais sur le `body` : un fond de
+ * `body` se propage au canevas tant que `html` n'en a pas, et c'est cette
+ * propagation qui rend visible le visuel révélé du pied de page. Deux réglages
+ * anodins l'ont déjà rompue — voir partials/footer.scss.
+ * ------------------------------------------------------------------------- */
+.main-content.page-equipe {
+  background: var.$blue-pale;
+  // LA BANDE DE L'APPLICATION REMONTE DE 48 SUR LE CONTENU : c'est le
+  // chevauchement qui masque l'encoche de ses coins arrondis. Sans réserve en
+  // bas de page, elle recouvrait les 48 derniers pixels du texte de
+  // présentation — la dernière ligne et demie, purement et simplement cachée.
+  //
+  // 80 est l'écart relevé sur la maquette entre le bas du dernier contenu
+  // (8836) et le haut de la bande (8916) ; 48 est ce que la bande avale. La
+  // réserve est donc la somme des deux, et elle est écrite comme telle : le
+  // jour où le chevauchement change, cette ligne suit.
+  padding-bottom: calc(#{var.$block-gap} + #{var.$radius-section});
+}
+
+/* ------------------------------------------------------------------------- *
+ * La deuxième section REPREND `block-intro`, le composant de « l'histoire » de
+ * l'accueil : étiquette à gauche, texte à droite. Sa grille `1fr 1fr` avec une
+ * gouttière de 12 place la colonne de droite à 48 + 666 + 12 = 726, la cote
+ * relevée au pixel sur cette maquette. Rien à réécrire, donc — seulement à lui
+ * donner la grille des pages intérieures au lieu de celle de l'accueil.
+ *
+ * Ce qui change, et rien d'autre :
+ *   retrait latéral  161 (accueil) → 48
+ *   largeur du contenu  1118 → 1344
+ *   rembourrage vertical  $section-padding → 80, l'écart relevé entre le bas
+ *                         du visuel (1124) et le haut de la pastille (1204)
+ * ------------------------------------------------------------------------- */
+.page-equipe .block-intro {
+  padding: var.$block-gap 0 0;
+
+  &__header {
+    max-width: var.$inner-outer;
+    margin: 0 auto;
+    // `padding-inline` et non le seul `padding-left` de l'accueil : la colonne
+    // de droite court jusqu'à 1392, elle a donc une marge à sa droite.
+    padding-inline: var.$inner-inset;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Le texte de cette section est un CHAPÔ, pas du corps courant : 24 contre les
+ * 16 de « l'histoire » sur l'accueil. Mesuré sur les deux PDF — le rapport vaut
+ * 1,5002 sur la même chaîne de caractères, et l'interligne relevé, 34, est bien
+ * celui de 24 et non celui de 16.
+ *
+ * L'écart entre deux paragraphes suit la taille : c'est une ligne vide dans la
+ * maquette, donc une hauteur de ligne, quelle qu'elle soit.
+ * ------------------------------------------------------------------------- */
+.page-equipe .block-intro__text {
+  gap: calc(#{var.$fs-lead} * #{var.$lh-lead});
+  font-size: var.$fs-lead;
+  line-height: var.$lh-lead;
+}

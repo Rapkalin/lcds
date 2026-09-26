@@ -1,0 +1,80 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Relevé au pixel sur `EQUIPE/LCDS_equipe.pdf` (page de 1446 × 10789, un point
+// = un pixel — les six pixels de plus que les autres maquettes sont du BLANC
+// hors page à droite, vérifié : la grille reste celle des pages intérieures,
+// contenu de 48 à 1392).
+//
+//   titre   x=48, boîte à 260, DEUX lignes de 58 — soit 48px de corps
+//   visuel  x 48 → 1392, y 452 → 1124, donc 1344 × 672 : un rapport de 2:1
+//           EXACT, et un rayon de 8
+//
+// LE TITRE NE COURT PAS SUR TOUTE LA LARGEUR, et c'est ce qui le met sur deux
+// lignes : « À propos de la Clinique » s'arrête à 710 alors que « du Sourire »
+// aurait tenu jusqu'à 1392. Sa boîte est BORNÉE — l'encre de la première ligne
+// mesure 662, et la ligne entière aurait demandé 747, donc la borne tombe entre
+// les deux. 666 est la seule valeur de la grille dans cet intervalle : la
+// demi-largeur du contenu, gouttière déduite, celle-là même que la section
+// suivante donne à sa colonne de gauche.
+//
+// Sans cette borne le titre tenait sur une ligne et tout ce qui suit remontait
+// de 58 — mesuré dans le navigateur, le visuel arrivait à 394 au lieu de 452.
+//
+// L'en-tête n'est pas fixé sur cette page — elle ne porte pas de hero —, il
+// occupe donc 128 de flux : la boîte du titre à 260 vaut un retrait de 132.
+.block-about {
+  padding: fn.toRem(132) 0 0;
+
+  &__inner {
+    max-width: var.$inner-outer;
+    margin: 0 auto;
+    padding: 0 var.$inner-inset;
+  }
+
+  // 76 entre le bas de la deuxième ligne du titre (376) et le visuel (452).
+  &__title {
+    // Une PART de la grille, jamais 666 en `rem` : à 200 % de taille de texte,
+    // une largeur en `rem` double et pousse la page hors de l'écran — c'est le
+    // défaut RGAA 10.4 déjà mesuré sur le rail des visuels du cabinet.
+    max-width: calc((100% - #{var.$gutter}) / 2);
+    margin: 0 0 fn.toRem(76);
+    font-size: var.$fs-h2;
+  }
+
+  // Le rapport plutôt qu'une hauteur : la largeur tombe avec la fenêtre, et
+  // une hauteur en dur aurait étiré le cadre sur les écrans étroits.
+  &__media {
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    border-radius: var.$radius;
+    // Aplat de repli : le cadre reste dessiné tant que le visuel se charge, ou
+    // si le contributeur n'en a pas encore posé.
+    background: var.$blue-separator;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
+  .block-about {
+    padding-top: var.$section-padding;
+
+    &__title {
+      // La demi-grille est une cote de la maquette de 1440. Elle ne survit pas
+      // au repli en une colonne : à 320 elle laissait 106 au titre quand le
+      // seul mot « Clinique » en demande 154, et le navigateur coupait DANS le
+      // mot — neuf lignes pour six mots. Le repli intervient ici, à la même
+      // largeur que celui de la section suivante.
+      max-width: none;
+      margin-bottom: fn.toRem(48);
+    }
+  }
+}

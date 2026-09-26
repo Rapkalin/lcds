@@ -1007,8 +1007,23 @@ done
 # Les autres pages passent la MEME campagne : les assertions qui ne trouvent pas
 # leur noeud se taisent, celles qui sont communes — repères, contrastes, plan de
 # titres, chargement différé — valent partout.
-echo "== Page « Le cabinet » à 1440px =="
-report "1440" "$(dump_dom 1440 /le-cabinet/)" || FAILURES=$((FAILURES + 1))
+# Les pages intérieures passent les TROIS largeurs, comme l'accueil. À 1440
+# elles portent leurs cotes de maquette ; à 500 et 320 elles n'en ont aucune —
+# aucune maquette mobile n'existe —, mais les assertions structurelles valent :
+# débordement horizontal, coupures dans les mots, contrastes, plan de titres.
+#
+# Ajouté après coup, et pour cause : le titre de « L'équipe » gardait à 320 une
+# largeur relevée à 1440 et se coupait au milieu d'un mot. La campagne ne
+# regardait alors ces pages qu'à 1440.
+for width in 1440 500 320; do
+    echo "== Page « Le cabinet » à ${width}px =="
+    report "$width" "$(dump_dom "$width" /le-cabinet/)" || FAILURES=$((FAILURES + 1))
+done
+
+for width in 1440 500 320; do
+    echo "== Page « L'équipe » à ${width}px =="
+    report "$width" "$(dump_dom "$width" /l-equipe/)" || FAILURES=$((FAILURES + 1))
+done
 
 echo
 if [ "$FAILURES" -eq 0 ]; then

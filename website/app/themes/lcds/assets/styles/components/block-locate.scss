@@ -67,9 +67,9 @@
     display: grid;
     grid-template-columns: minmax(0, 552fr) minmax(0, 666fr);
     gap: fn.toRem(126);
-    max-width: var.$cabinet-outer;
+    max-width: var.$inner-outer;
     margin: 0 auto;
-    padding: 0 var.$cabinet-inset;
+    padding: 0 var.$inner-inset;
   }
 
   // `align-items: flex-start` sur la tête empêche le plan de s'étirer : sans

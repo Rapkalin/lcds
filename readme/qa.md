@@ -318,6 +318,19 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > 387 à 587px pendant que les pixels du visuel restent identiques. C'est le
 > genre de preuve qu'aucune assertion de DOM ne remplace.
 
+- **Pages intérieures, à 1440** : « Le cabinet » et « L'équipe » rejouent la
+  campagne entière — les assertions qui ne trouvent pas leur nœud se taisent,
+  celles qui sont communes valent partout. S'y ajoutent leurs cotes relevées au
+  pixel : grille de 48 à 1392 et colonne de droite à 726 sur les deux, tête
+  collée d'un seul tenant sur le cabinet, visuel exactement 2:1 et chapô de
+  24/34 sur l'équipe.
+
+> **Ces cotes rougissent à la moindre refonte de maquette, et c'est voulu.** Les
+> cinq assertions du cabinet sont passées au rouge le jour où la maquette a posé
+> un `h1` au-dessus des sections : toute la page avait glissé de 48px et le
+> titre de section était devenu une pastille. Une campagne qui serait restée
+> verte n'aurait rien valu.
+
 ### Trois largeurs, dont un vrai 320px
 
 `1440`, `500` et `320`. La largeur est passée à l'**iframe** et non à la
@@ -437,6 +450,57 @@ Remplacer `arret = etape === 0 || …` par `arret = false` produit une ancre
 inverse en double, la restauration échoue et la source reste mutée. Vérifier
 l'unicité de l'ancre inverse **avant** de muter.
 
+## Homologuer une page contre sa maquette
+
+Une page n'est pas finie quand elle ressemble à la maquette : elle est finie
+quand une **campagne la compare à sa place**. Les cinq pas, dans l'ordre, et
+aucun n'est facultatif :
+
+1. **Relever la maquette** — voir la section suivante. Les cotes sont des
+   nombres, pas des impressions.
+2. **Mesurer le rendu** dans le navigateur, au même endroit, et comparer.
+3. **Écrire les cotes en assertions** dans `bin/qa/front.qa.js`, sous le bloc de
+   la page. Une cote qui n'est pas dans la campagne n'est pas homologuée : elle
+   est vraie le jour de la livraison, et plus jamais vérifiée.
+4. **Rejouer la campagne aux TROIS largeurs**, pas seulement à 1440.
+5. **Casser volontairement la règle surveillée** et vérifier que l'assertion
+   rougit — voir « Écrire une assertion qui peut échouer ».
+
+> **Les cotes de maquette ne valent qu'à 1440.** Aucune maquette mobile
+> n'existe. À 500 et 320, ce qui est homologué n'est pas une cote mais une
+> PROPRIÉTÉ : pas de débordement horizontal, pas de chevauchement, pas de mot
+> coupé par une largeur de desktop oubliée, contrastes tenus, plan de titres
+> intact.
+
+**Le défaut type, et celui qui a motivé cette section.** Le titre de
+« L'équipe » porte une `max-width` d'une demi-colonne : c'est ce que dessine la
+maquette, où il tient sur deux lignes. Cette largeur relevée à 1440 est restée
+en place quand la page passe à une seule colonne : à 320, elle laissait **106
+pixels** à un titre dont le seul mot « Clinique » en demande **154**. Le
+navigateur coupait dans le mot, neuf lignes pour six mots. La page avait
+pourtant été homologuée — mais **à 1440 seulement**, où la cote est juste.
+
+Deux enseignements, tous deux appliqués :
+
+- Les pages intérieures passent désormais les **trois largeurs**.
+- Deux assertions génériques attrapent chacune une classe entière : **aucune
+  boîte portant une `max-width` ne laisse un mot déborder**, et **rien du
+  contenu ne passe sous la bande de l'application** — celle-ci remonte de 48 sur
+  ce qui la précède, et une page dont la dernière section ne réserve pas cette
+  hauteur voit ses dernières lignes recouvertes sans que rien d'autre ne le
+  signale : ni débordement, ni chevauchement entre frères.
+- Pour la première : la coupure seule ne suffit pas à conclure. La coupure seule ne suffit pas à
+  conclure Le thème l'autorise à dessein pour une adresse électronique ou
+  un titre dans une carte étroite, où la boîte occupe déjà toute la place. C'est
+  sa conjonction avec une `max-width` qui dénonce une contrainte de desktop
+  oubliée.
+
+> **Trois coupures subsistent à 320 et sont tolérées** : deux titres de carte de
+> technologie et un titre d'accordéon sur l'accueil, une adresse électronique
+> sur le cabinet. Leurs boîtes ne portent aucune `max-width` — elles occupent
+> déjà toute leur place, il n'y a pas de largeur à corriger. L'assertion les
+> compte et les affiche, sans rougir.
+
 ## Lire la maquette au pixel
 
 Deux retours de recette ont été tranchés non par interprétation mais par
@@ -455,6 +519,46 @@ non du blanc, et que la caisse du bus occupe les deux tiers de sa boîte.
 Rendre un glyphe en ASCII, ligne à ligne, est le moyen le plus rapide de comparer
 un tracé à sa maquette : deux blocs de 24 lignes côte à côte disent en un coup
 d'œil ce qu'aucune cote isolée ne montre.
+
+### Les maquettes de page entière : rendre une BANDE, pas la page
+
+Les PDF des pages intérieures font une seule page de 8 000 à 11 000 points de
+haut. Les convertir d'un bloc donne une image illisible, et **`sips` ne sait pas
+en découper une région** : son `--cropOffset` est ignoré sur la machine de
+développement — trois décalages différents ont rendu la même bande centrale.
+
+Deux outils déjà présents s'en chargent. `pdftoppm` vient de **poppler**, comme
+`pdfimages` :
+
+```bash
+# Une bande de 1300 points depuis le HAUT de la page, à l'échelle 1:1.
+gs -q -dNOPAUSE -dBATCH -sDEVICE=ppmraw -r72 -dFIXEDMEDIA -g1440x1300 \
+   -o /tmp/bande.ppm \
+   -c "<</PageOffset [0 $((HAUTEUR_PAGE - 1300))]>> setpagedevice" \
+   -f maquette.pdf
+
+# Une région précise, à 3× pour en tirer une image utilisable.
+pdftoppm -jpeg -jpegopt quality=92 -r 216 \
+    -x 144 -y 1356 -W 4032 -H 2016 -f 1 -l 1 maquette.pdf sortie
+```
+
+> **Le `PageOffset` de Ghostscript se compte vers le BAS**, à l'inverse du
+> repère PostScript : `pageH - bandeH - y` amène la bande voulue dans la
+> fenêtre. Le signe contraire ne produit aucune erreur, juste une image
+> entièrement blanche.
+
+Le PPM se lit en Python sans dépendance — un en-tête de trois entiers puis des
+triplets d'octets, bien plus court que le décodeur PNG. C'est cette chaîne qui a
+établi les cotes des pages « Le cabinet » et « L'équipe » : position des
+pastilles à 442 et 1204, visuel de 1344 × 672 exactement, teinte de puce
+`rgb(4, 139, 140)`.
+
+> **Les cotes d'un texte ne se déduisent pas de sa boîte**, que `pdftotext
+> -bbox-layout` donne à la ligne : sa hauteur dépend des glyphes présents. Ce
+> qui se compare sans risque, c'est le **pas entre deux lignes** — il vaut
+> l'interligne rendu — et la **largeur d'une même chaîne** d'un bloc à l'autre.
+> C'est ce rapport, 467,9 contre 311,9 sur « Lorem ipsum dolor sit amet,
+> consectetur », qui a établi que le chapô de « L'équipe » vaut 24 et non 16.
 
 ## Ce qui n'est pas automatisé
 

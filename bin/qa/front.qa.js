@@ -329,6 +329,129 @@ window.runFrontQa = async (win) => {
         root.scrollWidth <= root.clientWidth
     );
 
+    /* --------------------------------------------------------------------- *
+     * Une largeur de maquette qui survit au repli en une colonne.
+     *
+     * LE DÉFAUT QUE CECI ATTRAPE : une `max-width` relevée sur la maquette de
+     * 1440 — une part de grille, une demi-colonne — laissée en place quand la
+     * mise en page passe à une seule colonne. La boîte reste alors deux fois
+     * trop étroite pour son contenu, et le navigateur coupe DANS LES MOTS.
+     * Constaté sur le titre de « L'équipe » à 320 : une boîte de 106 pour un
+     * « Clinique » qui en demande 154, soit neuf lignes pour six mots.
+     *
+     * La coupure seule ne suffit pas à conclure. Le thème l'autorise
+     * délibérément — `overflow-wrap: break-word`, posé pour le critère RGAA
+     * 10.4 — et elle est le bon dernier recours pour une adresse électronique
+     * ou un titre dans une carte étroite : là, la boîte occupe déjà toute la
+     * place disponible, il n'y a rien à corriger. C'est la conjonction avec une
+     * `max-width` qui dénonce une contrainte de desktop oubliée.
+     *
+     * Mesuré au canevas avec la police RÉELLEMENT rendue : une largeur déduite
+     * des métriques d'une police non chargée ne vaudrait rien.
+     */
+    /* --------------------------------------------------------------------- *
+     * Rien du contenu ne passe SOUS la bande de l'application.
+     *
+     * La bande remonte de 48 sur ce qui la précède — `margin-top: -48px`, le
+     * chevauchement qui masque l'encoche de ses coins arrondis, voir la section
+     * « Coins hauts des sections ». Une page dont la dernière section ne
+     * réserve pas cette hauteur laisse donc ses dernières lignes DERRIÈRE le
+     * panneau, et rien ne le signale : pas de débordement, pas de
+     * chevauchement entre frères, le texte est simplement recouvert.
+     *
+     * Constaté sur « L'équipe » : 48 pixels de texte avalés, soit la dernière
+     * ligne et demie du paragraphe de présentation. Les autres pages y
+     * échappaient par hasard — leur dernière section a un rembourrage bas qui
+     * dépasse largement le chevauchement.
+     * --------------------------------------------------------------------- */
+    const bandeApp = doc.querySelector(".block-app");
+    const contenuPrincipal = doc.querySelector(".main-content");
+
+    if (bandeApp !== null && contenuPrincipal !== null) {
+        const hautBande = bandeApp.getBoundingClientRect().top;
+        const avales = [];
+
+        for (const noeud of contenuPrincipal.querySelectorAll(":is(h1,h2,h3,p,li,a,span,img)")) {
+            if (noeud.closest(".screen-reader-text") !== null) {
+                continue;
+            }
+
+            const boite = noeud.getBoundingClientRect();
+
+            if (boite.width < 2 || boite.height === 0) {
+                continue;
+            }
+
+            if (noeud.tagName !== "IMG" && (noeud.textContent || "").trim() === "") {
+                continue;
+            }
+
+            if (boite.bottom > hautBande + 0.5) {
+                avales.push(`${noeud.className || noeud.tagName} dépasse de ${Math.round(boite.bottom - hautBande)}`);
+            }
+        }
+
+        assert(
+            `rien ne passe sous la bande de l'application (${avales.length === 0 ? "rien" : avales.slice(0, 3).join(" | ")})`,
+            avales.length === 0
+        );
+    }
+
+    const mesureur = doc.createElement("canvas").getContext("2d");
+    const coupures = [];
+    const tolerees = [];
+
+    for (const noeud of doc.querySelectorAll(".main-content :is(h1,h2,h3,p,li,a,span)")) {
+        // Le texte réservé aux lecteurs d'écran vit dans une boîte d'un pixel :
+        // c'est sa raison d'être, pas un défaut de largeur.
+        if (noeud.closest(".screen-reader-text") !== null) {
+            continue;
+        }
+
+        // Seules les FEUILLES portent du texte : un conteneur renvoie le texte
+        // de ses enfants, et sa largeur n'est pas celle qui les contraint.
+        if (noeud.querySelector(":is(h1,h2,h3,p,li)") !== null) {
+            continue;
+        }
+
+        const texte = (noeud.textContent || "").trim();
+        const boite = noeud.getBoundingClientRect();
+
+        if (texte === "" || boite.width < 2 || boite.height === 0) {
+            continue;
+        }
+
+        const styleNoeud = styleOf(noeud);
+
+        mesureur.font = `${styleNoeud.fontWeight} ${styleNoeud.fontSize} ${styleNoeud.fontFamily}`;
+
+        const motLong = texte.split(/\s+/).reduce(
+            (retenu, mot) => mesureur.measureText(mot).width > mesureur.measureText(retenu).width ? mot : retenu
+        );
+        const dispo = boite.width
+            - parseFloat(styleNoeud.paddingLeft)
+            - parseFloat(styleNoeud.paddingRight);
+
+        if (mesureur.measureText(motLong).width <= dispo + 0.5) {
+            continue;
+        }
+
+        const repere = `${noeud.className || noeud.tagName} « ${motLong} »`;
+
+        if (styleNoeud.maxWidth === "none") {
+            tolerees.push(repere);
+        } else {
+            coupures.push(`${repere} : ${Math.round(dispo)} de boîte, max-width ${styleNoeud.maxWidth}`);
+        }
+    }
+
+    assert(
+        `aucune largeur de maquette ne coupe un mot (${coupures.length === 0
+            ? `${tolerees.length} coupure(s) tolérée(s), boîtes sans max-width`
+            : coupures.join(" | ")})`,
+        coupures.length === 0
+    );
+
     const isOpen = () => toggle.getAttribute("aria-expanded") === "true";
     const hasBodyClass = () => doc.body.classList.contains("is-menu-open");
 
@@ -1044,10 +1167,16 @@ window.runFrontQa = async (win) => {
             `cabinet : ${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
             obtenu !== null && Math.abs(obtenu - attendu) <= tolerance
         );
-        const titreCab = doc.querySelector(".block-locate__title");
-        const retrait = titreCab === null ? 0 : parseFloat(styleOf(titreCab).paddingLeft);
+        // Le titre de section est une PASTILLE depuis la refonte de la
+        // maquette, et le titre de page un `h1` visible au-dessus d'elle. Le
+        // retrait latéral se lit maintenant sur ce `h1`, le seul des deux à
+        // porter la marge de la page.
+        const titrePage = doc.querySelector(".page-cabinet__title");
+        const retrait = titrePage === null ? 0 : parseFloat(styleOf(titrePage).paddingLeft);
 
-        coteCab("titre, bord gauche du texte", (boiteCab(".block-locate__title")?.left ?? null) + retrait, 48);
+        coteCab("titre de page, bord gauche du texte", (titrePage?.getBoundingClientRect().left ?? null) + retrait, 48);
+        coteCab("pastille, bord gauche", boiteCab(".block-locate .tag")?.left ?? null, 48);
+        coteCab("pastille, hauteur", boiteCab(".block-locate .tag")?.height ?? null, 29);
         coteCab("plan, bord gauche", boiteCab(".block-locate__media")?.left ?? null, 48);
         coteCab("plan, largeur", boiteCab(".block-locate__media")?.width ?? null, 552);
         coteCab("plan, hauteur", boiteCab(".block-locate__media")?.height ?? null, 516);
@@ -1058,26 +1187,56 @@ window.runFrontQa = async (win) => {
 
         // Le décalage de 10 entre la boîte d'une ligne et le haut des capitales
         // est MESURÉ sur le rendu, pas déduit des métriques de la police.
+        // Le retrait haut est PORTÉ PAR LE TITRE lui-même, comme le retrait
+        // latéral : sa boîte commence donc sous l'en-tête, à 128, et c'est son
+        // rembourrage qui descend le texte à 260.
+        const retraitHaut = titrePage === null ? 0 : parseFloat(styleOf(titrePage).paddingTop);
+
         coteCab(
-            "capitales du titre sous le haut de page",
-            (boiteCab(".block-locate__title")?.top ?? null) + win.scrollY + 10,
+            "capitales du titre de page sous le haut de page",
+            (titrePage?.getBoundingClientRect().top ?? null) + win.scrollY + retraitHaut + 10,
             270
+        );
+        coteCab(
+            "pastille sous le haut de page",
+            (boiteCab(".block-locate .tag")?.top ?? null) + win.scrollY,
+            442
         );
         coteCab(
             "plan sous le haut de page",
             (boiteCab(".block-locate__media")?.top ?? null) + win.scrollY,
-            394
+            519
         );
 
-        // Le plan reste au même niveau pendant que la liste défile. Même règle
-        // que les traitements de l'accueil, même piège : sans
+        // La liste de droite démarre AU NIVEAU DE LA PASTILLE, et non du plan.
+        // C'est cette cote qui autorise la tête d'un seul tenant : si elle
+        // repassait au niveau du plan, il faudrait de nouveau écrire quelque
+        // part la hauteur de la pastille.
+        coteCab(
+            "liste alignée sur la pastille",
+            (boiteCab(".block-locate .info-list")?.top ?? null) + win.scrollY,
+            442
+        );
+
+        // C'est la TÊTE ENTIÈRE qui reste au même niveau — pastille et plan
+        // ensemble —, et non plus le plan seul : collé de son côté, il chassait
+        // la pastille sous l'en-tête. Même piège qu'ailleurs : sans
         // `align-self: start`, l'élément s'étire à sa rangée et le collage est
         // silencieusement inopérant.
+        const teteCollee = doc.querySelector(".block-locate__head");
         const plan = doc.querySelector(".block-locate__media");
 
         assert(
-            `cabinet : le plan reste au même niveau (${styleOf(plan).position}, ${styleOf(plan).alignSelf})`,
-            styleOf(plan).position === "sticky" && styleOf(plan).alignSelf === "start"
+            `cabinet : la tête reste au même niveau (${styleOf(teteCollee).position}, ${styleOf(teteCollee).alignSelf})`,
+            styleOf(teteCollee).position === "sticky" && styleOf(teteCollee).alignSelf === "start"
+        );
+        assert(
+            `cabinet : le plan ne se colle plus tout seul (${styleOf(plan).position})`,
+            styleOf(plan).position === "static"
+        );
+        assert(
+            `cabinet : la pastille nomme la section en h2 (${doc.querySelector(".block-locate .tag")?.tagName})`,
+            doc.querySelector(".block-locate .tag")?.tagName === "H2"
         );
 
         // La liste est la MÊME que celle de l'accueil, à la gouttière près.
@@ -1107,11 +1266,101 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * Page « L'équipe » — « à propos » puis « l'équipe ».
+     *
+     * Relevé au pixel sur `EQUIPE/LCDS_equipe.pdf`. La page reprend la GRILLE
+     * DES PAGES INTÉRIEURES, celle du cabinet : contenu de 48 à 1392, colonne
+     * de droite à 726. Les ordonnées comptent le menu, qui n'est pas fixé ici
+     * non plus et occupe 128 de flux.
+     * --------------------------------------------------------------------- */
+    const equipe = doc.querySelector(".block-about");
+
+    if (equipe !== null && win.innerWidth === 1440) {
+        const boiteEq = (sel) => doc.querySelector(sel)?.getBoundingClientRect() ?? null;
+        const coteEq = (nom, obtenu, attendu, tolerance = 1) => assert(
+            `équipe : ${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
+            obtenu !== null && Math.abs(obtenu - attendu) <= tolerance
+        );
+
+        coteEq("titre, bord gauche", boiteEq(".block-about__title")?.left ?? null, 48);
+        coteEq(
+            "titre sous le haut de page",
+            (boiteEq(".block-about__title")?.top ?? null) + win.scrollY,
+            260
+        );
+
+        // DEUX lignes, et c'est la borne de largeur qui les impose : sur toute
+        // la largeur du contenu, le titre tiendrait sur une seule et tout ce
+        // qui suit remonterait de 58.
+        coteEq("titre, largeur bornée à la demi-grille", boiteEq(".block-about__title")?.width ?? null, 666);
+        coteEq("titre, deux lignes de 58", boiteEq(".block-about__title")?.height ?? null, 116);
+
+        coteEq("visuel, bord gauche", boiteEq(".block-about__media")?.left ?? null, 48);
+        coteEq("visuel, largeur", boiteEq(".block-about__media")?.width ?? null, 1344);
+        // 2:1 EXACT : la maquette dessine 1344 × 672.
+        coteEq("visuel, hauteur", boiteEq(".block-about__media")?.height ?? null, 672);
+        coteEq(
+            "visuel sous le haut de page",
+            (boiteEq(".block-about__media")?.top ?? null) + win.scrollY,
+            452
+        );
+
+        // La deuxième section est le composant de « l'histoire » de l'accueil,
+        // à qui cette page donne la grille intérieure. Si ces deux cotes
+        // lâchent, c'est que la surcharge de page a sauté.
+        coteEq("pastille, bord gauche", boiteEq(".page-equipe .block-intro .tag")?.left ?? null, 48);
+        coteEq(
+            "pastille sous le haut de page",
+            (boiteEq(".page-equipe .block-intro .tag")?.top ?? null) + win.scrollY,
+            1204
+        );
+        coteEq("texte, bord gauche", boiteEq(".page-equipe .block-intro__text")?.left ?? null, 726);
+        coteEq("texte, bord droit", boiteEq(".page-equipe .block-intro__text")?.right ?? null, 1392);
+
+        // Le texte démarre AU NIVEAU de la pastille, comme la liste du cabinet.
+        coteEq(
+            "texte aligné sur la pastille",
+            (boiteEq(".page-equipe .block-intro__text")?.top ?? null) + win.scrollY,
+            1204
+        );
+
+        // Un CHAPÔ, et non le corps courant : 24/34 contre 16/22 sur l'accueil.
+        // Mesuré sur la même chaîne de caractères dans les deux maquettes.
+        const chapo = doc.querySelector(".page-equipe .block-intro__text");
+        const tailleChapo = chapo === null ? "" : styleOf(chapo).fontSize;
+        const ligneChapo = chapo === null ? "" : styleOf(chapo).lineHeight;
+
+        assert(
+            `équipe : le texte est un chapô de 24/34 (${tailleChapo}/${ligneChapo})`,
+            tailleChapo === "24px" && ligneChapo === "34px"
+        );
+
+        // Le `h1` de cette page est le titre de sa première section : la
+        // maquette n'en dessine aucun autre. Le vérifier ici, c'est éprouver
+        // l'argument `element` du composant — sans lui le titre repartirait en
+        // `h2` et la page n'aurait plus de `h1`.
+        assert(
+            `équipe : le titre de la page est le h1 (${doc.querySelector(".block-about__title")?.tagName})`,
+            doc.querySelector(".block-about__title")?.tagName === "H1"
+        );
+
+        // Même aplat unique que le cabinet, en-tête compris.
+        const contenuEq = doc.querySelector(".main-content");
+
+        assert(
+            `équipe : un seul aplat, en-tête compris (${styleOf(contenuEq).backgroundColor}`
+            + ` / ${styleOf(doc.getElementById("site-header")).backgroundColor})`,
+            styleOf(contenuEq).backgroundColor === "rgb(242, 248, 255)"
+                && styleOf(doc.getElementById("site-header")).backgroundColor === "rgb(242, 248, 255)"
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
      * Page « Le cabinet » — le rail de visuels.
      *
      * Six groupes partagent un seul motif, et le rail est CONTINU de l'un à
-     * l'autre : dix visuels de 666 × 500, écart de 12 partout, de y=1419 à
-     * y=6524 sans respiration aux jonctions. C'est cette continuité qui compte
+     * l'autre : dix visuels de 666 × 500, écart de 12 partout, de y=1467 à
+     * y=6572 sans respiration aux jonctions. C'est cette continuité qui compte
      * — un rembourrage de section la romprait sans que rien ne le signale.
      * --------------------------------------------------------------------- */
     const visuelsRail = [...doc.querySelectorAll(".block-rooms__item")];
@@ -1134,11 +1383,13 @@ window.runFrontQa = async (win) => {
             Math.abs(boites[0].left - 726) <= 1 && Math.abs(boites[0].right - 1392) <= 1
         );
 
-        // Le premier visuel de la page tombe à 1419 : c'est lui qui valide le
+        // Le premier visuel de la page tombe à 1467 : c'est lui qui valide le
         // retrait bas de la section d'en-tête, porté là et non sur le rail.
+        // 1419 avant que la maquette ne pose un `h1` au-dessus des sections —
+        // toute la page a glissé de 48, et la maquette avec elle.
         assert(
-            `cabinet : le rail commence à 1419 (${Math.round(boites[0].top + win.scrollY)})`,
-            Math.abs(boites[0].top + win.scrollY - 1419) <= 2
+            `cabinet : le rail commence à 1467 (${Math.round(boites[0].top + win.scrollY)})`,
+            Math.abs(boites[0].top + win.scrollY - 1467) <= 2
         );
 
         // Chaque titre s'aligne sur le HAUT de son premier visuel, et y reste

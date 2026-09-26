@@ -8,7 +8,7 @@
             "name": "titre_h1",
             "aria-label": "",
             "type": "text",
-            "instructions": "Le titre de la page. La maquette n'en dessine aucun : il est rendu MASQUÉ visuellement, mais il reste lu par les lecteurs d'écran et par les moteurs. À revoir avec le designer — une page sans nom visible est un manque.",
+            "instructions": "Le titre de la page, affiché en tête, au-dessus de la première section.",
             "required": 0,
             "conditional_logic": false,
             "wrapper": {

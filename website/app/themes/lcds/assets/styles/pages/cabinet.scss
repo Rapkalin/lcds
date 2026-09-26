@@ -18,14 +18,6 @@
   background: var.$blue-pale;
 }
 
-// L'en-tête n'est PAS fixé ici : la règle `position: fixed` ne vaut que sur une
-// page qui porte un hero. Il occupe donc 128 de flux, et sans fond propre c'est
-// la teinte des côtés qui apparaissait derrière lui — un bandeau bleu foncé en
-// haut de la page.
-.page-template-template-cabinet .site-header {
-  background: var.$blue-pale;
-}
-
 // Titre de la page, au-dessus de la première section. Relevé : boîte à 260, soit
 // 132 sous un en-tête de 128, et une capitale à 270 — les mêmes cotes que
 // l'ancien titre de section qu'il remplace à cette place.
@@ -35,8 +27,8 @@
 // le titre tomberait au `2em` du navigateur, car `general.scss` ne donne pas de
 // taille aux `h1` — ils n'étaient jusqu'ici jamais affichés.
 .page-cabinet__title {
-  max-width: var.$cabinet-outer;
+  max-width: var.$inner-outer;
   margin: 0 auto;
-  padding: fn.toRem(132) var.$cabinet-inset 0;
+  padding: fn.toRem(132) var.$inner-inset 0;
   font-size: var.$fs-h2;
 }

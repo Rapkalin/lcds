@@ -29,9 +29,9 @@
     grid-template-columns: minmax(0, 630fr) minmax(0, 666fr);
     gap: fn.toRem(48);
     align-items: start;
-    max-width: var.$cabinet-outer;
+    max-width: var.$inner-outer;
     margin: 0 auto;
-    padding: 0 var.$cabinet-inset;
+    padding: 0 var.$inner-inset;
   }
 
   // La ligne du titre s'aligne sur le HAUT du premier visuel de son groupe.

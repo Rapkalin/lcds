@@ -190,6 +190,36 @@ venu d'un moteur voit désormais sur quelle page il est.
 dans le plan de titres exactement comme les titres des groupes de visuels, et
 c'est elle qui donne son nom accessible à la région.
 
+## La page « L'équipe »
+
+Elle se contribue comme « Le cabinet » : **page par page**, une surface de
+saisie par section de la maquette.
+
+**Pour créer la page :** Pages → Ajouter, puis **Attributs de page → Modèle →
+« L'équipe »**. Le groupe de champs apparaît alors sous le titre.
+
+| Champ | Ce qu'il porte |
+| --- | --- |
+| À propos → Titre principal (h1) | « À propos de la Clinique du Sourire » |
+| À propos → Visuel | La photo de groupe, **cadre 2:1** |
+| L'équipe → Étiquette de section | « l'équipe », affiché en pastille |
+| L'équipe → Couleur de la puce | Vert sur la maquette |
+| L'équipe → Texte | Les paragraphes de présentation |
+
+**Le `h1` de cette page est le titre de sa première section**, et non un titre
+posé au-dessus comme sur « Le cabinet » : la maquette n'en dessine aucun autre.
+C'est pour ça que le champ vit dans le groupe « À propos » et non à la racine.
+
+**Le visuel est recadré au centre, jamais déformé.** Le cadre vaut 1344 × 672,
+soit deux fois plus large que haut. Une photo d'un autre rapport perd ses bords :
+sur un portrait, elle perd le haut et le bas. Cadrer large et haut ne sert à
+rien — c'est la bande centrale qui reste.
+
+**La deuxième section est le composant de « l'histoire »** de la page d'accueil,
+sans son bouton ni sa galerie : étiquette à gauche, texte à droite. Les deux
+pages partagent donc la même mise en forme, et une correction faite à l'une
+profite à l'autre.
+
 ## Réutiliser une section sur une autre page
 
 Les sections sont des **composants importables**, et rien ne les attache à la

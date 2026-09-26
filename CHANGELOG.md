@@ -7,6 +7,51 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.26.0
+
+### Ajouté
+
+- **La page « L'équipe » existe.** Ses deux premières sections sont en place :
+  le titre de la page avec sa photo de groupe, puis l'étiquette « l'équipe » et
+  son texte de présentation. La suite de la maquette — les praticiens — viendra
+  après.
+
+- **Elle arrive pré-remplie.** `bin/seed-demo.sh` recadre la photo de groupe
+  depuis la maquette et l'importe, `bin/init.sh` crée la page et la garnit. Rien
+  n'écrase le contenu déjà saisi dans l'éditeur, sauf réamorçage demandé.
+
+### Modifié
+
+- **La deuxième section réutilise le bloc de « l'histoire »** de la page
+  d'accueil plutôt que d'en refaire un : même mise en forme, et une correction
+  faite à l'une des deux pages profite à l'autre.
+
+- **L'aide du champ « Titre principal » du cabinet ne dit plus qu'il est
+  masqué** : il est affiché depuis la version précédente.
+
+### Corrigé
+
+- **La fin du texte de présentation ne disparaît plus sous la bande de
+  l'application**, sur « L'équipe ». La bande remonte de 48 pixels sur ce qui la
+  précède — c'est ce qui masque l'encoche de ses coins arrondis —, et la page ne
+  réservait pas cette hauteur : la dernière ligne et demie passait derrière le
+  panneau.
+
+- **Le titre de « L'équipe » ne se coupe plus au milieu d'un mot sur
+  téléphone.** Il gardait à toutes les largeurs la demi-colonne relevée sur la
+  maquette de 1440 : à 320, il restait 106 pixels pour un mot qui en demande
+  154, et le titre partait sur neuf lignes.
+
+- **La recette front regarde les pages intérieures aux trois largeurs**, et non
+  plus à 1440 seulement, et gagne deux assertions qui valent sur toutes les
+  pages : aucune boîte portant une largeur maximale ne laisse un mot déborder,
+  et rien du contenu ne passe sous la bande de l'application.
+
+- **La recette front repasse au vert sur « Le cabinet ».** Cinq de ses
+  assertions mesuraient encore la maquette d'avant la refonte de la version
+  précédente : titre de section au lieu de pastille, plan à 394 au lieu de 519,
+  rail à 1419 au lieu de 1467.
+
 ## 2.25.0
 
 ### Modifié

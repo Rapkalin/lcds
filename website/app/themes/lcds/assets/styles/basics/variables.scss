@@ -85,6 +85,13 @@ $fs-h2: clamp(#{fn.toRem(32)}, 1.667vw + #{fn.toRem(24)}, #{fn.toRem(48)});
 $fs-h3: clamp(#{fn.toRem(20)}, 0.4167vw + #{fn.toRem(18)}, #{fn.toRem(24)});
 // 16px est déjà le plancher de lisibilité : le corps de texte ne bouge pas.
 $fs-p: fn.toRem(16);
+// Le CHAPÔ : un paragraphe de présentation, une fois et demie le corps courant.
+// MESURÉ, et non déduit : « Lorem ipsum dolor sit amet, consectetur » occupe
+// 467,9 dans la section « l'équipe » de `LCDS_equipe.pdf` contre 311,9 dans un
+// paragraphe courant de la même page — un rapport de 1,5002 pour un corps de
+// 16, donc 24. Le même PDF porte les deux, à quelques centaines de pixels
+// d'écart : ce n'est pas une dérive de maquette, c'est un style.
+$fs-lead: fn.toRem(24);
 $fs-cta: fn.toRem(13);
 // Numéro d'étape du parcours. FIXE, contrairement aux titres qui sont fluides,
 // et c'est le CONTRASTE qui l'impose : le turquoise mesure 3,87:1 sur le
@@ -105,6 +112,9 @@ $fs-step-number: fn.toRem(24);
 // 16 × 1.375 = 22. Reprendre 1.2 et 1.4 décalait toute la page de 3px.
 $lh-title: 1.2083333;
 $lh-p: 1.375;
+// 24 × 1.4166667 = 34,000 — l'interligne relevé sur le chapô. Figma annonce
+// 1.4 et arrondit 33,6 au pixel : même piège que ci-dessus, même parade.
+$lh-lead: 1.4166667;
 $lh-cta: 1;
 
 /* FONT WEIGHTS */
@@ -140,12 +150,15 @@ $content-outer: calc(#{fn.toRem(1118)} + 2 * #{fn.toRem(20)});
 // un enfant déjà en retrait, il compterait la moitié d'une largeur réduite et
 // le contenu se décalerait vers l'intérieur.
 $content-inset: max(#{fn.toRem(20)}, calc(50% - #{$content-width} / 2));
-// La page du cabinet respire plus large que l'accueil : 48 de marge latérale
-// là où l'accueil pose un retrait de 161. Relevé sur `LCDS_cabinet.pdf` —
-// titres et plan à x=48, colonne de droite jusqu'à 1392, soit 1344 de contenu.
-$cabinet-width: fn.toRem(1344);
-$cabinet-inset: fn.toRem(48);
-$cabinet-outer: calc(#{$cabinet-width} + 2 * #{$cabinet-inset});
+// LA GRILLE DES PAGES INTÉRIEURES — « Le cabinet », « L'équipe » —, qui respire
+// plus large que l'accueil : 48 de marge latérale là où l'accueil pose un
+// retrait de 161. Relevée sur `LCDS_cabinet.pdf` puis RETROUVÉE au pixel sur
+// `LCDS_equipe.pdf` : contenu de x=48 à x=1392, soit 1344, et colonne de droite
+// à 726 sur les deux. D'où un nom de page à bannir ici : ces trois valeurs ne
+// sont plus celles d'une page, mais du gabarit intérieur.
+$inner-width: fn.toRem(1344);
+$inner-inset: fn.toRem(48);
+$inner-outer: calc(#{$inner-width} + 2 * #{$inner-inset});
 // Largeur maximale de la PAGE. Au-delà, tout est centré et les côtés reçoivent
 // `$page-outside`. Trois blocs la portent — l'en-tête, `main` et le pied de
 // page — plus le visuel FIXÉ du pied de page, qui échappe à son conteneur.

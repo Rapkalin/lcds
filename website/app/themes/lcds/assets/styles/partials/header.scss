@@ -69,6 +69,17 @@
 //
 // `fixed` et non plus `absolute` : posé en absolu, l'en-tête restait accroché
 // au HAUT DU DOCUMENT et disparaissait au premier écran de défilement.
+// Les pages INTÉRIEURES ne portent pas de hero : l'en-tête y reste dans le flux
+// et occupe ses 128, mais il est transparent, et c'est la teinte des côtés qui
+// apparaissait derrière lui — un bandeau bleu foncé en haut de la page.
+//
+// Listé par gabarit, et non par `body:not(:has(.hero))` : la 404 et les pages
+// de résultats n'ont pas de hero non plus, et leur fond n'est pas celui-ci.
+.page-template-template-cabinet .site-header,
+.page-template-template-equipe .site-header {
+  background: var.$blue-pale;
+}
+
 body:has(.hero) .site-header {
   position: fixed;
   top: 0;
