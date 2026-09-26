@@ -13,10 +13,10 @@
  * Ce fichier reste DÉCLARATIF : il lit les champs et délègue aux composants de
  * `components/`, qui n'appellent jamais ACF — voir readme/contribution.md.
  *
- * Le titre `h1` est rendu MASQUÉ visuellement : la maquette n'en dessine aucun,
- * comme sur la page d'accueil. Conforme au RGAA, qui porte sur la structure des
- * titres et non sur leur visibilité, mais c'est un manque à soulever avec le
- * designer — voir readme/accessibilite.md.
+ * Le titre `h1` est VISIBLE, contrairement à celui de l'accueil : la maquette
+ * le dessine en tête de page depuis que la première section ne porte plus
+ * qu'une pastille. Il est rendu à la taille des `h2` — relevé au pixel, même
+ * chasse de 28,4 par caractère dans les deux cas.
  *
  * @package lcds
  */
@@ -82,7 +82,7 @@ foreach ((array) lcds_field('groupes', $page_id) as $group) {
 
 <main id="main-content" class="main-content page-cabinet">
     <?php if ($heading !== '') : ?>
-        <h1 class="screen-reader-text"><?php echo esc_html($heading); ?></h1>
+        <h1 class="page-cabinet__title"><?php echo esc_html($heading); ?></h1>
     <?php endif; ?>
 
     <?php get_template_part('components/block-locate', null, [

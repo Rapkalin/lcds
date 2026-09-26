@@ -146,8 +146,8 @@ se choisit, il ne se déduit pas de l'adresse : renommer la page ne le perd pas.
 
 | Champ | Ce qu'il porte |
 | --- | --- |
-| Titre principal (h1) | Le nom de la page. **Rendu masqué** — voir plus bas |
-| Nous trouver → Titre de la section | « Nous trouver » |
+| Titre principal (h1) | Le nom de la page, **affiché en tête de page** |
+| Nous trouver → Titre de la section | « Nous trouver », **affiché en pastille** |
 | Nous trouver → Plan | Une **image**, pas une carte interactive |
 | Nous trouver → Entrées | Les mêmes qu'« informations pratiques » sur l'accueil |
 
@@ -180,11 +180,15 @@ Ce n'est pas un titre de section : elle n'entre pas dans le plan de la page.
 > « Le parking privé et gratuit » y est coupé après « privé » alors que « et »
 > y tiendrait. Le retour à la ligne naturel ne le reproduira pas.
 
-**Le `h1` est masqué visuellement.** La maquette ne dessine aucun titre de
-page ; « Nous trouver » est déjà un titre de section. Conforme au RGAA, qui
-porte sur la structure des titres et non sur leur visibilité, et indexé
-normalement — mais un titre visible pèserait davantage, et un visiteur venu
-d'un moteur verrait sur quelle page il est. **À revoir avec le designer.**
+**Le `h1` est visible**, contrairement à celui de l'accueil. La maquette le
+dessine en tête de page depuis qu'elle a remplacé le titre de la première
+section par une pastille : « Nous trouver » ne tenait plus le rôle de titre de
+page. C'est la réserve qui était portée ici qui se trouve levée — un visiteur
+venu d'un moteur voit désormais sur quelle page il est.
+
+**La pastille reste un `h2`.** Seule sa forme change : elle nomme la section
+dans le plan de titres exactement comme les titres des groupes de visuels, et
+c'est elle qui donne son nom accessible à la région.
 
 ## Réutiliser une section sur une autre page
 

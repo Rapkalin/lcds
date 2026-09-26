@@ -7,6 +7,22 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.25.0
+
+### Modifié
+
+- **La page « Le cabinet » affiche son titre.** « Le cabinet » apparaît en tête
+  de page, là où la maquette le dessine désormais. Il était jusqu'ici lisible
+  par les seuls lecteurs d'écran.
+
+- **« Nous trouver » s'affiche en pastille**, et non plus en titre. C'est
+  toujours un `h2` : la section garde sa place dans le plan de titres et son
+  nom de région.
+
+- **Le libellé de « nous trouver » et le plan restent ensemble au défilement.**
+  Le plan ne chasse plus le libellé : les deux forment une seule tête collée,
+  que le titre de la section suivante emmène d'un bloc.
+
 ## 2.24.0
 
 ### Ajouté
