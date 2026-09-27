@@ -1,0 +1,88 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Relevé au pixel sur `EQUIPE/LCDS_equipe.pdf` :
+//
+//   carte    440 × 542, rayon 8
+//   portrait 440 × 440 — un CARRÉ, alors que les photos sont deux fois plus
+//            hautes que larges
+//   bandeau  102 de haut, aplat blanc
+//   nom      encre à 24 du bord gauche, capitales de 18 — le corps des `h3`
+//   fonction en capitales, le corps des boutons
+//   bouton   52 × 52, contour `$blue-light`, encastré de 24 à droite
+.person-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var.$radius;
+  background: var.$white;
+}
+
+// LE PORTRAIT EST CADRÉ PAR LE HAUT. Les photos sont des bustes de 2731 × 4096
+// posés dans un cadre carré : au centre, le cadrage coupait le haut du crâne.
+// Vérifié sur la maquette — elle montre le carré SUPÉRIEUR de la photo.
+.person-card__media {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  // Aplat de repli : le cadre reste dessiné tant qu'aucune photo n'est fournie,
+  // et dix-sept cartes sur vingt-neuf sont dans ce cas sur la maquette.
+  background: var.$blue-separator;
+}
+
+.person-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.person-card__foot {
+  display: flex;
+  // Le bouton est calé à droite, le nom et la fonction à gauche.
+  align-items: center;
+  justify-content: space-between;
+  gap: var.$gutter;
+  min-height: fn.toRem(102);
+  padding: fn.toRem(16) fn.toRem(24);
+}
+
+.person-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: fn.toRem(4);
+}
+
+// `h4` dans le plan de titres, mais la TAILLE d'un `h3` : la classe dit
+// l'apparence, le niveau dit la structure. Même parti pris que le titre de la
+// bande de l'application.
+.person-card__name {
+  font-family: var.$font-title;
+  font-size: var.$fs-h3;
+  font-weight: var.$fw-title;
+  line-height: var.$lh-title;
+}
+
+.person-card__role {
+  font-size: var.$fs-cta;
+  font-weight: var.$fw-cta;
+  line-height: var.$lh-cta;
+  letter-spacing: var.$ls-cta;
+  text-transform: uppercase;
+}
+
+.person-card__toggle {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: fn.toRem(52);
+  height: fn.toRem(52);
+  border: 1px solid var.$blue-light;
+  border-radius: var.$radius;
+  background: transparent;
+  color: var.$blue;
+  cursor: pointer;
+}
+
+.person-card__bio {
+  padding: 0 fn.toRem(24) fn.toRem(24);
+}

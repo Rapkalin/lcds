@@ -220,6 +220,36 @@ sans son bouton ni sa galerie : étiquette à gauche, texte à droite. Les deux
 pages partagent donc la même mise en forme, et une correction faite à l'une
 profite à l'autre.
 
+### « Rencontrez l'équipe »
+
+| Champ | Ce qu'il porte |
+| --- | --- |
+| Titre de la section | « Rencontrez l'équipe » |
+| Groupes → Étiquette | « les docteurs », « le secrétariat »… |
+| Groupes → Couleur de la puce | Rouge sur la maquette, pour les cinq |
+| Groupes → Texte | La présentation du groupe, sous l'étiquette |
+| Groupes → Personnes | Une entrée par carte |
+
+**Un groupe = une rangée qui s'ouvre par son étiquette.** Elle occupe la
+première case de la grille ; les cartes suivent, trois par rangée, et
+reprennent la colonne de gauche une fois la première rangée pleine.
+
+**L'étiquette reste sous les yeux** pendant que sa rangée défile, puis la carte
+qui arrive dessous la chasse — la même mécanique que les titres de groupe du
+cabinet.
+
+**Une personne sans photo garde son cadre.** C'est ce que la maquette dessine
+pour dix-sept cartes sur vingt-neuf, et le rendu le reproduit plutôt que de
+resserrer la grille.
+
+**Le portrait est cadré par le haut.** Le cadre est carré, les photos sont des
+bustes deux fois plus hauts que larges : c'est le carré du haut qui s'affiche.
+Une photo cadrée large perd donc ses côtés, et une photo où le visage est bas
+perd le visage.
+
+**Le bouton « + » n'apparaît que si la présentation est remplie.** Un bouton
+qui n'ouvre rien n'est pas un bouton.
+
 ## Réutiliser une section sur une autre page
 
 Les sections sont des **composants importables**, et rien ne les attache à la

@@ -7,6 +7,43 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.27.0
+
+### Ajouté
+
+- **« Rencontrez l'équipe » sur la page de l'équipe.** Cinq groupes — les
+  docteurs, le secrétariat, les assistantes, l'équipe labo, les techniciennes de
+  surface —, chacun ouvert par son étiquette, et leurs vingt-neuf cartes de
+  trois par rangée. Douze portent une photo, les autres gardent leur cadre :
+  c'est ce que dessine la maquette.
+
+- **L'étiquette d'un groupe reste sous les yeux** pendant que ses cartes
+  défilent, puis la carte qui arrive dessous la chasse. Même mécanique que les
+  titres de groupe du cabinet.
+
+- **Chaque carte porte un bouton « + »** qui déplie la présentation de la
+  personne. Sans texte saisi, pas de bouton : un bouton qui n'ouvre rien n'est
+  pas un bouton.
+
+- **Les douze portraits arrivent avec le contenu de démonstration**, tirés de la
+  maquette par `bin/seed-demo.sh`.
+
+### Corrigé
+
+- **La bande de l'application ne recouvre plus le dernier visuel du rail sur
+  « Le cabinet ».** Elle remonte de 48 pixels sur ce qui la précède — c'est ce
+  qui masque l'encoche de ses coins arrondis —, et la page ne réservait pas
+  cette hauteur. Le défaut ne se voyait pas : la maquette laisse ce dernier
+  cadre vide, et un aplat recouvert reste un aplat. Il serait apparu le jour où
+  le client fournit la photo.
+
+- **L'écart de fin de page suit maintenant la maquette de CHAQUE page** : 128
+  sur le cabinet, 60 sur l'équipe — la version précédente y posait 80, mesurés
+  sur le mauvais bord.
+
+- **La recette front vérifie cet écart page par page**, et n'admet plus qu'il
+  soit seulement positif.
+
 ## 2.26.0
 
 ### Ajouté

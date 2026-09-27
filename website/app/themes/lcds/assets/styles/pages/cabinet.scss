@@ -16,6 +16,16 @@
  * ------------------------------------------------------------------------- */
 .main-content.page-cabinet {
   background: var.$blue-pale;
+  // LA BANDE DE L'APPLICATION REMONTE DE 48 SUR LE CONTENU : c'est le
+  // chevauchement qui masque l'encoche de ses coins arrondis. Sans réserve, elle
+  // recouvrait les 48 derniers pixels du DERNIER VISUEL DU RAIL — mesuré. Le
+  // défaut ne se voyait pas : la maquette laisse ce dernier cadre vide, et un
+  // aplat recouvert reste un aplat. Il serait apparu le jour où le client
+  // fournit la photo de la salle PMR.
+  //
+  // 128 est l'écart relevé entre le bas du rail (6572) et le haut de la bande
+  // (6701) ; 48 est ce que la bande avale.
+  padding-bottom: calc(#{fn.toRem(128)} + #{var.$radius-section});
 }
 
 // Titre de la page, au-dessus de la première section. Relevé : boîte à 260, soit

@@ -1,0 +1,105 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+// Relevé au pixel sur `EQUIPE/LCDS_equipe.pdf`.
+//
+//   titre de section   x=48, boîte à 1571, une ligne de 58
+//   grille             trois colonnes de 440, écart de 12 — 3 × 440 + 2 × 12
+//                      = 1344, la largeur de contenu des pages intérieures
+//   tête du groupe     pastille à 1756, texte 48 plus bas
+//   cartes             440 × 542, premières à 1756
+//   entre deux groupes 128, soit le rembourrage de section
+//
+// Les 128 entre le bas de la section précédente et le titre, puis entre le
+// titre et la grille, sont la même valeur : `$section-padding` la donne à 1440
+// et la resserre en dessous.
+.block-team {
+  padding-top: var.$section-padding;
+
+  &__title {
+    max-width: var.$inner-outer;
+    margin: 0 auto var.$section-padding;
+    padding: 0 var.$inner-inset;
+    font-size: var.$fs-h2;
+  }
+
+  // La grille est posée PAR GROUPE : chaque étiquette ouvre une rangée, ce
+  // qu'une grille commune à la section n'aurait pas fait.
+  //
+  // Les colonnes en PARTS, jamais en `rem` : à 200 % de taille de texte une
+  // largeur en `rem` double et pousse la page hors de l'écran — RGAA 10.4,
+  // le défaut est documenté sur le rail du cabinet.
+  &__group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var.$gutter;
+    max-width: var.$inner-outer;
+    margin: 0 auto;
+    padding: 0 var.$inner-inset;
+
+    & + & {
+      margin-top: var.$section-padding;
+    }
+  }
+
+  // La case occupe la PREMIÈRE COLONNE de la première rangée, et c'est ELLE qui
+  // s'étire à la hauteur de la rangée — l'étirement par défaut d'un élément de
+  // grille, qu'il ne faut surtout pas neutraliser ici.
+  //
+  // C'est cette enveloppe qui BORNE LE COLLAGE de la tête. Collée directement
+  // dans la grille, la tête prenait la grille entière pour cage : mesuré, elle
+  // tenait 530px de course là où sa rangée n'en fait que 377, et la carte de la
+  // rangée suivante lui passait dessus au lieu de la chasser.
+  &__cell {
+    position: relative;
+  }
+
+  // La tête reste au même niveau pendant que sa rangée défile, puis la carte
+  // qui arrive dessous la chasse — sa course s'arrête au bas de la case.
+  &__head {
+    position: sticky;
+    top: var.$sticky-top;
+    display: flex;
+    flex-direction: column;
+    // La pastille est une boîte en ligne : étirée, son contour courrait sur
+    // toute la colonne au lieu d'épouser son libellé.
+    align-items: flex-start;
+    gap: fn.toRem(48);
+  }
+
+  // Une ligne vide sépare deux paragraphes dans la maquette : l'écart vaut donc
+  // exactement une hauteur de ligne.
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: calc(#{var.$fs-p} * #{var.$lh-p});
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
+  .block-team {
+    &__group {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    // Collée, la tête resterait en travers d'une grille qui n'a plus de rangée
+    // à parcourir.
+    &__cell {
+      grid-column: 1 / -1;
+      margin-bottom: fn.toRem(24);
+    }
+
+    &__head {
+      position: static;
+    }
+  }
+}
+
+@media (max-width: var.$bp-mobile) {
+  .block-team__group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

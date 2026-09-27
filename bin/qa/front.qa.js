@@ -367,6 +367,61 @@ window.runFrontQa = async (win) => {
     const bandeApp = doc.querySelector(".block-app");
     const contenuPrincipal = doc.querySelector(".main-content");
 
+    // L'écart entre le dernier contenu et la bande est une COTE DE MAQUETTE, et
+    // elle appartient à la PAGE : 128 sur « Le cabinet », 60 sur « L'équipe »,
+    // relevés au pixel sur leurs PDF respectifs. Une règle commune aurait été
+    // fausse sur l'une des deux. Sans cette assertion, seule la précédente
+    // veillait — et elle ne dit pas si l'écart est JUSTE, seulement s'il est
+    // positif.
+    const ecartsAttendus = { "page-cabinet": 128, "page-equipe": 60 };
+
+    if (bandeApp !== null && contenuPrincipal !== null && win.innerWidth === 1440) {
+        for (const [classePage, attendu] of Object.entries(ecartsAttendus)) {
+            if (!contenuPrincipal.classList.contains(classePage)) {
+                continue;
+            }
+
+            // Ce qui compte, c'est le dernier élément PEINT.
+            //
+            // Les feuilles, donc — un cadre vide du rail est une feuille sans
+            // texte, et c'est bien lui le dernier peint du cabinet. Mais aussi
+            // les conteneurs qui portent un aplat À EUX : la carte d'une
+            // personne est blanche, et son bord bas est ce que l'œil voit
+            // s'arrêter, 28 sous le dernier mot de son bandeau.
+            //
+            // Les sections, elles, sont exclues par leur fond : il est celui de
+            // la page. Les compter revenait à mesurer le rembourrage contre
+            // lui-même.
+            const fondDeLaPage = styleOf(contenuPrincipal).backgroundColor;
+            let basDuContenu = -1;
+
+            for (const noeud of contenuPrincipal.querySelectorAll("*")) {
+                const boite = noeud.getBoundingClientRect();
+
+                if (boite.width < 2 || boite.height < 2) {
+                    continue;
+                }
+
+                const fond = styleOf(noeud).backgroundColor;
+                const peint = noeud.children.length === 0
+                    || (fond !== "rgba(0, 0, 0, 0)" && fond !== "transparent" && fond !== fondDeLaPage);
+
+                if (! peint) {
+                    continue;
+                }
+
+                basDuContenu = Math.max(basDuContenu, boite.bottom);
+            }
+
+            const ecart = bandeApp.getBoundingClientRect().top - basDuContenu;
+
+            assert(
+                `${classePage} : la bande vient ${attendu} sous le dernier contenu (${ecart.toFixed(0)})`,
+                Math.abs(ecart - attendu) <= 2
+            );
+        }
+    }
+
     if (bandeApp !== null && contenuPrincipal !== null) {
         const hautBande = bandeApp.getBoundingClientRect().top;
         const avales = [];
@@ -1352,6 +1407,132 @@ window.runFrontQa = async (win) => {
             + ` / ${styleOf(doc.getElementById("site-header")).backgroundColor})`,
             styleOf(contenuEq).backgroundColor === "rgb(242, 248, 255)"
                 && styleOf(doc.getElementById("site-header")).backgroundColor === "rgb(242, 248, 255)"
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Page « L'équipe » — « rencontrez l'équipe ».
+     *
+     * Relevé au pixel sur `EQUIPE/LCDS_equipe.pdf` : trois colonnes de 440 avec
+     * 12 d'écart — 3 × 440 + 2 × 12 = 1344, la largeur de contenu des pages
+     * intérieures —, des cartes de 440 × 542 dont le portrait est un CARRÉ, et
+     * 128 entre deux groupes.
+     *
+     * LES ORDONNÉES ABSOLUES NE SONT PAS ASSERTÉES ICI, et c'est délibéré : le
+     * paragraphe de la section précédente tient sur six lignes au lieu de sept
+     * tant qu'Inter n'est pas auto-hébergée, et toute la section glisse de 34.
+     * Ce qui est vérifiable sans la police, ce sont les écarts INTERNES.
+     * --------------------------------------------------------------------- */
+    const equipeGroupes = [...doc.querySelectorAll(".block-team__group")];
+
+    if (equipeGroupes.length > 0 && win.innerWidth === 1440) {
+        const boiteEq2 = (sel) => doc.querySelector(sel)?.getBoundingClientRect() ?? null;
+        const coteEq2 = (nom, obtenu, attendu, tolerance = 1) => assert(
+            `équipe : ${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
+            obtenu !== null && Math.abs(obtenu - attendu) <= tolerance
+        );
+        const cartes = [...doc.querySelectorAll(".person-card")];
+        const boites = cartes.map((noeud) => noeud.getBoundingClientRect());
+        const formats = boites.map((b) => `${Math.round(b.width)}×${Math.round(b.height)}`);
+
+        assert(
+            `équipe : les ${cartes.length} cartes font 440 × 542 (${[...new Set(formats)].join(", ")})`,
+            formats.length > 0 && formats.every((f) => f === "440×542")
+        );
+
+        // Le portrait est un CARRÉ dans une photo deux fois plus haute que
+        // large : c'est le cadrage qui décide de ce qu'on voit, et il est pris
+        // PAR LE HAUT. Au centre, le haut du crâne tombait hors cadre.
+        const portrait = boiteEq2(".person-card__media");
+        const image = doc.querySelector(".person-card__image");
+
+        coteEq2("portrait, côté", portrait?.width ?? null, 440);
+        coteEq2("portrait, hauteur", portrait?.height ?? null, 440);
+        assert(
+            `équipe : le portrait est cadré par le haut (${image === null ? "absent" : styleOf(image).objectPosition})`,
+            image !== null && styleOf(image).objectPosition.startsWith("50% 0")
+        );
+
+        coteEq2("bandeau de la carte", boiteEq2(".person-card__foot")?.height ?? null, 102);
+        coteEq2("bouton, côté", boiteEq2(".person-card__toggle")?.width ?? null, 52);
+        coteEq2(
+            "bouton, encastré du bord droit",
+            (boites[0]?.right ?? 0) - (boiteEq2(".person-card__toggle")?.right ?? 0),
+            24
+        );
+
+        // Les trois colonnes, et l'écart de 12 dans les deux sens.
+        const premiere = equipeGroupes[0].querySelectorAll(".person-card");
+
+        // La PREMIÈRE carte est en colonne 2 : la tête occupe la case de gauche.
+        // C'est la troisième, au début de la deuxième rangée, qui reprend la
+        // colonne de 48 — et c'est elle qui dit que la tête n'a pas réservé sa
+        // colonne pour tout le groupe.
+        coteEq2("carte 1, bord gauche", premiere[0]?.getBoundingClientRect().left ?? null, 500);
+        coteEq2("carte 2, bord gauche", premiere[1]?.getBoundingClientRect().left ?? null, 952);
+        coteEq2("carte 3, sous la tête", premiere[2]?.getBoundingClientRect().left ?? null, 48);
+        coteEq2(
+            "écart entre deux colonnes",
+            (premiere[1]?.getBoundingClientRect().left ?? 0) - (premiere[0]?.getBoundingClientRect().right ?? 0),
+            12
+        );
+
+        // 128 sous le titre, puis 128 entre deux groupes. Relevé deux fois sur
+        // la maquette, et c'est `$section-padding` qui les donne à 1440.
+        const titreEq = boiteEq2(".block-team__title");
+
+        coteEq2(
+            "écart titre → grille",
+            (equipeGroupes[0].getBoundingClientRect().top ?? 0) - (titreEq?.bottom ?? 0),
+            128,
+            2
+        );
+
+        if (equipeGroupes.length > 1) {
+            coteEq2(
+                "écart entre deux groupes",
+                equipeGroupes[1].getBoundingClientRect().top - equipeGroupes[0].getBoundingClientRect().bottom,
+                128,
+                2
+            );
+        }
+
+        /*
+         * LA MÉCANIQUE : la tête se colle, et la carte qui arrive dessous la
+         * CHASSE au lieu de lui passer dessus.
+         *
+         * Ce qui le garantit n'est pas le `sticky` — il y était déjà — mais sa
+         * CAGE : la tête est collée dans une case qui, elle, s'étire à la
+         * hauteur de la rangée. Collée directement dans la grille, elle prenait
+         * la grille entière pour cage et tenait 530px là où sa rangée n'en fait
+         * que 377 ; la carte suivante lui passait alors dessus. L'assertion
+         * porte donc sur la hauteur de la CASE, seule chose qui borne la course.
+         */
+        const cellule = doc.querySelector(".block-team__cell");
+        const tete = doc.querySelector(".block-team__head");
+
+        assert(
+            `équipe : la tête de groupe est collée (${tete === null ? "absente" : styleOf(tete).position}, top ${tete === null ? "?" : styleOf(tete).top})`,
+            tete !== null && styleOf(tete).position === "sticky"
+        );
+        assert(
+            `équipe : sa course est bornée par sa rangée (case ${Math.round(cellule?.getBoundingClientRect().height ?? 0)}`
+            + ` pour une carte de ${Math.round(boites[0]?.height ?? 0)})`,
+            cellule !== null && Math.abs(cellule.getBoundingClientRect().height - (boites[0]?.height ?? 0)) <= 1
+        );
+
+        // Le plan de titres : la section en `h2`, ses groupes en `h3`, les noms
+        // en `h4`. Un `h2` sur une étiquette sortirait les groupes de leur
+        // section, et la page n'aurait plus qu'une suite de titres frères.
+        const niveaux = [
+            doc.querySelector(".block-team__title")?.tagName,
+            doc.querySelector(".block-team__head .tag")?.tagName,
+            doc.querySelector(".person-card__name")?.tagName,
+        ].join(" > ");
+
+        assert(
+            `équipe : le plan de titres descend h2 > h3 > h4 (${niveaux})`,
+            niveaux === "H2 > H3 > H4"
         );
     }
 

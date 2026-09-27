@@ -145,6 +145,236 @@
                     "delay": 0
                 }
             ]
+        },
+        {
+            "key": "field_lcds_equipe_rencontrez",
+            "label": "Rencontrez l'équipe",
+            "name": "rencontrez",
+            "aria-label": "",
+            "type": "group",
+            "instructions": "Troisième section : un titre, puis les groupes de personnes.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_equipe_rencontrez_titre",
+                    "label": "Titre de la section",
+                    "name": "titre",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Exemple : « Rencontrez l'équipe ». Il nomme la section dans le plan de la page.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 80,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_equipe_groupes",
+                    "label": "Groupes",
+                    "name": "groupes",
+                    "aria-label": "",
+                    "type": "repeater",
+                    "instructions": "Un groupe par métier : les docteurs, le secrétariat, les assistantes… Chacun ouvre une nouvelle rangée, son étiquette à gauche.",
+                    "required": 0,
+                    "conditional_logic": false,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "collapsed": "field_lcds_equipe_groupe_etiquette",
+                    "min": 0,
+                    "max": 0,
+                    "layout": "block",
+                    "button_label": "Ajouter un groupe",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_equipe_groupe_etiquette",
+                            "label": "Étiquette du groupe",
+                            "name": "etiquette",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Libellé court, affiché en capitales dans une pastille. Exemple : « les docteurs ». Il nomme le groupe dans le plan de la page.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 40,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_equipe_groupe_puce",
+                            "label": "Couleur de la puce",
+                            "name": "puce",
+                            "aria-label": "",
+                            "type": "button_group",
+                            "instructions": "Le petit point coloré de l'étiquette.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "choices": {
+                                "turquoise": "Vert",
+                                "orange": "Rouge"
+                            },
+                            "default_value": "orange",
+                            "return_format": "value",
+                            "allow_null": 0,
+                            "layout": "horizontal"
+                        },
+                        {
+                            "key": "field_lcds_equipe_groupe_texte",
+                            "label": "Texte",
+                            "name": "texte",
+                            "aria-label": "",
+                            "type": "wysiwyg",
+                            "instructions": "Paragraphes de présentation du groupe, affichés sous l'étiquette.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "tabs": "all",
+                            "toolbar": "basic",
+                            "media_upload": 0,
+                            "delay": 0
+                        },
+                        {
+                            "key": "field_lcds_equipe_personnes",
+                            "label": "Personnes",
+                            "name": "personnes",
+                            "aria-label": "",
+                            "type": "repeater",
+                            "instructions": "Une entrée par personne. L'ordre est celui de la grille, de gauche à droite.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "collapsed": "field_lcds_equipe_personne_nom",
+                            "min": 0,
+                            "max": 0,
+                            "layout": "block",
+                            "button_label": "Ajouter une personne",
+                            "sub_fields": [
+                                {
+                                    "key": "field_lcds_equipe_personne_photo",
+                                    "label": "Portrait",
+                                    "name": "photo",
+                                    "aria-label": "",
+                                    "type": "image",
+                                    "instructions": "Cadre CARRÉ de 440 × 440. La photo est cadrée PAR LE HAUT, jamais au centre : sur un portrait en buste, un cadrage centré couperait le haut du crâne. Sans photo, le cadre reste dessiné — c'est ce que la maquette montre pour dix-sept cartes sur vingt-neuf.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "return_format": "id",
+                                    "preview_size": "medium",
+                                    "library": "all",
+                                    "min_width": "",
+                                    "min_height": "",
+                                    "min_size": "",
+                                    "max_width": "",
+                                    "max_height": "",
+                                    "max_size": "",
+                                    "mime_types": ""
+                                },
+                                {
+                                    "key": "field_lcds_equipe_personne_nom",
+                                    "label": "Nom",
+                                    "name": "nom",
+                                    "aria-label": "",
+                                    "type": "text",
+                                    "instructions": "Exemple : « Yann Le Fur ».",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "maxlength": 60,
+                                    "placeholder": "",
+                                    "prepend": "",
+                                    "append": ""
+                                },
+                                {
+                                    "key": "field_lcds_equipe_personne_role",
+                                    "label": "Fonction",
+                                    "name": "role",
+                                    "aria-label": "",
+                                    "type": "text",
+                                    "instructions": "Exemple : « Orthodontiste ». Affichée en capitales.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "maxlength": 60,
+                                    "placeholder": "",
+                                    "prepend": "",
+                                    "append": ""
+                                },
+                                {
+                                    "key": "field_lcds_equipe_personne_bio",
+                                    "label": "Présentation",
+                                    "name": "bio",
+                                    "aria-label": "",
+                                    "type": "wysiwyg",
+                                    "instructions": "Texte révélé par le bouton « + » de la carte. LAISSÉ VIDE, LE BOUTON N'APPARAÎT PAS : un bouton qui n'ouvre rien n'est pas un bouton.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "tabs": "all",
+                                    "toolbar": "basic",
+                                    "media_upload": 0,
+                                    "delay": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
     ],
     "location": [

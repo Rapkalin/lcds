@@ -36,6 +36,34 @@ $about = is_array($about) ? $about : [];
 
 $team = lcds_field('equipe', $page_id);
 $team = is_array($team) ? $team : [];
+
+$meet = lcds_field('rencontrez', $page_id);
+$meet = is_array($meet) ? $meet : [];
+$groups = [];
+
+// `is_array` et non `?? []` : ACF rend `false` pour un répéteur sans ligne, et
+// `(array) false` vaut `[false]` — une ligne fantôme.
+$rows = is_array($meet['groupes'] ?? null) ? $meet['groupes'] : [];
+
+foreach ($rows as $row) {
+    $people = [];
+
+    foreach ((is_array($row['personnes'] ?? null) ? $row['personnes'] : []) as $person) {
+        $people[] = [
+            'image' => lcds_attachment_id($person['photo'] ?? 0),
+            'name' => trim((string) ($person['nom'] ?? '')),
+            'role' => trim((string) ($person['role'] ?? '')),
+            'bio' => (string) ($person['bio'] ?? ''),
+        ];
+    }
+
+    $groups[] = [
+        'label' => trim((string) ($row['etiquette'] ?? '')),
+        'dot' => trim((string) ($row['puce'] ?? '')) ?: 'orange',
+        'text' => (string) ($row['texte'] ?? ''),
+        'people' => $people,
+    ];
+}
 ?>
 
 <main id="main-content" class="main-content page-equipe">
@@ -49,6 +77,11 @@ $team = is_array($team) ? $team : [];
         'label' => trim((string) ($team['etiquette'] ?? '')),
         'dot' => trim((string) ($team['puce'] ?? '')) ?: 'turquoise',
         'text' => (string) ($team['texte'] ?? ''),
+    ]); ?>
+
+    <?php get_template_part('components/block-team', null, [
+        'title' => trim((string) ($meet['titre'] ?? '')),
+        'groups' => $groups,
     ]); ?>
 </main>
 

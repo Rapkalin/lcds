@@ -20,11 +20,15 @@
   // bas de page, elle recouvrait les 48 derniers pixels du texte de
   // présentation — la dernière ligne et demie, purement et simplement cachée.
   //
-  // 80 est l'écart relevé sur la maquette entre le bas du dernier contenu
-  // (8836) et le haut de la bande (8916) ; 48 est ce que la bande avale. La
-  // réserve est donc la somme des deux, et elle est écrite comme telle : le
-  // jour où le chevauchement change, cette ligne suit.
-  padding-bottom: calc(#{var.$block-gap} + #{var.$radius-section});
+  // 60 est l'écart relevé entre le bord bas de la dernière carte (8856) et le
+  // haut de la bande (8916) ; 48 est ce que la bande avale. La réserve est la
+  // somme des deux, et elle est écrite comme telle : le jour où le
+  // chevauchement change, cette ligne suit.
+  //
+  // L'écart APPARTIENT À LA PAGE, il n'est pas une propriété de la bande : le
+  // cabinet en relève 128 au même endroit. Une règle commune aurait donc été
+  // fausse sur l'une des deux.
+  padding-bottom: calc(#{fn.toRem(60)} + #{var.$radius-section});
 }
 
 /* ------------------------------------------------------------------------- *
