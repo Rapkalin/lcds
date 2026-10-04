@@ -400,8 +400,28 @@ body:has(.hero) .site-header {
   }
 }
 
+/* ------------------------------------------------------------------------- *
+ * « Prendre RDV » : L'ORANGE DE LA MAQUETTE, arbitré.
+ *
+ * `#E25304` est échantillonné sur les QUATRE maquettes — teinte dominante
+ * rgb(226, 83, 4) sur chacune. Le bouton portait une variante assombrie à
+ * `#C43F04`, posée pour l'accessibilité et signalée « à faire arbitrer par le
+ * design ». L'arbitrage est revenu : c'est la teinte de la maquette.
+ *
+ * ÉCART D'ACCESSIBILITÉ ASSUMÉ, et il ne se cache pas. Blanc sur `#E25304`
+ * mesure 3,84:1, sous le seuil de 4,5 d'un texte de 13px — RGAA 3.2. Conforme
+ * en revanche au seuil de 3 des objets graphiques. Une assertion mesure ce
+ * rapport À CHAQUE PASSAGE et l'écrit dans son libellé : l'écart est verrouillé
+ * contre son aggravation, pas effacé. Voir readme/accessibilite.md, qui donne
+ * les teintes qui le refermeraient.
+ *
+ * LE SURVOL EST DÉSORMAIS PLUS SOMBRE QUE LE REPOS. `#D84900` avait été demandé
+ * pour ÉCLAIRCIR le bouton, mais il éclaircissait le `#C43F04` assombri ; face
+ * à `#E25304` il l'assombrit. Teinte imposée en recette, laissée telle quelle —
+ * à rouvrir avec le design.
+ * ------------------------------------------------------------------------- */
 .site-header__cta a {
-  background: var.$orange-on-text;
+  background: var.$orange;
   color: var.$white;
 
   &:hover,

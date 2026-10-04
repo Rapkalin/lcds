@@ -7,6 +7,24 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.29.3
+
+### Modifié
+
+- **Le bouton « Prendre RDV » retrouve l'orange de la maquette**, `#E25304`. Il
+  portait une variante plus sombre, posée pour que le texte blanc y soit
+  suffisamment lisible. Le design a tranché en faveur de la teinte dessinée.
+
+> **Écart d'accessibilité assumé.** Du blanc sur cet orange atteint 3,84:1, sous
+> le seuil de 4,5 exigé pour un texte de cette taille (RGAA 3.2). Deux épreuves
+> de recette mesurent ce rapport à chaque passage et empêchent qu'il se dégrade
+> davantage. Les teintes qui refermeraient l'écart sont dans
+> `readme/accessibilite.md`.
+>
+> **Le survol s'est inversé au passage** : il éclaircissait le bouton, il
+> l'assombrit maintenant. Sa teinte n'a pas bougé, c'est le repos qui a changé.
+> À rouvrir avec le design.
+
 ## 2.29.2
 
 ### Corrigé

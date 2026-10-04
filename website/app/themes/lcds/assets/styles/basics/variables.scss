@@ -10,17 +10,22 @@
 $blue: #00387a;
 $turquoise: #048b8c;
 $orange: #e25304;
-// Même orange, assombri pour porter du texte blanc. `$orange` mesure 3,84:1
-// contre du blanc : conforme pour un objet graphique (seuil 3), en échec pour
-// du texte de moins de 24px (seuil 4,5). Cette variante atteint 5,17:1.
-// À FAIRE ARBITRER PAR LE DESIGN : idéalement la bibliothèque Figma porte les
-// deux teintes, l'une pour les aplats, l'autre pour les fonds de texte.
-$orange-on-text: #c43f04;
-// Survol du bouton d'action de l'en-tête. Teinte DEMANDÉE par le client, plus
-// claire que le repos : le bouton s'éclaire au survol au lieu de s'assombrir.
+// `$orange-on-text`, la variante assombrie à #C43F04, A ÉTÉ RETIRÉE. Elle
+// existait pour porter du texte blanc — 5,17:1 contre les 3,84:1 de `$orange` —
+// et elle était signalée « à faire arbitrer par le design ». L'arbitrage est
+// revenu : le bouton « Prendre RDV » reprend l'orange de la maquette, et
+// l'écart d'accessibilité est assumé. Le jour où il faut le refermer, les
+// teintes candidates sont dans readme/accessibilite.md.
+// Survol du bouton d'action de l'en-tête. Teinte DEMANDÉE par le client.
+//
+// Elle ÉCLAIRCISSAIT le bouton tant que le repos portait la variante assombrie
+// à #C43F04. Le repos étant revenu à `$orange` #E25304, elle l'ASSOMBRIT : le
+// sens du survol s'est inversé. Teinte imposée, laissée telle quelle — à
+// rouvrir avec le design en même temps que le contraste du repos.
+//
 // Elle mesure 4,31:1 contre du blanc, sous le seuil 4,5 des textes de moins de
-// 24px — le repos, lui, est conforme. À arbitrer avec le design en même temps
-// que `$orange-on-text`.
+// 24px. Le repos, désormais à 3,84:1, l'est aussi — voir
+// readme/accessibilite.md.
 $orange-hover: #d84900;
 $blue-pale: #f2f8ff;
 // Bordures et pistes inactives. Relevé au pixel sur les maquettes PDF.

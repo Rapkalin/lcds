@@ -34,7 +34,7 @@ coup : c’est la thématique la plus lourde du référentiel après Multimédia
 | --- | --- |
 | **1.1** | 26 `<img>` sur les 5 gabarits, toutes avec un `alt` ; le texte vient de la médiathèque |
 | **1.2** | les 29 `<svg>` décoratifs portent `aria-hidden="true"` et `focusable="false"` |
-| **3.2** | 53 éléments de texte mesurés sur les styles réels, **0 sous le seuil** ; survol des boutons contournés à 11,37:1 |
+| **3.2** | Éléments de texte mesurés sur les styles réels, **0 sous le seuil** — à UNE exception près, arbitrée : le bouton « Prendre RDV », 3,84:1 au repos et 4,31:1 au survol, en 13px. Deux assertions mesurent ces rapports à chaque passage et verrouillent le seuil de 3. Voir « L'écart connu » plus bas. |
 | **3.3** | glyphes des contrôles à 10,64:1, curseur du carrousel à 5,96:1, remplissage du parcours à 8,84:1 |
 | **6.1** | aucun intitulé générique ; les boutons à glyphe portent un texte masqué visuellement |
 | **6.2** | 107 liens, **0 sans intitulé** |
@@ -181,26 +181,39 @@ client changera de visuel.
 | Blanc sur bleu | 11,37:1 | conforme partout |
 | Turquoise `#048B8C` sur blanc | 4,14:1 | **échec** pour du texte < 24px |
 | Orange `#E25304` sur blanc | 3,84:1 | **échec** pour du texte < 24px |
-| Blanc sur `$orange-on-text` `#C43F04` | 5,17:1 | conforme |
-| Blanc sur `$orange-hover` `#D84900` | 4,31:1 | **échec** pour du texte < 24px |
+| Blanc sur `$orange` `#E25304` | 3,84:1 | **échec** pour du texte < 24px — bouton « Prendre RDV » au repos |
+| Blanc sur `$orange-hover` `#D84900` | 4,31:1 | **échec** pour du texte < 24px — le même, au survol |
+| Blanc sur `#C43F04` | 5,17:1 | conforme — la variante RETIRÉE |
 | `#A8BED6` sur blanc | 1,91:1 | bordures et pistes seulement |
 | `#D9E4F1` sur blanc | 1,29:1 | filets seulement |
 
-`$orange-on-text` existe **uniquement** pour porter du texte blanc : le bouton
-« Prendre RDV » de l'en-tête était à 3,84:1 en 13px, sous le seuil de 4,5.
-`$orange` reste la couleur des objets graphiques, où le seuil est de 3.
+`$orange` est la couleur des objets graphiques, où le seuil est de 3. Il porte
+aussi du texte blanc sur le bouton « Prendre RDV », et c'est là qu'est l'écart.
 
-> **À faire arbitrer par le design.** Deux oranges pour une seule intention est
-> un compromis, pas une cible : idéalement la bibliothèque Figma porte les deux
-> teintes. Même remarque pour le turquoise, qui ne doit jamais recevoir du texte
-> blanc de moins de 24px.
+> **ARBITRÉ PAR LE DESIGN, contre l'accessibilité.** Une variante assombrie,
+> `$orange-on-text` `#C43F04`, avait été posée pour ce bouton : 5,17:1, donc
+> conforme. Le design a réimposé l'orange de la maquette — `#E25304`,
+> échantillonné sur les quatre PDF, teinte dominante rgb(226, 83, 4) sur
+> chacune. La variante a été retirée.
+>
+> Même remarque pour le turquoise, qui ne doit jamais recevoir du texte blanc de
+> moins de 24px.
 
-### L'écart connu : le survol du bouton « Prendre RDV »
+### L'écart connu : le bouton « Prendre RDV », au repos ET au survol
 
-`$orange-hover` `#D84900` est une **teinte imposée**, demandée en recette. Elle
-mesure 4,31:1 contre du blanc : conforme pour un objet graphique (seuil 3), en
-**échec de 0,19** pour du texte de 13px (seuil 4,5). L'état au repos, lui, est
-conforme — l'écart ne concerne que le survol.
+| État | Teinte | Contre du blanc | Verdict |
+| --- | --- | --- | --- |
+| repos | `$orange` `#E25304` | **3,84:1** | échec de 0,66 pour du texte de 13px |
+| survol | `$orange-hover` `#D84900` | **4,31:1** | échec de 0,19 |
+
+Les deux sont des **teintes imposées** par le design. Les deux sont conformes au
+seuil de 3 des objets graphiques, et en échec au seuil de 4,5 d'un texte de
+13px — RGAA 3.2.
+
+> **Le survol s'est inversé au passage.** `#D84900` avait été demandé pour
+> ÉCLAIRCIR le bouton au survol ; il éclaircissait le `#C43F04` assombri. Face à
+> `#E25304`, il l'ASSOMBRIT. Le sens du geste a changé sans que la teinte bouge.
+> À rouvrir avec le design en même temps que le contraste.
 
 C'est un arbitrage, pas un oubli. Trois portes de sortie, si le design veut le
 refermer :
@@ -238,8 +251,8 @@ Conforme, mais au seuil du texte LARGE uniquement : 3:1 à partir de 24px, contr
 assertion le vérifie aux trois largeurs de la campagne.
 
 > Corollaire : **ce turquoise ne peut pas servir à du texte courant** sur ce
-> fond. Il y faudrait une variante assombrie, comme `$orange-on-text` en est une
-> pour l'orange, qui mesurait 3,84:1 dans la même situation.
+> fond. Il y faudrait une variante assombrie — l'orange en avait eu une,
+> `#C43F04`, que le design a refusée au profit de la teinte de maquette.
 
 **La carte blanche du hero** repose sur la photo, pas sur un aplat : le
 contraste de sa frontière n'est **pas mesurable** avant les visuels définitifs.

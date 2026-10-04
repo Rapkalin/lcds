@@ -4490,8 +4490,13 @@ window.runFrontQa = async (win) => {
         // mesuré ici — il ne devient visible qu'à la prise de focus, où il
         // reçoit un fond blanc. C'est cet état-là qui compte, et il est éprouvé
         // juste après la boucle.
+        // Le bouton d'action de l'en-tête est ÉPROUVÉ À PART, juste après la
+        // boucle : sa teinte est imposée par le design et son écart au seuil
+        // est arbitré. Le laisser ici noierait un écart CONNU dans une
+        // assertion qui doit rester à zéro pour servir à quelque chose.
         const masque = node.closest(".screen-reader-text") !== null
-            || node.closest(".skip-link") !== null;
+            || node.closest(".skip-link") !== null
+            || node.closest(".site-header__cta") !== null;
 
         if (texte === "" || !affiche(node) || masque) {
             continue;
@@ -4528,12 +4533,51 @@ window.runFrontQa = async (win) => {
         }) === true
     );
 
-    // Le bouton d'action était à 3,84:1 : blanc sur l'orange de la maquette,
-    // 13px. D'où la variante assombrie $orange-on-text.
     assert(
         `contraste du texte (${insuffisants.length} sous le seuil${insuffisants.length === 0 ? "" : " : " + insuffisants.join(", ")})`,
         insuffisants.length === 0
     );
+
+    /* --------------------------------------------------------------------- *
+     * Le bouton d'action AU REPOS — écart connu, arbitré, et mesuré à chaque
+     * passage.
+     *
+     * `#E25304` est la teinte des quatre maquettes, et le design l'a
+     * réimposée : le bouton portait une variante assombrie à `#C43F04`, posée
+     * pour l'accessibilité et signalée comme un compromis à trancher.
+     *
+     * Blanc sur cet orange mesure 3,84:1, sous le seuil de 4,5 d'un texte de
+     * 13px. Ce qui est verrouillé ici, c'est le seuil des OBJETS GRAPHIQUES —
+     * 3 — pour que l'écart ne se creuse pas sans qu'on le voie, et le rapport
+     * est écrit dans le libellé à chaque passage. Même dispositif que pour le
+     * survol, juste en dessous. Voir readme/accessibilite.md.
+     * --------------------------------------------------------------------- */
+    const ctaRepos = doc.querySelector(".site-header__cta a");
+
+    if (ctaRepos !== null && affiche(ctaRepos)) {
+        const fondRepos = fondDe(ctaRepos);
+        const texteRepos = couleur(styleOf(ctaRepos).color);
+        const rapportRepos = fondRepos === null || texteRepos === null
+            ? null
+            : contraste(texteRepos.rgb, fondRepos);
+
+        assert(
+            `bouton d'action : teinte de maquette au repos`
+            + ` (${fondRepos === null ? "?" : `rgb(${fondRepos.join(", ")})`})`,
+            fondRepos !== null && fondRepos.join(",") === "226,83,4"
+        );
+        // Le libellé dit ce qui EST mesuré, pas ce qu'on suppose : si une
+        // teinte repasse au-dessus de 4,5 un jour, l'assertion doit l'annoncer
+        // au lieu de continuer à parler d'un écart qui n'existe plus.
+        assert(
+            `bouton d'action : contraste au repos`
+            + ` (${rapportRepos === null ? "?" : rapportRepos.toFixed(2)}:1,`
+            + `${rapportRepos !== null && rapportRepos >= 4.5
+                ? " conforme"
+                : " sous le seuil 4,5 — écart assumé"}, seuil 3 verrouillé)`,
+            rapportRepos !== null && rapportRepos >= 3
+        );
+    }
 
     /* --------------------------------------------------------------------- *
      * Le SURVOL du bouton d'action, que la boucle ci-dessus ne voit pas :
