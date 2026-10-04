@@ -15,13 +15,12 @@
  * ------------------------------------------------------------------------- */
 .main-content.page-conseils {
   background: var.$blue-pale;
-  // LA BANDE DE L'APPLICATION REMONTE DE 48 SUR LE CONTENU : c'est le
-  // chevauchement qui masque l'encoche de ses coins arrondis.
+  // AUCUNE RÉSERVE, contrairement au cabinet (128) et à l'équipe (60). Relevé :
+  // 128 entre la dernière entrée de la foire aux questions (5714) et le haut de
+  // la bande (5842) — et ces 128, la dernière section les porte déjà dans son
+  // propre rembourrage bas.
   //
-  // Ici la réserve vaut ce chevauchement SEUL, contrairement au cabinet (128)
-  // et à l'équipe (60). Relevé : 128 entre la dernière entrée de la foire aux
-  // questions (5714) et le haut de la bande (5842) — et ces 128, la section les
-  // porte déjà dans son propre retrait bas. Il ne reste donc que ce que la
-  // bande avale.
-  padding-bottom: var.$radius-section;
+  // La page réservait 48 tant que la bande remontait d'autant pour masquer
+  // l'encoche de ses coins arrondis. Les coins étant carrés, elle ne remonte
+  // plus — voir block-app.scss.
 }

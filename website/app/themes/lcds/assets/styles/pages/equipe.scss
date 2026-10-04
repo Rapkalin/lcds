@@ -15,20 +15,17 @@
  * ------------------------------------------------------------------------- */
 .main-content.page-equipe {
   background: var.$blue-pale;
-  // LA BANDE DE L'APPLICATION REMONTE DE 48 SUR LE CONTENU : c'est le
-  // chevauchement qui masque l'encoche de ses coins arrondis. Sans réserve en
-  // bas de page, elle recouvrait les 48 derniers pixels du texte de
-  // présentation — la dernière ligne et demie, purement et simplement cachée.
-  //
-  // 60 est l'écart relevé entre le bord bas de la dernière carte (8856) et le
-  // haut de la bande (8916) ; 48 est ce que la bande avale. La réserve est la
-  // somme des deux, et elle est écrite comme telle : le jour où le
-  // chevauchement change, cette ligne suit.
+  // 60, l'écart relevé entre le bord bas de la dernière carte (8856) et le haut
+  // de la bande (8916).
   //
   // L'écart APPARTIENT À LA PAGE, il n'est pas une propriété de la bande : le
-  // cabinet en relève 128 au même endroit. Une règle commune aurait donc été
-  // fausse sur l'une des deux.
-  padding-bottom: calc(#{fn.toRem(60)} + #{var.$radius-section});
+  // cabinet en relève 128 au même endroit. Une règle commune serait donc fausse
+  // sur l'une des deux.
+  //
+  // Il valait `60 + 48` tant que la bande remontait de 48 pour masquer
+  // l'encoche de ses coins arrondis. Les coins étant carrés, elle ne remonte
+  // plus — voir block-app.scss.
+  padding-bottom: fn.toRem(60);
 }
 
 /* ------------------------------------------------------------------------- *

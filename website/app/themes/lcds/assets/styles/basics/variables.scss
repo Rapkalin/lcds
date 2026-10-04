@@ -190,9 +190,17 @@ $inner-outer: calc(#{$inner-width} + 2 * #{$inner-inset});
 // sur un écran très large. `$page-outside` ne se voit qu'une fois la borne
 // rétablie.
 $page-max: 100%;
-// Débord d'une carte inclinée hors de sa boîte : 471,5 × 470 pivotée de 2,88°
-// englobe 494,5, soit 11,5 de chaque côté. Le rail impose `overflow-x` et
-// rognerait ce débord sur la première carte.
+// Débord d'une carte inclinée hors de sa boîte. Un bord pivoté se déplace de
+// `hauteur / 2 × sin(inclinaison)` à chaque extrémité, soit 235 × sin 2,88° =
+// 11,8 pour les cartes de 470 de haut du rail des technologies.
+//
+// Il sert DEUX FOIS : le rail impose `overflow-x` et rognerait ce débord sur la
+// première carte, et c'est aussi l'unité dans laquelle se compte l'écart à
+// ouvrir entre deux cartes voisines — voir components/carousel.scss.
+//
+// À NE PAS CONFONDRE AVEC LA LARGEUR DES CARTES. 447,5 × 470 pivotée de 2,88°
+// englobe 470,5 : c'est cette boîte englobante qui avait été prise pour une
+// largeur, et les cartes inclinées étaient servies 24px trop larges.
 $tilt-bleed: fn.toRem(12);
 // Teinte des côtés au-delà de `$page-max`. ARBITRÉE, aucune maquette ne couvre
 // ce cas : le bleu du système se lit comme « hors de la page » quelle que soit

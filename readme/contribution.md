@@ -101,9 +101,10 @@ ayant chacun la leur.
 
 ### Les cartes du carrousel s'inclinent par cycle de trois
 
-Largeurs et inclinaisons alternent : **471,5 / 447,5 / 471,5** et
-**+2,88° / 0 / −2,88°**, relevés au pixel sur le PDF. Le contributeur n'a rien à
-régler — il ajoute des cartes, le cycle se poursuit.
+Les cartes ont toutes la **même largeur** ; seule l'inclinaison alterne —
+**+2,88° / 0 / −2,88°**, relevée au pixel sur le PDF. Le contributeur n'a rien à
+régler : il ajoute des cartes, le cycle se poursuit, et l'écart entre deux
+cartes s'ajuste tout seul à leur inclinaison.
 
 Les inclinaisons ne sont pas retirées sous `prefers-reduced-motion` : cette
 préférence concerne le mouvement, et une inclinaison fixe n'en est pas un.

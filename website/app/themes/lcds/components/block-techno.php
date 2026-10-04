@@ -33,12 +33,25 @@ $dot = isset($args['dot']) ? (string) $args['dot'] : 'orange';
 $cta = isset($args['cta']) && is_array($args['cta']) ? $args['cta'] : [];
 $cards = isset($args['cards']) && is_array($args['cards']) ? $args['cards'] : [];
 
-// Largeurs et inclinaisons alternées, relevées au pixel sur le PDF. Le cycle
-// est de trois : la maquette n'en montre que trois cartes, le rail en porte
-// neuf.
-$widths = [471.5, 447.5, 471.5];
+/*
+ * LES TROIS CARTES ONT LA MÊME LARGEUR, et c'est un relevé : mesurées À
+ * MI-HAUTEUR sur `HP_06_Frame 54.pdf`, où la rotation ne déplace aucun bord,
+ * elles font 448 toutes les trois — 173..620, 644..1091, 1115..…
+ *
+ * Le 471,5 qui était écrit ici était la BOÎTE ENGLOBANTE d'une carte pivotée :
+ * 447,5 × cos 2,88° + 470 × sin 2,88° = 470,5. C'est exactement le piège déjà
+ * rencontré sur les décalages verticaux, où Figma annonçait « 0 / 11,4 / 23,4 »
+ * pour des cadres qui partagent le même centre. Mesurer une forme pivotée par
+ * sa boîte, c'est mesurer sa rotation en plus de sa taille.
+ *
+ * Seule l'INCLINAISON alterne. Le cycle est de trois ; la maquette n'en dessine
+ * que trois cartes, le rail en porte autant que le contributeur en saisit.
+ */
+$cardWidth = 447.5;
 $tilts = [2.88, 0.0, -2.88];
+$reference = max(array_map('abs', $tilts));
 $items = [];
+$previousTilt = null;
 
 foreach ($cards as $index => $card) {
     $title = isset($card['title']) ? (string) $card['title'] : '';
@@ -48,9 +61,42 @@ foreach ($cards as $index => $card) {
     }
 
     $slot = count($items) % 3;
+    $tilt = $tilts[$slot];
+
+    /*
+     * DE COMBIEN LES DEUX BORDS VOISINS SE RAPPROCHENT, compté en débords de
+     * carte inclinée — l'unité étant `$tilt-bleed`, que la feuille de style
+     * tient déjà.
+     *
+     * Un bord pivoté se déplace de `hauteur / 2 × sin(inclinaison)` à chaque
+     * extrémité. Entre deux cartes, l'écart le plus serré vaut donc
+     * `gouttière − hauteur / 2 × |sin A − sin B|`. Rapporté au débord de
+     * référence, ça donne 0, 1 ou 2 :
+     *
+     *   penchée / droite       1 — elles ne se rapprochent que d'un débord
+     *   droite / penchée       1
+     *   penchée / penchée en sens inverse  2 — elles convergent des deux côtés
+     *
+     * SANS CE CALCUL, la gouttière de 12 était rognée de 11,8 aux jonctions
+     * simples — 0,5px d'écart, les cartes se touchaient — et de 23,6 à la
+     * jonction inverse, où elles se CHEVAUCHAIENT de 11. Mesuré sur le rendu.
+     *
+     * Le rapport des sinus, et non un simple compte de signes : il reste juste
+     * si le cycle prend un jour des inclinaisons d'amplitudes différentes.
+     */
+    $bleed = 0.0;
+
+    if ($previousTilt !== null && $reference > 0.0) {
+        $bleed = abs(sin(deg2rad($previousTilt)) - sin(deg2rad($tilt)))
+            / sin(deg2rad($reference));
+    }
+
+    $previousTilt = $tilt;
+
     $items[] = [
-        'width' => $widths[$slot],
-        'tilt' => $tilts[$slot],
+        'width' => $cardWidth,
+        'tilt' => $tilt,
+        'bleed' => $bleed,
         'content' => lcds_capture('components/tech-card', [
             'id' => 'techno-' . ((int) $index + 1),
             'title' => $title,

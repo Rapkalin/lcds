@@ -21,18 +21,30 @@
 // boîte de bloc, il fixe la hauteur et le contenu DÉBORDE au lieu de la
 // pousser. La grille, elle, prend le maximum.
 .block-app {
-  // La bande appartient au PIED DE PAGE et non aux sections de l'accueil : la
-  // règle `.front-page > *` ne la touche plus. Elle porte donc elle-même ce
-  // que cette règle lui donnait — l'arrondi haut, l'arête, et le
-  // chevauchement de la valeur du rayon qui met la section précédente derrière
-  // ses deux épaules. Voir pages/homepage.scss, qui porte le raisonnement.
-  //
+  /* -------------------------------------------------------------------------
+   * COINS HAUTS CARRÉS — relevé, et retour client.
+   *
+   * La bande portait l'arrondi de 48 des sections empilées, et avec lui le
+   * chevauchement de la même valeur qui mettait la section précédente derrière
+   * ses deux épaules : c'est ce chevauchement qui masquait l'encoche laissée
+   * par les coins ronds.
+   *
+   * Les trois maquettes qui la dessinent — cabinet, équipe, conseils — la
+   * posent À COINS CARRÉS. Mesuré : sur chacune, la première ligne de la bande
+   * est encrée dès x=0, et le reste aussi. Aucune maquette d'accueil ne la
+   * dessine, l'uniformité tranche donc là.
+   *
+   * Sans arrondi il n'y a plus d'encoche, donc plus rien à masquer : le
+   * chevauchement disparaît AVEC l'arrondi, et les réserves qui le
+   * compensaient dans les gabarits de page avec lui. L'écart relevé entre le
+   * dernier contenu et la bande est inchangé — seul son porteur a changé.
+   *
+   * L'arête, elle, reste : elle ne dépend pas de l'arrondi.
+   * ----------------------------------------------------------------------- */
   // `z-index` : `.main-content` est positionné avec la même valeur ; c'est
   // l'ordre du DOM qui tranche, et la bande vient après.
   position: relative;
   z-index: 1;
-  margin-top: calc(-1 * #{var.$radius-section});
-  border-radius: var.$radius-section var.$radius-section 0 0;
   box-shadow: var.$volet-shadow;
   display: grid;
   // Fond PROPRE : un fond de parent peint sous ses enfants, et sans lui la

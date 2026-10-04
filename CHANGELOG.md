@@ -7,6 +7,25 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.29.2
+
+### Corrigé
+
+- **Les cartes de « les technologies » ne se touchent plus.** Les deux
+  dernières se chevauchaient, les autres se frôlaient à un demi-pixel. Deux
+  causes : les cartes inclinées étaient servies 24px trop larges — c'était la
+  taille de leur boîte une fois penchées, pas leur taille —, et l'écart entre
+  deux cartes ne tenait pas compte de leur inclinaison. Il s'y ajuste
+  désormais tout seul, quel que soit le nombre de cartes saisies.
+
+- **La bande « Dentapoche » n'a plus les coins du haut arrondis**, sur toutes
+  les pages. C'est ce que dessinent les maquettes. Elle ne remonte plus non
+  plus sur le contenu qui la précède : cette remontée ne servait qu'à cacher
+  l'encoche des coins ronds.
+
+- **Deux épreuves de recette surveillaient la mauvaise valeur** : celle des
+  cartes attendait la largeur erronée, celle de la bande exigeait l'arrondi.
+
 ## 2.29.1
 
 ### Corrigé

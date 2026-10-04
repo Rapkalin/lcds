@@ -363,6 +363,88 @@ la section sort par le haut à son rythme et le pied de page prend sa place.
 > mobile. Vérifié au balayage : sur les 1800 derniers pixels, à trois colonnes,
 > aucune section ne réapparaît une fois recouverte.
 
+## Les cartes inclinées : la boîte englobante n'est pas la largeur
+
+Retour client : *« deux cards se chevauchent, les dernières, il ne faut pas que
+les cards se touchent »*. Deux défauts tenaient dans cette phrase, et le second
+était la cause du premier.
+
+### Les trois cartes ont la MÊME largeur
+
+Mesurées **à mi-hauteur** sur `HP_06_Frame 54.pdf` — là où la rotation ne
+déplace aucun bord — les trois font **448** : `173..620`, `644..1091`,
+`1115..…`. Le `471,5` qui était servi aux cartes inclinées est leur **boîte
+englobante** : `447,5 × cos 2,88° + 470 × sin 2,88° = 470,5`.
+
+> **C'est le piège déjà rencontré sur cette même section**, et déjà documenté
+> dans `components/block-techno.php` : Figma annonçait des décalages verticaux
+> de « 0 / 11,4 / 23,4 » pour des cadres qui partagent le même centre. Mesurer
+> une forme pivotée par sa boîte, c'est mesurer sa rotation en plus de sa
+> taille. La leçon avait été tirée en hauteur, pas en largeur.
+
+Contrôle du relevé : la pente du bord droit de la première carte, suivie de
+`y=146` à `y=556`, se déplace de 20px. `410 × sin 2,88° = 20,6`. L'inclinaison
+est donc bien celle annoncée, et la largeur à mi-hauteur est la vraie.
+
+### L'écart se dérive de l'inclinaison, il ne se pose pas
+
+La gouttière de flex sépare les **boîtes de flux**. Un bord pivoté, lui, se
+déplace de `hauteur / 2 × sin(inclinaison)` à chaque extrémité. L'écart
+réellement visible entre deux cartes vaut donc :
+
+```
+gouttière − hauteur / 2 × |sin A − sin B|
+```
+
+Mesuré sur le rendu, avec la seule gouttière de 12 :
+
+| Jonction | Écart visible |
+| --- | --- |
+| penchée → droite | **0,5px** — elles se touchent |
+| droite → penchée | **0,5px** — elles se touchent |
+| penchée → penchée **en sens inverse** | **−11px** — elles se chevauchent |
+
+Le composant compte donc, pour chaque carte, de combien son bord et celui de sa
+voisine se rapprochent, **en unités de `$tilt-bleed`** — 0, 1 ou 2 — et la
+feuille de style rend cet écart à la gouttière. Les trois jonctions retrouvent
+leurs 12px de vide : mesuré **12,5 / 12,5 / 13,0**.
+
+Le rapport des sinus plutôt qu'un compte de signes : il reste juste le jour où
+le cycle prendra des inclinaisons d'amplitudes différentes.
+
+> **La maquette ne dessine que la jonction penchée/droite.** Elle y pose 24
+> entre les boîtes — la gouttière plus un débord —, et c'est exactement ce que
+> le calcul rend. La jonction inverse n'est dessinée nulle part : la règle la
+> tranche seule, et elle lui donne le même vide visible.
+
+> **L'assertion de recette encodait l'erreur.** Elle attendait
+> `471,5 / 447,5 / 471,5`, c'est-à-dire la boîte englobante qu'elle était censée
+> surveiller. Même défaut que la borne du collet de la navigation : une
+> assertion écrite d'après le code ne peut plus rien trouver. Elle compare
+> désormais les boîtes **rendues**, et exige 12px de vide à chaque jonction.
+
+## La bande de l'application : coins hauts CARRÉS
+
+Retour client. La bande portait l'arrondi de 48 des sections empilées, et avec
+lui le chevauchement du même rayon qui mettait la section précédente derrière
+ses deux épaules — c'est ce chevauchement qui masquait l'encoche laissée par
+les coins ronds.
+
+Les trois maquettes qui la dessinent — cabinet, équipe, conseils — la posent à
+**coins carrés** : mesuré, sur chacune la première ligne de la bande est encrée
+dès `x=0`, et toutes les suivantes aussi. **Aucune maquette d'accueil ne la
+dessine**, l'uniformité tranche donc là.
+
+Sans arrondi il n'y a plus d'encoche, donc plus rien à masquer :
+
+- le chevauchement (`margin-top: -48`) disparaît **avec** l'arrondi ;
+- les réserves qui le compensaient dans les gabarits de page disparaissent avec
+  lui — le cabinet repasse de `128 + 48` à `128`, l'équipe de `60 + 48` à `60`,
+  « Conseils » n'en a plus du tout.
+
+**Les écarts relevés ne bougent pas**, seul leur porteur change. L'arête, elle,
+ne dépend pas de l'arrondi et reste.
+
 ## Grilles : toujours `minmax(0, Nfr)`
 
 Une piste `fr` ne descend jamais sous la largeur minimale de son contenu. Avec

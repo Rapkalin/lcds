@@ -3033,9 +3033,48 @@ window.runFrontQa = async (win) => {
         cote("techno : piste, bord gauche", boite(".carousel--cards .carousel__track")?.left ?? null, 161);
         cote("techno : boutons, bord droit", boite(".carousel--cards .carousel__buttons")?.right ?? null, 1279);
 
-        for (const [i, largeur, inclinaison] of [[0, 471.5, 2.88], [1, 447.5, 0], [2, 471.5, -2.88]]) {
-            cote(`techno : carte ${i + 1}, largeur`, propriete(".carousel--cards .carousel__item", i, "--item-width"), largeur, 0.1);
+        /*
+         * LES TROIS CARTES ONT LA MÊME LARGEUR. Cette boucle attendait
+         * 471,5 / 447,5 / 471,5 : c'était la BOÎTE ENGLOBANTE des cartes
+         * pivotées prise pour leur largeur. Mesurées à MI-HAUTEUR sur
+         * `HP_06_Frame 54.pdf`, où la rotation ne déplace aucun bord, elles
+         * font 448 toutes les trois.
+         *
+         * L'assertion encodait donc l'erreur qu'elle était censée surveiller —
+         * même défaut que la borne du collet de la navigation.
+         */
+        for (const [i, inclinaison] of [[0, 2.88], [1, 0], [2, -2.88]]) {
+            cote(`techno : carte ${i + 1}, largeur`, propriete(".carousel--cards .carousel__item", i, "--item-width"), 447.5, 0.1);
             cote(`techno : carte ${i + 1}, inclinaison`, propriete(".carousel--cards .carousel__item", i, "--item-tilt"), inclinaison, 0.01);
+        }
+
+        /*
+         * AUCUNE CARTE N'EN TOUCHE UNE AUTRE — retour client, et c'est la
+         * raison d'être de l'écart dérivé de l'inclinaison.
+         *
+         * L'assertion porte sur les boîtes RENDUES, pas sur les boîtes de
+         * flux : c'est tout le piège. La gouttière sépare les secondes, et un
+         * bord pivoté se déplace. Mesuré avant correctif, avec la seule
+         * gouttière de 12 : 0,5px aux jonctions simples — elles se touchaient —
+         * et −11 à la jonction penchée/penchée inverse, où elles se
+         * chevauchaient.
+         *
+         * L'écart attendu est la GOUTTIÈRE : c'est ce que la maquette laisse
+         * voir entre deux cartes, et ce que le calcul rend à chaque jonction
+         * quelle que soit la paire d'inclinaisons.
+         */
+        const cartes = [...doc.querySelectorAll(".carousel--cards .carousel__item")]
+            .map((noeud) => noeud.getBoundingClientRect());
+
+        if (cartes.length > 1) {
+            const ecarts = cartes.slice(1).map((boite, i) => boite.left - cartes[i].right);
+            const serres = ecarts.filter((ecart) => ecart < 11);
+
+            assert(
+                `techno : les ${cartes.length} cartes gardent 12px de vide, inclinaison comprise`
+                + ` (${ecarts.map((e) => e.toFixed(1)).join(", ")})`,
+                ecarts.length > 0 && serres.length === 0
+            );
         }
 
         const c0 = boite(".carousel--cards .carousel__item", 0);
@@ -3209,19 +3248,28 @@ window.runFrontQa = async (win) => {
                     && app.nextElementSibling === doc.querySelector(".footer-reveal")
             );
 
-            // La bande a quitté la règle `.front-page > *` en changeant de
-            // place : elle porte donc elle-même l'arrondi haut, l'arête et le
-            // chevauchement d'un rayon qui met la section précédente derrière
-            // ses deux épaules. Rien d'autre ne les lui donne plus.
+            /*
+             * COINS HAUTS CARRÉS — relevé, et retour client.
+             *
+             * Cette assertion exigeait l'inverse : un rayon de 48 et le
+             * chevauchement du même rayon, qui servait à masquer l'encoche que
+             * les coins ronds laissent voir. Les trois maquettes qui dessinent
+             * la bande — cabinet, équipe, conseils — la posent à coins carrés :
+             * mesuré, leur première ligne est encrée dès x=0.
+             *
+             * Sans arrondi, plus d'encoche : le chevauchement part AVEC lui, et
+             * les réserves qui le compensaient dans les gabarits de page avec
+             * eux. L'arête, elle, ne dépend pas de l'arrondi et reste.
+             */
             const styleApp = styleOf(app);
 
             assert(
-                `app : elle garde l'habit d'un panneau`
+                `app : coins hauts carrés, aucun chevauchement, arête gardée`
                 + ` (rayon ${styleApp.borderTopLeftRadius}, marge ${styleApp.marginTop},`
                 + ` ombre ${styleApp.boxShadow === "none" ? "aucune" : "posée"})`,
-                styleApp.borderTopLeftRadius === "48px"
-                    && styleApp.borderBottomLeftRadius === "0px"
-                    && styleApp.marginTop === "-48px"
+                parseFloat(styleApp.borderTopLeftRadius) === 0
+                    && parseFloat(styleApp.borderTopRightRadius) === 0
+                    && parseFloat(styleApp.marginTop) === 0
                     && styleApp.boxShadow !== "none"
             );
 

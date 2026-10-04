@@ -19,6 +19,10 @@
  *                                   réutiliser CE rail et CES contrôles — la
  *                                   maquette les dessine strictement
  *                                   identiques, à écrire une fois.
+ *                    bleed   float  Écart SUPPLÉMENTAIRE à ouvrir avant cet
+ *                                   élément, compté en débords de carte
+ *                                   inclinée. Voir components/block-techno.php,
+ *                                   qui le calcule depuis les inclinaisons.
  *                    tilt    float  Inclinaison en degrés. La maquette fait
  *                                   onduler les cartes Technologies : +2,88 / 0
  *                                   / -2,88, mesuré sur le PDF.
@@ -93,6 +97,9 @@ foreach ($items as $item) {
     $rows[] = [
         'width' => isset($item['width']) ? (float) $item['width'] : 0.0,
         'tilt' => isset($item['tilt']) ? (float) $item['tilt'] : 0.0,
+        // Combien de débords de carte inclinée séparer en plus de la gouttière.
+        // 0 sur un rail droit, où rien ne se rapproche.
+        'bleed' => isset($item['bleed']) ? (float) $item['bleed'] : 0.0,
         'content' => $content,
         'medias' => $medias,
     ];
@@ -118,7 +125,7 @@ foreach ($items as $item) {
     <?php /* Pas de role="group" : il écrasait le rôle `list` du <ul>, et le nombre de visuels n'était plus annoncé. */ ?>
     <ul class="carousel__rail" tabindex="0" aria-label="<?php echo esc_attr($label); ?>">
         <?php foreach ($rows as $row) : ?>
-            <li class="carousel__item" style="--item-width: <?php echo esc_attr((string) $row['width']); ?>px; --item-tilt: <?php echo esc_attr((string) $row['tilt']); ?>deg">
+            <li class="carousel__item" style="--item-width: <?php echo esc_attr((string) $row['width']); ?>px; --item-tilt: <?php echo esc_attr((string) $row['tilt']); ?>deg; --item-bleed: <?php echo esc_attr((string) $row['bleed']); ?>">
                 <?php if ($row['content'] !== '') : ?>
                     <?php echo $row['content']; ?>
                 <?php else : ?>

@@ -156,10 +156,32 @@
   .carousel__item {
     height: fn.toRem(470);
     transform: rotate(var(--item-tilt, 0deg));
+    /* ---------------------------------------------------------------------
+     * L'ÉCART VISIBLE ENTRE DEUX CARTES VAUT LA GOUTTIÈRE, et il la vaut
+     * partout — c'est tout l'objet de cette marge.
+     *
+     * Un bord pivoté se déplace : la gouttière de flex sépare les BOÎTES, pas
+     * les formes. Mesuré sur le rendu, avec la seule gouttière de 12 :
+     *
+     *   penchée → droite            0,5px — elles se touchent
+     *   droite → penchée            0,5px — elles se touchent
+     *   penchée → penchée inverse   −11px — elles se CHEVAUCHENT
+     *
+     * Le composant compte, pour chaque carte, de combien son bord gauche et
+     * celui de sa voisine se rapprochent, en unités de `$tilt-bleed`. La marge
+     * rend cet écart à la gouttière, et les trois jonctions retrouvent leurs
+     * 12px de vide.
+     *
+     * La maquette ne dessine que la jonction penchée/droite : elle y pose 24
+     * entre les boîtes, soit la gouttière plus un débord. C'est ce que cette
+     * règle redonne, et elle décide seule de la jonction inverse, qu'aucune
+     * maquette ne montre.
+     * ------------------------------------------------------------------- */
+    margin-left: calc(var(--item-bleed, 0) * #{var.$tilt-bleed});
   }
 
-  // Une carte inclinée est PLUS LARGE que sa boîte : 471,5 × 470 pivotée de
-  // 2,88° englobe 494,5, soit 11,5 de débord de chaque côté. Le rail impose
+  // Une carte inclinée est PLUS LARGE que sa boîte : 447,5 × 470 pivotée de
+  // 2,88° englobe 470,5, soit 11,8 de débord de chaque côté. Le rail impose
   // `overflow-x`, donc il rognait ce débord sur la PREMIÈRE carte — le même
   // raisonnement qui a porté la hauteur du rail de 470 à 494, oublié en largeur.
   //
