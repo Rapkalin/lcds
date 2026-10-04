@@ -61,8 +61,10 @@ $dot-colors: (
 );
 
 /* FONTS */
-// Sligoil et Inter ne sont pas encore auto-hébergées : tant que les fichiers
-// manquent, seule la pile de secours s'applique. Voir readme/front.md.
+// Sligoil et Inter sont AUTO-HÉBERGÉES : les `@font-face` vivent dans
+// `basics/fonts.scss` et les fichiers dans `assets/fonts/`. Les piles de
+// secours ci-dessous ne servent plus qu'au temps du chargement — d'où le repli
+// monospacé de Sligoil. Voir readme/front.md.
 // Sligoil est une police à chasse fixe (vérifié sur le rendu Figma : titres et
 // numéros d'étape monospacés, zéro barré). Le repli doit l'être aussi, sinon la
 // mise en page saute tant que la police n'est pas chargée.
@@ -83,6 +85,24 @@ $font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 //   24px à 1440 → 20px à 480 : 0.4167vw + 1.125rem
 $fs-h2: clamp(#{fn.toRem(32)}, 1.667vw + #{fn.toRem(24)}, #{fn.toRem(48)});
 $fs-h3: clamp(#{fn.toRem(20)}, 0.4167vw + #{fn.toRem(18)}, #{fn.toRem(24)});
+/* ---------------------------------------------------------------------------
+ * Le titre d'une section dont le titre est COLLANT au-dessus de sa colonne de
+ * gauche — la page « Conseils ». Deux tiers de `$fs-h2`, et ce n'est pas un
+ * glissement de maquette : c'est ce qui le fait tenir dans sa colonne.
+ *
+ * Sligoil a une chasse de 0,6 em, mesurée sur les PDF : 28,8px par caractère à
+ * 48, 19,2 à 32. La zone du titre va de x=48 au bord de la colonne de gauche,
+ * soit 553px à 1440. « Les urgences en orthodontie », le plus long de la page,
+ * y occupe 518 à 32 — et 778 à 48, soit 225 de trop.
+ *
+ * CE DÉBORDEMENT N'EST PAS COSMÉTIQUE. Le titre est collant : ce qui dépasse
+ * court au-dessus de la colonne de droite, et le texte lui défile derrière.
+ * Le remettre à `$fs-h2` demande donc un aplat sous le titre, ou de le laisser
+ * passer à deux lignes.
+ *
+ *   32px à 1440 → 24px à 480 : 0.8333vw + 1.25rem
+ * ------------------------------------------------------------------------- */
+$fs-h2-sticky: clamp(#{fn.toRem(24)}, 0.8333vw + #{fn.toRem(20)}, #{fn.toRem(32)});
 // 16px est déjà le plancher de lisibilité : le corps de texte ne bouge pas.
 $fs-p: fn.toRem(16);
 // Le CHAPÔ : un paragraphe de présentation, une fois et demie le corps courant.

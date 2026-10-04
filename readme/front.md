@@ -299,38 +299,101 @@ silence. `minmax(0, …)` rend le comportement explicite.
 
 
 
-## Polices — pas encore auto-hébergées
+## Polices — auto-hébergées
 
-| Police | Rôle | Licence |
-| --- | --- | --- |
-| [Sligoil](https://velvetyne.fr/fonts/sligoil/) (coupe *Micro*) | Titres | Libre, Velvetyne — usage commercial autorisé, redistribution sous la même licence |
-| [Inter](https://github.com/rsms/inter) | Textes | SIL OFL 1.1 |
+| Police | Rôle | Fichier servi | Origine | Licence |
+| --- | --- | --- | --- | --- |
+| [Sligoil](https://velvetyne.fr/fonts/sligoil/) (coupe *Micro*) | Titres | `Sligoil-Micro.woff2` | Velvetyne | SIL OFL 1.1 |
+| [Inter](https://github.com/rsms/inter) Medium | Boutons d'action | `Inter-Medium.woff2` | release `v4.1` | SIL OFL 1.1 |
+| Inter SemiBold | Corps de texte | `Inter-SemiBold.woff2` | release `v4.1` | SIL OFL 1.1 |
 
-Les deux sont libres : auto-hébergement en `@font-face`, sans licence à acheter
-et **sans toucher à la CSP** (pas de Google Fonts). Tant que les fichiers
-manquent, seule la pile de secours s'applique.
+Les deux licences voyagent avec les fichiers, dans `assets/fonts/` : l'OFL exige
+que l'avis de copyright accompagne toute redistribution, et un thème déployé en
+est une.
 
-**Sligoil est une police à chasse fixe** (vérifié sur le rendu Figma : titres et
-numéros d'étape monospacés, zéro barré). Son repli doit l'être aussi, sinon la
-mise en page saute avant le chargement.
+### « Inter est une Google Font, pourquoi ne pas la prendre là-bas ? »
 
-> Figma annonce un poids `90` pour « Sligoil Micro ». C'est le nom de la coupe,
-> pas un poids CSS — la famille compte *Micro*, *Micro Medium* et *Micro Bold*
-> depuis juin 2025, et la maquette utilise la régulière. À confirmer sur le
-> fichier de police une fois installé.
+Parce que « la prendre là-bas » veut dire deux choses, et qu'une seule est
+possible ici :
 
-### Ajouter les fichiers
+- **Télécharger les fichiers et les servir soi-même** — c'est ce qui est fait,
+  depuis la release officielle `rsms/inter`, qui est la SOURCE dont Google
+  Fonts est un miroir ;
+- **Lier `fonts.googleapis.com`** — impossible, et pour deux raisons qui
+  tiennent chacune toute seule. La CSP du site pose `font-src 'self'` et
+  `style-src 'self'` : la feuille et ses fichiers seraient **bloqués**. Et
+  l'appel transmet l'adresse IP du visiteur à un tiers à chaque page, sans base
+  légale — la lecture de la CNIL, confirmée par la jurisprudence allemande de
+  2022.
+
+La licence, elle, n'interdit rien : Inter est sous SIL OFL 1.1, redistribuable
+tant que l'avis l'accompagne.
+
+### Trois fichiers, pas un de plus
+
+Ce sont exactement les poids que `variables.scss` déclare — `$fw-title` 400,
+`$fw-cta` 500, `$fw-p` 600. Les coupes *Micro Medium* et *Micro Bold* de
+Sligoil existent et ne sont pas servies : aucune maquette ne les emploie.
+
+`woff2` seul, sans repli `woff` : il est pris en charge partout depuis 2017, et
+le `woff` de Sligoil pèse 10 % de plus pour ne servir personne. Coût total :
+**271 Ko**, servis avec un `Expires` d'un mois.
+
+> **LIMITE ASSUMÉE : pas de 700 ni d'italique.** L'éditeur du contributeur porte
+> les boutons *gras* et *italique* ; ce qu'il écrira sera **synthétisé** par le
+> navigateur. Aucune maquette n'en pose, et deux fichiers de plus coûteraient
+> 230 Ko. Le jour où le contenu en demande : un `@font-face` de plus, et
+> `Inter-Bold.woff2` dans `assets/fonts/`.
+
+### La chasse de Sligoil vaut 0,6 em, mesurée
+
+Vérifié dans le navigateur à 24, 32 et 48px : **0,6000 em** aux trois tailles,
+soit 14,4 / 19,2 / 28,8px par caractère — exactement ce qui avait été relevé sur
+les quatre PDF de maquette. C'est le nombre sur lequel repose la taille des
+titres collants de « Conseils », et une assertion le garde : une coupe
+substituée ne se verrait nulle part ailleurs.
+
+### Ce que l'auto-hébergement a révélé
+
+Une seule assertion est passée au rouge, et le défaut lui PRÉEXISTAIT : à 200 %
+de taille de texte, la barre de navigation réclamait 1350px pour 1248
+disponibles et poussait la page de 6px — RGAA 10.4. L'en-tête savait passer à la
+ligne, **la barre qu'il contient ne le savait pas**.
+
+Ces 6px ne tenaient qu'à la puce d'entrée courante, qui n'existe que sur la page
+du cabinet et élargit la liste de 20px. Avec la pile de secours la liste
+mesurait 20px de moins, et le défaut dormait — n'importe quelle entrée de menu
+un peu plus longue l'aurait réveillé. Un `flex-wrap: wrap` sur
+`.site-header__nav` le corrige, par le même raisonnement que celui déjà porté
+par l'en-tête.
+
+> **Aucune autre cote n'a bougé** — la campagne entière, douze exécutions, est
+> restée verte. La pile de secours était assez proche pour que rien ne dépende
+> d'elle.
+
+### `font-display: swap`
+
+Le texte reste **lisible** pendant le chargement, rendu dans la pile de secours,
+au lieu d'être invisible jusqu'à trois secondes. Le prix est un redessin au
+moment de l'échange, et le socle le sait déjà : `initHeaderHeight`,
+`initNavShape` et `initAdviceTitles` remesurent tous sur `document.fonts.ready`.
+
+C'est aussi pourquoi le repli de Sligoil est **monospacé**, comme elle : la mise
+en page saute d'autant moins.
+
+### Aucune règle webpack à ajouter
 
 **Ne pas ajouter de règle `asset/resource` pour les polices dans
 `webpack.config.js`.** Webpack 5 les gère déjà, en leur donnant un nom dérivé de
-leur contenu. Ce hachage est indispensable : `.htaccess` sert `dist/` avec un
-`Expires` à un mois, donc un nom de fichier fixe figerait la police chez les
-visiteurs déjà venus. Vérifié dans les deux sens : le build passe sans règle et
-émet `<hash>.woff2` ; avec une règle `[name][ext]`, il émet un nom stable et
-perd l'invalidation.
+leur contenu — vérifié : le build émet `3ce809b52c986a5c3671.woff2` et les
+trois fichiers répondent 200. Ce hachage est indispensable : `.htaccess` sert
+`dist/` avec un `Expires` à un mois, donc un nom de fichier fixe figerait la
+police chez les visiteurs déjà venus.
 
-Déposer les `.woff2` dans `assets/fonts/`, déclarer les `@font-face` dans un
-partiel de `basics/`, et l'importer depuis `app.scss`.
+Les `@font-face` vivent dans `basics/fonts.scss`, importé en TÊTE d'`app.scss`.
+Le chemin est `../../fonts/`, relatif au partiel et non à `app.scss` :
+`resolve-url-loader` résout depuis le fichier source, et `../fonts/` cherchait
+dans `assets/styles/fonts/`.
 
 ## Invalidation du cache des assets
 
@@ -2136,21 +2199,20 @@ Aucune compensation n'a donc été posée. Elle l'aurait été si le décalage a
 déplacé un voisin — c'est le défaut classique de ce genre de survol, et il ne se
 voit qu'en le mesurant.
 
-#### Ce que « la bonne police » veut dire ici
+#### Ce que « la bonne police » voulait dire ici
 
-Le CSS est juste : la pile est déclarée sur le `body` et correctement héritée.
-**Mais le thème n'embarque aucun fichier de police** — pas de `assets/fonts/`,
-aucun `@font-face`. Inter s'affiche sur un poste où elle est installée, et sur
-lui seul.
+Le CSS était juste — la pile déclarée sur le `body`, correctement héritée —
+**mais le thème n'embarquait aucun fichier** : Inter ne s'affichait que sur un
+poste où elle était installée, et valider une demande de typographie à l'œil
+dépendait donc du poste qui regarde.
 
-Vérifié : `document.fonts.check('13px Inter')` répond vrai sur la machine de
-développement, et une mesure au canevas confirme une largeur différente de
-`system-ui`. Ça ne dit rien du rendu chez un visiteur.
+`document.fonts.check('13px Inter')` répondait vrai sur la machine de
+développement, et c'est précisément le piège : **cette API ne dit pas qu'une
+police est servie**, elle dit que le texte peut être rendu. Éprouvé depuis, une
+déclaration retirée la laisse répondre vrai.
 
-Tant que les `.woff2` ne sont pas déposés et les `@font-face` déclarés — voir
-« Polices — pas encore auto-hébergées » plus haut, Inter étant sous SIL OFL et
-donc libre —, **valider une demande de typographie à l'œil dépend du poste qui
-regarde**.
+**Réglé** : les trois coupes sont auto-hébergées, et trois assertions le gardent
+— voir « Polices — auto-hébergées » plus haut.
 
 ### Les étiquettes de section restent au même niveau
 
@@ -2195,6 +2257,116 @@ collée sous l'en-tête, pour une vue de 797 — 19px de marge. Dans une section
 > tout du long ; « seule la partie de droite défile » demande de coller la
 > colonne entière, visuel compris. La seconde a été retenue. Rendre l'étiquette
 > seule collante est une ligne à déplacer.
+
+## Deux collages imbriqués sur la page « Conseils »
+
+Demande : le titre de section reste à l'écran pendant qu'on lit sa colonne de
+droite, et l'étiquette du groupe en cours de lecture se range **sous lui**, puis
+se fait chasser par la suivante en fin de groupe. Le titre, lui, n'est chassé
+que par un autre titre.
+
+C'est la mécanique de `block-team` montée d'un cran, et tout tient dans les
+**cages** — un élément collant ne peut rester immobile que tant que la fin de son
+conteneur ne le rattrape pas :
+
+| | Cage | Donc chassé par |
+| --- | --- | --- |
+| Titre de section | la `<section>` | le titre suivant |
+| Étiquette de groupe | `__cell`, la case de sa rangée | l'étiquette suivante |
+
+### La section ne porte AUCUN retrait, et c'est ce qui fait la chasse
+
+Le piège est arithmétique, et il se referme deux fois. Un élément collant est
+borné par la **boîte de contenu** de son conteneur : tout ce que la section met
+en rembourrage bas est autant de course que le titre perd à la fin, et tout ce
+qu'elle met en rembourrage haut est autant de retard que le titre suivant prend
+au début.
+
+Mesuré à 1470 × 797, largeur de la fenêtre de défilement **sans aucun titre à
+l'écran** :
+
+| Agencement | Fenêtre morte |
+| --- | --- |
+| Retraits sur la section, marge sous l'enveloppe du titre | **423px** |
+| Retraits déplacés sur `__body` | 160px |
+| Écart inter-sections porté par la section qui FINIT | **39px** — la hauteur du titre |
+
+Les 39 restants sont le temps que le titre met à sortir : il ne peut pas faire
+moins. D'où l'agencement retenu, qui ne change **aucune cote de la maquette** —
+128 entre le titre et le contenu, 256 entre deux sections — mais en change le
+porteur :
+
+- la **première** section porte le seul retrait haut, elle n'a personne devant
+  elle pour le lui donner ;
+- chaque `__body` porte **deux** retraits en bas : la fin de sa section et le
+  haut de la suivante ;
+- la **dernière** revient à un seul, les 128 relevés avant la bande de
+  l'application.
+
+### La hauteur du titre est PUBLIÉE, pas additionnée
+
+`--advice-title-height`, posée par `initAdviceTitles` sur chaque section. Même
+raison que `--header-height` : un titre long revient à la ligne, et
+systématiquement à fort grossissement de texte. Une addition écrite à la main
+rangerait alors l'étiquette **derrière** lui, et le défaut n'apparaîtrait pas à
+la taille de la maquette.
+
+Le script mesure l'**enveloppe** `__head` et surtout pas le titre : le retrait
+haut de ce dernier étend son aplat jusqu'au bord de la vue, et `offsetHeight`
+compterait ces 152px.
+
+### L'aplat du titre, et pourquoi il remonte jusqu'en haut de la vue
+
+Une étiquette chassée remonte, et son chemin passe par le titre collé. Mesuré :
+au défilement 1895, la puce « avant l'âge de 16 ans » occupait **142..171**
+pendant que le titre tenait **152..191** — superposition franche, en vertical
+comme en horizontal.
+
+L'aplat la masque. Il est sans danger **ici, et seulement ici**, parce que le
+titre est borné à la colonne de gauche : à `$fs-h2` il mordrait la colonne de
+droite de 165px, et c'est l'autre raison de `$fs-h2-sticky`.
+
+Trois conditions, et en retirer une le casse :
+
+| Condition | Rôle |
+| --- | --- |
+| retrait haut d'un calage, repris en marge négative | l'aplat monte jusqu'au bord de la vue sans déplacer le titre |
+| `display: flow-root` sur l'enveloppe | sans contexte de formatage, la marge **fusionne** et c'est l'enveloppe entière qui remonte de 152 — mesuré, la boîte du titre tenait 152..343 au lieu de 152..191 |
+| `z-index: 1` sur l'enveloppe | les deux collants sont positionnés ; à `auto`, l'ordre du document met l'étiquette **au-dessus** du titre |
+
+### Le titre déborde de sa colonne vers la gauche
+
+La maquette mélange deux grilles, et c'est délibéré de sa part : le titre sur la
+marge des pages intérieures (**48**), les colonnes sur l'axe de l'accueil
+(**161 + 440 + 12 + 666**). Relevé quatre fois chacun.
+
+Le retrait du titre est donc `min(48, retrait du contenu)` : en dessous de 1440
+l'axe centré se resserre sous 48, et un titre figé à 48 passerait **à droite**
+des colonnes au lieu de les précéder.
+
+### Pourquoi 32px et pas 48
+
+Sligoil a une chasse de **0,6 em**, mesurée sur les PDF : 28,8px par caractère à
+48, 19,2 à 32. La zone du titre va de x=48 au bord de la colonne de gauche, soit
+**553px** à 1440.
+
+| Titre de la maquette | à 32px | à 48px |
+| --- | --- | --- |
+| Les urgences en orthodontie (27 car.) | 518 | **778** |
+| Les conseils de brossage (24 car.) | 461 | **691** |
+| Coûts et prise en charge (24 car.) | 461 | **691** |
+| Foire aux questions (19 car.) | 365 | 547 |
+
+Trois titres sur quatre débordent à 48. Le titre étant collant, ce qui dépasse
+court au-dessus de la colonne de droite. **La maquette n'a donc pas dérivé en
+réduisant l'échelle sur cette page : elle a dimensionné ses titres pour qu'ils
+tiennent dans leur colonne.** D'où `$fs-h2-sticky`, et un `max-width` dérivé de
+la grille qui borne le titre quoi qu'on y écrive.
+
+> **Le pied de page de cette maquette est à 32 lui aussi**, alors qu'il est
+> partagé et déjà livré à 48 — « Rester informé » mesure 403px sur `LCDS_equipe`
+> contre 269 ici, le rapport exact de 2/3. Il n'a **pas** été suivi : arbitré,
+> le pied de page reste à `$fs-h2`.
 
 ## La révélation du pied de page
 

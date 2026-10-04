@@ -1025,6 +1025,11 @@ for width in 1440 500 320; do
     report "$width" "$(dump_dom "$width" /l-equipe/)" || FAILURES=$((FAILURES + 1))
 done
 
+for width in 1440 500 320; do
+    echo "== Page « Conseils » à ${width}px =="
+    report "$width" "$(dump_dom "$width" /conseils/)" || FAILURES=$((FAILURES + 1))
+done
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
     echo "QA front : tout est au vert."

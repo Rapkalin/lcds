@@ -1,0 +1,75 @@
+@use "variables" as var;
+
+/* ------------------------------------------------------------------------- *
+ * Les deux polices du site, AUTO-HÉBERGÉES.
+ *
+ * Pas de Google Fonts, et ce n'est pas une préférence : la CSP du site pose
+ * `font-src 'self'` et `style-src 'self'` — une feuille servie par
+ * `fonts.googleapis.com` et ses fichiers sur `fonts.gstatic.com` seraient
+ * bloqués. Et un appel à ce CDN transmet l'adresse IP du visiteur à un tiers
+ * à chaque page, ce que la CNIL lit comme un transfert sans base légale. Voir
+ * readme/securite.md.
+ *
+ * « Récupérer Inter chez Google » se fait donc en TÉLÉCHARGEANT les fichiers,
+ * pas en les liant : ils sont ici, servis par le même domaine que la page.
+ *
+ * | Police | Fichier | Origine | Licence |
+ * | --- | --- | --- | --- |
+ * | Sligoil Micro | `Sligoil-Micro.woff2` | Velvetyne | SIL OFL 1.1 |
+ * | Inter Medium | `Inter-Medium.woff2` | rsms/inter v4.1 | SIL OFL 1.1 |
+ * | Inter SemiBold | `Inter-SemiBold.woff2` | rsms/inter v4.1 | SIL OFL 1.1 |
+ *
+ * Les deux licences voyagent avec les fichiers, dans `assets/fonts/` : l'OFL
+ * exige que l'avis de copyright accompagne toute redistribution, et un thème
+ * déployé en est une.
+ *
+ * TROIS FICHIERS, PAS UN DE PLUS. Ce sont exactement les poids que
+ * `variables.scss` déclare — 400 pour les titres, 500 pour les boutons
+ * d'action, 600 pour le corps de texte. Les coupes *Micro Medium* et
+ * *Micro Bold* de Sligoil existent et ne sont pas servies : aucune maquette ne
+ * les emploie.
+ *
+ * `woff2` SEUL, sans repli `woff`. Il est pris en charge partout depuis 2017,
+ * et le `woff` de Sligoil pèse 10 % de plus pour ne servir personne.
+ *
+ * AUCUNE RÈGLE WEBPACK À AJOUTER pour ces fichiers : webpack 5 les traite en
+ * module d'asset et leur donne un nom dérivé de leur CONTENU. Ce hachage est
+ * indispensable — `.htaccess` sert `dist/` avec un `Expires` d'un mois, et un
+ * nom fixe figerait la police chez les visiteurs déjà venus.
+ * ------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+ * `swap` et non `block` : le texte reste LISIBLE pendant le chargement, rendu
+ * dans la pile de secours, au lieu d'être invisible jusqu'à trois secondes.
+ *
+ * Le prix est un redessin au moment de l'échange, et le socle le sait déjà :
+ * `initHeaderHeight`, `initNavShape` et `initAdviceTitles` remesurent tous sur
+ * `document.fonts.ready`. Une hauteur figée avant l'échange serait celle de la
+ * police de secours, dont la chasse n'est pas la même.
+ *
+ * C'est aussi pourquoi le repli de Sligoil est MONOSPACÉ, comme elle : la mise
+ * en page saute d'autant moins.
+ * ------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Sligoil";
+  src: url("../../fonts/Sligoil-Micro.woff2") format("woff2");
+  font-weight: var.$fw-title;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("../../fonts/Inter-Medium.woff2") format("woff2");
+  font-weight: var.$fw-cta;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("../../fonts/Inter-SemiBold.woff2") format("woff2");
+  font-weight: var.$fw-p;
+  font-style: normal;
+  font-display: swap;
+}

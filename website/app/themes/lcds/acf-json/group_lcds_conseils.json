@@ -1,0 +1,423 @@
+{
+    "key": "group_lcds_conseils",
+    "title": "Page « Conseils »",
+    "fields": [
+        {
+            "key": "field_lcds_conseils_h1",
+            "label": "Titre principal (h1)",
+            "name": "titre_h1",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "MASQUÉ À L'ÉCRAN, lu par les moteurs et les lecteurs d'écran : la maquette ne dessine aucun titre de page. Sans lui, la page n'a aucun h1. Exemple : « Conseils ».",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 80,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_conseils_sections",
+            "label": "Sections",
+            "name": "sections",
+            "aria-label": "",
+            "type": "flexible_content",
+            "instructions": "Les sections de la page, dans l'ordre d'affichage. Les deux formes partagent la même mise en page : un titre à gauche, des groupes de deux colonnes en dessous.",
+            "required": 0,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layouts": {
+                "layout_lcds_conseils_accordeon": {
+                    "key": "layout_lcds_conseils_accordeon",
+                    "name": "accordeon",
+                    "label": "Section à questions dépliables",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_conseils_acc_titre",
+                            "label": "Titre de la section",
+                            "name": "titre",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Exemple : « Foire aux questions ». Il RESTE À L'ÉCRAN pendant que la section défile, et seul le titre de la section suivante le chasse. Court de préférence : au-delà d'une ligne il repousse les étiquettes vers le bas.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 80,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_conseils_acc_chapo",
+                            "label": "Chapô",
+                            "name": "chapo",
+                            "aria-label": "",
+                            "type": "wysiwyg",
+                            "instructions": "Paragraphes d'introduction, posés dans la colonne de droite au-dessus du premier groupe. Facultatif.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "tabs": "all",
+                            "toolbar": "basic",
+                            "media_upload": 0,
+                            "delay": 0
+                        },
+                        {
+                            "key": "field_lcds_conseils_acc_groupes",
+                            "label": "Groupes",
+                            "name": "groupes",
+                            "aria-label": "",
+                            "type": "repeater",
+                            "instructions": "Un groupe par étiquette. Deux groupes sont séparés par un filet, comme la maquette le dessine entre « chez l'enfant » et « chez l'adolescent ».",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "collapsed": "field_lcds_conseils_acc_groupe_etiquette",
+                            "min": 0,
+                            "max": 0,
+                            "layout": "block",
+                            "button_label": "Ajouter un groupe",
+                            "sub_fields": [
+                                {
+                                    "key": "field_lcds_conseils_acc_groupe_etiquette",
+                                    "label": "Étiquette du groupe",
+                                    "name": "etiquette",
+                                    "aria-label": "",
+                                    "type": "text",
+                                    "instructions": "Libellé court, affiché en capitales dans une pastille à gauche. Exemple : « chez l'enfant ». Il reste sous le titre de la section pendant que son contenu défile, puis l'étiquette suivante le chasse. LAISSÉ VIDE, aucune pastille n'est rendue et la colonne reste vide — c'est ce que fait la maquette sur la première section.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "maxlength": 40,
+                                    "placeholder": "",
+                                    "prepend": "",
+                                    "append": ""
+                                },
+                                {
+                                    "key": "field_lcds_conseils_acc_groupe_puce",
+                                    "label": "Couleur de la puce",
+                                    "name": "puce",
+                                    "aria-label": "",
+                                    "type": "button_group",
+                                    "instructions": "Le petit point coloré de l'étiquette. Sans étiquette, elle n'est pas rendue.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "choices": {
+                                        "turquoise": "Vert",
+                                        "orange": "Rouge"
+                                    },
+                                    "default_value": "orange",
+                                    "return_format": "value",
+                                    "allow_null": 0,
+                                    "layout": "horizontal"
+                                },
+                                {
+                                    "key": "field_lcds_conseils_questions",
+                                    "label": "Questions",
+                                    "name": "questions",
+                                    "aria-label": "",
+                                    "type": "repeater",
+                                    "instructions": "Une entrée par question. UNE SEULE est ouverte à la fois : en ouvrir une referme la précédente.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "collapsed": "field_lcds_conseils_question_titre",
+                                    "min": 0,
+                                    "max": 0,
+                                    "layout": "block",
+                                    "button_label": "Ajouter une question",
+                                    "sub_fields": [
+                                        {
+                                            "key": "field_lcds_conseils_question_titre",
+                                            "label": "Question",
+                                            "name": "titre",
+                                            "aria-label": "",
+                                            "type": "text",
+                                            "instructions": "Exemple : « À quel âge consulter un orthodontiste pour enfants ? ». Sans question, l'entrée n'est pas rendue.",
+                                            "required": 0,
+                                            "conditional_logic": false,
+                                            "wrapper": {
+                                                "width": "",
+                                                "class": "",
+                                                "id": ""
+                                            },
+                                            "default_value": "",
+                                            "maxlength": 160,
+                                            "placeholder": "",
+                                            "prepend": "",
+                                            "append": ""
+                                        },
+                                        {
+                                            "key": "field_lcds_conseils_question_reponse",
+                                            "label": "Réponse",
+                                            "name": "reponse",
+                                            "aria-label": "",
+                                            "type": "wysiwyg",
+                                            "instructions": "Le texte révélé par le bouton « + ».",
+                                            "required": 0,
+                                            "conditional_logic": false,
+                                            "wrapper": {
+                                                "width": "",
+                                                "class": "",
+                                                "id": ""
+                                            },
+                                            "default_value": "",
+                                            "tabs": "all",
+                                            "toolbar": "basic",
+                                            "media_upload": 0,
+                                            "delay": 0
+                                        },
+                                        {
+                                            "key": "field_lcds_conseils_question_ouvert",
+                                            "label": "Ouverte au chargement",
+                                            "name": "ouvert",
+                                            "aria-label": "",
+                                            "type": "true_false",
+                                            "instructions": "La maquette ouvre la PREMIÈRE entrée de chaque groupe. Plusieurs entrées cochées : seule la dernière reste ouverte, le groupe n'en tolère qu'une.",
+                                            "required": 0,
+                                            "conditional_logic": false,
+                                            "wrapper": {
+                                                "width": "",
+                                                "class": "",
+                                                "id": ""
+                                            },
+                                            "message": "",
+                                            "default_value": 0,
+                                            "ui": 1,
+                                            "ui_on_text": "",
+                                            "ui_off_text": ""
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                },
+                "layout_lcds_conseils_description": {
+                    "key": "layout_lcds_conseils_description",
+                    "name": "description",
+                    "label": "Section à textes",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_conseils_des_titre",
+                            "label": "Titre de la section",
+                            "name": "titre",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Exemple : « Coûts et prise en charge ». Il RESTE À L'ÉCRAN pendant que la section défile, et seul le titre de la section suivante le chasse. Court de préférence : au-delà d'une ligne il repousse les étiquettes vers le bas.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 80,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_conseils_des_groupes",
+                            "label": "Blocs",
+                            "name": "groupes",
+                            "aria-label": "",
+                            "type": "repeater",
+                            "instructions": "Un bloc par étiquette. Contrairement aux sections à questions, aucun filet ne les sépare — seulement l'écart.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "collapsed": "field_lcds_conseils_des_groupe_etiquette",
+                            "min": 0,
+                            "max": 0,
+                            "layout": "block",
+                            "button_label": "Ajouter un bloc",
+                            "sub_fields": [
+                                {
+                                    "key": "field_lcds_conseils_des_groupe_etiquette",
+                                    "label": "Étiquette du bloc",
+                                    "name": "etiquette",
+                                    "aria-label": "",
+                                    "type": "text",
+                                    "instructions": "Libellé court, affiché en capitales dans une pastille à gauche. Exemple : « chez l'enfant ». Il reste sous le titre de la section pendant que son contenu défile, puis l'étiquette suivante le chasse. LAISSÉ VIDE, aucune pastille n'est rendue et la colonne reste vide — c'est ce que fait la maquette sur la première section.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "maxlength": 40,
+                                    "placeholder": "",
+                                    "prepend": "",
+                                    "append": ""
+                                },
+                                {
+                                    "key": "field_lcds_conseils_des_groupe_puce",
+                                    "label": "Couleur de la puce",
+                                    "name": "puce",
+                                    "aria-label": "",
+                                    "type": "button_group",
+                                    "instructions": "Le petit point coloré de l'étiquette. Sans étiquette, elle n'est pas rendue.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "choices": {
+                                        "turquoise": "Vert",
+                                        "orange": "Rouge"
+                                    },
+                                    "default_value": "orange",
+                                    "return_format": "value",
+                                    "allow_null": 0,
+                                    "layout": "horizontal"
+                                },
+                                {
+                                    "key": "field_lcds_conseils_des_groupe_titre",
+                                    "label": "Titre du bloc",
+                                    "name": "titre",
+                                    "aria-label": "",
+                                    "type": "text",
+                                    "instructions": "Titre posé au-dessus du texte, dans la colonne de droite. Facultatif : la maquette n'en pose qu'un, sur « Quel est le coût d'un traitement orthodontique ? ».",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "maxlength": 160,
+                                    "placeholder": "",
+                                    "prepend": "",
+                                    "append": ""
+                                },
+                                {
+                                    "key": "field_lcds_conseils_des_groupe_texte",
+                                    "label": "Texte",
+                                    "name": "texte",
+                                    "aria-label": "",
+                                    "type": "wysiwyg",
+                                    "instructions": "Paragraphes du bloc. Une ligne vide entre deux paragraphes suffit.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "default_value": "",
+                                    "tabs": "all",
+                                    "toolbar": "basic",
+                                    "media_upload": 0,
+                                    "delay": 0
+                                },
+                                {
+                                    "key": "field_lcds_conseils_des_groupe_lien",
+                                    "label": "Bouton d'action",
+                                    "name": "lien",
+                                    "aria-label": "",
+                                    "type": "link",
+                                    "instructions": "Bouton posé sous le texte. Exemple : « voir le tutoriel ». Laissé vide, aucun bouton n'est rendu.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "return_format": "array"
+                                }
+                            ]
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                }
+            },
+            "min": "",
+            "max": "",
+            "button_label": "Ajouter une section"
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "page_template",
+                "operator": "==",
+                "value": "template-conseils.php"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+        "the_content",
+        "excerpt",
+        "discussion",
+        "comments",
+        "author",
+        "format",
+        "featured_image",
+        "categories",
+        "tags",
+        "send-trackbacks"
+    ],
+    "active": true,
+    "description": "Contenu de la page « Conseils ». Le gabarit se choisit dans « Attributs de page ».",
+    "show_in_rest": 0
+}

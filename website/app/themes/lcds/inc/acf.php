@@ -18,6 +18,7 @@ require_once __DIR__ . '/enums/LcdsMediaShape.php';
 require_once __DIR__ . '/enums/LcdsDotColor.php';
 require_once __DIR__ . '/enums/LcdsInfoIcon.php';
 require_once __DIR__ . '/enums/LcdsFocalPoint.php';
+require_once __DIR__ . '/enums/LcdsAdviceSection.php';
 
 if (! defined('ABSPATH')) {
     exit;

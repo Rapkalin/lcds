@@ -71,7 +71,7 @@ coup : c’est la thématique la plus lourde du référentiel après Multimédia
 
 | Critère | Ce qui n’allait pas |
 | --- | --- |
-| **10.4** | *« Le texte reste-t-il lisible lorsque la taille des caractères est augmentée jusqu’à 200 % ? »* — **non** : toutes les cotes du thème étant en `rem`, la mise en page doublait et la page passait à **1519px pour une vue de 1440**, imposant un défilement horizontal. Corrigé : la page tient désormais à 1440. Une assertion de `bin/qa-front.sh` le vérifie. |
+| **10.4** | *« Le texte reste-t-il lisible lorsque la taille des caractères est augmentée jusqu’à 200 % ? »* — **non** : toutes les cotes du thème étant en `rem`, la mise en page doublait et la page passait à **1519px pour une vue de 1440**, imposant un défilement horizontal. Corrigé : la page tient désormais à 1440. Une assertion de `bin/qa-front.sh` le vérifie. **Rouvert puis refermé** le jour de l'auto-hébergement des polices : la BARRE de navigation, contrairement à l'en-tête qui la contient, ne savait pas passer à la ligne — 1350px réclamés pour 1248 disponibles, 6px de trop. Le défaut préexistait, il ne tenait qu'aux 20px de la puce d'entrée courante. |
 
 > **Attribution non isolée.** J’ai posé sept règles en même temps (retour à la
 > ligne de l’en-tête et des pastilles, plafonds de largeur, `min-width: 0` sur

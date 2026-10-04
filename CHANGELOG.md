@@ -7,6 +7,69 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.29.0
+
+### Ajouté
+
+- **Les polices du site sont servies par le site.** Sligoil pour les titres,
+  Inter pour les textes : trois fichiers `woff2`, 271 Ko, servis depuis le même
+  domaine que la page. Le site s'affiche désormais dans sa typographie chez
+  tout le monde, et plus seulement sur un poste où ces polices sont installées.
+
+- **Aucun appel à Google Fonts**, et c'est délibéré : un tel appel transmettrait
+  l'adresse IP de chaque visiteur à un tiers, et la politique de sécurité du
+  site le bloquerait de toute façon. Les fichiers viennent des sources
+  officielles, leurs licences les accompagnent.
+
+### Corrigé
+
+- **À 200 % de taille de texte, la page du cabinet ne déborde plus.** La barre
+  de navigation ne savait pas passer à la ligne, contrairement à l'en-tête qui
+  la contient. Le défaut préexistait et ne tenait qu'à six pixels : il
+  apparaissait dès qu'une entrée de menu s'allongeait un peu.
+
+## 2.28.0
+
+### Ajouté
+
+- **La page « Conseils ».** Quatre sections — les urgences, les coûts et la
+  prise en charge, les conseils de brossage, la foire aux questions —, chacune
+  ouverte par son titre et divisée en deux colonnes : les étiquettes à gauche,
+  le contenu à droite.
+
+- **Deux formes de section, un seul formulaire.** « Section à questions
+  dépliables » et « Section à textes » s'ajoutent, se réordonnent et se
+  suppriment au glisser-déposer, comme les sections de l'accueil. Une section
+  peut porter plusieurs étiquettes, ou aucune.
+
+- **Le titre de section reste sous les yeux** pendant qu'on lit sa colonne de
+  droite, et seul le titre suivant le chasse. L'étiquette du groupe en cours de
+  lecture se range sous lui, et c'est la suivante qui la chasse, en fin de
+  groupe.
+
+- **L'accordéon est repris tel quel**, avec sa règle d'un seul panneau ouvert
+  par groupe. Seule son apparence change sur cette page — titres plus petits,
+  aucun filet entre les entrées —, ce que la maquette dessine.
+
+- **La page arrive garnie** de la copie relevée sur la maquette. Les réponses de
+  la foire aux questions y sont du lorem ipsum : la maquette ne les rédige pas,
+  elles attendent le client.
+
+- **« Conseils » entre dans la navigation d'en-tête**, comme la maquette le
+  dessine. Sur une installation existante le menu n'est pas touché : il
+  appartient au contributeur.
+
+### Corrigé
+
+- **Les paragraphes d'une réponse dépliée ne se touchent plus.** Un contributeur
+  qui en saisissait deux obtenait un seul bloc, l'accueil comme ailleurs.
+
+- **L'en-tête de « Conseils » ne laisse plus voir le bleu foncé du fond de
+  page.** Il est listé par gabarit, et celui-ci manquait.
+
+- **Deux paragraphes de la documentation de contribution étaient intervertis** :
+  l'accordéon décrivait la liste d'informations, et réciproquement.
+
 ## 2.27.0
 
 ### Ajouté

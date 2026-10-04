@@ -183,10 +183,11 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
   l'encoche des coins laisse voir le blanc du conteneur, soit deux oreilles
   claires à chaque épaule.
 
-- **Panneaux dépliables** : deux groupes déclarés sur la page, au plus un
+- **Panneaux dépliables** : **aucun accordéon sans son groupe** — l'invariant a
+  remplacé le compte de deux, qui retombait à chaque page ajoutée —, au plus un
   ouvert par groupe, ouvrir un panneau referme son voisin, un second clic
-  referme tout, et surtout les deux groupes **n'interfèrent pas** — c'est ce
-  qu'un `data-disclosure-group` posé au mauvais niveau casserait en silence.
+  referme tout, et surtout les groupes **n'interfèrent pas** — c'est ce qu'un
+  `data-disclosure-group` posé au mauvais niveau casserait en silence.
 
 > L'assertion « au plus un ouvert au chargement » **ne peut pas échouer sur le
 > contenu semé**, qui ne coche qu'un panneau par groupe : vérifié, elle reste
@@ -318,12 +319,43 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > 387 à 587px pendant que les pixels du visuel restent identiques. C'est le
 > genre de preuve qu'aucune assertion de DOM ne remplace.
 
-- **Pages intérieures, à 1440** : « Le cabinet » et « L'équipe » rejouent la
-  campagne entière — les assertions qui ne trouvent pas leur nœud se taisent,
-  celles qui sont communes valent partout. S'y ajoutent leurs cotes relevées au
-  pixel : grille de 48 à 1392 et colonne de droite à 726 sur les deux, tête
-  collée d'un seul tenant sur le cabinet, visuel exactement 2:1 et chapô de
-  24/34 sur l'équipe.
+- **Polices, à 1440** : les trois coupes **réellement chargées** — lues sur
+  `document.fonts`, jamais sur `fonts.check()`, qui répond vrai sans la
+  déclaration puisque la pile de secours lui suffit (éprouvé) —, **aucune
+  source tierce** dans les `@font-face`, et la **chasse de Sligoil à 0,6 em**
+  aux trois tailles. Cette dernière est celle qui compte : une coupe substituée
+  laisse la page lisible et ne se voit nulle part ailleurs, mais fait déborder
+  les titres collants de « Conseils » au-dessus de la colonne de droite.
+
+- **Pages intérieures, à 1440** : « Le cabinet », « L'équipe » et « Conseils »
+  rejouent la campagne entière — les assertions qui ne trouvent pas leur nœud se
+  taisent, celles qui sont communes valent partout. S'y ajoutent leurs cotes
+  relevées au pixel : grille de 48 à 1392 et colonne de droite à 726 sur les
+  deux premières, tête collée d'un seul tenant sur le cabinet, visuel exactement
+  2:1 et chapô de 24/34 sur l'équipe.
+
+- **« Conseils », trente assertions** : les deux grilles de la page — titre à
+  48, colonnes à 161 + 440 + 12 + 666 —, le titre **borné avant la colonne de
+  droite**, les deux collages et leurs cages, **aucun retrait bas sur les
+  sections** (c'est lui qui rend la chasse possible), la hauteur de titre
+  publiée par le script et égale à la mesure, l'aplat et ses trois conditions,
+  les étiquettes alignées en haut de leur bloc, **un seul filet et seulement
+  entre deux groupes de questions**, la coupe `--flush` de l'accordéon, le plan
+  de titres qui descend en `h4` seulement quand une étiquette occupe le `h3`, et
+  les 22px entre deux paragraphes.
+
+> **Deux assertions de l'accueil ont dû être RECADRÉES, pas assouplies.**
+> `.accordion__item` ne désignait plus une seule page dès que « Conseils » a
+> repris le composant : les cotes de l'accueil — cinq entrées, filet, 48 de part
+> et d'autre — tombaient sur une page qui n'a ni filet ni cinq entrées. Elles
+> sont désormais lues sous `.block-treatments`. Et le compte de groupes
+> dépliables, écrit en dur à deux, est devenu l'invariant qui vaut partout :
+> **aucun accordéon sans son attribut de groupe**.
+>
+> L'épreuve d'exclusivité, elle, partait d'un état supposé fermé : « Conseils »
+> ouvre la première entrée de chaque groupe comme la maquette le dessine, et le
+> premier clic la **refermait**. Elle referme maintenant tout avant de
+> commencer — elle tombait sur du code correct.
 
 > **Ces cotes rougissent à la moindre refonte de maquette, et c'est voulu.** Les
 > cinq assertions du cabinet sont passées au rouge le jour où la maquette a posé

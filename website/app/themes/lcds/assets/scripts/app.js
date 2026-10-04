@@ -1453,6 +1453,73 @@ const initLogoScroll = () => {
     relire();
 };
 
+/**
+ * Publie la hauteur du titre de chaque section de conseils, pour que
+ * l'étiquette du groupe vienne se caler JUSTE DESSOUS.
+ *
+ * MÊME PARTAGE QUE LE LOGO ET LE PARCOURS : ce code publie UN SEUL NOMBRE, et
+ * la feuille de style en tire le calage. Le retrait sous l'en-tête, la
+ * respiration entre le titre et l'étiquette, les tailles : tout cela reste dans
+ * `block-advice.scss`, à un seul endroit.
+ *
+ * POURQUOI MESURER PLUTÔT QU'ADDITIONNER. Le titre revient à la ligne dès que
+ * son libellé est long, et systématiquement à fort grossissement de texte. Une
+ * hauteur écrite à la main rangerait alors l'étiquette DERRIÈRE lui — le défaut
+ * ne se verrait pas à la taille de la maquette, et apparaîtrait chez le premier
+ * contributeur qui écrit un titre de deux lignes. Même raison que
+ * `--header-height`, et même repli côté CSS : la hauteur d'une seule ligne.
+ */
+const initAdviceTitles = () => {
+    const sections = Array.from(document.querySelectorAll(".block-advice"));
+
+    if (sections.length === 0) {
+        return;
+    }
+
+    const mesurer = () => {
+        for (const section of sections) {
+            // L'ENVELOPPE, et surtout pas le titre lui-même : son retrait haut
+            // étend son aplat jusqu'au bord de la vue, et `offsetHeight`
+            // compterait ces 152px — l'étiquette se rangerait alors bien plus
+            // bas que le titre. L'enveloppe, elle, vaut la hauteur de FLUX,
+            // que la marge négative du titre ramène à sa seule ligne.
+            const tete = section.querySelector(".block-advice__head");
+
+            if (tete === null) {
+                continue;
+            }
+
+            section.style.setProperty(
+                "--advice-title-height",
+                `${tete.offsetHeight}px`,
+            );
+        }
+    };
+
+    // Le titre change de hauteur sans que la fenêtre bouge : une police qui
+    // arrive, un grossissement de texte. Le seul `resize` laisserait alors un
+    // calage faux.
+    if (window.ResizeObserver !== undefined) {
+        const observateur = new window.ResizeObserver(mesurer);
+
+        for (const section of sections) {
+            observateur.observe(section);
+        }
+    }
+
+    window.addEventListener("resize", mesurer);
+
+    // La hauteur dépend de la POLICE : mesurer avant qu'elle soit chargée fige
+    // une valeur calculée sur les métriques de la police de secours, dont la
+    // chasse n'est pas celle de Sligoil — un titre qui tient sur une ligne avec
+    // l'une peut en demander deux avec l'autre.
+    if (document.fonts !== undefined) {
+        document.fonts.ready.then(mesurer);
+    }
+
+    mesurer();
+};
+
 const initHeaderHeight = () => {
     const header = document.getElementById("site-header");
 
@@ -1481,6 +1548,7 @@ const initHeaderHeight = () => {
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initHeaderHeight();
+    initAdviceTitles();
     initLogoScroll();
     initNavShape();
     initCtaShapes();

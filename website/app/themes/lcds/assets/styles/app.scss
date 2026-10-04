@@ -1,4 +1,5 @@
 /* UTILS / ABSTRACTS */
+@use "basics/fonts" as *;
 @use "basics/general" as *;
 
 /* PARTIALS */
@@ -7,6 +8,7 @@
 
 /* COMPONENTS */
 @use "components/tag" as *;
+@use "components/accordion" as *;
 @use "components/cta" as *;
 @use "components/hero" as *;
 @use "components/carousel" as *;
@@ -23,9 +25,11 @@
 @use "components/block-team" as *;
 @use "components/person-card" as *;
 @use "components/block-rooms" as *;
+@use "components/block-advice" as *;
 
 /* PAGES */
 @use "pages/homepage" as *;
 @use "pages/cabinet" as *;
 @use "pages/equipe" as *;
+@use "pages/conseils" as *;
 @use "pages/404" as *;

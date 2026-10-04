@@ -250,6 +250,74 @@ perd le visage.
 **Le bouton « + » n'apparaît que si la présentation est remplie.** Un bouton
 qui n'ouvre rien n'est pas un bouton.
 
+## La page « Conseils »
+
+**Pages → Conseils → Modifier.** Deuxième page à contenu flexible après
+l'accueil, et le groupe est localisé par **le gabarit** `template-conseils.php`
+et non par l'identifiant d'URL : la page peut être renommée sans que ses champs
+lui échappent.
+
+| Forme de section | Ce qu'elle porte à droite |
+| --- | --- |
+| **Section à questions dépliables** | un chapô facultatif, puis des entrées dépliables |
+| **Section à textes** | un titre facultatif, du texte, un bouton d'action |
+
+Les deux partagent la même carcasse — **un titre, puis des groupes de deux
+colonnes** — et c'est pour ça qu'elles n'ont **qu'un seul composant**,
+`components/block-advice.php`, et non deux gabarits dans `layouts/`, qui est le
+catalogue de l'accueil et de personne d'autre.
+
+Le nom du layout est repris par `inc/enums/LcdsAdviceSection.php`, source
+unique : il sert d'**allow-list** à la lecture — un layout inconnu n'est pas
+rendu plutôt que de rendre la mauvaise section — et il porte la seule
+différence qui ne soit pas du contenu, le **filet entre deux groupes**, réservé
+aux sections à questions. `tests/Unit/AdviceSectionTest.php` fait échouer la CI
+si l'enum et le JSON divergent.
+
+### Le titre de section reste à l'écran
+
+C'est le dispositif de la page, et il a une conséquence pour le contributeur :
+**le titre est collant**, il reste sous les yeux pendant toute sa section et
+seul le titre suivant le chasse. Un titre long revient à la ligne et **repousse
+les étiquettes d'autant** — sa hauteur est mesurée par le script, rien ne casse,
+mais la page respire moins. Les quatre titres de la maquette tiennent sur une
+ligne.
+
+### L'étiquette est facultative, et la maquette s'en sert
+
+Laissée vide, **aucune pastille n'est rendue** et la colonne de gauche reste
+vide — c'est ce que fait la première section, « Les urgences en orthodontie ».
+Le plan de titres suit : sans étiquette les titres de bloc sont des `h3`, avec
+étiquette ils descendent en `h4`, l'étiquette prenant le `h3`. Un niveau sauté
+est une erreur d'accessibilité, et la recette le vérifie.
+
+### Une seule question ouverte par groupe
+
+Le champ « ouverte au chargement » est contribuable. Plusieurs entrées cochées
+dans le même groupe : **seule la dernière reste ouverte**, le groupe n'en tolère
+qu'une. La maquette ouvre la première entrée de chaque groupe.
+
+### Réamorcer la page
+
+`bin/seed-conseils.php` la remplit avec la copie de la maquette. **Il est
+idempotent** : une page déjà en place n'est jamais réécrite, pour que le contenu
+saisi survive à un redémarrage de conteneur. Pour la recréer volontairement :
+
+```bash
+docker compose exec php wp eval-file bin/seed-conseils.php force
+```
+
+Les **réponses de la foire aux questions sont du lorem ipsum** : la maquette ne
+les rédige pas, et elles sont reprises telles quelles — même parti pris que les
+légendes du cabinet. Les trois premières sections, elles, portent le texte
+définitif.
+
+> **Les champs sont désignés par leur CLÉ dans ce seed, pas par leur nom.**
+> `titre_h1` et `sections` sont aussi les noms des champs de l'accueil : résolu
+> par le nom, `update_field` tombe sur ceux-là, et les sous-champs s'évaluent
+> contre les layouts de l'accueil. Mesuré — les quatre sections s'écrivaient,
+> leurs groupes disparaissaient en silence.
+
 ## Réutiliser une section sur une autre page
 
 Les sections sont des **composants importables**, et rien ne les attache à la
@@ -283,14 +351,6 @@ ou des valeurs en dur. C'est le rôle du gabarit appelant, pas du composant.
 
 ### Le cas de l'accordéon
 
-### Le cas de la liste d'informations
-
-`components/info-list.php` est **partagée** entre « informations pratiques » de
-l'accueil et « nous trouver » du cabinet : mêmes icônes, mêmes entrées, mêmes
-filets. Les deux maquettes ne diffèrent que par la gouttière entre l'icône et
-le texte — 24 sur l'accueil, 90 sur le cabinet — et c'est une propriété
-personnalisée, `--info-gutter`, pas un second composant.
-
 `components/accordion.php` prend `items` — une entrée par panneau, avec `id`,
 `title`, `text` et `open` — et un `heading` facultatif. **Ce dernier compte** :
 un accordéon posé directement sous le `h1` d'une page prend `h2`, sinon la
@@ -299,6 +359,28 @@ hiérarchie des titres saute un niveau et le critère RGAA 9.1 tombe.
 L'exclusivité — un seul panneau ouvert — vient de `data-disclosure-group`, que
 le composant pose lui-même sur sa liste. Deux accordéons sur la même page sont
 donc **indépendants** l'un de l'autre, chacun exclusif chez lui.
+
+**Il a DEUX COUPES, et une seule logique.** La maquette des conseils le dessine
+autrement que celle de l'accueil, et c'est un argument `variant` qui le dit —
+pas un second composant :
+
+| | accueil (défaut) | conseils (`flush`) |
+| --- | --- | --- |
+| titre d'entrée | 48px, soit `$fs-h2` | 24px, soit `$fs-h3` |
+| filet entre deux | oui | **aucun** |
+| écart entre deux | 48 + filet + 48 | 48 |
+
+Le balisage, le script et la règle d'un seul panneau ouvert sont **les mêmes**.
+Seules trois déclarations changent, dans `components/accordion.scss` — sorti de
+`block-treatments.scss` le jour où une deuxième page a repris le composant.
+
+### Le cas de la liste d'informations
+
+`components/info-list.php` est **partagée** entre « informations pratiques » de
+l'accueil et « nous trouver » du cabinet : mêmes icônes, mêmes entrées, mêmes
+filets. Les deux maquettes ne diffèrent que par la gouttière entre l'icône et
+le texte — 24 sur l'accueil, 90 sur le cabinet — et c'est une propriété
+personnalisée, `--info-gutter`, pas un second composant.
 
 ### Réamorcer la page
 

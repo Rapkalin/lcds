@@ -1,0 +1,290 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+/* ------------------------------------------------------------------------- *
+ * Section de conseils : un titre COLLANT, puis des groupes de deux colonnes.
+ *
+ * Relevé au pixel sur `CONSEILS/LCDS_conseils.pdf`, cotes confirmées au moins
+ * deux fois chacune :
+ *
+ *   titre de section    x=48 — la marge des pages intérieures, pas celle du
+ *                       contenu
+ *   colonnes            440 + 12 + 666 à partir de x=161 — la grille de
+ *                       l'accueil, celle de `block-treatments`
+ *   retrait de section  128 (en-tête → titre, titre → contenu, 256 entre deux
+ *                       sections, 128 avant la bande de l'application)
+ *   entre deux groupes  80
+ *   étiquette           alignée EN HAUT sur son bloc de droite
+ *
+ * LA PAGE MÉLANGE DONC DEUX GRILLES, et c'est la maquette qui le dessine : le
+ * titre sur l'axe des pages intérieures, le contenu sur celui de l'accueil.
+ * ------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+ * Bord DROIT de la colonne de gauche, mesuré depuis le bord de la page.
+ *
+ * C'est ce qui BORNE le titre : au-delà, sa boîte courrait au-dessus de la
+ * colonne de droite et le texte lui défilerait derrière.
+ *
+ * `440 / 1106` est la part de la colonne de gauche une fois la gouttière
+ * déduite — la même répartition que `grid-template-columns` plus bas, écrite
+ * en division pour qu'elle suive si les parts changent.
+ * ------------------------------------------------------------------------- */
+$column-left-end: calc(
+  #{var.$content-inset} +
+  (min(#{fn.toRem(1118)}, 100% - 2 * #{var.$gutter-min}) - #{var.$gutter}) * 440 / 1106
+);
+// Retrait du titre : celui des pages intérieures, mais JAMAIS plus que celui
+// du contenu. En dessous de 1440 l'axe centré se resserre sous 48, et un titre
+// figé à 48 passerait à DROITE des colonnes au lieu de les précéder.
+$title-inset: min(#{var.$inner-inset}, #{var.$content-inset});
+
+/* ---------------------------------------------------------------------------
+ * AUCUN RETRAIT SUR LA SECTION, et c'est ce qui permet au titre d'être CHASSÉ
+ * par le suivant plutôt que de s'en aller tout seul.
+ *
+ * Un élément collant est borné par la BOÎTE DE CONTENU de son conteneur : tout
+ * ce que la section met en rembourrage est autant de course que le titre perd
+ * à la fin, et autant de retard que le titre suivant prend au début. L'écart
+ * entre deux sections appartient donc à celle qui FINIT — son `__body` le
+ * porte —, et celle qui commence pose son titre sur son tout premier pixel.
+ *
+ * Mesuré à 1470 × 797, largeur de la fenêtre sans aucun titre à l'écran :
+ *
+ *   retraits sur la section, marge sous l'enveloppe   423px
+ *   retraits déplacés sur `__body`                    160px
+ *   écart inter-sections porté par celle qui finit     39px — la hauteur du
+ *                                                      titre, soit le temps
+ *                                                      qu'il passe à sortir
+ *
+ * Les cotes de la maquette ne bougent pas : 128 entre le titre et le contenu,
+ * 256 entre deux sections. Elles ont seulement changé de porteur.
+ * ------------------------------------------------------------------------- */
+.block-advice {
+
+  /* -----------------------------------------------------------------------
+   * Le titre reste sous les yeux tant que sa section défile, et seul le titre
+   * de la section SUIVANTE le chasse.
+   *
+   * Sa cage est la section, parce qu'il en est l'enfant direct : un élément
+   * collant ne peut rester immobile que tant que la fin de son conteneur ne
+   * le rattrape pas. Le descendre d'un cran, dans `__body`, ne changerait rien
+   * ici — mais le mettre dans un groupe le bornerait à ce groupe.
+   * --------------------------------------------------------------------- */
+  &__head {
+    position: sticky;
+    top: var.$sticky-top;
+    // Au-dessus de l'étiquette, qui est collante elle aussi. Les deux sont
+    // positionnés : à `z-index: auto`, c'est l'ORDRE DU DOCUMENT qui tranche,
+    // et l'étiquette — qui vient après — passerait par-dessus le titre en se
+    // faisant chasser. Reste très en dessous de l'en-tête du site, à 10.
+    z-index: 1;
+    // INDISPENSABLE avec la marge négative du titre. Sans contexte de
+    // formatage, cette marge FUSIONNE avec celle de l'enveloppe : c'est
+    // l'enveloppe entière qui remonte de 152, sa hauteur passe de 39 à 191, et
+    // le titre se retrouve collé 152px trop bas. Mesuré — la boîte du titre
+    // tenait 152..343 au lieu de 152..191.
+    display: flow-root;
+  }
+
+  /* -----------------------------------------------------------------------
+   * L'APLAT DU TITRE, et pourquoi il remonte jusqu'en haut de la vue.
+   *
+   * Une étiquette chassée par la suivante remonte, et son chemin passe par le
+   * titre collé. Mesuré à 1470 × 797 : au défilement 1895, la puce « avant
+   * l'âge de 16 ans » occupe 142..171 pendant que le titre tient 152..191 —
+   * les deux se superposent, en vertical comme en horizontal.
+   *
+   * L'aplat la masque. Il est sans danger ici, et seulement ici : le titre est
+   * BORNÉ à la colonne de gauche (voir `max-width`), il ne peut donc pas
+   * recouvrir la colonne de droite. À `$fs-h2` il la mordrait de 165px — c'est
+   * l'autre raison de `$fs-h2-sticky`.
+   *
+   * Le retrait haut, repris en marge négative, étend l'aplat jusqu'au bord de
+   * la vue sans déplacer le titre d'un pixel : sans lui, l'étiquette
+   * réapparaîtrait dans les 24px qui séparent l'en-tête du titre.
+   *
+   * La teinte est celle de la page, donc l'aplat est INVISIBLE au repos — il
+   * ne se voit qu'à ce qu'il masque.
+   * --------------------------------------------------------------------- */
+  &__title {
+    margin-top: calc(-1 * #{var.$sticky-top});
+    padding-top: var.$sticky-top;
+    background: var.$blue-pale;
+    // `margin-left` et `max-width` se résolvent tous deux sur la largeur de
+    // `__head`, qui est pleine largeur : c'est la condition pour que le `50%`
+    // de `$content-inset` compte la bonne moitié. Posées sur un élément déjà
+    // en retrait, les deux seraient fausses — voir le piège documenté sur le
+    // jeton.
+    margin-left: $title-inset;
+    max-width: calc(#{$column-left-end} - #{$title-inset});
+    font-size: var.$fs-h2-sticky;
+  }
+
+  // Le rembourrage bas vaut DEUX retraits : la fin de cette section, et le
+  // haut de la suivante, qui n'en a plus.
+  &__body {
+    max-width: var.$content-outer;
+    margin: var.$section-padding auto 0;
+    padding: 0 var.$gutter-min calc(2 * #{var.$section-padding});
+  }
+
+  // La première section est la seule à porter un retrait haut : elle n'a pas de
+  // section devant elle pour le lui donner, et son titre doit se poser à 128
+  // sous l'en-tête — la cote relevée.
+  &:first-of-type {
+    padding-top: var.$section-padding;
+  }
+
+  // La dernière n'a personne derrière elle non plus : son rembourrage bas
+  // redevient un seul retrait, les 128 relevés avant la bande de l'application.
+  &:last-of-type .block-advice__body {
+    padding-bottom: var.$section-padding;
+  }
+
+  // 1118 = 440 + 12 + 666. Les parts en `fr` redonnent ces largeurs exactes
+  // sans les écrire, et se répartissent proportionnellement ailleurs.
+  //
+  // Une grille PAR GROUPE, et non une pour la section : chaque étiquette ouvre
+  // une rangée, et c'est cette grille qui lui sert de cage.
+  &__group {
+    display: grid;
+    grid-template-columns: minmax(0, 440fr) minmax(0, 666fr);
+    gap: var.$gutter;
+
+    & + & {
+      margin-top: var.$block-gap;
+    }
+  }
+
+  // La case occupe la première colonne et c'est ELLE qui s'étire à la hauteur
+  // de la rangée — l'étirement par défaut d'un élément de grille, qu'il ne
+  // faut surtout pas neutraliser ici.
+  //
+  // C'est cette enveloppe qui BORNE le collage de l'étiquette. Collée
+  // directement dans la grille, l'étiquette prendrait la grille entière pour
+  // cage et traverserait tous les groupes au lieu d'être chassée par la
+  // suivante — même piège que `block-team`.
+  &__cell {
+    position: relative;
+  }
+
+  /* -----------------------------------------------------------------------
+   * L'étiquette se cale SOUS le titre, qui est lui-même collé sous l'en-tête.
+   *
+   * La hauteur du titre est publiée par le script, pas additionnée ici : un
+   * titre long revient à la ligne — un libellé de contributeur, ou n'importe
+   * quel titre à 200 % de taille de texte —, et un nombre écrit à la main
+   * rangerait alors l'étiquette derrière lui. Même raison que
+   * `--header-height`, et même repli : la hauteur d'UNE ligne, qui vaut la
+   * maquette tant que le titre y tient.
+   *
+   * Les 24px de respiration sont ARBITRÉS : la maquette est un cadre figé, elle
+   * ne montre jamais les deux collés l'un sous l'autre. C'est l'écart que
+   * `$sticky-top` donne déjà sous l'en-tête.
+   * --------------------------------------------------------------------- */
+  &__label {
+    position: sticky;
+    top: calc(
+      #{var.$sticky-top} +
+      var(--advice-title-height, calc(#{var.$fs-h2-sticky} * #{var.$lh-title})) +
+      #{fn.toRem(24)}
+    );
+    // `align-self` n'a pas de prise ici — l'étiquette n'est pas un élément de
+    // grille, c'est la case qui l'est. C'est donc la case qui s'étire, et
+    // l'étiquette garde sa course.
+    display: flex;
+    // La pastille est une boîte en ligne : étirée, son contour courrait sur
+    // toute la colonne au lieu d'épouser son libellé.
+    align-items: flex-start;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Une ligne vide sépare deux paragraphes dans la maquette : l'écart vaut donc
+  // exactement une hauteur de ligne.
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: calc(#{var.$fs-p} * #{var.$lh-p});
+  }
+
+  // La police de titre est REPIQUÉE : `general.scss` ne la pose que sur
+  // `h1, h2, h3`, et ce titre descend à `h4` dès que son groupe porte une
+  // étiquette. Même parade que `accordion__heading` et `person-card__name`.
+  //
+  // Les 12px sous le titre sont le seul relevé de cette cote dans la maquette :
+  // la gouttière, à une décimale près.
+  &__heading {
+    margin-bottom: var.$gutter;
+    font-family: var.$font-title;
+    font-size: var.$fs-h3;
+    font-weight: var.$fw-title;
+    line-height: var.$lh-title;
+  }
+
+  &__cta {
+    display: flex;
+    margin-top: var.$block-gap;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Le filet entre deux groupes — accordéons SEULEMENT.
+ *
+ * Relevé : un seul filet dans toute la maquette, entre les deux groupes de la
+ * foire aux questions, de 161 à 1279 — soit toute la largeur de contenu, les
+ * deux colonnes. Les trois groupes de « coûts et prise en charge » ne sont
+ * séparés que par le même écart de 80, sans trait. C'est `LcdsAdviceSection`
+ * qui porte cette distinction, pas une liste de sections.
+ * ------------------------------------------------------------------------- */
+.block-advice--accordeon .block-advice__group + .block-advice__group {
+  padding-top: var.$block-gap;
+  border-top: 1px solid var.$blue-separator;
+}
+
+// Le chapô N'EST PAS UN GROUPE : il n'ouvre aucune étiquette, et le filet
+// sépare des étiquettes. Mesuré sans cette exception : un trait s'intercalait
+// entre le chapô des urgences et sa première entrée, et les 161px qu'il ouvre
+// — 80, le filet, 80 — repoussaient l'accordéon d'autant.
+//
+// La classe de section est REPRISE dans le sélecteur : sans elle la règle pèse
+// (0,2,0) contre les (0,3,0) de celle qu'elle corrige, et c'est l'autre qui
+// l'emporte. Mesuré — le filet restait en place.
+.block-advice--accordeon .block-advice__group--intro + .block-advice__group {
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+// Voir block-intro : le repli intervient à 1024, avant le bloc mobile.
+@media (max-width: var.$bp-tablet) {
+  .block-advice {
+    &__title {
+      // Plus de colonne de droite à éviter : le titre reprend toute la largeur.
+      max-width: none;
+    }
+
+    &__group {
+      grid-template-columns: minmax(0, 1fr);
+      gap: fn.toRem(32);
+    }
+
+    // Collée, l'étiquette resterait en travers d'une grille qui n'a plus de
+    // rangée à parcourir. Le titre, lui, n'a plus rien pour le masquer.
+    &__head,
+    &__label {
+      position: static;
+    }
+
+    // Le chapô n'a plus de colonne vide à sa gauche : la case disparaît.
+    &__group--intro .block-advice__cell {
+      display: none;
+    }
+  }
+}

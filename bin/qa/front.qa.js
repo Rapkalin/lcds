@@ -1624,6 +1624,271 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * Page « Conseils » — les cotes de la maquette.
+     *
+     * LES ORDONNÉES ABSOLUES NE SONT ASSERTÉES QU'EN TÊTE DE PAGE, et pour la
+     * raison qui vaut déjà sur « l'équipe » : ni Sligoil ni Inter ne sont
+     * auto-hébergées, les textes ne se coupent donc pas aux mêmes endroits que
+     * dans la maquette, et tout ce qui suit un paragraphe glisse. Ce qui est
+     * vérifiable sans les polices, ce sont les ÉCARTS et les ALIGNEMENTS.
+     * --------------------------------------------------------------------- */
+    const conseilsSections = [...doc.querySelectorAll(".block-advice")];
+
+    if (conseilsSections.length > 0 && win.innerWidth === 1440) {
+        const boiteCo = (noeud) => noeud.getBoundingClientRect();
+        const coteCo = (nom, obtenu, attendu, tolerance = 1) => assert(
+            `conseils : ${nom} = ${attendu} (${obtenu === null ? "absent" : obtenu.toFixed(1)})`,
+            obtenu !== null && Math.abs(obtenu - attendu) <= tolerance
+        );
+
+        /*
+         * LA PAGE MÉLANGE DEUX GRILLES, et c'est la maquette qui le dessine :
+         * le titre sur la marge des pages intérieures (48), les colonnes sur
+         * l'axe de l'accueil (161 + 440 + 12 + 666). Relevé quatre fois chacun.
+         */
+        const titreCo = boiteCo(conseilsSections[0].querySelector(".block-advice__title"));
+        const celluleCo = boiteCo(conseilsSections[0].querySelector(".block-advice__cell"));
+        const contenuCo = boiteCo(conseilsSections[0].querySelector(".block-advice__content"));
+
+        coteCo("titre de section, bord gauche", titreCo.left, 48);
+        coteCo("colonne de gauche, bord gauche", celluleCo.left, 161);
+        coteCo("colonne de gauche, largeur", celluleCo.width, 440);
+        coteCo("colonne de droite, bord gauche", contenuCo.left, 613);
+        coteCo("colonne de droite, bord droit", contenuCo.right, 1279);
+
+        /*
+         * Le titre est BORNÉ à la colonne de gauche. S'il la dépassait, son
+         * aplat courrait au-dessus de la colonne de droite et le texte lui
+         * défilerait derrière. C'est aussi ce qui fixe sa taille : à `$fs-h2`,
+         * « Les urgences en orthodontie » demande 778px pour 553 disponibles.
+         */
+        assert(
+            `conseils : le titre s'arrête avant la colonne de droite`
+            + ` (${Math.round(titreCo.right)} pour une gouttière à ${Math.round(contenuCo.left - 12)})`,
+            titreCo.right <= contenuCo.left - 12 + 1
+        );
+
+        // Le premier titre tombe à 128 sous un en-tête de 128 : le retrait de
+        // section, relevé au pixel.
+        coteCo(
+            "premier titre à 256",
+            boiteCo(conseilsSections[0].querySelector(".block-advice__head")).top + win.scrollY,
+            256,
+            2
+        );
+
+        /*
+         * LES DEUX COLLAGES, et leurs cages. C'est tout le dispositif :
+         *   le TITRE est borné par la SECTION    → seul le titre suivant le chasse ;
+         *   l'ÉTIQUETTE est bornée par sa CASE   → la suivante la chasse en fin
+         *                                          de groupe, le titre reste.
+         *
+         * L'assertion porte sur les CAGES et non sur le seul `sticky` : c'est
+         * la cage qui décide de qui chasse qui. Une étiquette collée
+         * directement dans la grille traverserait tous les groupes.
+         */
+        const teteCo = conseilsSections[0].querySelector(".block-advice__head");
+        const etiquetteCo = doc.querySelector(".block-advice__label");
+
+        assert(
+            `conseils : le titre est collant (${styleOf(teteCo).position})`,
+            styleOf(teteCo).position === "sticky"
+        );
+        assert(
+            `conseils : l'étiquette est collante (${etiquetteCo === null ? "absente" : styleOf(etiquetteCo).position})`,
+            etiquetteCo !== null && styleOf(etiquetteCo).position === "sticky"
+        );
+
+        /*
+         * LA SECTION NE PORTE AUCUN RETRAIT BAS, et c'est ce qui rend la chasse
+         * possible : un élément collant est borné par la boîte de CONTENU de son
+         * conteneur. Mesuré, fenêtre sans aucun titre à l'écran : 423px avec les
+         * retraits sur la section, 39 une fois l'écart inter-sections porté par
+         * la section qui finit. L'assertion garde le porteur, pas la valeur.
+         */
+        const retraitsCo = conseilsSections.map((noeud) => styleOf(noeud).paddingBottom);
+
+        assert(
+            `conseils : aucune section ne porte de retrait bas (${[...new Set(retraitsCo)].join(", ")})`,
+            retraitsCo.every((valeur) => parseFloat(valeur) === 0)
+        );
+
+        /*
+         * L'ÉTIQUETTE SE CALE SOUS LE TITRE, et la hauteur du titre est PUBLIÉE
+         * par le script. Une addition écrite à la main rangerait l'étiquette
+         * derrière un titre revenu à la ligne — le cas d'un libellé long, et
+         * celui de n'importe quel titre à 200 % de taille de texte.
+         */
+        const publiee = conseilsSections[0].style.getPropertyValue("--advice-title-height");
+
+        coteCo(
+            "hauteur de titre publiée",
+            publiee === "" ? null : parseFloat(publiee),
+            boiteCo(teteCo).height
+        );
+        assert(
+            `conseils : les ${conseilsSections.length} sections la publient`
+            + ` (${conseilsSections.filter((n) => n.style.getPropertyValue("--advice-title-height") !== "").length})`,
+            conseilsSections.every((n) => n.style.getPropertyValue("--advice-title-height") !== "")
+        );
+
+        /*
+         * L'APLAT DU TITRE remonte jusqu'au bord de la vue. Sans lui,
+         * l'étiquette chassée traverse le titre à découvert — mesuré : la puce
+         * « avant l'âge de 16 ans » occupait 142..171 pendant que le titre
+         * tenait 152..191.
+         */
+        const titreNoeud = conseilsSections[0].querySelector(".block-advice__title");
+
+        assert(
+            `conseils : le titre porte l'aplat de la page (${styleOf(titreNoeud).backgroundColor})`,
+            styleOf(titreNoeud).backgroundColor === "rgb(242, 248, 255)"
+        );
+        assert(
+            `conseils : son aplat remonte d'un calage entier`
+            + ` (${styleOf(titreNoeud).paddingTop} de retrait, ${styleOf(titreNoeud).marginTop} de marge)`,
+            parseFloat(styleOf(titreNoeud).paddingTop) > 0
+                && Math.abs(parseFloat(styleOf(titreNoeud).paddingTop)
+                    + parseFloat(styleOf(titreNoeud).marginTop)) <= 1
+        );
+        assert(
+            `conseils : l'enveloppe du titre ouvre un contexte de formatage`
+            + ` (${styleOf(teteCo).display}) — sinon la marge négative la remonte entière`,
+            styleOf(teteCo).display === "flow-root"
+        );
+        assert(
+            `conseils : le titre passe au-dessus de l'étiquette (z-index ${styleOf(teteCo).zIndex})`,
+            parseInt(styleOf(teteCo).zIndex, 10) > 0
+        );
+
+        /*
+         * L'ÉTIQUETTE S'ALIGNE EN HAUT sur son bloc de droite — relevé trois
+         * fois sur la maquette, sur les deux formes de section.
+         */
+        const desalignees = [...doc.querySelectorAll(".block-advice__group")].filter((groupe) => {
+            const pastille = groupe.querySelector(".tag");
+            const contenu = groupe.querySelector(".block-advice__content > *");
+
+            return pastille !== null && contenu !== null
+                && Math.abs(boiteCo(pastille).top - boiteCo(contenu).top) > 1;
+        });
+
+        assert(
+            `conseils : les étiquettes s'alignent sur le haut de leur bloc`
+            + ` (${desalignees.length === 0 ? "toutes" : desalignees.length + " décalées"})`,
+            desalignees.length === 0
+        );
+
+        /*
+         * LE FILET N'EXISTE QU'ENTRE DEUX GROUPES D'ACCORDÉON. Relevé : un seul
+         * trait dans toute la maquette, entre les deux groupes de la foire aux
+         * questions, de 161 à 1279. Les trois blocs de « coûts et prise en
+         * charge » n'en ont aucun. C'est `LcdsAdviceSection` qui porte la
+         * distinction, pas une liste de sections.
+         */
+        const avecFilet = [...doc.querySelectorAll(".block-advice__group")]
+            .filter((groupe) => parseFloat(styleOf(groupe).borderTopWidth) > 0);
+        const horsAccordeon = avecFilet
+            .filter((groupe) => groupe.closest(".block-advice--accordeon") === null);
+
+        assert(
+            `conseils : ${avecFilet.length} filet(s), tous dans une section à questions`
+            + ` (${horsAccordeon.length} ailleurs)`,
+            avecFilet.length > 0 && horsAccordeon.length === 0
+        );
+
+        if (avecFilet.length > 0) {
+            const filet = boiteCo(avecFilet[0]);
+
+            coteCo("filet, bord gauche", filet.left, 161);
+            coteCo("filet, bord droit", filet.right, 1279);
+            coteCo("filet, respiration au-dessus", parseFloat(styleOf(avecFilet[0]).marginTop), 80);
+            coteCo("filet, respiration en dessous", parseFloat(styleOf(avecFilet[0]).paddingTop), 80);
+        }
+
+        /*
+         * LA COUPE `--flush` DE L'ACCORDÉON : titres à 24, aucun filet entre les
+         * entrées, 48 d'écart. Trois écarts relevés à 100 entre deux boutons de
+         * 52 — soit 48 — et un seul filet dans toute la page.
+         */
+        const entrees = [...doc.querySelectorAll(".accordion--flush .accordion__item")];
+
+        if (entrees.length > 1) {
+            const bordures = entrees.map((noeud) => parseFloat(styleOf(noeud).borderTopWidth));
+            const boutons = [...doc.querySelectorAll(".accordion--flush .accordion__icon")]
+                .map((noeud) => boiteCo(noeud));
+
+            assert(
+                `conseils : aucun filet entre les entrées (${[...new Set(bordures)].join(", ")})`,
+                bordures.every((valeur) => valeur === 0)
+            );
+            coteCo("entrée, taille du titre",
+                parseFloat(styleOf(entrees[0].querySelector(".accordion__heading")).fontSize), 24);
+            coteCo("entrée, côté du bouton", boutons[0].width, 52);
+
+            // Le bouton se cale en TÊTE de ligne et non centré dessus : à 24px,
+            // (29 − 52) / 2 vaut −11,5 et le bouton remonterait au-dessus du
+            // titre. Le plancher à zéro le retient.
+            coteCo("bouton, décalage vertical",
+                parseFloat(styleOf(doc.querySelector(".accordion--flush .accordion__icon")).marginTop), 0);
+        }
+
+        /*
+         * Le plan de titres : la section en `h2`, ses étiquettes en `h3`, les
+         * entrées en `h4`. SANS ÉTIQUETTE l'entrée remonte à `h3` — c'est le
+         * cas de la première section de la maquette, qui n'en porte aucune, et
+         * un `h4` y sauterait un niveau.
+         */
+        const sansEtiquette = conseilsSections
+            .flatMap((section) => [...section.querySelectorAll(".block-advice__group")])
+            .filter((groupe) => groupe.querySelector(".tag") === null)
+            .flatMap((groupe) => [...groupe.querySelectorAll(".accordion__heading, .block-advice__heading")]);
+        const avecEtiquette = conseilsSections
+            .flatMap((section) => [...section.querySelectorAll(".block-advice__group")])
+            .filter((groupe) => groupe.querySelector(".tag") !== null)
+            .flatMap((groupe) => [...groupe.querySelectorAll(".accordion__heading, .block-advice__heading")]);
+
+        assert(
+            `conseils : sans étiquette, les titres de bloc sont des h3`
+            + ` (${[...new Set(sansEtiquette.map((n) => n.tagName))].join(", ") || "aucun"})`,
+            sansEtiquette.length > 0 && sansEtiquette.every((n) => n.tagName === "H3")
+        );
+        assert(
+            `conseils : avec étiquette, ils descendent en h4`
+            + ` (${[...new Set(avecEtiquette.map((n) => n.tagName))].join(", ") || "aucun"})`,
+            avecEtiquette.length > 0 && avecEtiquette.every((n) => n.tagName === "H4")
+        );
+
+        // La police de titre est repiquée sur ces `h4` : `general.scss` ne la
+        // pose que sur `h1, h2, h3`, et ils seraient rendus en Inter.
+        if (avecEtiquette.length > 0) {
+            assert(
+                `conseils : les h4 gardent la police de titre`
+                + ` (${styleOf(avecEtiquette[0]).fontFamily.split(",")[0]})`,
+                styleOf(avecEtiquette[0]).fontFamily.includes("Sligoil")
+            );
+        }
+
+        /*
+         * Une ligne vide sépare deux paragraphes, dans un bloc de texte comme
+         * dans une réponse dépliée — relevé à 22 sur les deux. Sans règle les
+         * paragraphes se TOUCHENT : `general.scss` retire la marge par défaut.
+         */
+        const ecartsCo = [...doc.querySelectorAll(".block-advice__text, .accordion__body")]
+            .map((noeud) => [...noeud.querySelectorAll(":scope > p")])
+            .filter((paras) => paras.length > 1)
+            .flatMap((paras) => paras.slice(1).map((noeud, i) => Math.round(
+                boiteCo(noeud).top - boiteCo(paras[i]).bottom
+            )));
+
+        assert(
+            `conseils : ${ecartsCo.length} écart(s) entre paragraphes, tous à 22`
+            + ` (${[...new Set(ecartsCo)].join(", ") || "aucun"})`,
+            ecartsCo.length > 0 && ecartsCo.every((valeur) => Math.abs(valeur - 22) <= 1)
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
      * Chargement différé des visuels.
      *
      * WordPress ne pose `loading` que DANS la boucle
@@ -1834,9 +2099,18 @@ window.runFrontQa = async (win) => {
         const ouverts = (racine) => [...racine.querySelectorAll("[data-disclosure]")]
             .filter((noeud) => noeud.getAttribute("aria-expanded") === "true");
 
+        // L'INVARIANT, ET NON LE COMPTE. Deux groupes sur l'accueil, trois sur
+        // « Conseils » : un nombre écrit ici retomberait à chaque page ajoutée.
+        // Ce qui doit tenir partout, c'est qu'aucun accordéon ne reste sans
+        // groupe — sans l'attribut, ses panneaux deviennent indépendants et
+        // l'exclusivité disparaît en silence.
+        const sansGroupe = [...doc.querySelectorAll(".accordion")]
+            .filter((noeud) => !noeud.hasAttribute("data-disclosure-group"));
+
         assert(
-            `panneaux : ${groupes.length} groupes déclarés (${groupes.map((n) => n.className.split(" ")[0]).join(", ")})`,
-            groupes.length === 2
+            `panneaux : ${groupes.length} groupes déclarés, aucun accordéon sans le sien`
+            + ` (${sansGroupe.length} orphelin(s))`,
+            groupes.length > 0 && sansGroupe.length === 0
         );
 
         // AU CHARGEMENT déjà : le champ « ouvert » est contribuable, deux
@@ -1859,6 +2133,16 @@ window.runFrontQa = async (win) => {
             const boutons = [...accordeon.querySelectorAll("[data-disclosure]")];
             const techno = doc.querySelector(".block-techno");
             const ouvertsTechnoAvant = techno === null ? 0 : ouverts(techno).length;
+
+            // PARTIR D'UN ÉTAT CONNU. Le champ « ouvert » est contribuable, et
+            // « Conseils » ouvre la première entrée de chaque groupe comme la
+            // maquette le dessine : un premier clic la REFERMAIT au lieu de
+            // l'ouvrir, et l'assertion tombait sur du code correct.
+            for (const bouton of boutons) {
+                if (bouton.getAttribute("aria-expanded") === "true") {
+                    bouton.click();
+                }
+            }
 
             boutons[0].click();
             const apresPremier = ouverts(accordeon);
@@ -2195,13 +2479,19 @@ window.runFrontQa = async (win) => {
     }
 
     // Accordéon : les cotes de la maquette, puis la bascule des panneaux.
-    const items = doc.querySelectorAll(".accordion__item");
+    //
+    // RESTREINT À LA COUPE DES TRAITEMENTS. Depuis que « Conseils » reprend le
+    // composant, `.accordion__item` ne désigne plus une seule page : ces cotes
+    // — cinq entrées, filet, 48 de part et d'autre — sont celles de l'accueil,
+    // et elles tombaient sur une page qui n'a ni filet ni cinq entrées. La
+    // coupe `--flush` a ses propres assertions, plus haut.
+    const items = doc.querySelectorAll(".block-treatments .accordion__item");
 
     if (items.length > 0 && win.innerWidth === 1440) {
         const round = (value) => Math.round(value);
         const offsetTop = (node) => round(node.getBoundingClientRect().top + win.scrollY);
         const first = items[0].getBoundingClientRect();
-        const icon = doc.querySelector(".accordion__icon").getBoundingClientRect();
+        const icon = doc.querySelector(".block-treatments .accordion__icon").getBoundingClientRect();
 
         assert(`accordéon : 5 entrées (${items.length})`, items.length === 5);
         assert(`colonne : 666 de large (${round(first.width)})`, round(first.width) === 666);
@@ -2231,7 +2521,7 @@ window.runFrontQa = async (win) => {
             dernier.paddingBottom === "0px"
         );
 
-        const closed = [...doc.querySelectorAll(".accordion__trigger")]
+        const closed = [...doc.querySelectorAll(".block-treatments .accordion__trigger")]
             .find((node) => node.getAttribute("aria-expanded") === "false");
         const panel = doc.getElementById(closed.getAttribute("aria-controls"));
 
@@ -4344,6 +4634,108 @@ window.runFrontQa = async (win) => {
         assert(
             "panneau refermé : la page redevient tabulable",
             doc.querySelectorAll("[inert]").length === 0
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * Les polices sont AUTO-HÉBERGÉES, et elles rendent vraiment.
+     *
+     * Ce bloc est en DERNIER et il est le seul à attendre `fonts.ready` : placé
+     * plus haut, il changerait le moment où tout le reste mesure.
+     *
+     * Trois choses qui cassent en silence, et qu'aucune autre assertion ne
+     * voit — un fichier absent, une source tierce rétablie, une coupe
+     * remplacée : dans les trois cas la page reste lisible, rendue dans la pile
+     * de secours, et seules les COTES bougent.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440 && doc.fonts !== undefined) {
+        await doc.fonts.ready;
+
+        const coupes = [
+            ["Sligoil", 400],
+            ["Inter", 500],
+            ["Inter", 600],
+        ];
+        /*
+         * LES FACES RÉELLEMENT CHARGÉES, et surtout pas `fonts.check()`.
+         * Éprouvé : cette API répond VRAI pour `500 16px "Inter"` alors même
+         * que la déclaration a été retirée — elle dit « ce texte peut être
+         * rendu », et la pile de secours suffit à le lui faire dire. Une
+         * assertion bâtie dessus restait verte quoi qu'on casse.
+         *
+         * `status === "loaded"` ne ment pas : un fichier absent laisse la face
+         * en `error`, une déclaration retirée la laisse hors de l'ensemble.
+         */
+        const chargees = Array.from(doc.fonts).filter((face) => face.status === "loaded");
+        const manquantes = coupes.filter(([famille, poids]) => ! chargees.some(
+            (face) => face.family.replace(/["']/g, "") === famille
+                && String(face.weight) === String(poids)
+        ));
+
+        assert(
+            `polices : les ${coupes.length} coupes déclarées sont chargées`
+            + ` (${chargees.length} face(s) servie(s)`
+            + `${manquantes.length === 0 ? "" : ", manque " + manquantes.map((c) => c.join(" ")).join(" et ")})`,
+            manquantes.length === 0
+        );
+
+        /*
+         * AUCUNE SOURCE TIERCE. La CSP pose `font-src 'self'`, et un appel à
+         * `fonts.gstatic.com` transmettrait l'adresse IP du visiteur à chaque
+         * page. La règle est lue dans la feuille, pas devinée : une source
+         * ajoutée à côté du fichier local passerait inaperçue, le navigateur se
+         * servant du premier `src` qui répond.
+         */
+        const sources = [];
+
+        for (const feuille of Array.from(doc.styleSheets)) {
+            let regles;
+
+            try {
+                regles = feuille.cssRules;
+            } catch (erreur) {
+                continue;
+            }
+
+            for (const regle of Array.from(regles || [])) {
+                if (regle.constructor.name === "CSSFontFaceRule") {
+                    sources.push(regle.style.getPropertyValue("src"));
+                }
+            }
+        }
+
+        const tierces = sources.filter((src) => /url\(\s*["']?(https?:)?\/\//i.test(src)
+            && ! src.includes(win.location.host));
+
+        assert(
+            `polices : ${sources.length} déclarations, aucune source tierce`
+            + ` (${tierces.length === 0 ? "aucune" : tierces.join(" ")})`,
+            sources.length === coupes.length && tierces.length === 0
+        );
+
+        /*
+         * LA CHASSE DE SLIGOIL VAUT 0,6 EM, et ce n'est pas un détail de
+         * typographie : c'est le relevé sur lequel repose la taille des titres
+         * collants de « Conseils ». À 48, « Les urgences en orthodontie »
+         * demande 778px pour une colonne de 553 ; à 32 elle en demande 518.
+         *
+         * Une coupe substituée — Micro Medium au lieu de Micro, un fichier
+         * périmé — ne se verrait nulle part ailleurs, et ferait déborder le
+         * titre au-dessus de la colonne de droite.
+         */
+        const chaine = "Les urgences en orthodontie";
+        const toile = doc.createElement("canvas").getContext("2d");
+        const chasse = (taille) => {
+            toile.font = `400 ${taille}px "Sligoil", monospace`;
+
+            return toile.measureText(chaine).width / chaine.length / taille;
+        };
+        const ratios = [24, 32, 48].map(chasse);
+
+        assert(
+            `polices : Sligoil garde 0,6 em de chasse à 24, 32 et 48`
+            + ` (${ratios.map((r) => r.toFixed(4)).join(", ")})`,
+            ratios.every((ratio) => Math.abs(ratio - 0.6) < 0.001)
         );
     }
 

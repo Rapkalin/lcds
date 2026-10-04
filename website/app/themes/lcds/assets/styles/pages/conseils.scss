@@ -1,0 +1,27 @@
+@use "../basics/variables" as var;
+
+/* ------------------------------------------------------------------------- *
+ * Page « Conseils ».
+ *
+ * Même fond que « Le cabinet » et « L'équipe », et pour la même raison : la
+ * maquette ne dessine ni volet, ni coin arrondi, ni changement de fond —
+ * échantillonné sur `LCDS_conseils.pdf`, rgb(242, 248, 255) partout hors
+ * contenu.
+ *
+ * L'aplat est posé sur `.main-content`, jamais sur le `body` : un fond de
+ * `body` se propage au canevas tant que `html` n'en a pas, et c'est cette
+ * propagation qui rend visible le visuel révélé du pied de page. Deux réglages
+ * anodins l'ont déjà rompue — voir partials/footer.scss.
+ * ------------------------------------------------------------------------- */
+.main-content.page-conseils {
+  background: var.$blue-pale;
+  // LA BANDE DE L'APPLICATION REMONTE DE 48 SUR LE CONTENU : c'est le
+  // chevauchement qui masque l'encoche de ses coins arrondis.
+  //
+  // Ici la réserve vaut ce chevauchement SEUL, contrairement au cabinet (128)
+  // et à l'équipe (60). Relevé : 128 entre la dernière entrée de la foire aux
+  // questions (5714) et le haut de la bande (5842) — et ces 128, la section les
+  // porte déjà dans son propre retrait bas. Il ne reste donc que ce que la
+  // bande avale.
+  padding-bottom: var.$radius-section;
+}

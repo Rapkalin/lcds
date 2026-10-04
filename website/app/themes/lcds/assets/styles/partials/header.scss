@@ -54,6 +54,17 @@
   &__nav {
     display: flex;
     align-items: center;
+    // `wrap` comme sur l'en-tête qui la contient, et pour la même raison : il
+    // ne change RIEN tant que la ligne tient, et il n'agit qu'au moment où elle
+    // déborderait. L'en-tête savait déjà passer à la ligne, la barre non — à
+    // 200 % de taille de texte la liste réclame 1127 et le bouton d'action 199,
+    // soit 1350 pour 1248 disponibles, et les 6px de trop poussaient la page.
+    //
+    // RÉVÉLÉ par l'auto-hébergement des polices, pas causé par lui : la liste
+    // ne mesurait que 20px de moins avec la pile de secours, et la page du
+    // cabinet est la seule à porter la puce d'entrée courante — ces 20px-là.
+    // Toute entrée de menu un peu plus longue rouvrait le défaut. RGAA 10.4.
+    flex-wrap: wrap;
     gap: var.$gutter;
   }
 
@@ -76,7 +87,8 @@
 // Listé par gabarit, et non par `body:not(:has(.hero))` : la 404 et les pages
 // de résultats n'ont pas de hero non plus, et leur fond n'est pas celui-ci.
 .page-template-template-cabinet .site-header,
-.page-template-template-equipe .site-header {
+.page-template-template-equipe .site-header,
+.page-template-template-conseils .site-header {
   background: var.$blue-pale;
 }
 

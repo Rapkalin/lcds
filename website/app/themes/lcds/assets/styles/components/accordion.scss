@@ -1,0 +1,255 @@
+@use "../basics/variables" as var;
+@use "../basics/functions" as fn;
+
+/* ------------------------------------------------------------------------- *
+ * L'accordéon, composant à part entière : il sert les « traitements » de
+ * l'accueil et les sections de la page « Conseils ». Ses règles vivaient dans
+ * `block-treatments.scss`, la section qui l'a vu naître ; elles en sont sorties
+ * le jour où une deuxième page l'a repris.
+ *
+ * DEUX COUPES, un seul composant — la maquette des conseils le dessine
+ * autrement que celle de l'accueil, et seule l'APPARENCE change :
+ *
+ *                      accueil (défaut)        conseils (`--flush`)
+ *   titre d'entrée     48px, soit $fs-h2       24px, soit $fs-h3
+ *   filet entre deux   oui, $blue-separator    AUCUN
+ *   écart entre deux   48 + filet + 48         48
+ *
+ * Relevé sur `CONSEILS/LCDS_conseils.pdf` : un seul filet dans toute la page —
+ * entre les deux groupes de la foire aux questions, et c'est `block-advice` qui
+ * le porte. Les boutons, eux, gardent leurs 52px de côté sur les deux pages.
+ * ------------------------------------------------------------------------- */
+// Rythme de la coupe par défaut : 48px de part et d'autre du filet séparateur,
+// et aucun retrait aux extrémités — le retrait de section s'en charge.
+.accordion {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    padding: fn.toRem(48) 0;
+    border-top: 1px solid var.$blue-separator;
+
+    &:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  // Le niveau dit la hiérarchie, la classe dit l'apparence : l'entrée est un
+  // `h3` sous le `h2` de la section, et garde la taille relevée sur la maquette.
+  //
+  // La police de titre est REPIQUÉE, elle n'est pas héritée. `general.scss` ne
+  // la pose que sur `h1, h2, h3` : l'entrée descend à `h4` dès qu'une étiquette
+  // de groupe occupe le `h3` au-dessus d'elle — c'est le cas de la foire aux
+  // questions —, et elle serait alors rendue en Inter. Même parade que
+  // `person-card__name`, qui est un `h4` pour la même raison.
+  &__heading {
+    margin: 0;
+    font-family: var.$font-title;
+    font-size: var.$fs-h2;
+    font-weight: var.$fw-title;
+    line-height: var.$lh-title;
+  }
+
+  &__trigger {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: fn.toRem(24);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var.$module;
+    height: var.$module;
+    border: 1px solid var.$blue-light;
+    border-radius: var.$radius;
+    // Centré sur la PREMIÈRE ligne du titre, pas sur le titre entier :
+    // (58 − 52) / 2 = 3. Calculé, donc juste si l'échelle typographique bouge.
+    margin-top: calc((#{var.$fs-h2} * #{var.$lh-title} - #{var.$module}) / 2);
+    transition: border-color var.$fade, background-color var.$fade;
+  }
+
+  // Même principe que le bouton d'action secondaire et que les flèches de
+  // carrousel : le VOILE remplit la pastille, la bordure s'efface.
+  &__trigger:hover &__icon,
+  &__trigger:focus-visible &__icon {
+    border-color: transparent;
+    background: var.$blue-veil;
+  }
+
+}
+
+/* ------------------------------------------------------------------------- *
+ * Ouverture ADOUCIE du panneau.
+ *
+ * Le panneau reste un vrai `hidden` : c'est ce qui le retire de l'arbre
+ * d'accessibilité et de l'ordre de tabulation, et rien ici ne le remplace. Ce
+ * qui est ajouté, c'est une transition qui SURVIT à la bascule de `display`.
+ *
+ * `display` est une propriété discrète : sans `allow-discrete`, elle saute d'un
+ * coup et la fermeture n'a pas lieu — le panneau disparaît avant d'avoir pu
+ * s'effacer. Avec elle, le passage à `none` est différé jusqu'à la fin de la
+ * transition.
+ *
+ * `@starting-style` fournit l'état de DÉPART à l'ouverture : sans lui, un
+ * élément qui vient de quitter `display: none` n'a pas d'ancienne valeur à
+ * interpoler, et la transition n'a pas lieu non plus.
+ *
+ * `grid-template-rows: 0fr → 1fr` plutôt qu'une hauteur : la hauteur du contenu
+ * n'est pas connue, et `height: auto` ne s'anime pas. L'enfant a besoin de
+ * `min-height: 0` pour que la ligne puisse réellement se refermer.
+ *
+ * Le `display: grid` n'est posé QUE sur l'état ouvert : déclaré sur les deux, il
+ * l'emporterait sur le `display: none` de la feuille du navigateur et le
+ * panneau ne se fermerait jamais.
+ *
+ * Sans prise en charge d'`allow-discrete`, tout ceci est ignoré et la bascule
+ * reste instantanée — c'est-à-dire le comportement d'avant.
+ * ------------------------------------------------------------------------- */
+.accordion__panel {
+  grid-template-rows: 0fr;
+  // Le retrait s'anime AVEC la rangée. Posé en dur, il survivait au repliement
+  // et donnait le saut signalé en recette : la hauteur descendait en douceur
+  // jusqu'à 24, puis tombait à 0 d'un coup au passage à `display: none`, et
+  // tout ce qui suit remontait de 24px en une image.
+  //
+  // Le déplacer sur l'enveloppe ne change rien : le retrait d'un élément de
+  // grille compte dans sa contribution minimale, et la rangée ne peut pas
+  // descendre sous lui. Mesuré à 24 dans les DEUX dispositions. Il n'y a que
+  // l'animer qui le fasse disparaître.
+  padding-top: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    grid-template-rows 0.3s ease,
+    padding-top 0.3s ease,
+    opacity 0.25s ease,
+    display 0.3s allow-discrete;
+
+  // L'enveloppe est l'enfant UNIQUE de cette grille, et c'est toute sa raison
+  // d'être : `grid-template-rows` ne décrit qu'UNE rangée, et des enfants
+  // directs multiples — deux paragraphes saisis par un contributeur suffisent —
+  // tomberaient dans des rangées implicites en `auto`, qui ne se replient
+  // jamais. Mesuré : 18px de texte restaient visibles panneau fermé.
+  > * {
+    min-height: 0;
+  }
+
+  &:not([hidden]) {
+    display: grid;
+    grid-template-rows: 1fr;
+    padding-top: fn.toRem(24);
+    opacity: 1;
+  }
+}
+
+@starting-style {
+  .accordion__panel:not([hidden]) {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    opacity: 0;
+  }
+}
+
+// Le contenu qui s'ouvre et pousse ce qui suit EST du mouvement : quelqu'un qui
+// demande à le réduire retrouve la bascule instantanée.
+@media (prefers-reduced-motion: reduce) {
+  .accordion__panel {
+    transition: none;
+  }
+}
+
+// Panneau ouvert : la barre verticale disparaît, le « + » devient « − ».
+.accordion__trigger[aria-expanded="true"] .icon-plus__bar {
+  display: none;
+}
+
+/* ------------------------------------------------------------------------- *
+ * La coupe des conseils.
+ *
+ * Le filet disparaît et le rythme se lit alors sur l'ÉCART, pas sur le
+ * rembourrage : 48 entre deux entrées, rien aux extrémités — le retrait de
+ * section et l'écart entre groupes s'en chargent.
+ * ------------------------------------------------------------------------- */
+.accordion--flush {
+  display: flex;
+  flex-direction: column;
+  gap: fn.toRem(48);
+
+  .accordion__item {
+    padding: 0;
+    border-top: 0;
+  }
+
+  .accordion__heading {
+    font-size: var.$fs-h3;
+  }
+
+  // Centré sur la PREMIÈRE ligne du titre comme sur l'accueil, mais la pastille
+  // est ici PLUS HAUTE que la ligne : (29 − 52) / 2 vaut −11,5, et le bouton
+  // remonterait au-dessus du titre. Le plancher à zéro le cale en tête de
+  // ligne — ce que fait la maquette sur quatre entrées sur six, les deux
+  // autres étant à 11px de là, dans la tolérance d'un cadre posé à la main.
+  .accordion__icon {
+    margin-top: max(0px, calc((#{var.$fs-h3} * #{var.$lh-title} - #{var.$module}) / 2));
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-mobile) {
+
+  .accordion__item {
+    padding: fn.toRem(24) 0;
+  }
+
+  .accordion__trigger {
+    gap: fn.toRem(16);
+  }
+
+  // L'écart remplace le rembourrage sur cette coupe : le resserrer là où
+  // l'autre resserre son rembourrage.
+  .accordion--flush {
+    gap: fn.toRem(24);
+
+    .accordion__item {
+      padding: 0;
+    }
+  }
+}
+
+// Une ligne vide sépare deux paragraphes dans la maquette : l'écart vaut donc
+// exactement une hauteur de ligne. Sans cette règle les paragraphes se
+// TOUCHENT — `general.scss` retire la marge par défaut des `p`, et la réponse
+// d'un contributeur qui en saisit deux se lit alors comme un seul bloc.
+// Relevé sur les réponses de la foire aux questions : 22 entre les deux.
+.accordion__body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(#{var.$fs-p} * #{var.$lh-p});
+}
+
+// Un élément flex ne descend pas sous sa largeur de mot le plus long
+// (`min-width: auto`), et `overflow-wrap` ne change pas cette largeur minimale
+// — vérifié : le titre restait à 424px pour 280 disponibles à 200 % de taille
+// de texte, RGAA 10.4. C'est `min-width: 0` qui débloque la coupure.
+.accordion__title {
+  min-width: 0;
+}

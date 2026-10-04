@@ -68,6 +68,7 @@ enum LcdsMenuLocation: string
                 ['title' => __('Le cabinet', 'lcds'), 'url' => '#'],
                 ['title' => __('L’équipe', 'lcds'), 'url' => '#'],
                 ['title' => __('Les traitements', 'lcds'), 'url' => '#'],
+                ['title' => __('Conseils', 'lcds'), 'url' => '#'],
                 ['title' => __('Contact', 'lcds'), 'url' => '#'],
             ],
             self::HeaderCta => [

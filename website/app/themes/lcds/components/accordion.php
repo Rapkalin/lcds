@@ -15,6 +15,12 @@
  *   heading string Niveau de titre portant le déclencheur, `h3` par défaut.
  *                  À ajuster selon la page : un accordéon posé directement sous
  *                  le `h1` prend `h2`, sinon la hiérarchie saute un niveau.
+ *   variant string `flush` pour la coupe de la page « Conseils » : titres à la
+ *                  taille des `h3`, aucun filet entre les entrées, 48px
+ *                  d'écart. Relevé sur `CONSEILS/LCDS_conseils.pdf`, qui ne
+ *                  porte qu'UN SEUL filet dans toute la page — entre les deux
+ *                  groupes de la foire aux questions, pas entre les entrées.
+ *                  Vide : la coupe des « traitements » de l'accueil.
  *
  * L'ENVELOPPE `__body` n'est pas décorative : `grid-template-rows` ne décrit
  * qu'une rangée, et des enfants directs multiples — deux paragraphes saisis par
@@ -42,9 +48,13 @@ if ($items === []) {
 
 $heading = isset($args['heading']) ? (string) $args['heading'] : 'h3';
 $heading = in_array($heading, ['h2', 'h3', 'h4'], true) ? $heading : 'h3';
+
+// Allow-list : la variante finit dans une classe, elle ne peut pas venir
+// librement de l'appelant.
+$variant = isset($args['variant']) && $args['variant'] === 'flush' ? ' accordion--flush' : '';
 ?>
 
-<ul class="accordion" data-disclosure-group>
+<ul class="accordion<?php echo $variant; ?>" data-disclosure-group>
     <?php foreach ($items as $item) : ?>
         <?php
         $id = isset($item['id']) ? (string) $item['id'] : '';
