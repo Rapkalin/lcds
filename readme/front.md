@@ -78,6 +78,79 @@ signale.
 > la silhouette, qui doivent foncer de la même quantité — sinon l'écart de teinte
 > se voit en travers du bouton.
 
+## Les rayons, par famille — et le piège qu'ils cachaient
+
+Retour client : *« le style des pastilles doit être plus rectangulaire »*.
+Relevé sur les quatre maquettes, profil de coin mesuré au pixel du haut vers la
+gauche. **Il y a trois familles, et les confondre est exactement ce qui rendait
+les pastilles trop rondes.**
+
+| Famille | Relevé | Jeton | Ce qui était servi |
+| --- | --- | --- | --- |
+| Contrôles — navigation, boutons d'action, boutons ronds de 52, burger | **4** | `$radius-control` | 8 |
+| Étiquettes de section et badges de durée | **10** | `$radius-tag` | 999, soit **14,5** sur une pastille de 29 |
+| Visuels et cartes | *non revérifié* | `$radius` | 8 |
+| Extrémités de la piste de carrousel (2px) | — | `$radius-pill` | 999, inchangé |
+
+**La méthode est validée sur un rayon CONNU** avant d'être crue : le coin bas du
+panneau de pied de page, annoncé à 64, se mesure à 65. Elle ne divise ni ne
+double rien.
+
+### Les contrôles : 4, et trois fois plutôt qu'une
+
+Profil identique — `4, 3, 2, 1, 0, 0, 0` — sur trois éléments de nature
+différente et sur les **quatre** maquettes, l'ancienne version du cabinet
+comprise :
+
+- le bouton orange **plein** « Prendre RDV » ;
+- le bouton rond **contourné** d'une entrée d'accordéon ;
+- la pastille **pleine** d'un bouton d'action.
+
+Trois remplissages, trois contrastes, un seul profil : ce n'est pas un artefact
+de seuil.
+
+### Les étiquettes : 10, et pas « pleinement arrondi »
+
+Même profil — `10, 8, 6, 5, 4, 3, 2, 2, 1, 1, 0` — sur l'étiquette d'une section
+(29 de haut) et sur le badge de durée du parcours (31). **Deux hauteurs
+différentes, le même rayon** : c'est donc une constante, pas une demi-hauteur.
+`$radius-pill` posait une capsule là où la maquette dessine un rectangle à coins
+doux.
+
+> **`border-radius: 999px` se CLAMPE à la moitié de la hauteur, et le style
+> calculé rend `999px` quand même.** Mesurer le jeton ne dit donc rien du rendu.
+> Une assertion compare le coin à la demi-hauteur de la boîte, pas à une valeur.
+
+### Ce rayon pilote AUSSI la silhouette du menu
+
+`initPillShape` lit `borderTopLeftRadius` sur la première pastille et en tire
+tous ses arcs : le collet entre deux entrées vaut
+`hauteur − 2 × rayon × (1 − sin 19,4°)`.
+
+| Rayon | Collet calculé | Rendu mesuré |
+| --- | --- | --- |
+| 8 | 18,3 pour une rangée de 29 | 61 % |
+| **4** | **23,7** | **80 %** |
+| maquette | — | **79 %** (23 pour 29, sur trois maquettes ; 21 sur l'accueil) |
+
+Le passage à 4 fait donc tomber le collet **sur le relevé**, et c'est une
+confirmation indépendante du rayon : deux mesures sans rapport — un profil de
+coin et un pincement de silhouette — donnent la même réponse.
+
+> **L'assertion du collet était ajustée sur le code, pas sur la maquette.** Elle
+> bornait 50–75 % au nom d'un « 61 % relevé ». Vérifié en remettant le rayon à
+> 8 : **61 %, c'est ce que rendait l'implémentation**. Une assertion calée sur ce
+> qu'elle observe ne peut plus rien trouver — elle a verrouillé un rayon de 8
+> que la maquette ne dessine nulle part, pendant toute la vie du projet.
+
+### Les visuels n'ont PAS bougé
+
+`$radius` reste à 8, et c'est une abstention assumée : la seule carte mesurable
+— le QR code de 144 × 144 de la bande de l'application — donne environ **13**,
+pas 8. Les photos, elles, ne se mesurent pas : leurs bords se confondent avec le
+fond. Les corriger les rendrait **plus** ronds, l'inverse de la demande. À
+reprendre quand un relevé solide sera disponible.
+
 ## Conteneur centré : `$content-outer`, pas `$content-width`
 
 `box-sizing: border-box` fait entrer le rembourrage **dans** la largeur. Un

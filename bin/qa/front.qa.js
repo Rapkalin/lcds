@@ -4060,11 +4060,29 @@ window.runFrontQa = async (win) => {
             assert(`forme : les ${liensNav.length} pastilles sont peintes (${repos.peintes})`,
                 repos.peintes === liensNav.length);
             assert(`forme : silhouette continue au repos (${repos.trous} trous)`, repos.trous === 0);
-            // Le collet ne se referme pas : c'est lui qui donne la continuité.
-            // 61 % relevé, la référence est à 55 % pour ses propres proportions.
+            /*
+             * Le collet ne se referme pas : c'est lui qui donne la continuité.
+             *
+             * LA BORNE VIENT DU RELEVÉ, et elle a été refaite. Mesuré colonne
+             * par colonne sur les QUATRE maquettes, le pincement vaut 23 pour
+             * une rangée de 29 sur le cabinet, l'équipe et les conseils —
+             * 79 % —, et 21 sur l'accueil, où l'en-tête est posé sur une photo
+             * et où le seuil de blanc mord un pixel de plus.
+             *
+             * L'ancienne borne disait 50–75 % au nom d'un « 61 % relevé ».
+             * VÉRIFIÉ EN REMETTANT LE RAYON À 8 : l'implémentation rendait
+             * alors 61 %. Ce chiffre ne venait donc pas de la maquette, il
+             * venait du code qu'il était censé éprouver — une assertion ajustée
+             * sur ce qu'elle observe ne peut plus rien trouver.
+             *
+             * C'est une mesure de RAYON déguisée : le collet vaut
+             * `hauteur − 2 × rayon × (1 − sin 19,4°)`, soit 18,3 à 8 et 23,7 à
+             * 4. L'ancienne borne verrouillait donc un rayon de 8 que la
+             * maquette ne dessine nulle part.
+             */
             assert(
                 `forme : collet à ${(100 * repos.collet / repos.hauteur).toFixed(0)} % de la rangée au repos`,
-                repos.collet > repos.hauteur * 0.5 && repos.collet < repos.hauteur * 0.75
+                repos.collet > repos.hauteur * 0.7 && repos.collet < repos.hauteur * 0.85
             );
 
             // Écart forcé : la campagne neutralise le mouvement, or c'est
@@ -4079,8 +4097,22 @@ window.runFrontQa = async (win) => {
             assert(`forme : écart ouvert de ${etire.ecart.toFixed(0)}px`, etire.ecart > 19);
             assert(`forme : silhouette continue une fois étirée (${etire.trous} trous)`,
                 etire.trous === 0);
-            // Le collet s'affine en s'étirant — c'est le filament de la
-            // référence — mais il ne se pince jamais jusqu'à rompre.
+            /*
+             * ASSERTION ROUGE, ET ELLE LE RESTE — documenté plutôt que retiré.
+             *
+             * L'intention était le filament de la référence : le collet
+             * s'affine quand l'écart s'ouvre. `cheminSilhouette` ne le fait
+             * PAS. Son pincement ne dépend que du rayon, jamais de l'écart :
+             * l'écart ne déplace que les poignées de Bézier. Vérifié aux DEUX
+             * rayons — 12,6 → 12,6 à 8, 20,8 → 20,8 à 4 — donc le défaut ne
+             * vient pas du passage à 4, il lui préexiste.
+             *
+             * Laissée en l'état FAUTE DE RELEVÉ : la maquette est un cadre
+             * figé, elle ne montre aucun survol, et inventer la courbe du
+             * filament serait décider à la place du design. À trancher avec
+             * lui : soit le générateur apprend à pincer, soit cette clause
+             * tombe.
+             */
             assert(
                 `forme : collet aminci à ${(100 * etire.collet / etire.hauteur).toFixed(0)} % (${repos.collet.toFixed(1)} → ${etire.collet.toFixed(1)})`,
                 etire.collet < repos.collet && etire.collet > etire.hauteur * 0.3
@@ -4129,6 +4161,13 @@ window.runFrontQa = async (win) => {
         if (premiere !== null) {
             const round = (valeur) => Math.round(valeur);
             const lien = premiere.querySelector("a");
+
+            // PARTIR D'UN ÉTAT CONNU. Sur « Le cabinet », la PREMIÈRE entrée
+            // est déjà l'entrée courante : ajouter la classe n'y changeait
+            // rien, l'écart mesuré valait 0, et l'assertion tombait sur du
+            // code correct. Le défaut était dans l'épreuve, pas dans la puce.
+            premiere.classList.remove("current-menu-item", "current_page_item");
+
             const largeurSansPuce = lien.getBoundingClientRect().width;
 
             premiere.classList.add("current-menu-item");
@@ -4635,6 +4674,78 @@ window.runFrontQa = async (win) => {
             "panneau refermé : la page redevient tabulable",
             doc.querySelectorAll("[inert]").length === 0
         );
+    }
+
+    /* --------------------------------------------------------------------- *
+     * LES RAYONS, PAR FAMILLE — relevés sur les quatre maquettes.
+     *
+     * Trois valeurs, et les confondre est exactement ce qui rendait les
+     * pastilles trop rondes. Profils de coin relevés au pixel :
+     *
+     *   contrôles   4   — bouton orange plein, bouton rond contourné, pastille
+     *                     pleine d'un bouton d'action : profil identique
+     *                     4, 3, 2, 1, 0 sur les quatre maquettes
+     *   étiquettes  10  — même profil sur l'étiquette de section (29 de haut)
+     *                     et sur le badge de durée du parcours (31) : une
+     *                     constante, pas une demi-hauteur
+     *
+     * Méthode validée sur un rayon CONNU : le coin bas du panneau de pied de
+     * page, annoncé à 64, se mesure à 65.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        const rayonDe = (noeud) => parseFloat(styleOf(noeud).borderTopLeftRadius);
+        const controles = [
+            [".site-nav__list a", "pastille de navigation"],
+            [".site-header__cta a", "bouton « Prendre RDV »"],
+            [".accordion__icon", "bouton rond d'accordéon"],
+            [".cta__label", "bouton d'action"],
+            [".carousel__button", "flèche de carrousel"],
+            [".person-card__toggle", "bouton d'une carte de personne"],
+        ]
+            .map(([sel, nom]) => [doc.querySelector(sel), nom])
+            .filter(([noeud]) => noeud !== null);
+
+        if (controles.length > 0) {
+            const faux = controles.filter(([noeud]) => Math.abs(rayonDe(noeud) - 4) > 0.5);
+
+            assert(
+                `rayons : les ${controles.length} contrôles de la page sont à 4`
+                + ` (${faux.length === 0 ? "tous" : faux.map(([n, nom]) => `${nom} à ${rayonDe(n)}`).join(", ")})`,
+                faux.length === 0
+            );
+        }
+
+        const etiquettes = [
+            [".tag", "étiquette de section"],
+            [".block-journey__duration", "badge de durée"],
+        ]
+            .map(([sel, nom]) => [doc.querySelector(sel), nom])
+            .filter(([noeud]) => noeud !== null);
+
+        if (etiquettes.length > 0) {
+            const faux = etiquettes.filter(([noeud]) => Math.abs(rayonDe(noeud) - 10) > 0.5);
+
+            assert(
+                `rayons : les étiquettes sont à 10, pas pleinement arrondies`
+                + ` (${faux.length === 0 ? "toutes" : faux.map(([n, nom]) => `${nom} à ${rayonDe(n)}`).join(", ")})`,
+                faux.length === 0
+            );
+
+            /*
+             * LE PIÈGE QUE CETTE ASSERTION GARDE : `border-radius: 999px` se
+             * CLAMPE à la moitié de la hauteur, et le style calculé rend alors
+             * `999px` quand même. Mesurer le jeton ne dirait donc rien. On
+             * compare ici au RENDU : une capsule de 29 de haut a un coin de
+             * 14,5, un rectangle à coins doux en a un de 10.
+             */
+            const pastille = etiquettes[0][0].getBoundingClientRect();
+
+            assert(
+                `rayons : l'étiquette garde des côtés droits`
+                + ` (coin ${rayonDe(etiquettes[0][0])} pour ${Math.round(pastille.height)} de haut)`,
+                rayonDe(etiquettes[0][0]) < pastille.height / 2 - 1
+            );
+        }
     }
 
     /* --------------------------------------------------------------------- *

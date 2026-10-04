@@ -13,7 +13,7 @@
   gap: var.$gutter;
   padding: 0 fn.toRem(16) 0 fn.toRem(10);
   border: 1px solid var.$blue-light;
-  border-radius: var.$radius-pill;
+  border-radius: var.$radius-tag;
   color: var.$blue;
   // Repiquées explicitement : l'étiquette est rendue en `h2` quand elle nomme
   // une section, et hériterait alors la police de titre et la taille de `h2`

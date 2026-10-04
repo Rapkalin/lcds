@@ -78,7 +78,7 @@
     width: var.$module;
     height: var.$module;
     border: 1px solid var.$blue-light;
-    border-radius: var.$radius;
+    border-radius: var.$radius-control;
     // Centré sur la PREMIÈRE ligne du titre, pas sur le titre entier :
     // (58 − 52) / 2 = 3. Calculé, donc juste si l'échelle typographique bouge.
     margin-top: calc((#{var.$fs-h2} * #{var.$lh-title} - #{var.$module}) / 2);

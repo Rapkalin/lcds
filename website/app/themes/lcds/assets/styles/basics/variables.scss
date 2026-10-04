@@ -246,7 +246,58 @@ $module: fn.toRem(52);
 // relevées sur la maquette restent donc justes. Plancher à 64px sous 720.
 $section-padding: clamp(#{fn.toRem(64)}, 8.889vw, #{fn.toRem(128)});
 $block-gap: fn.toRem(80);
+/* ---------------------------------------------------------------------------
+ * LES RAYONS, PAR FAMILLE — relevés sur les quatre maquettes, jamais déduits
+ * les uns des autres.
+ *
+ * Il y en a TROIS, et les confondre est exactement ce qui rendait les pastilles
+ * trop rondes. Profils de coin relevés au pixel, du haut vers la gauche :
+ *
+ *   contrôles   4, 3, 2, 1, 0           → $radius-control
+ *   étiquettes  10, 8, 6, 5, 4, …, 0    → $radius-tag
+ *   visuels     ~13 sur une carte de 144 → $radius, à REVÉRIFIER
+ *
+ * Méthode validée sur un rayon connu : le coin bas du panneau de pied de page,
+ * annoncé à 64, se mesure à 65. Elle ne divise ni ne double rien.
+ * ------------------------------------------------------------------------- */
+
+// VISUELS ET CARTES. Non revérifié : la seule carte mesurable — le QR code de
+// 144 × 144 de la bande de l'application — donne environ 13, pas 8. Les photos
+// ne se mesurent pas, leurs bords se confondant avec le fond. Laissé tel quel
+// faute de relevé solide, et parce que ce serait rendre les visuels PLUS ronds,
+// l'inverse de la demande.
 $radius: fn.toRem(8);
+
+/* ---------------------------------------------------------------------------
+ * TOUT CE QUI SE CLIQUE : pastilles de navigation, boutons d'action, boutons
+ * ronds de 52, bouton burger.
+ *
+ * Mesuré 4 sur TROIS éléments de nature différente — le bouton orange plein
+ * « Prendre RDV », le bouton rond contourné d'un accordéon, la pastille pleine
+ * d'un bouton d'action — et sur les QUATRE maquettes, l'ancienne version du
+ * cabinet comprise. Profils identiques : 4, 3, 2, 1, 0, 0, 0.
+ *
+ * CE JETON PILOTE AUSSI LA SILHOUETTE DU MENU. `initPillShape` lit
+ * `borderTopLeftRadius` sur la première pastille et en tire tous ses arcs : le
+ * collet entre deux entrées vaut `hauteur − 2 × rayon × (1 − sin 19,4°)`. À 8 il
+ * valait 18,3 pour une rangée de 29 ; à 4 il vaut 23,7, et la maquette en
+ * mesure 23. C'est ce relevé qui a tranché — voir readme/front.md.
+ * ------------------------------------------------------------------------- */
+$radius-control: fn.toRem(4);
+
+/* ---------------------------------------------------------------------------
+ * ÉTIQUETTES DE SECTION ET BADGES DE DURÉE.
+ *
+ * 10, et non « pleinement arrondi ». Même profil de coin sur l'étiquette d'une
+ * section (29 de haut) et sur le badge de durée du parcours (31) : deux
+ * hauteurs différentes, le même rayon — c'est donc bien une constante, pas une
+ * demi-hauteur.
+ *
+ * `$radius-pill` posait 999, soit 14,5 sur une pastille de 29 : une capsule là
+ * où la maquette dessine un rectangle à coins doux. C'est le défaut que le
+ * client a signalé.
+ * ------------------------------------------------------------------------- */
+$radius-tag: fn.toRem(10);
 // Coins HAUTS des sections empilées. Distinct de `--footer-radius`, qui vaut 64
 // et arrondit les coins BAS du panneau de pied de page : deux rôles, deux
 // valeurs, et les confondre ferait bouger l'un en corrigeant l'autre.
@@ -310,8 +361,13 @@ $volet-shadow: 0 #{fn.toRem(-4)} #{fn.toRem(24)} rgba($blue, 0.1);
 // L'encoche entre les deux pastilles d'un bouton d'action primaire au repos.
 // C'est elle que le survol ouvre jusqu'à `$spread`.
 $notch: fn.toRem(2);
-// Pastilles pleinement arrondies (étiquettes, badges de durée) : une valeur
-// bien supérieure à la moitié de la hauteur reste juste quelle que soit celle-ci.
+// PLEINEMENT ARRONDI, et il ne reste qu'un seul usage : les extrémités de la
+// piste de progression des carrousels, haute de 2px. Les étiquettes et les
+// badges de durée en sont sortis — ils valent 10, voir `$radius-tag`.
+//
+// Sur une barre de 2px n'importe quelle valeur au-dessus de 1 rend la même
+// chose ; ce qui compte ici est l'INTENTION, et 999 la dit mieux qu'un 1 écrit
+// à la main qui deviendrait faux si la barre s'épaississait.
 $radius-pill: fn.toRem(999);
 
 /* BREAKPOINTS */

@@ -319,6 +319,27 @@ n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
 > 387 à 587px pendant que les pixels du visuel restent identiques. C'est le
 > genre de preuve qu'aucune assertion de DOM ne remplace.
 
+- **Rayons, à 1440** : les contrôles de la page à **4**, les étiquettes à
+  **10**, et l'étiquette comparée à sa propre demi-hauteur — `border-radius:
+  999px` se clampe et le style calculé rend `999px` quand même, donc lire le
+  jeton ne dirait rien du rendu. Les assertions nomment l'élément fautif et sa
+  valeur.
+
+> **Deux assertions ont été recalées sur le relevé, pas assouplies.** Celle du
+> collet du menu bornait 50–75 % au nom d'un « 61 % relevé » : en remettant le
+> rayon à 8, l'implémentation rend **61 %** — le chiffre venait du code qu'elle
+> était censée éprouver. Mesuré colonne par colonne sur les quatre maquettes, le
+> pincement vaut **79 %**. Et celle de la puce d'entrée courante mesurait 0
+> d'élargissement sur « Le cabinet », parce que la PREMIÈRE entrée y est déjà
+> l'entrée courante : elle retire la classe avant de mesurer.
+>
+> **Une troisième reste rouge, et c'est documenté dans le code** : « le collet
+> s'affine en s'étirant » décrit une intention que `cheminSilhouette` n'a jamais
+> implémentée — son pincement ne dépend que du rayon, jamais de l'écart.
+> Vérifié aux deux rayons : 12,6 → 12,6 à 8, 20,8 → 20,8 à 4. Le défaut
+> préexiste ; la maquette étant un cadre figé, elle ne montre aucun survol et ne
+> peut pas trancher. À arbitrer avec le design.
+
 - **Polices, à 1440** : les trois coupes **réellement chargées** — lues sur
   `document.fonts`, jamais sur `fonts.check()`, qui répond vrai sans la
   déclaration puisque la pile de secours lui suffit (éprouvé) —, **aucune

@@ -7,6 +7,25 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.29.1
+
+### Corrigé
+
+- **Les pastilles sont moins arrondies, partout.** Retour client. Relevé sur les
+  quatre maquettes : les étiquettes de section et les badges de durée étaient
+  servis en capsule alors que la maquette dessine un rectangle à coins doux, et
+  tout ce qui se clique — navigation, boutons d'action, boutons ronds — était
+  deux fois trop arrondi.
+
+- **La barre du menu retrouve sa forme.** Son tracé se déduit du rayon des
+  pastilles : le collet entre deux entrées était pincé bien plus fort que sur la
+  maquette. Il tombe maintenant sur le relevé.
+
+- **Deux épreuves de recette tombaient sur du code correct** : celle de la puce
+  d'entrée courante, parce que sur « Le cabinet » la première entrée du menu est
+  déjà l'entrée courante ; celle du collet, parce que sa borne avait été calée
+  sur ce que rendait le code plutôt que sur la maquette.
+
 ## 2.29.0
 
 ### Ajouté
