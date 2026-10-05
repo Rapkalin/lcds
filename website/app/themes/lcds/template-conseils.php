@@ -12,10 +12,12 @@
  *
  * Les sections sont les layouts d'un champ de contenu flexible : le
  * contributeur les ajoute, les réordonne et les supprime au glisser-déposer,
- * comme sur l'accueil. Elles ne sont que DEUX — accordéon et description — et
- * elles partagent la même carcasse, d'où un seul composant et non deux
- * gabarits dans `layouts/`, qui est le catalogue de l'accueil et de personne
- * d'autre (voir tests/Unit/HomepageLayoutsTest.php).
+ * comme sur l'accueil. Accordéon et description partagent la même carcasse,
+ * d'où un seul composant et non deux gabarits dans `layouts/`, qui est le
+ * catalogue de l'accueil et de personne d'autre (voir
+ * tests/Unit/HomepageLayoutsTest.php). La galerie, elle, n'a pas cette
+ * carcasse : elle part sur son propre composant, en amont de la boucle à
+ * groupes qui ne la concerne pas.
  *
  * Le `h1` est MASQUÉ VISUELLEMENT, comme sur l'accueil : la maquette ne dessine
  * aucun titre de page, elle commence directement par le titre de la première
@@ -57,6 +59,15 @@ $heading = trim((string) lcds_field('titre_h1', $page_id));
             $kind = LcdsAdviceSection::fromLayout(get_row_layout());
 
             if ($kind === null) {
+                continue;
+            }
+
+            if ($kind === LcdsAdviceSection::Gallery) {
+                get_template_part('components/block-gallery', null, [
+                    'label' => lcds_sub_field_text('galerie_libelle'),
+                    'items' => lcds_gallery_items(lcds_sub_field('galerie')),
+                ]);
+
                 continue;
             }
 

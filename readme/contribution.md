@@ -262,11 +262,21 @@ lui échappent.
 | --- | --- |
 | **Section à questions dépliables** | un chapô facultatif, puis des entrées dépliables |
 | **Section à textes** | un titre facultatif, du texte, un bouton d'action |
+| **Galerie défilante** | un rail de visuels, sans texte |
 
-Les deux partagent la même carcasse — **un titre, puis des groupes de deux
-colonnes** — et c'est pour ça qu'elles n'ont **qu'un seul composant**,
+Les deux premières partagent la même carcasse — **un titre, puis des groupes de
+deux colonnes** — et c'est pour ça qu'elles n'ont **qu'un seul composant**,
 `components/block-advice.php`, et non deux gabarits dans `layouts/`, qui est le
 catalogue de l'accueil et de personne d'autre.
+
+### La galerie est celle de l'accueil
+
+Mêmes champs, même rail : vous choisissez une **forme nommée** par visuel —
+grand, moyen, petit, ou deux visuels empilés — jamais un nombre de pixels, et
+le libellé du rail est **lu par les lecteurs d'écran**, il nomme aussi la
+section. Comme sur l'accueil, le rail **avance avec le défilement de la page**
+et n'a donc pas de flèches. Plus vous ajoutez de visuels, plus il défile
+longtemps. Sans aucun visuel, la section n'est pas rendue du tout.
 
 Le nom du layout est repris par `inc/enums/LcdsAdviceSection.php`, source
 unique : il sert d'**allow-list** à la lecture — un layout inconnu n'est pas

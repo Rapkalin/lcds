@@ -1,14 +1,19 @@
 <?php
 
 /**
- * Les deux formes de section de la page « Conseils » — source unique.
+ * Les formes de section de la page « Conseils » — source unique.
  *
- * Elles partagent la même carcasse : un titre collant, puis des groupes de deux
- * colonnes, étiquette à gauche et contenu à droite. Ce qui change, c'est ce que
- * porte la colonne de droite, et c'est tout :
+ * Les DEUX PREMIÈRES partagent la même carcasse : un titre collant, puis des
+ * groupes de deux colonnes, étiquette à gauche et contenu à droite. Ce qui
+ * change, c'est ce que porte la colonne de droite, et c'est tout :
  *
  *   accordeon    des entrées dépliables, et un filet entre deux groupes ;
  *   description  un titre, du texte, un bouton d'action, sans filet.
+ *
+ * La troisième n'a pas cette carcasse et c'est assumé — l'enum est l'ALLOW-LIST
+ * des sections de la page, pas la description d'un composant :
+ *
+ *   galerie      le rail de visuels de l'accueil, sans son texte.
  *
  * La VALEUR est le nom du layout de contenu flexible tel qu'il est enregistré
  * en base. C'est donc elle qui sert d'allow-list : `tryFrom()` sur le nom rendu
@@ -31,6 +36,7 @@ enum LcdsAdviceSection: string
 {
     case Accordion = 'accordeon';
     case Description = 'description';
+    case Gallery = 'galerie';
 
     /**
      * Les groupes de cette forme sont-ils séparés par un filet ?
@@ -44,7 +50,10 @@ enum LcdsAdviceSection: string
     {
         return match ($this) {
             self::Accordion => true,
-            self::Description => false,
+            // La galerie n'a pas de groupes et ne passe pas par `block-advice` :
+            // la valeur n'est jamais lue. Le bras existe parce qu'un `match`
+            // doit être exhaustif, pas parce qu'il décrit quelque chose.
+            self::Description, self::Gallery => false,
         };
     }
 

@@ -384,6 +384,150 @@
                     ],
                     "min": "",
                     "max": ""
+                },
+                "layout_lcds_conseils_galerie": {
+                    "key": "layout_lcds_conseils_galerie",
+                    "name": "galerie",
+                    "label": "Galerie défilante",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_conseils_gal_libelle",
+                            "label": "Libellé du rail",
+                            "name": "galerie_libelle",
+                            "aria-label": "",
+                            "type": "text",
+                            "instructions": "Description du rail, lue par les lecteurs d'écran. Exemple : « Le cabinet en images ».",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "maxlength": 80,
+                            "placeholder": "",
+                            "prepend": "",
+                            "append": ""
+                        },
+                        {
+                            "key": "field_lcds_conseils_gal_visuels",
+                            "label": "Visuels du rail",
+                            "name": "galerie",
+                            "aria-label": "",
+                            "type": "repeater",
+                            "instructions": "Ajoutez autant de visuels que voulu : plus il y en a, plus le rail défile. Il avance avec le défilement de la page, comme la galerie de l'accueil.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "collapsed": "field_lcds_conseils_gal_forme",
+                            "min": 0,
+                            "max": 0,
+                            "layout": "block",
+                            "button_label": "Ajouter un visuel",
+                            "sub_fields": [
+                                {
+                                    "key": "field_lcds_conseils_gal_forme",
+                                    "label": "Forme du cadre",
+                                    "name": "forme",
+                                    "aria-label": "",
+                                    "type": "select",
+                                    "instructions": "La largeur du cadre. « Deux visuels empilés » attend deux images.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "choices": {
+                                        "large": "Grand (892 px)",
+                                        "pair": "Deux visuels empilés (553 px)",
+                                        "medium": "Moyen (666 px)",
+                                        "small": "Petit (503 px)"
+                                    },
+                                    "default_value": "large",
+                                    "allow_null": 0,
+                                    "multiple": 0,
+                                    "ui": 0,
+                                    "ajax": 0,
+                                    "return_format": "value",
+                                    "placeholder": "",
+                                    "create_options": 0,
+                                    "save_options": 0,
+                                    "parent_repeater": "field_lcds_conseils_gal_visuels"
+                                },
+                                {
+                                    "key": "field_lcds_conseils_gal_image",
+                                    "label": "Visuel",
+                                    "name": "image",
+                                    "aria-label": "",
+                                    "type": "image",
+                                    "instructions": "Cadré automatiquement.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "return_format": "id",
+                                    "library": "all",
+                                    "preview_size": "medium",
+                                    "mime_types": "jpg,jpeg,png,webp",
+                                    "min_width": 0,
+                                    "min_height": 0,
+                                    "min_size": 0,
+                                    "max_width": 0,
+                                    "max_height": 0,
+                                    "max_size": 0,
+                                    "parent_repeater": "field_lcds_conseils_gal_visuels"
+                                },
+                                {
+                                    "key": "field_lcds_conseils_gal_image_2",
+                                    "label": "Second visuel (empilé)",
+                                    "name": "image_2",
+                                    "aria-label": "",
+                                    "type": "image",
+                                    "instructions": "Uniquement pour la forme « Deux visuels empilés ».",
+                                    "required": 0,
+                                    "conditional_logic": [
+                                        [
+                                            {
+                                                "field": "field_lcds_conseils_gal_forme",
+                                                "operator": "==",
+                                                "value": "pair"
+                                            }
+                                        ]
+                                    ],
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "return_format": "id",
+                                    "library": "all",
+                                    "preview_size": "thumbnail",
+                                    "mime_types": "jpg,jpeg,png,webp",
+                                    "min_width": 0,
+                                    "min_height": 0,
+                                    "min_size": 0,
+                                    "max_width": 0,
+                                    "max_height": 0,
+                                    "max_size": 0,
+                                    "parent_repeater": "field_lcds_conseils_gal_visuels"
+                                }
+                            ],
+                            "rows_per_page": 20
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
                 }
             },
             "min": "",

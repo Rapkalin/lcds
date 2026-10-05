@@ -1,0 +1,45 @@
+@use "../basics/variables" as var;
+
+/* ------------------------------------------------------------------------- *
+ * Section « galerie » : le rail seul.
+ *
+ * AUCUNE MAQUETTE NE LA DESSINE — `LCDS_conseils.pdf` n'a pas de carrousel. Le
+ * rythme vient donc de la galerie de l'accueil, qui est le même rail, et les
+ * retraits de la page « Conseils », qui sont les mêmes pour toutes ses
+ * sections.
+ *
+ * AUCUN FOND : la page en pose déjà un, bleu pâle de bout en bout. Sur
+ * l'accueil c'est `block-intro` qui peint le sien, parce qu'il y tranche avec
+ * le blanc des sections voisines.
+ *
+ * Le retrait de page est porté par le RAIL et par ses contrôles, jamais par la
+ * section : porté par la section, il bornerait le conteneur de défilement à
+ * gauche et les visuels disparaîtraient avant le bord au lieu d'en sortir. Le
+ * défaut est documenté sur block-intro.scss, qui s'est fait prendre dessus.
+ * ------------------------------------------------------------------------- */
+.block-gallery {
+  // Le rembourrage bas vaut DEUX retraits : la fin de cette section, et le haut
+  // de la suivante, qui n'en a pas. C'est la convention de block-advice.scss,
+  // et une section qui s'en écarterait creuserait ou fermerait l'écart.
+  padding-bottom: calc(2 * #{var.$section-padding});
+
+  .carousel__rail {
+    padding-left: var.$content-inset;
+  }
+
+  .carousel__controls {
+    margin-left: var.$content-inset;
+  }
+
+  // Première section de la page : personne devant elle pour lui donner son
+  // retrait haut.
+  &:first-of-type {
+    padding-top: var.$section-padding;
+  }
+
+  // Dernière : personne derrière elle non plus, son rembourrage bas redevient
+  // un seul retrait.
+  &:last-of-type {
+    padding-bottom: var.$section-padding;
+  }
+}

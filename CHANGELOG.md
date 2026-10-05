@@ -7,6 +7,26 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.31.0
+
+### Ajouté
+
+- **La page « Conseils » accueille la galerie défilante de l'accueil.** Une
+  troisième forme de section, « Galerie défilante », à placer où l'on veut parmi
+  les autres au glisser-déposer. Mêmes champs que sur l'accueil — une forme
+  nommée par visuel, un libellé de rail — et même comportement : le rail avance
+  avec le défilement de la page, sans flèches. Sans visuel saisi, rien n'est
+  rendu.
+
+> Aucune maquette ne dessine cette section sur « Conseils ». Son rythme
+> vertical est celui des autres sections de la page, et son rail celui de
+> l'accueil.
+
+### Modifié
+
+- **La conversion « forme nommée → largeur du cadre » est partagée** par les
+  deux galeries. Recopiée, elle aurait divergé à la première forme ajoutée.
+
 ## 2.30.5
 
 ### Modifié

@@ -189,6 +189,40 @@ function lcds_attachment_id(mixed $value): int
 }
 
 /**
+ * Éléments d'un rail, depuis les lignes d'un répéteur de galerie.
+ *
+ * Le contributeur choisit une FORME NOMMÉE ; c'est l'enum qui en donne la
+ * largeur. Partagé par la galerie de l'accueil et celle des conseils, qui
+ * déclarent les mêmes sous-champs : la conversion recopiée aurait divergé dès
+ * la première forme ajoutée.
+ *
+ * @param mixed $rows Lignes du répéteur, telles qu'ACF les rend.
+ */
+function lcds_gallery_items(mixed $rows): array
+{
+    $items = [];
+
+    // `is_array` et non `?? []` : ACF rend `false` pour un répéteur sans ligne,
+    // et `(array) false` vaut `[false]` — une ligne fantôme.
+    foreach ((is_array($rows) ? $rows : []) as $row) {
+        if (! is_array($row)) {
+            continue;
+        }
+
+        $shape = LcdsMediaShape::fromValue($row['forme'] ?? null, LcdsMediaShape::Medium);
+        $images = [lcds_attachment_id($row['image'] ?? null)];
+
+        if ($shape->isPair()) {
+            $images[] = lcds_attachment_id($row['image_2'] ?? null);
+        }
+
+        $items[] = ['width' => $shape->width(), 'images' => $images];
+    }
+
+    return $items;
+}
+
+/**
  * Alimente les listes de formes depuis LcdsMediaShape.
  *
  * Les choix ne sont PAS écrits dans le JSON du groupe : ils vivraient alors à
@@ -209,7 +243,11 @@ function lcds_load_gallery_shapes(array $field): array
 
     return $field;
 }
+// Accroché sur la CLÉ et non sur le nom, contrairement aux puces : le champ
+// `forme` sert aussi au parcours, qui n'a pas les mêmes formes. Une galerie de
+// plus = une ligne de plus ici, sinon sa liste s'affiche vide.
 add_filter('acf/load_field/key=field_lcds_histoire_forme', 'lcds_load_gallery_shapes');
+add_filter('acf/load_field/key=field_lcds_conseils_gal_forme', 'lcds_load_gallery_shapes');
 
 /**
  * Idem pour les visuels accompagnant une étape du parcours, qui n'ont que deux
