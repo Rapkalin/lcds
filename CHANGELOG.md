@@ -7,6 +7,19 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.30.1
+
+### Corrigé
+
+- **La page ne rebondit plus quand on défile au-delà du haut ou du bas.** On y
+  voyait une bande bleu foncé apparaître derrière le contenu.
+
+> La couleur de cette bande n'était pas modifiable : c'est elle qui permet au
+> visuel du pied de page de se laisser découvrir. C'est donc le rebond lui-même
+> qui est bloqué. Deux effets de bord : le « tirer pour rafraîchir » disparaît
+> sur Chrome mobile, et les versions de Safari antérieures à 16 continuent de
+> rebondir.
+
 ## 2.30.0
 
 ### Modifié

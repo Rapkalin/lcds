@@ -4851,6 +4851,42 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * AUCUN REBOND AUX EXTRÉMITÉS DE LA PAGE.
+     *
+     * Retour client : en haut de page, continuer à défiler vers le haut faisait
+     * descendre le contenu et laissait voir le CANEVAS — bleu foncé.
+     *
+     * On ne pouvait pas repeindre cette bande : sa couleur est celle du `body`,
+     * propagée au canevas, et c'est ce dispositif qui laisse voir le visuel
+     * révélé du pied de page. Le déplacer sur `html` masque ce visuel — déjà
+     * constaté. On empêche donc de découvrir la bande.
+     *
+     * CE QUI EST VÉRIFIÉ ICI, C'EST LA DÉCLARATION, pas le geste : le rebond est
+     * un comportement du compositeur, qu'aucun navigateur sans tête ne simule.
+     * L'assertion garde donc la règle, et la propagation du canevas est gardée
+     * par les assertions du visuel révélé, plus haut.
+     * --------------------------------------------------------------------- */
+    if (win.innerWidth === 1440) {
+        const racineDoc = doc.documentElement;
+
+        assert(
+            `page : aucun rebond vertical aux extrémités`
+            + ` (overscroll-behavior-y ${styleOf(racineDoc).overscrollBehaviorY})`,
+            styleOf(racineDoc).overscrollBehaviorY === "none"
+        );
+
+        // Le fond du `body` reste celui du canevas : c'est la condition du
+        // visuel révélé, et la raison pour laquelle on bloque plutôt qu'on
+        // repeint.
+        assert(
+            `page : la teinte du canevas vient toujours du body`
+            + ` (html ${styleOf(racineDoc).backgroundColor}, body ${styleOf(doc.body).backgroundColor})`,
+            styleOf(racineDoc).backgroundColor === "rgba(0, 0, 0, 0)"
+                && styleOf(doc.body).backgroundColor !== "rgba(0, 0, 0, 0)"
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
      * LE TITRE D'UNE ENTRÉE D'ACCORDÉON S'ARRÊTE AVANT SON PICTOGRAMME.
      *
      * Retour client. La V2 de l'accueil descend les titres d'entrée de 48 à 32,

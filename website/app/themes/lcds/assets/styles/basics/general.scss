@@ -33,6 +33,33 @@ html {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * PAS DE REBOND ÉLASTIQUE AUX EXTRÉMITÉS.
+ *
+ * Retour client : en haut de page, continuer à défiler vers le haut faisait
+ * descendre le contenu et laissait voir du bleu foncé derrière.
+ *
+ * Ce bleu est le CANEVAS. Le fond du `body` lui est propagé — c'est le
+ * dispositif qui laisse voir le visuel révélé du pied de page, et il est
+ * intouchable : posé sur `html`, il masque ce visuel ; la photo avait déjà
+ * disparu une fois comme ça. Voir le commentaire du `body` juste en dessous.
+ *
+ * On ne peut donc pas repeindre la bande découverte : on empêche de la
+ * découvrir. `none` et non `contain` — `contain` n'arrête que l'enchaînement
+ * vers le parent, le rebond local reste.
+ *
+ * DEUX CONSÉQUENCES ASSUMÉES :
+ *   — le « tirer pour rafraîchir » de Chrome mobile disparaît ;
+ *   — Safari ne l'applique que depuis la version 16 ; en deçà, le rebond et sa
+ *     bande bleue subsistent.
+ *
+ * Les rails de carrousel posent leur propre `overscroll-behavior-x` : cette
+ * règle ne porte que sur l'axe vertical et ne les touche pas.
+ * ------------------------------------------------------------------------- */
+html {
+  overscroll-behavior-y: none;
+}
+
 // `width: 100vw` incluait la largeur de la barre de défilement et provoquait un
 // débordement horizontal de quelques pixels sur toute page assez haute.
 // La teinte des côtés est posée sur le `body`, et SURTOUT PAS sur `html`.

@@ -2584,6 +2584,45 @@ la grille qui borne le titre quoi qu'on y écrive.
 > contre 269 ici, le rapport exact de 2/3. Il n'a **pas** été suivi : arbitré,
 > le pied de page reste à `$fs-h2`.
 
+## Pas de rebond aux extrémités de la page
+
+Retour client : en haut de page, continuer à défiler vers le haut faisait
+descendre le contenu et laissait voir une bande **bleu foncé** derrière.
+
+Cette bande est le **canevas**. Le fond du `body` lui est propagé, et c'est
+exactement le dispositif qui laisse voir le visuel révélé du pied de page.
+
+**On ne pouvait donc pas la repeindre.** Déplacer ce fond sur `html` arrête la
+propagation : le `body` se met à peindre sa propre boîte, qui passe au-dessus du
+`z-index: -1` et masque le visuel. Le piège est documenté dans `general.scss`,
+et il s'est déjà refermé une fois — la photo du pied de page avait disparu.
+
+On empêche donc de **découvrir** la bande, plutôt que de la recolorer :
+
+```scss
+html { overscroll-behavior-y: none; }
+```
+
+`none` et non `contain` : `contain` n'arrête que l'enchaînement du défilement
+vers le parent, le rebond local subsiste.
+
+### Deux conséquences assumées
+
+- **Le « tirer pour rafraîchir » de Chrome mobile disparaît.** C'est le prix de
+  `none` sur la racine.
+- **Safari ne l'applique que depuis la version 16.** En deçà, le rebond et sa
+  bande bleue subsistent.
+
+> Les rails de carrousel posent leur propre `overscroll-behavior-x: contain` :
+> cette règle ne porte que sur l'axe vertical et ne les touche pas.
+
+> **Ce que la recette vérifie, c'est la DÉCLARATION, pas le geste.** Le rebond
+> est un comportement du compositeur, qu'aucun navigateur sans tête ne simule.
+> Une seconde assertion garde la propagation du canevas — celle-là attrape le
+> cas où quelqu'un repeindrait `html` pour masquer la bande, et elle le fait là
+> où les assertions du visuel révélé, qui mesurent une géométrie, ne voient
+> rien.
+
 ## La révélation du pied de page
 
 Le panneau bleu masque un visuel pleine largeur, puis se soulève en fin de page
