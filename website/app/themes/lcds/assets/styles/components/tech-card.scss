@@ -124,9 +124,22 @@
     cursor: pointer;
     transition: background-color var.$fade;
 
+    /* ---------------------------------------------------------------------
+     * MÊME SURVOL QUE LE BOUTON D'ACTION SECONDAIRE — demande client.
+     *
+     * Celui-ci efface sa bordure et se remplit de `$blue-veil`. Posé sur le
+     * panneau pâle, ce voile compose EXACTEMENT `$blue-light` — c'est déjà
+     * écrit dans le jeton. Ce bouton-ci n'a pas de bordure à effacer et repose
+     * sur une PHOTO : le voile y composerait une teinte différente à chaque
+     * image. On pose donc la teinte aplatie, qui rend le même survol quelle
+     * que soit la photo.
+     *
+     * Contrôle : le glyphe `$blue` y mesure 5,96:1, contre les 5,97:1 relevés
+     * sur le bouton secondaire. C'est bien le même survol.
+     * ------------------------------------------------------------------- */
     &:hover,
     &:focus-visible {
-      background: var.$blue-pale;
+      background: var.$blue-light;
     }
   }
 

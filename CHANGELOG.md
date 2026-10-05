@@ -7,6 +7,20 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.30.3
+
+### Modifié
+
+- **Le bouton « + » d'une carte de technologie réagit au survol comme un bouton
+  d'action secondaire.** Il se remplit du même bleu clair, et son signe y reste
+  lisible.
+
+### Corrigé
+
+- **Le texte d'une réponse d'accordéon ne passe plus sous le bouton « + ».** Il
+  s'arrête désormais au même endroit que le titre de l'entrée, comme la maquette
+  le dessine. La dernière ligne pouvait auparavant le recouvrir de 52 pixels.
+
 ## 2.30.2
 
 ### Corrigé

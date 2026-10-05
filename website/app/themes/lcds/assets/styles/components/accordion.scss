@@ -22,6 +22,15 @@
 // Rythme de la coupe par défaut : 48px de part et d'autre du filet séparateur,
 // et aucun retrait aux extrémités — le retrait de section s'en charge.
 .accordion {
+  /* -------------------------------------------------------------------------
+   * L'ÉCART ENTRE LE TITRE ET SON BOUTON, écrit UNE FOIS.
+   *
+   * Il sert deux fois : à séparer le titre du bouton, et à borner le panneau —
+   * la réponse s'arrête au même endroit que le titre. Une propriété
+   * personnalisée plutôt qu'un jeton, parce que le repli mobile la resserre et
+   * que les deux usages doivent la suivre ensemble.
+   * ----------------------------------------------------------------------- */
+  --accordion-gutter: #{fn.toRem(24)};
   margin: 0;
   padding: 0;
   list-style: none;
@@ -60,7 +69,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: fn.toRem(24);
+    gap: var(--accordion-gutter);
     width: 100%;
     padding: 0;
     border: 0;
@@ -123,6 +132,23 @@
  * reste instantanée — c'est-à-dire le comportement d'avant.
  * ------------------------------------------------------------------------- */
 .accordion__panel {
+  /* -------------------------------------------------------------------------
+   * LA RÉPONSE S'ARRÊTE OÙ S'ARRÊTE LE TITRE — demande client, relevée sur
+   * `HP/HP_01_LCDS_hp full_V2.pdf`, entrée « Multibagues ».
+   *
+   * Le panneau est un FRÈRE du déclencheur, pas son enfant : il prenait donc
+   * toute la colonne et sa dernière ligne pouvait courir jusque sous le bouton.
+   * Mesuré sur la maquette : les lignes s'arrêtent à 1191 pour un bouton qui
+   * commence à 1227, soit la même borne que le titre — bouton plus gouttière.
+   *
+   * ÉCART ASSUMÉ AVEC LA MAQUETTE DES CONSEILS, qui est antérieure à cette V2 :
+   * elle y laisse le texte filer jusqu'à 1277. La demande dit « les accordéons
+   * EN GÉNÉRAL », la règle est donc posée sur le composant.
+   *
+   * `padding-right` et non `max-width` : la largeur du panneau porte la
+   * mécanique de repliement, et la borner la perturberait.
+   * ----------------------------------------------------------------------- */
+  padding-right: calc(#{var.$module} + var(--accordion-gutter));
   grid-template-rows: 0fr;
   // Le retrait s'anime AVEC la rangée. Posé en dur, il survivait au repliement
   // et donnait le saut signalé en recette : la hauteur descendait en douceur
@@ -220,8 +246,10 @@
     padding: fn.toRem(24) 0;
   }
 
-  .accordion__trigger {
-    gap: fn.toRem(16);
+  // L'écart se resserre, et le panneau le suit : la propriété est lue par les
+  // deux.
+  .accordion {
+    --accordion-gutter: #{fn.toRem(16)};
   }
 
   // L'écart remplace le rembourrage sur cette coupe : le resserrer là où

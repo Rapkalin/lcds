@@ -4935,6 +4935,94 @@ window.runFrontQa = async (win) => {
             + ` (${serrees.length === 0 ? "tous" : serrees.join(", ")})`,
             serrees.length === 0
         );
+
+        /*
+         * ET LA RÉPONSE AUSSI — demande client, relevée sur la V2, entrée
+         * « Multibagues » : ses lignes s'arrêtent à 1191 pour un bouton qui
+         * commence à 1227.
+         *
+         * Le panneau est un FRÈRE du déclencheur : rien ne le bornait, et sa
+         * dernière ligne pouvait courir jusque sous le bouton. Il porte
+         * désormais la même réserve que le titre.
+         *
+         * Seuls les panneaux OUVERTS sont mesurables : un panneau replié n'a
+         * aucune boîte.
+         */
+        const reponses = [];
+
+        for (const entree of entreesTitre) {
+            const panneau = entree.querySelector(".accordion__panel:not([hidden]) .accordion__body");
+            const icone = entree.querySelector(".accordion__icon");
+
+            if (panneau === null || icone === null) {
+                continue;
+            }
+
+            const plage = doc.createRange();
+
+            plage.selectNodeContents(panneau);
+
+            const lignes = [...plage.getClientRects()];
+
+            if (lignes.length === 0) {
+                continue;
+            }
+
+            const vide = icone.getBoundingClientRect().left - Math.max(...lignes.map((l) => l.right));
+
+            reponses.push(vide);
+        }
+
+        if (reponses.length > 0) {
+            const serrees2 = reponses.filter((vide) => vide < 12);
+
+            assert(
+                `accordéon : les ${reponses.length} réponses dépliées s'arrêtent avant le pictogramme`
+                + ` (au plus près ${Math.round(Math.min(...reponses))}px)`,
+                serrees2.length === 0
+            );
+        }
+    }
+
+    /*
+     * SON SURVOL EST CELUI DU BOUTON D'ACTION SECONDAIRE — demande client.
+     *
+     * Celui-ci se remplit de `$blue-veil`, qui composé sur le panneau pâle
+     * donne `$blue-light`. Ce bouton-ci repose sur une PHOTO : le voile y
+     * composerait une teinte par image. On pose donc la teinte aplatie.
+     *
+     * Lu sur la RÈGLE : `getComputedStyle` ne rend que l'état au repos.
+     */
+    const boutonCarte = doc.querySelector(".tech-card__trigger");
+
+    if (boutonCarte !== null && win.innerWidth === 1440) {
+        const survolCarte = trouverRegle(doc, ".tech-card__trigger:hover", (regle) => {
+            const valeur = regle.style.backgroundColor || regle.style.background;
+
+            return valeur === "" ? null : couleur(valeur);
+        });
+        const survolSecondaire = trouverRegle(doc, ".cta--outline:hover .cta__label", (regle) => {
+            const valeur = regle.style.backgroundColor || regle.style.background;
+
+            return valeur === "" ? null : couleur(valeur);
+        });
+        const glyphe = couleur(styleOf(boutonCarte).color);
+        const rapport = survolCarte === null || glyphe === null
+            ? null
+            : contraste(glyphe.rgb, survolCarte.rgb);
+
+        assert(
+            `techno : survol de carte sur la teinte aplatie du voile secondaire`
+            + ` (carte ${survolCarte === null ? "?" : survolCarte.rgb.join(", ")},`
+            + ` secondaire ${survolSecondaire === null ? "?" : survolSecondaire.rgb.join(", ") + " à " + survolSecondaire.a})`,
+            survolCarte !== null && survolCarte.rgb.join(",") === "168,190,214"
+                && survolSecondaire !== null && survolSecondaire.a < 1
+        );
+        assert(
+            `techno : le glyphe reste lisible au survol`
+            + ` (${rapport === null ? "?" : rapport.toFixed(2)}:1)`,
+            rapport !== null && rapport >= 4.5
+        );
     }
 
     /* --------------------------------------------------------------------- *

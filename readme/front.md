@@ -126,6 +126,41 @@ contributeur dépose** — lisible sur une image sombre, perdu sur une claire.
 L'aplat opaque le détache de n'importe quelle photo, et le bleu du système y
 mesure 11,37:1. Le contraste cesse d'être une propriété du contenu.
 
+### Son survol est celui du bouton d'action secondaire
+
+Demande client. Le secondaire efface sa bordure et se remplit de `$blue-veil` ;
+posé sur le panneau pâle, ce voile compose exactement `$blue-light`.
+
+Ce bouton-ci repose sur une **photo** : le voile y composerait une teinte par
+image, et on retomberait dans le défaut qu'on vient de corriger. On pose donc la
+teinte **aplatie**.
+
+> **Contrôle** : le glyphe `$blue` y mesure **5,96:1**, contre les **5,97:1**
+> relevés sur le bouton secondaire. C'est bien le même survol — la vérification
+> ne porte pas sur l'intention mais sur le rapport rendu.
+
+## La réponse d'un accordéon s'arrête où s'arrête son titre
+
+Retour client, relevé sur `HP/HP_01_LCDS_hp full_V2.pdf`, entrée
+« Multibagues » : les lignes de la réponse s'arrêtent à **1191** pour un bouton
+qui commence à **1227**.
+
+Le panneau est un **frère** du déclencheur, pas son enfant : rien ne le bornait,
+et sa dernière ligne pouvait courir **sous** le bouton. Mesuré en retirant la
+réserve : 52px de recouvrement.
+
+Il porte donc la même réserve que le titre — la largeur du bouton plus la
+gouttière —, et cette gouttière n'est plus écrite qu'une fois, en propriété
+personnalisée, parce que le repli mobile la resserre et que les deux usages
+doivent la suivre ensemble.
+
+`padding-right` et non `max-width` : la largeur du panneau porte la mécanique de
+repliement, et la borner la perturberait.
+
+> **Écart assumé avec la maquette des conseils**, antérieure à cette V2 : elle y
+> laisse le texte filer jusqu'à 1277. La demande dit « les accordéons EN
+> GÉNÉRAL », la règle est donc posée sur le composant.
+
 ## Les rayons, par famille — et le piège qu'ils cachaient
 
 Retour client : *« le style des pastilles doit être plus rectangulaire »*.
