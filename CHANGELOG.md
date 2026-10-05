@@ -7,6 +7,15 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.30.2
+
+### Corrigé
+
+- **Les étiquettes de section et les badges de durée retrouvent leur forme de
+  capsule.** Ils avaient été aplatis à la livraison précédente, sur un relevé
+  mal interprété. Aucun autre élément arrondi n'est touché : la valeur ne sert
+  qu'à ces deux-là.
+
 ## 2.30.1
 
 ### Corrigé

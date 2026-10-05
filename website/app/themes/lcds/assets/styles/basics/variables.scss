@@ -315,18 +315,28 @@ $radius: fn.toRem(8);
 $radius-control: fn.toRem(8);
 
 /* ---------------------------------------------------------------------------
- * ÉTIQUETTES DE SECTION ET BADGES DE DURÉE.
+ * ÉTIQUETTES DE SECTION ET BADGES DE DURÉE : 18, soit une CAPSULE.
  *
- * 10, et non « pleinement arrondi ». Même profil de coin sur l'étiquette d'une
- * section (29 de haut) et sur le badge de durée du parcours (31) : deux
- * hauteurs différentes, le même rayon — c'est donc bien une constante, pas une
- * demi-hauteur.
+ * 18 dépasse la demi-hauteur d'une pastille de 29, donc le navigateur l'écrête
+ * à 14,6 et la pastille est pleinement arrondie. La valeur reste 18 et non 999 :
+ * c'est celle du design, et elle garde son sens sur une pastille plus haute —
+ * une étiquette revenue à la ligne, ou un fort grossissement de texte.
  *
- * `$radius-pill` posait 999, soit 14,5 sur une pastille de 29 : une capsule là
- * où la maquette dessine un rectangle à coins doux. C'est le défaut que le
- * client a signalé.
+ * AJUSTÉ, PAS LU AU PIXEL. Le profil du bord gauche a été comparé au modèle
+ * circulaire pour une série de rayons, sur trois pastilles de deux maquettes :
+ *
+ *   rayon      8      10      12      14    demi-hauteur
+ *   écart   2,81    2,06    1,24    0,51        0,47
+ *
+ * L'erreur décroît jusqu'à la demi-hauteur sur les trois. C'est une capsule.
+ *
+ * CE JETON A VALU 10, ET C'ÉTAIT FAUX. Le relevé lisait un « bord droit » de
+ * 4 à 7 points au milieu de la pastille — en réalité du bruit de quantification :
+ * près de son sommet, l'arc d'une capsule de 14,6 s'écarte de moins de 0,2 point
+ * sur ±2,3 points de hauteur, soit moins que le quart de point que le rendu
+ * distingue. Lire le premier pixel ne suffit pas ; il faut AJUSTER UN MODÈLE.
  * ------------------------------------------------------------------------- */
-$radius-tag: fn.toRem(10);
+$radius-tag: fn.toRem(18);
 // Coins HAUTS des sections empilées. Distinct de `--footer-radius`, qui vaut 64
 // et arrondit les coins BAS du panneau de pied de page : deux rôles, deux
 // valeurs, et les confondre ferait bouger l'un en corrigeant l'autre.

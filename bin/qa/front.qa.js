@@ -4947,9 +4947,10 @@ window.runFrontQa = async (win) => {
      *                     bouton d'action à icône. Profil mesuré sur la V2 :
      *                     8,2 / 4,0 / 2,8 / 1,8 / 1,0 / 0,8 / 0,5 / 0,2, soit
      *                     l'arc d'un rayon 8 à la décimale près
-     *   étiquettes  10  — servi. Le relevé dit 12 : son bord gauche est droit
-     *                     sur 5 points, donc ni capsule ni 10. Laissé à 10 sur
-     *                     demande — « que seul cet arrondi change ».
+     *   étiquettes  18  — soit une CAPSULE : 18 dépasse la demi-hauteur d'une
+     *                     pastille de 29 et le navigateur l'écrête à 14,6.
+     *                     Obtenu en AJUSTANT un modèle circulaire, pas en
+     *                     lisant un pixel — voir le jeton.
      *
      * MESURER À 288 DPI, JAMAIS À 72. À 72, un rayon de 8 se lit 4 : quatre
      * pixels de courbe, et l'anticrénelage aplatit le profil. C'est ce qui a
@@ -4986,27 +4987,34 @@ window.runFrontQa = async (win) => {
             .filter(([noeud]) => noeud !== null);
 
         if (etiquettes.length > 0) {
-            const faux = etiquettes.filter(([noeud]) => Math.abs(rayonDe(noeud) - 10) > 0.5);
+            const faux = etiquettes.filter(([noeud]) => Math.abs(rayonDe(noeud) - 18) > 0.5);
 
             assert(
-                `rayons : les étiquettes sont à 10, pas pleinement arrondies`
+                `rayons : les étiquettes sont à 18, donc pleinement arrondies`
                 + ` (${faux.length === 0 ? "toutes" : faux.map(([n, nom]) => `${nom} à ${rayonDe(n)}`).join(", ")})`,
                 faux.length === 0
             );
 
             /*
-             * LE PIÈGE QUE CETTE ASSERTION GARDE : `border-radius: 999px` se
-             * CLAMPE à la moitié de la hauteur, et le style calculé rend alors
-             * `999px` quand même. Mesurer le jeton ne dirait donc rien. On
-             * compare ici au RENDU : une capsule de 29 de haut a un coin de
-             * 14,5, un rectangle à coins doux en a un de 10.
+             * ET LE RENDU SUIT : 18 dépasse la demi-hauteur d'une pastille de
+             * 29, le navigateur l'écrête, et la pastille est une capsule.
+             *
+             * Les deux assertions sont nécessaires. Le style calculé rend `18px`
+             * quel que soit l'écrêtage : lire le jeton ne dit rien de ce qu'on
+             * voit. Et mesurer le rendu seul laisserait passer un 999 écrit en
+             * dur, qui donnerait la même capsule ici mais perdrait son sens sur
+             * une pastille plus haute.
+             *
+             * L'assertion d'avant exigeait L'INVERSE — des côtés droits — sur la
+             * foi d'un relevé faux. Voir le jeton : ce « bord droit » était du
+             * bruit de quantification au sommet de l'arc.
              */
             const pastille = etiquettes[0][0].getBoundingClientRect();
 
             assert(
-                `rayons : l'étiquette garde des côtés droits`
-                + ` (coin ${rayonDe(etiquettes[0][0])} pour ${Math.round(pastille.height)} de haut)`,
-                rayonDe(etiquettes[0][0]) < pastille.height / 2 - 1
+                `rayons : l'étiquette est écrêtée en capsule`
+                + ` (jeton ${rayonDe(etiquettes[0][0])} pour ${Math.round(pastille.height)} de haut)`,
+                rayonDe(etiquettes[0][0]) >= pastille.height / 2
             );
         }
     }
