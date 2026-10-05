@@ -18,6 +18,10 @@
  *   bio   string Texte révélé par le bouton. Vide : PAS DE BOUTON — un bouton
  *                qui n'ouvre rien n'est pas un bouton.
  *
+ * LE BANDEAU ET LA DESCRIPTION SONT UN SEUL PANNEAU, et il est ancré au bas de
+ * la carte : en s'ouvrant il grandit vers le haut, par-dessus la photo, au lieu
+ * de pousser la rangée. Sa mise en forme est dans `person-card.scss`.
+ *
  * @package lcds
  */
 
@@ -46,40 +50,44 @@ $visual = $image === 0 ? '' : lcds_render_image($image, ['class' => 'person-card
         <?php endif; ?>
     </div>
 
-    <div class="person-card__foot">
-        <div class="person-card__identity">
-            <?php if ($name !== '') : ?>
-                <h4 class="person-card__name"><?php echo esc_html($name); ?></h4>
-            <?php endif; ?>
+    <div class="person-card__panel">
+        <div class="person-card__foot">
+            <div class="person-card__identity">
+                <?php if ($name !== '') : ?>
+                    <h4 class="person-card__name"><?php echo esc_html($name); ?></h4>
+                <?php endif; ?>
 
-            <?php if ($role !== '') : ?>
-                <p class="person-card__role"><?php echo esc_html($role); ?></p>
+                <?php if ($role !== '') : ?>
+                    <p class="person-card__role"><?php echo esc_html($role); ?></p>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($bio !== '') : ?>
+                <button
+                    class="person-card__toggle"
+                    type="button"
+                    data-disclosure
+                    aria-expanded="false"
+                    aria-controls="<?php echo esc_attr($panelId); ?>"
+                >
+                    <?php get_template_part('components/icon-plus'); ?>
+                    <span class="screen-reader-text">
+                        <?php printf(
+                            /* translators: %s : nom de la personne. */
+                            esc_html__('En savoir plus sur %s', 'lcds'),
+                            esc_html($name),
+                        ); ?>
+                    </span>
+                </button>
             <?php endif; ?>
         </div>
 
         <?php if ($bio !== '') : ?>
-            <button
-                class="person-card__toggle"
-                type="button"
-                data-disclosure
-                aria-expanded="false"
-                aria-controls="<?php echo esc_attr($panelId); ?>"
-            >
-                <?php get_template_part('components/icon-plus'); ?>
-                <span class="screen-reader-text">
-                    <?php printf(
-                        /* translators: %s : nom de la personne. */
-                        esc_html__('En savoir plus sur %s', 'lcds'),
-                        esc_html($name),
-                    ); ?>
-                </span>
-            </button>
+            <div class="person-card__bio" id="<?php echo esc_attr($panelId); ?>" hidden>
+                <div class="person-card__body">
+                    <?php echo wp_kses_post($bio); ?>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
-
-    <?php if ($bio !== '') : ?>
-        <div class="person-card__bio" id="<?php echo esc_attr($panelId); ?>" hidden>
-            <?php echo wp_kses_post($bio); ?>
-        </div>
-    <?php endif; ?>
 </article>

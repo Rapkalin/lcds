@@ -7,6 +7,21 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.30.5
+
+### Modifié
+
+- **Une description d'équipe dépliée ne pousse plus la page.** Le bandeau blanc
+  d'une carte — nom, fonction et bouton — remonte par-dessus la photo et
+  découvre la description dessous. La carte garde sa hauteur, sa voisine de
+  rangée ne bouge plus, et la page non plus : elle gagnait 134 pixels à chaque
+  ouverture. Une description trop longue pour la carte défile sur place.
+
+### Corrigé
+
+- **Le « + » d'une carte d'équipe devient « − » quand elle est ouverte**, comme
+  l'accordéon des traitements et les cartes de technologie. Il restait un « + ».
+
 ## 2.30.4
 
 ### Corrigé

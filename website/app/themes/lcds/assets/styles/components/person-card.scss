@@ -10,11 +10,33 @@
 //   nom      encre à 24 du bord gauche, capitales de 18 — le corps des `h3`
 //   fonction en capitales, le corps des boutons
 //   bouton   52 × 52, contour `$blue-light`, encastré de 24 à droite
+//
+// LA CARTE NE CHANGE JAMAIS DE HAUTEUR, description dépliée comprise. Le
+// bandeau et la description forment un panneau ancré au bas de la carte : il
+// grandit vers le HAUT, par-dessus la photo, et le nom et la fonction montent
+// d'autant. Déplié en flux, il poussait sa rangée — mesuré : la carte passait
+// de 542 à 676, sa voisine la suivait, et la page gagnait 134px.
 .person-card {
+  position: relative;
+  overflow: hidden;
+  // La réserve du bandeau. Le panneau étant hors flux, sans elle la carte se
+  // réduirait à sa photo.
+  padding-bottom: var.$person-foot;
+  border-radius: var.$radius;
+  background: var.$white;
+}
+
+.person-card__panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border-radius: var.$radius;
+  // Le panneau ne sort JAMAIS de la carte : au-delà, c'est la description qui
+  // défile. Sans ce plafond, une bio longue déborderait par le haut et serait
+  // rognée par la carte, sans aucun moyen d'atteindre sa fin.
+  max-height: 100%;
   background: var.$white;
 }
 
@@ -37,12 +59,15 @@
 }
 
 .person-card__foot {
+  // Il ne se comprime pas quand la description pousse le panneau à son plafond :
+  // c'est elle qui défile, pas le bandeau qui s'écrase.
+  flex-shrink: 0;
   display: flex;
   // Le bouton est calé à droite, le nom et la fonction à gauche.
   align-items: center;
   justify-content: space-between;
   gap: var.$gutter;
-  min-height: fn.toRem(102);
+  min-height: var.$person-foot;
   padding: fn.toRem(16) fn.toRem(24);
 }
 
@@ -83,6 +108,64 @@
   cursor: pointer;
 }
 
+/* ------------------------------------------------------------------------- *
+ * Révélation de la description.
+ *
+ * Mécanique de l'accordéon des traitements, reprise telle quelle — panneau
+ * réellement `hidden`, `display` rendue transitionnable par `allow-discrete`,
+ * état de départ fourni par `@starting-style`. Voir `accordion.scss` pour le
+ * détail de chacun de ces trois ingrédients.
+ *
+ * Ce qui diffère : le panneau qui la porte est ancré EN BAS. La rangée qui
+ * s'ouvre pousse donc le bandeau vers le haut au lieu de pousser la page.
+ * ------------------------------------------------------------------------- */
 .person-card__bio {
-  padding: 0 fn.toRem(24) fn.toRem(24);
+  grid-template-rows: 0fr;
+  // Le retrait du bas s'anime AVEC la rangée. Posé en dur, il survivait au
+  // repliement et donnait un saut de 24px au passage à `display: none` — le
+  // défaut est documenté sur l'accordéon, qui a le même, en haut.
+  padding: 0 fn.toRem(24);
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    grid-template-rows var.$reveal-fade,
+    padding-bottom var.$reveal-fade,
+    opacity var.$fade,
+    display var.$reveal-fade allow-discrete;
+
+  &:not([hidden]) {
+    display: grid;
+    grid-template-rows: 1fr;
+    padding-bottom: fn.toRem(24);
+    opacity: 1;
+  }
+}
+
+// Enfant UNIQUE de la grille, et c'est toute sa raison d'être : deux
+// paragraphes saisis par un contributeur tomberaient dans des rangées
+// implicites en `auto`, qui ne se replient jamais.
+.person-card__body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+@starting-style {
+  .person-card__bio:not([hidden]) {
+    grid-template-rows: 0fr;
+    padding-bottom: 0;
+    opacity: 0;
+  }
+}
+
+// Une description qui se déplie EST du mouvement : qui demande à le réduire
+// retrouve la bascule instantanée.
+@media (prefers-reduced-motion: reduce) {
+  .person-card__bio {
+    transition: none;
+  }
+}
+
+// Panneau ouvert : la barre verticale disparaît, le « + » devient « − ».
+.person-card__toggle[aria-expanded="true"] .icon-plus__bar {
+  display: none;
 }

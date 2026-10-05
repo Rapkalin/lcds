@@ -258,6 +258,10 @@ $logo-word-top: fn.toRem(8);
 $logo-word-slide: fn.toRem(110);
 // Boutons ronds, pastilles et piste de progression des carrousels.
 $module: fn.toRem(52);
+// Bandeau blanc d'une carte d'équipe, description repliée. La carte le RÉSERVE
+// en rembourrage : le panneau qui le porte est hors flux, et sans cette réserve
+// la carte se réduirait à sa photo.
+$person-foot: fn.toRem(102);
 // Retrait vertical d'une section, et rythme interne entre ses blocs.
 //
 // Fluide, pour la même raison que les titres : deux sections voisines cumulaient
