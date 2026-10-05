@@ -337,6 +337,20 @@ $radius-control: fn.toRem(8);
  * distingue. Lire le premier pixel ne suffit pas ; il faut AJUSTER UN MODÈLE.
  * ------------------------------------------------------------------------- */
 $radius-tag: fn.toRem(18);
+
+/* ---------------------------------------------------------------------------
+ * LA MÊME ÉTIQUETTE, POSÉE SUR UN VISUEL : 8, et ce n'est PAS une capsule.
+ *
+ * Seules les légendes des visuels du cabinet en portent une. Ajusté comme
+ * ci-dessus, sur le profil du coin haut-gauche relevé à 288 dpi :
+ *
+ *   rayon      6      8      10      12      18
+ *   écart   0,75   0,16    0,42    0,82    2,03
+ *
+ * Le minimum est net à 8. La capsule, elle, est le pire des cinq : sur une
+ * pastille de 36, 18 l'arrondit pleinement là où la maquette dessine un coin.
+ * ------------------------------------------------------------------------- */
+$radius-tag-media: fn.toRem(8);
 // Coins HAUTS des sections empilées. Distinct de `--footer-radius`, qui vaut 64
 // et arrondit les coins BAS du panneau de pied de page : deux rôles, deux
 // valeurs, et les confondre ferait bouger l'un en corrigeant l'autre.

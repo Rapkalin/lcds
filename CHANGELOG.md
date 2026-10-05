@@ -7,6 +7,16 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.30.4
+
+### Corrigé
+
+- **Les légendes posées sur les photos du cabinet ne sont plus des capsules.**
+  Leurs coins sont arrondis à 8, comme la V2 de la maquette les dessine. Les
+  étiquettes de section du reste du site gardent leur capsule : le réglage ne
+  vaut que pour une étiquette posée sur un visuel, et seule la page du cabinet
+  en pose.
+
 ## 2.30.3
 
 ### Modifié

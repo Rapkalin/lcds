@@ -53,6 +53,7 @@
 .tag--on-media {
   min-height: fn.toRem(36);
   border-color: transparent;
+  border-radius: var.$radius-tag-media;
   background: var.$white;
   padding-top: fn.toRem(8);
   padding-bottom: fn.toRem(8);
