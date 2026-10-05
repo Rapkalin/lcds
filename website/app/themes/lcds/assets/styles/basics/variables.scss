@@ -88,26 +88,33 @@ $font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 //
 //   48px à 1440 → 32px à 480 :  1.667vw + 1.5rem
 //   24px à 1440 → 20px à 480 : 0.4167vw + 1.125rem
-$fs-h2: clamp(#{fn.toRem(32)}, 1.667vw + #{fn.toRem(24)}, #{fn.toRem(48)});
-$fs-h3: clamp(#{fn.toRem(20)}, 0.4167vw + #{fn.toRem(18)}, #{fn.toRem(24)});
 /* ---------------------------------------------------------------------------
- * Le titre d'une section dont le titre est COLLANT au-dessus de sa colonne de
- * gauche — la page « Conseils ». Deux tiers de `$fs-h2`, et ce n'est pas un
- * glissement de maquette : c'est ce qui le fait tenir dans sa colonne.
+ * H1 ET H2 : 72 ET 32. C'EST UN CHANGEMENT, demandé par le design.
  *
- * Sligoil a une chasse de 0,6 em, mesurée sur les PDF : 28,8px par caractère à
- * 48, 19,2 à 32. La zone du titre va de x=48 au bord de la colonne de gauche,
- * soit 553px à 1440. « Les urgences en orthodontie », le plus long de la page,
- * y occupe 518 à 32 — et 778 à 48, soit 225 de trop.
+ * `$fs-h2` valait 48. La V2 de la maquette d'accueil
+ * (`HP/HP_01_LCDS_hp full_V2.pdf`) descend TOUS ses titres Sligoil à 32 —
+ * vérifié sur les sept, chasse de 19,2 par caractère contre 28,8 dans la V1.
  *
- * CE DÉBORDEMENT N'EST PAS COSMÉTIQUE. Le titre est collant : ce qui dépasse
- * court au-dessus de la colonne de droite, et le texte lui défile derrière.
- * Le remettre à `$fs-h2` demande donc un aplat sous le titre, ou de le laisser
- * passer à deux lignes.
+ * `$fs-h1` est NEUF, et il n'est relevé nulle part : aucune maquette ne dessine
+ * de titre à 72. Le cabinet et l'équipe posent encore leur titre de page à 48,
+ * et leurs maquettes n'ont pas de V2 — elles divergeront donc jusqu'à ce
+ * qu'elles soient révisées. Arbitré : la règle est générale.
  *
+ * LE PLANCHER DU `h1` EST CONTRAINT PAR LA PAGE, pas par le rapport. Les pages
+ * intérieures posent 48 de marge de chaque côté : à 320 de vue, il reste 224
+ * pour le titre. Un plancher à 54 y coupait « cabinet » au milieu du mot —
+ * 7 caractères × 0,6 × 54 = 227 pour 224 disponibles. RGAA 10.4, mesuré.
+ *
+ * Le plancher est donc celui des `h2`, 32 : un mot de ONZE caractères —
+ * « orthodontie » — y occupe 211 et tient. La hiérarchie s'aplatit en dessous
+ * de 480, et c'est assumé faute de maquette mobile.
+ *
+ *   72px à 1440 → 32px à 480 : 4.1667vw + 0.75rem
  *   32px à 1440 → 24px à 480 : 0.8333vw + 1.25rem
  * ------------------------------------------------------------------------- */
-$fs-h2-sticky: clamp(#{fn.toRem(24)}, 0.8333vw + #{fn.toRem(20)}, #{fn.toRem(32)});
+$fs-h1: clamp(#{fn.toRem(32)}, 4.1667vw + #{fn.toRem(12)}, #{fn.toRem(72)});
+$fs-h2: clamp(#{fn.toRem(24)}, 0.8333vw + #{fn.toRem(20)}, #{fn.toRem(32)});
+$fs-h3: clamp(#{fn.toRem(20)}, 0.4167vw + #{fn.toRem(18)}, #{fn.toRem(24)});
 // 16px est déjà le plancher de lisibilité : le corps de texte ne bouge pas.
 $fs-p: fn.toRem(16);
 // Le CHAPÔ : un paragraphe de présentation, une fois et demie le corps courant.
@@ -285,18 +292,27 @@ $radius: fn.toRem(8);
  * TOUT CE QUI SE CLIQUE : pastilles de navigation, boutons d'action, boutons
  * ronds de 52, bouton burger.
  *
- * Mesuré 4 sur TROIS éléments de nature différente — le bouton orange plein
- * « Prendre RDV », le bouton rond contourné d'un accordéon, la pastille pleine
- * d'un bouton d'action — et sur les QUATRE maquettes, l'ancienne version du
- * cabinet comprise. Profils identiques : 4, 3, 2, 1, 0, 0, 0.
+ * MESURÉ À 288 DPI, et c'est la seule résolution qui vaille ici. Le profil du
+ * coin, relevé sur la V2 de la maquette d'accueil, donne aux trois contrôles le
+ * même arc :
+ *
+ *   mesuré   8,2  4,0  2,8  1,8  1,0  0,8  0,5  0,2
+ *   r = 8    8,0  4,1  2,7  1,8  1,1  0,6  0,3  0,1
+ *
+ * Vérifié sur la pastille de navigation, le bouton « prendre rdv » et le bouton
+ * d'action à icône — trois remplissages différents, un seul profil.
+ *
+ * CE JETON A VALU 4, ET C'ÉTAIT UNE ERREUR DE MESURE. Le relevé avait été fait
+ * à 72 dpi, où un rayon de 4 ne couvre que quatre pixels et où l'anticrénelage
+ * aplatit la courbe : on y lit 4, 3, 2, 1, 0 pour un arc de 8. Le défaut est
+ * reparti en recette — « les arrondis ne correspondent plus à la maquette ».
  *
  * CE JETON PILOTE AUSSI LA SILHOUETTE DU MENU. `initPillShape` lit
  * `borderTopLeftRadius` sur la première pastille et en tire tous ses arcs : le
- * collet entre deux entrées vaut `hauteur − 2 × rayon × (1 − sin 19,4°)`. À 8 il
- * valait 18,3 pour une rangée de 29 ; à 4 il vaut 23,7, et la maquette en
- * mesure 23. C'est ce relevé qui a tranché — voir readme/front.md.
+ * collet entre deux entrées vaut `hauteur − 2 × rayon × (1 − sin 19,4°)`, soit
+ * 18,3 pour une rangée de 29 — voir readme/front.md.
  * ------------------------------------------------------------------------- */
-$radius-control: fn.toRem(4);
+$radius-control: fn.toRem(8);
 
 /* ---------------------------------------------------------------------------
  * ÉTIQUETTES DE SECTION ET BADGES DE DURÉE.

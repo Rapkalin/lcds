@@ -39,7 +39,8 @@
     // défaut RGAA 10.4 déjà mesuré sur le rail des visuels du cabinet.
     max-width: calc((100% - #{var.$gutter}) / 2);
     margin: 0 0 fn.toRem(76);
-    font-size: var.$fs-h2;
+    // `h1` sur « L'équipe », `h2` ailleurs : la taille suit le niveau, et
+    // `general.scss` la donne. Rien à poser ici.
   }
 
   // Le rapport plutôt qu'une hauteur : la largeur tombe avec la fenêtre, et

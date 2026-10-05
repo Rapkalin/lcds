@@ -7,6 +7,37 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.30.0
+
+### Modifié
+
+- **Les titres changent de taille, partout.** Les titres de section passent de
+  48 à 32, comme la nouvelle version de la maquette d'accueil les dessine. Les
+  titres de page passent à 72.
+
+> Les maquettes du cabinet et de l'équipe n'ont pas encore été révisées : leur
+> titre de page y est toujours dessiné à 48, et la page s'en écarte désormais.
+> Aucune maquette ne dessine de titre à 72 — la valeur vient du design, pas d'un
+> relevé.
+
+- **Le bouton « + » d'une carte de technologie est sur fond blanc**, son signe
+  en bleu. Il était translucide sur la photo : sa lisibilité dépendait de
+  l'image déposée par le contributeur.
+
+### Corrigé
+
+- **Les arrondis du menu et des boutons d'action retrouvent ceux de la
+  maquette.** Ils avaient été arrondis de moitié trop peu à la livraison
+  précédente. Les étiquettes, elles, ne bougent pas.
+
+- **À 320px, le titre de page ne se coupe plus au milieu d'un mot.**
+
+- **Trois épreuves de recette mesuraient au mauvais endroit** : celles de la
+  silhouette du menu visaient toujours les deux premières pastilles, alors que
+  l'entrée courante s'écarte en permanence — sur le cabinet et sur l'équipe,
+  elles mesuraient donc une jonction déjà ouverte. L'une d'elles n'avait jamais
+  rien pu prouver. **La campagne est au vert pour la première fois.**
+
 ## 2.29.3
 
 ### Modifié

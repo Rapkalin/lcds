@@ -88,6 +88,12 @@ h1, h2, h3 {
   overflow-wrap: break-word;
 }
 
+// Le `h1` porte désormais une taille : il n'en avait aucune tant qu'aucune page
+// n'en affichait, et les deux qui le font la repiquaient depuis `$fs-h2`.
+h1 {
+  font-size: var.$fs-h1;
+}
+
 h2 {
   font-size: var.$fs-h2;
 }

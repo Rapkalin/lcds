@@ -78,6 +78,54 @@ signale.
 > la silhouette, qui doivent foncer de la même quantité — sinon l'écart de teinte
 > se voit en travers du bouton.
 
+## H1 à 72, H2 à 32 — un changement de système
+
+Demande du design, et la V2 de l'accueil la confirme pour les `h2` : **tous ses
+titres Sligoil descendent de 48 à 32**, vérifié sur les sept, chasse de 19,2 par
+caractère contre 28,8 dans la V1.
+
+| | Avant | Après |
+| --- | --- | --- |
+| `$fs-h1` | *n'existait pas* — les deux `h1` affichés reprenaient `$fs-h2` | **72** |
+| `$fs-h2` | 48 | **32** |
+
+### Deux conséquences à connaître
+
+**`$fs-h2-sticky` a disparu.** Il valait 32 et n'existait que parce que les
+titres collants de « Conseils » devaient tenir dans leur colonne quand `$fs-h2`
+en valait 48. `$fs-h2` valant désormais 32, le jeton faisait doublon.
+
+**Le cabinet et l'équipe divergent de leur maquette.** Elles posent encore leur
+titre de page à 48 et n'ont pas de version révisée. Le `h1` à 72 y décale tout
+ce qui suit : **+29** sur le cabinet (une ligne passe de 58 à 87), **+145** sur
+l'équipe, dont le titre passe de deux lignes de 58 à trois lignes de 87. Les
+cotes de recette sont écrites `relevé + 29` et `relevé + 145`, **arithmétique
+visible**, à remesurer quand ces maquettes seront révisées.
+
+> **Aucune maquette ne dessine de titre à 72.** Le `h1` est appliqué sur la
+> parole du design, pas sur un relevé. C'est le seul jeton typographique du
+> projet dans ce cas.
+
+### Le plancher du `h1` est contraint par la page, pas par le rapport
+
+Les pages intérieures posent 48 de marge de chaque côté : à 320 de vue, il reste
+**224** pour le titre. Un plancher à 54 — le rapport de 0,75 appliqué à 72 —
+coupait « cabinet » au milieu du mot : 7 caractères × 0,6 × 54 = **227 pour 224
+disponibles**. RGAA 10.4, mesuré par la campagne.
+
+Le plancher est donc celui des `h2`, **32** : « orthodontie », onze caractères, y
+occupe 211 et tient. La hiérarchie s'aplatit en dessous de 480, et c'est assumé
+faute de maquette mobile.
+
+## Le bouton d'une carte de technologie : aplat blanc, glyphe bleu
+
+Retour client. Le bouton était un contour blanc translucide sur un fond blanc à
+16 %, avec un glyphe blanc : **son contraste dépendait de la photo que le
+contributeur dépose** — lisible sur une image sombre, perdu sur une claire.
+
+L'aplat opaque le détache de n'importe quelle photo, et le bleu du système y
+mesure 11,37:1. Le contraste cesse d'être une propriété du contenu.
+
 ## Les rayons, par famille — et le piège qu'ils cachaient
 
 Retour client : *« le style des pastilles doit être plus rectangulaire »*.
@@ -85,29 +133,43 @@ Relevé sur les quatre maquettes, profil de coin mesuré au pixel du haut vers l
 gauche. **Il y a trois familles, et les confondre est exactement ce qui rendait
 les pastilles trop rondes.**
 
-| Famille | Relevé | Jeton | Ce qui était servi |
+| Famille | Relevé | Jeton | Servi |
 | --- | --- | --- | --- |
-| Contrôles — navigation, boutons d'action, boutons ronds de 52, burger | **4** | `$radius-control` | 8 |
-| Étiquettes de section et badges de durée | **10** | `$radius-tag` | 999, soit **14,5** sur une pastille de 29 |
+| Contrôles — navigation, boutons d'action, boutons ronds de 52, burger | **8** | `$radius-control` | 8 |
+| Étiquettes de section et badges de durée | **12** | `$radius-tag` | **10**, sur demande |
 | Visuels et cartes | *non revérifié* | `$radius` | 8 |
-| Extrémités de la piste de carrousel (2px) | — | `$radius-pill` | 999, inchangé |
+| Extrémités de la piste de carrousel (2px) | — | `$radius-pill` | 999 |
 
-**La méthode est validée sur un rayon CONNU** avant d'être crue : le coin bas du
-panneau de pied de page, annoncé à 64, se mesure à 65. Elle ne divise ni ne
-double rien.
+### MESURER À 288 DPI, JAMAIS À 72 — la leçon coûteuse
 
-### Les contrôles : 4, et trois fois plutôt qu'une
+Ce tableau a d'abord dit **4** pour les contrôles et **10** pour les étiquettes.
+Les deux étaient faux, et de la même façon : **le relevé avait été fait sur un
+rendu à 72 dpi**, où un rayon de 8 ne couvre que huit pixels et où
+l'anticrénelage aplatit la courbe du coin. On y lit `4, 3, 2, 1, 0` pour un arc
+de 8.
 
-Profil identique — `4, 3, 2, 1, 0, 0, 0` — sur trois éléments de nature
-différente et sur les **quatre** maquettes, l'ancienne version du cabinet
-comprise :
+Le défaut est reparti en recette — « les arrondis ne correspondent plus à la
+maquette ». Refait à **288 dpi** sur `HP/HP_01_LCDS_hp full_V2.pdf` :
 
-- le bouton orange **plein** « Prendre RDV » ;
-- le bouton rond **contourné** d'une entrée d'accordéon ;
-- la pastille **pleine** d'un bouton d'action.
+| | mesuré | arc d'un rayon 8 |
+| --- | --- | --- |
+| pastille de navigation | 8,2 / 4,0 / 2,8 / 1,8 / 1,0 / 0,8 / 0,5 / 0,2 | 8,0 / 4,1 / 2,7 / 1,8 / 1,1 / 0,6 / 0,3 / 0,1 |
+| bouton « prendre rdv » | 8,2 / 4,0 / 2,5 / 1,8 / 1,0 / 0,8 / 0,5 / 0,2 | idem |
+| bouton d'action à icône | 8,2 / 4,0 / 2,5 / 1,8 / 1,0 / 0,8 / 0,5 / 0,2 | idem |
 
-Trois remplissages, trois contrastes, un seul profil : ce n'est pas un artefact
-de seuil.
+Trois remplissages différents, un seul profil, et il colle à la décimale.
+
+> **Le contrôle sur un rayon connu ne suffisait pas.** Le coin bas du pied de
+> page, annoncé à 64, se mesure bien à 65 à 72 dpi — parce que 64 pixels de
+> courbe noient l'erreur d'un pixel. **Un contrôle ne vaut que s'il porte sur un
+> ordre de grandeur comparable à ce qu'on mesure.**
+
+### Les étiquettes : 12 relevé, 10 servi
+
+Le bord gauche de l'étiquette est **droit sur 5 points** : ce n'est donc ni une
+capsule ni un rayon de 10, c'est 12 sur une pastille de 29. Servi à 10 sur
+demande — « il faudrait faire attention que seul cet arrondi change, pas le
+reste ». Un jeton à changer le jour où le design le veut.
 
 ### Les étiquettes : 10, et pas « pleinement arrondi »
 
@@ -121,27 +183,26 @@ doux.
 > calculé rend `999px` quand même.** Mesurer le jeton ne dit donc rien du rendu.
 > Une assertion compare le coin à la demi-hauteur de la boîte, pas à une valeur.
 
-### Ce rayon pilote AUSSI la silhouette du menu
+### Ce rayon pilote AUSSI la silhouette du menu — et il reste un écart
 
 `initPillShape` lit `borderTopLeftRadius` sur la première pastille et en tire
 tous ses arcs : le collet entre deux entrées vaut
-`hauteur − 2 × rayon × (1 − sin 19,4°)`.
+`hauteur − 2 × rayon × (1 − sin θ)`, avec `PILL_ANGLE_ACCROCHE` à 19,4°.
 
-| Rayon | Collet calculé | Rendu mesuré |
-| --- | --- | --- |
-| 8 | 18,3 pour une rangée de 29 | 61 % |
-| **4** | **23,7** | **80 %** |
-| maquette | — | **79 %** (23 pour 29, sur trois maquettes ; 21 sur l'accueil) |
+| | Collet |
+| --- | --- |
+| maquette, mesurée à 288 dpi | **21 pour une rangée de 29, soit 72 %** |
+| tracé, rayon 8 | 17,7 — **61 %** |
 
-Le passage à 4 fait donc tomber le collet **sur le relevé**, et c'est une
-confirmation indépendante du rayon : deux mesures sans rapport — un profil de
-coin et un pincement de silhouette — donnent la même réponse.
+**L'écart vient de l'angle, pas du rayon.** Pour obtenir 21 avec un rayon de 8,
+il faut `sin θ = 0,5`, donc **θ = 30°**. Une ligne à changer — mais elle
+redessine toute la silhouette, écartement au survol compris, et le design n'a
+demandé que l'arrondi. **Laissé en l'état, sciemment.**
 
-> **L'assertion du collet était ajustée sur le code, pas sur la maquette.** Elle
-> bornait 50–75 % au nom d'un « 61 % relevé ». Vérifié en remettant le rayon à
-> 8 : **61 %, c'est ce que rendait l'implémentation**. Une assertion calée sur ce
-> qu'elle observe ne peut plus rien trouver — elle a verrouillé un rayon de 8
-> que la maquette ne dessine nulle part, pendant toute la vie du projet.
+> **Un détour par 4 avait fait tomber le collet juste par accident** : à 80 %, il
+> approchait les 72 % de la maquette. Deux erreurs qui se compensent ne font pas
+> une mesure — et la borne de l'assertion, poussée à 70–85 % ce jour-là, a dû
+> revenir sur ce que rend le tracé.
 
 ### Les visuels n'ont PAS bougé
 

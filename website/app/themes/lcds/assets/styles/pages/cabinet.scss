@@ -29,13 +29,14 @@
 // 132 sous un en-tête de 128, et une capitale à 270 — les mêmes cotes que
 // l'ancien titre de section qu'il remplace à cette place.
 //
-// La taille est celle des `h2`, MESURÉE : 28,4 de chasse par caractère sur le
-// PDF, pour « Le cabinet » comme pour « Les salles de soin ». Sans cette règle
-// le titre tomberait au `2em` du navigateur, car `general.scss` ne donne pas de
-// taille aux `h1` — ils n'étaient jusqu'ici jamais affichés.
+// La taille vient de `general.scss`, qui donne désormais `$fs-h1` à tous les
+// `h1`. Ce titre reprenait la taille des `h2` — mesurée à l'époque : 28,4 de
+// chasse par caractère sur le PDF, pour « Le cabinet » comme pour « Les salles
+// de soin ». Le design a depuis séparé les deux niveaux : 72 pour les `h1`, 32
+// pour les `h2`. La maquette du cabinet, elle, est toujours à 48 et n'a pas de
+// version révisée — l'écart est assumé, voir readme/front.md.
 .page-cabinet__title {
   max-width: var.$inner-outer;
   margin: 0 auto;
   padding: fn.toRem(132) var.$inner-inset 0;
-  font-size: var.$fs-h2;
 }

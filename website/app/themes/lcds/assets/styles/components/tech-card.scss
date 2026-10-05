@@ -105,17 +105,28 @@
     width: var.$module;
     height: var.$module;
     padding: 0;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    /* ---------------------------------------------------------------------
+     * APLAT BLANC, GLYPHE BLEU — retour client.
+     *
+     * Le bouton était un contour blanc translucide sur un fond blanc à 16 %,
+     * avec un glyphe blanc : lisible sur une photo sombre, il disparaissait
+     * sur une photo claire, et son contraste dépendait donc de l'image que le
+     * contributeur dépose.
+     *
+     * L'aplat opaque le détache de n'importe quelle photo, et le bleu du
+     * système y mesure 11,37:1. Le contraste cesse d'être une propriété du
+     * contenu.
+     * ------------------------------------------------------------------- */
+    border: 0;
     border-radius: var.$radius-control;
-    background: rgba(255, 255, 255, 0.16);
-    color: var.$white;
+    background: var.$white;
+    color: var.$blue;
     cursor: pointer;
-    transition: background-color var.$fade, border-color var.$fade;
+    transition: background-color var.$fade;
 
     &:hover,
     &:focus-visible {
-      border-color: var.$white;
-      background: rgba(255, 255, 255, 0.32);
+      background: var.$blue-pale;
     }
   }
 

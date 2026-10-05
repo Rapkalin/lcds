@@ -184,6 +184,7 @@ client changera de visuel.
 | Blanc sur `$orange` `#E25304` | 3,84:1 | **échec** pour du texte < 24px — bouton « Prendre RDV » au repos |
 | Blanc sur `$orange-hover` `#D84900` | 4,31:1 | **échec** pour du texte < 24px — le même, au survol |
 | Blanc sur `#C43F04` | 5,17:1 | conforme — la variante RETIRÉE |
+| Bleu `#00387A` sur blanc, bouton d'une carte de technologie | 11,37:1 | conforme — l'aplat blanc l'affranchit de la photo |
 | `#A8BED6` sur blanc | 1,91:1 | bordures et pistes seulement |
 | `#D9E4F1` sur blanc | 1,29:1 | filets seulement |
 

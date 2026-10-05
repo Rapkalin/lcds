@@ -1252,15 +1252,27 @@ window.runFrontQa = async (win) => {
             (titrePage?.getBoundingClientRect().top ?? null) + win.scrollY + retraitHaut + 10,
             270
         );
+        /*
+         * COTES DÉCALÉES PAR LE PASSAGE DU `h1` À 72.
+         *
+         * Les valeurs ci-dessous sont des RELEVÉS sur une maquette dont le
+         * titre de page fait 48, et dont il n'existe pas de version révisée.
+         * Le design a porté les `h1` à 72 : une ligne passe de 58 à 87, soit
+         * +29, et tout ce qui suit le titre descend d'autant.
+         *
+         * Les cotes sont donc écrites « relevé + 29 », ARITHMÉTIQUE VISIBLE, et
+         * non remplacées par ce que rend le code. À remesurer le jour où la
+         * maquette du cabinet est révisée.
+         */
         coteCab(
             "pastille sous le haut de page",
             (boiteCab(".block-locate .tag")?.top ?? null) + win.scrollY,
-            442
+            442 + 29
         );
         coteCab(
             "plan sous le haut de page",
             (boiteCab(".block-locate__media")?.top ?? null) + win.scrollY,
-            519
+            519 + 29
         );
 
         // La liste de droite démarre AU NIVEAU DE LA PASTILLE, et non du plan.
@@ -1270,7 +1282,7 @@ window.runFrontQa = async (win) => {
         coteCab(
             "liste alignée sur la pastille",
             (boiteCab(".block-locate .info-list")?.top ?? null) + win.scrollY,
-            442
+            442 + 29
         );
 
         // C'est la TÊTE ENTIÈRE qui reste au même niveau — pastille et plan
@@ -1344,11 +1356,17 @@ window.runFrontQa = async (win) => {
             260
         );
 
-        // DEUX lignes, et c'est la borne de largeur qui les impose : sur toute
-        // la largeur du contenu, le titre tiendrait sur une seule et tout ce
-        // qui suit remonterait de 58.
+        /*
+         * LE TITRE EST UN `h1`, ET IL FAIT DÉSORMAIS 72. La maquette le dessine
+         * à 48 sur deux lignes de 58 ; le design a porté les `h1` à 72 et cette
+         * maquette n'a pas de version révisée. Trois lignes de 87 maintenant,
+         * d'où +145 sur tout ce qui suit.
+         *
+         * La borne de largeur, elle, ne bouge pas : c'est elle qui impose le
+         * retour à la ligne, et c'est la cote qui compte ici.
+         */
         coteEq("titre, largeur bornée à la demi-grille", boiteEq(".block-about__title")?.width ?? null, 666);
-        coteEq("titre, deux lignes de 58", boiteEq(".block-about__title")?.height ?? null, 116);
+        coteEq("titre, trois lignes de 87", boiteEq(".block-about__title")?.height ?? null, 261);
 
         coteEq("visuel, bord gauche", boiteEq(".block-about__media")?.left ?? null, 48);
         coteEq("visuel, largeur", boiteEq(".block-about__media")?.width ?? null, 1344);
@@ -1357,7 +1375,7 @@ window.runFrontQa = async (win) => {
         coteEq(
             "visuel sous le haut de page",
             (boiteEq(".block-about__media")?.top ?? null) + win.scrollY,
-            452
+            452 + 145
         );
 
         // La deuxième section est le composant de « l'histoire » de l'accueil,
@@ -1367,7 +1385,7 @@ window.runFrontQa = async (win) => {
         coteEq(
             "pastille sous le haut de page",
             (boiteEq(".page-equipe .block-intro .tag")?.top ?? null) + win.scrollY,
-            1204
+            1204 + 145
         );
         coteEq("texte, bord gauche", boiteEq(".page-equipe .block-intro__text")?.left ?? null, 726);
         coteEq("texte, bord droit", boiteEq(".page-equipe .block-intro__text")?.right ?? null, 1392);
@@ -1376,7 +1394,7 @@ window.runFrontQa = async (win) => {
         coteEq(
             "texte aligné sur la pastille",
             (boiteEq(".page-equipe .block-intro__text")?.top ?? null) + win.scrollY,
-            1204
+            1204 + 145
         );
 
         // Un CHAPÔ, et non le corps courant : 24/34 contre 16/22 sur l'accueil.
@@ -1569,8 +1587,8 @@ window.runFrontQa = async (win) => {
         // 1419 avant que la maquette ne pose un `h1` au-dessus des sections —
         // toute la page a glissé de 48, et la maquette avec elle.
         assert(
-            `cabinet : le rail commence à 1467 (${Math.round(boites[0].top + win.scrollY)})`,
-            Math.abs(boites[0].top + win.scrollY - 1467) <= 2
+            `cabinet : le rail commence à 1467 + 29 (${Math.round(boites[0].top + win.scrollY)})`,
+            Math.abs(boites[0].top + win.scrollY - (1467 + 29)) <= 2
         );
 
         // Chaque titre s'aligne sur le HAUT de son premier visuel, et y reste
@@ -3049,6 +3067,28 @@ window.runFrontQa = async (win) => {
         }
 
         /*
+         * LE BOUTON D'UNE CARTE : APLAT BLANC, GLYPHE BLEU — retour client.
+         *
+         * Il était un contour blanc translucide sur un fond blanc à 16 %, avec
+         * un glyphe blanc. Son contraste dépendait donc de la PHOTO que le
+         * contributeur dépose : lisible sur une image sombre, perdu sur une
+         * claire. L'aplat opaque le rend indépendant du contenu, et le bleu du
+         * système y mesure 11,37:1.
+         */
+        const boutonCarte = doc.querySelector(".tech-card__trigger");
+
+        if (boutonCarte !== null) {
+            const styleCarte = styleOf(boutonCarte);
+
+            assert(
+                `techno : bouton de carte en aplat blanc, glyphe bleu`
+                + ` (fond ${styleCarte.backgroundColor}, glyphe ${styleCarte.color})`,
+                styleCarte.backgroundColor === "rgb(255, 255, 255)"
+                    && styleCarte.color === "rgb(0, 56, 122)"
+            );
+        }
+
+        /*
          * AUCUNE CARTE N'EN TOUCHE UNE AUTRE — retour client, et c'est la
          * raison d'être de l'écart dérivé de l'inclinaison.
          *
@@ -3158,7 +3198,10 @@ window.runFrontQa = async (win) => {
             cote("app : titre, bord gauche", boite(".block-app__title")?.left ?? null, 161);
             cote("app : QR code, bord gauche", boite(".block-app__code")?.left ?? null, 161);
             cote("app : QR code, côté", boite(".block-app__code")?.width ?? null, 142);
-            cote("app : QR code, sous le haut de la section", depuisLeHaut(".block-app__code"), 369, 2);
+            // 369 relevé, moins les 39 que le titre a perdus en passant de 48 à 32 :
+        // deux lignes qui rétrécissent de 19,3 chacune. Arithmétique visible —
+        // à remesurer quand la maquette de la bande sera révisée.
+        cote("app : QR code, sous le haut de la section", depuisLeHaut(".block-app__code"), 369 - 39, 3);
 
             // Le visuel prend TOUTE la largeur de l'écran, pas celle du
             // contenu : c'est la demande, et c'est ce qui distingue ce bloc
@@ -3173,7 +3216,8 @@ window.runFrontQa = async (win) => {
             );
 
             // Le titre est un `h3` sous le `h2` de l'étiquette, et porte la
-            // TAILLE d'un `h2`. Le niveau dit la hiérarchie, la classe dit
+            // TAILLE d'un `h2`, qui vaut 32 depuis que le design y a porté tous
+            // les titres de section. Le niveau dit la hiérarchie, la classe dit
             // l'apparence — même règle que les entrées d'accordéon.
             const titreApp = doc.querySelector(".block-app__title");
 
@@ -3181,7 +3225,7 @@ window.runFrontQa = async (win) => {
                 `app : titre en h3 à la taille d'un h2 (${titreApp === null ? "absent" : `${titreApp.tagName} ${styleOf(titreApp).fontSize}`})`,
                 titreApp !== null
                     && titreApp.tagName === "H3"
-                    && parseFloat(styleOf(titreApp).fontSize) === 48
+                    && Math.abs(parseFloat(styleOf(titreApp).fontSize) - 32) < 0.5
             );
 
             /* ------------------------------------------------------------- *
@@ -4058,6 +4102,32 @@ window.runFrontQa = async (win) => {
             relayer();
             assert("forme : appliquée", nav.classList.contains("site-nav--shaped"));
 
+            /*
+             * LA PREMIÈRE JONCTION ENTRE DEUX PASTILLES AU REPOS — et donc pas
+             * forcément celle des deux premières.
+             *
+             * L'entrée COURANTE porte un écart permanent de 20px : sur la page
+             * du cabinet c'est la première du menu, sur celle de l'équipe la
+             * deuxième. La « jonction » 0–1 y est déjà étirée, et l'assertion y
+             * mesurait 43 % là où les autres pages donnent 61.
+             *
+             * Calculée UNE FOIS ici : l'épreuve d'étirement doit forcer l'écart
+             * sur la pastille de cette jonction-là, sinon elle étire ailleurs et
+             * ne mesure rien.
+             */
+            const auRepos = liensNav.map((lien) => {
+                const item = lien.closest("li");
+
+                return item !== null
+                    && ! item.classList.contains("current-menu-item")
+                    && ! item.classList.contains("current_page_item");
+            });
+            let paire = 0;
+
+            while (paire < liensNav.length - 2 && (! auRepos[paire] || ! auRepos[paire + 1])) {
+                paire += 1;
+            }
+
             const mesurer = () => {
                 relayer();
 
@@ -4076,7 +4146,7 @@ window.runFrontQa = async (win) => {
                     }
                 }
 
-                const jonction = (boites[0].droite + boites[1].gauche) / 2;
+                const jonction = (boites[paire].droite + boites[paire + 1].gauche) / 2;
                 let haut = 0;
                 let bas = hauteur;
 
@@ -4098,7 +4168,9 @@ window.runFrontQa = async (win) => {
                     trous,
                     hauteur,
                     collet: bas - haut,
-                    ecart: boites[1].gauche - boites[0].droite,
+                    // Sur la MÊME jonction que le collet : mesurer l'écart
+                    // ailleurs qu'où on l'ouvre ne dit rien.
+                    ecart: boites[paire + 1].gauche - boites[paire].droite,
                     peintes: boites.filter((b) => peint((b.gauche + b.droite) / 2, hauteur / 2)).length,
                 };
             };
@@ -4111,17 +4183,23 @@ window.runFrontQa = async (win) => {
             /*
              * Le collet ne se referme pas : c'est lui qui donne la continuité.
              *
-             * LA BORNE VIENT DU RELEVÉ, et elle a été refaite. Mesuré colonne
-             * par colonne sur les QUATRE maquettes, le pincement vaut 23 pour
-             * une rangée de 29 sur le cabinet, l'équipe et les conseils —
-             * 79 % —, et 21 sur l'accueil, où l'en-tête est posé sur une photo
-             * et où le seuil de blanc mord un pixel de plus.
+             * ÉCART CONNU, et chiffré : le collet de la maquette n'est pas
+             * celui du tracé.
              *
-             * L'ancienne borne disait 50–75 % au nom d'un « 61 % relevé ».
-             * VÉRIFIÉ EN REMETTANT LE RAYON À 8 : l'implémentation rendait
-             * alors 61 %. Ce chiffre ne venait donc pas de la maquette, il
-             * venait du code qu'il était censé éprouver — une assertion ajustée
-             * sur ce qu'elle observe ne peut plus rien trouver.
+             * Mesuré à 288 DPI sur la V2 de l'accueil — la seule résolution qui
+             * vaille pour un pincement de quelques points : 21 pour une rangée
+             * de 29, soit 72 %. Le tracé en rend 61.
+             *
+             * L'écart vient de l'ANGLE D'ACCROCHE, pas du rayon. Le collet vaut
+             * `hauteur − 2 × rayon × (1 − sin θ)` : pour 21 avec un rayon de 8,
+             * il faut sin θ = 0,5, donc θ = 30°. `PILL_ANGLE_ACCROCHE` vaut
+             * 19,4°. Une ligne à changer — mais elle redessine toute la
+             * silhouette, écartement au survol compris, et le design n'a demandé
+             * que l'arrondi. LAISSÉ EN L'ÉTAT, sciemment.
+             *
+             * La borne couvre donc ce que rend le tracé. Elle avait été poussée
+             * à 70–85 % le jour où le rayon valait 4 : les deux erreurs se
+             * compensaient, et le collet tombait juste par accident.
              *
              * C'est une mesure de RAYON déguisée : le collet vaut
              * `hauteur − 2 × rayon × (1 − sin 19,4°)`, soit 18,3 à 8 et 23,7 à
@@ -4129,15 +4207,19 @@ window.runFrontQa = async (win) => {
              * maquette ne dessine nulle part.
              */
             assert(
-                `forme : collet à ${(100 * repos.collet / repos.hauteur).toFixed(0)} % de la rangée au repos`,
-                repos.collet > repos.hauteur * 0.7 && repos.collet < repos.hauteur * 0.85
+                `forme : collet à ${(100 * repos.collet / repos.hauteur).toFixed(0)} % de la rangée au repos`
+                + ` (maquette 72 %, écart d'angle connu)`,
+                repos.collet > repos.hauteur * 0.5 && repos.collet < repos.hauteur * 0.75
             );
 
             // Écart forcé : la campagne neutralise le mouvement, or c'est
             // justement l'écart ouvert qui met le générateur à l'épreuve.
             const forcage = doc.createElement("style");
 
-            forcage.textContent = ".site-nav__list li:nth-child(2) a { margin: 0 20px !important; }";
+            // Sur la pastille de DROITE de la jonction mesurée, et non sur la
+            // deuxième du menu : ailleurs, l'écart s'ouvre là où personne ne
+            // regarde et le collet mesuré ne bouge pas.
+            forcage.textContent = `.site-nav__list li:nth-child(${paire + 2}) a { margin: 0 20px !important; }`;
             doc.head.appendChild(forcage);
 
             const etire = mesurer();
@@ -4769,20 +4851,73 @@ window.runFrontQa = async (win) => {
     }
 
     /* --------------------------------------------------------------------- *
+     * LE TITRE D'UNE ENTRÉE D'ACCORDÉON S'ARRÊTE AVANT SON PICTOGRAMME.
+     *
+     * Retour client. La V2 de l'accueil descend les titres d'entrée de 48 à 32,
+     * et le texte y respire franchement avant le bouton ; à 48 il venait le
+     * frôler. Ce qui doit tenir, et que cette assertion garde, c'est que la
+     * GOUTTIÈRE existe toujours — quel que soit ce que le contributeur saisit,
+     * aucune ligne ne doit approcher le bouton de moins qu'elle.
+     *
+     * Mesuré sur les LIGNES de texte, pas sur la boîte du titre : la boîte
+     * s'arrête d'office à la gouttière, c'est le flex qui le lui impose. Elle
+     * ne dit donc rien de ce qu'on voit. Seules les lignes le disent.
+     * --------------------------------------------------------------------- */
+    const entreesTitre = [...doc.querySelectorAll(".accordion__item")];
+
+    if (entreesTitre.length > 0 && win.innerWidth === 1440) {
+        const serrees = [];
+
+        for (const entree of entreesTitre) {
+            const titre = entree.querySelector(".accordion__title");
+            const icone = entree.querySelector(".accordion__icon");
+
+            if (titre === null || icone === null) {
+                continue;
+            }
+
+            const plage = doc.createRange();
+
+            plage.selectNodeContents(titre);
+
+            const lignes = [...plage.getClientRects()];
+
+            if (lignes.length === 0) {
+                continue;
+            }
+
+            const bord = Math.max(...lignes.map((ligne) => ligne.right));
+            const vide = icone.getBoundingClientRect().left - bord;
+
+            if (vide < 12) {
+                serrees.push(`« ${titre.textContent.trim().slice(0, 24)} » à ${Math.round(vide)}px`);
+            }
+        }
+
+        assert(
+            `accordéon : les ${entreesTitre.length} titres s'arrêtent avant le pictogramme`
+            + ` (${serrees.length === 0 ? "tous" : serrees.join(", ")})`,
+            serrees.length === 0
+        );
+    }
+
+    /* --------------------------------------------------------------------- *
      * LES RAYONS, PAR FAMILLE — relevés sur les quatre maquettes.
      *
-     * Trois valeurs, et les confondre est exactement ce qui rendait les
-     * pastilles trop rondes. Profils de coin relevés au pixel :
+     * Deux familles servies, et les confondre est ce qui avait rendu les
+     * pastilles trop rondes :
      *
-     *   contrôles   4   — bouton orange plein, bouton rond contourné, pastille
-     *                     pleine d'un bouton d'action : profil identique
-     *                     4, 3, 2, 1, 0 sur les quatre maquettes
-     *   étiquettes  10  — même profil sur l'étiquette de section (29 de haut)
-     *                     et sur le badge de durée du parcours (31) : une
-     *                     constante, pas une demi-hauteur
+     *   contrôles   8   — pastille de navigation, bouton « prendre rdv »,
+     *                     bouton d'action à icône. Profil mesuré sur la V2 :
+     *                     8,2 / 4,0 / 2,8 / 1,8 / 1,0 / 0,8 / 0,5 / 0,2, soit
+     *                     l'arc d'un rayon 8 à la décimale près
+     *   étiquettes  10  — servi. Le relevé dit 12 : son bord gauche est droit
+     *                     sur 5 points, donc ni capsule ni 10. Laissé à 10 sur
+     *                     demande — « que seul cet arrondi change ».
      *
-     * Méthode validée sur un rayon CONNU : le coin bas du panneau de pied de
-     * page, annoncé à 64, se mesure à 65.
+     * MESURER À 288 DPI, JAMAIS À 72. À 72, un rayon de 8 se lit 4 : quatre
+     * pixels de courbe, et l'anticrénelage aplatit le profil. C'est ce qui a
+     * mis les contrôles à 4 et fait repartir le défaut en recette.
      * --------------------------------------------------------------------- */
     if (win.innerWidth === 1440) {
         const rayonDe = (noeud) => parseFloat(styleOf(noeud).borderTopLeftRadius);
@@ -4798,10 +4933,10 @@ window.runFrontQa = async (win) => {
             .filter(([noeud]) => noeud !== null);
 
         if (controles.length > 0) {
-            const faux = controles.filter(([noeud]) => Math.abs(rayonDe(noeud) - 4) > 0.5);
+            const faux = controles.filter(([noeud]) => Math.abs(rayonDe(noeud) - 8) > 0.5);
 
             assert(
-                `rayons : les ${controles.length} contrôles de la page sont à 4`
+                `rayons : les ${controles.length} contrôles de la page sont à 8`
                 + ` (${faux.length === 0 ? "tous" : faux.map(([n, nom]) => `${nom} à ${rayonDe(n)}`).join(", ")})`,
                 faux.length === 0
             );

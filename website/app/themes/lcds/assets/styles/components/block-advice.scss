@@ -97,8 +97,8 @@ $title-inset: min(#{var.$inner-inset}, #{var.$content-inset});
    *
    * L'aplat la masque. Il est sans danger ici, et seulement ici : le titre est
    * BORNÉ à la colonne de gauche (voir `max-width`), il ne peut donc pas
-   * recouvrir la colonne de droite. À `$fs-h2` il la mordrait de 165px — c'est
-   * l'autre raison de `$fs-h2-sticky`.
+   * recouvrir la colonne de droite. À l'ancien `$fs-h2` de 48 il la mordait de
+   * 165px — c'est l'autre raison pour laquelle le design est passé à 32.
    *
    * Le retrait haut, repris en marge négative, étend l'aplat jusqu'au bord de
    * la vue sans déplacer le titre d'un pixel : sans lui, l'étiquette
@@ -118,7 +118,7 @@ $title-inset: min(#{var.$inner-inset}, #{var.$content-inset});
     // jeton.
     margin-left: $title-inset;
     max-width: calc(#{$column-left-end} - #{$title-inset});
-    font-size: var.$fs-h2-sticky;
+    font-size: var.$fs-h2;
   }
 
   // Le rembourrage bas vaut DEUX retraits : la fin de cette section, et le
@@ -187,7 +187,7 @@ $title-inset: min(#{var.$inner-inset}, #{var.$content-inset});
     position: sticky;
     top: calc(
       #{var.$sticky-top} +
-      var(--advice-title-height, calc(#{var.$fs-h2-sticky} * #{var.$lh-title})) +
+      var(--advice-title-height, calc(#{var.$fs-h2} * #{var.$lh-title})) +
       #{fn.toRem(24)}
     );
     // `align-self` n'a pas de prise ici — l'étiquette n'est pas un élément de
