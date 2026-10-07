@@ -1545,6 +1545,82 @@ const initHeaderHeight = () => {
     mesurer();
 };
 
+/**
+ * Vidéo de fond du hero : lecture, arrêt, et préférence d'animation.
+ *
+ * L'attribut `autoplay` n'est PAS dans le balisage, et c'est délibéré : il
+ * aurait fait jouer quelques images avant que ce script puisse l'arrêter sous
+ * `prefers-reduced-motion`, or c'est précisément ce que la préférence interdit.
+ * Ce script est donc le SEUL à lancer la lecture. Sans lui — JavaScript coupé,
+ * script en erreur — le visiteur voit l'image d'attente, qui est la photo
+ * contribuée : le hero n'est jamais vide.
+ *
+ * Le bouton d'arrêt suit la même règle : PHP le rend `hidden`, et il n'apparaît
+ * qu'ici. Un bouton qui n'arrête rien n'est pas un bouton.
+ */
+const initHeroMotion = () => {
+    const video = document.querySelector("[data-hero-video]");
+
+    if (video === null) {
+        return;
+    }
+
+    const hero = video.closest(".hero");
+    const toggle = hero === null ? null : hero.querySelector("[data-hero-motion]");
+    const label = toggle === null ? null : toggle.querySelector("[data-hero-motion-label]");
+
+    if (hero === null || toggle === null || label === null) {
+        return;
+    }
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const showState = (playing) => {
+        hero.classList.toggle("hero--paused", ! playing);
+        label.textContent = playing ? toggle.dataset.labelPause : toggle.dataset.labelPlay;
+    };
+
+    // L'état est posé AVANT d'attendre la promesse : `play()` ne se résout
+    // qu'une fois la vidéo chargée, et jusque-là le bouton n'aurait aucun nom
+    // accessible — relevé au harnais, le libellé restait vide.
+    //
+    // La promesse est REJETÉE quand le navigateur refuse la lecture — économie
+    // de données, onglet ouvert en arrière-plan, règle de lecture automatique.
+    // Sans ce rattrapage, la console reçoit une erreur et l'état affiché ment :
+    // le bouton proposerait d'arrêter une vidéo qui ne joue pas.
+    const startPlayback = () => {
+        showState(true);
+        video.play().catch(() => showState(false));
+    };
+
+    const applyPreference = () => {
+        if (reduceMotion.matches) {
+            video.pause();
+            showState(false);
+
+            return;
+        }
+
+        startPlayback();
+    };
+
+    toggle.addEventListener("click", () => {
+        if (video.paused) {
+            startPlayback();
+
+            return;
+        }
+
+        video.pause();
+        showState(false);
+    });
+
+    reduceMotion.addEventListener("change", applyPreference);
+
+    toggle.hidden = false;
+    applyPreference();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initHeaderMenu();
     initHeaderHeight();
@@ -1557,4 +1633,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initAccordions();
     initJourneys();
     initVolets();
+    initHeroMotion();
 });

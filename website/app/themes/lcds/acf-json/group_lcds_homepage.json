@@ -49,7 +49,7 @@
                             "name": "visuel",
                             "aria-label": "",
                             "type": "image",
-                            "instructions": "Photographie pleine largeur. Cadrée automatiquement : prévoir un sujet centré.",
+                            "instructions": "Photographie pleine largeur. Cadrée automatiquement : prévoir un sujet centré. AVEC UNE VIDÉO, elle devient l'image d'attente : c'est elle qu'on voit pendant le chargement, et c'est elle seule que voient les visiteurs qui ont demandé moins d'animations.",
                             "required": 0,
                             "conditional_logic": false,
                             "wrapper": {
@@ -67,6 +67,26 @@
                             "max_width": 0,
                             "max_height": 0,
                             "max_size": 0
+                        },
+                        {
+                            "key": "field_lcds_hero_video",
+                            "label": "Vidéo de fond",
+                            "name": "video",
+                            "aria-label": "",
+                            "type": "file",
+                            "instructions": "Facultative. Posée, elle joue À LA PLACE de la photo : en boucle, sans son, et le visiteur peut l'arrêter par le bouton posé en bas à gauche. MP4 (H.264) de préférence, cadrage et proportions de la photo. Le fichier part en entier chez le visiteur : au-delà de quelques mégaoctets, l'accueil met longtemps à s'animer sur une connexion ordinaire.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "return_format": "id",
+                            "library": "all",
+                            "min_size": 0,
+                            "max_size": 0,
+                            "mime_types": "mp4,webm"
                         },
                         {
                             "key": "field_lcds_hero_vignette",

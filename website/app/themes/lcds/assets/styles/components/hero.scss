@@ -50,6 +50,62 @@
     }
   }
 
+  // La vidéo reprend la boîte du visuel — même classe, mêmes règles — et n'y
+  // ajoute qu'un aplat : le temps que l'image d'attente arrive, le cadre est
+  // bleu et non blanc, comme le repli du visuel juste au-dessus.
+  &__video {
+    background: var.$blue;
+  }
+
+  /* -------------------------------------------------------------------------
+   * Bouton d'arrêt de la vidéo.
+   *
+   * AUCUNE MAQUETTE NE LE DESSINE — elle ne prévoit pas de vidéo. Il reprend
+   * donc la boîte des boutons ronds du site (52, rayon des contrôles), mais en
+   * blanc sur un voile sombre : la bordure bleu clair des carrousels se perdrait
+   * sur une image quelconque, et c'est le contributeur qui choisit l'image.
+   *
+   * `margin-right: auto` plutôt qu'un positionnement absolu : le hero est déjà
+   * une boîte flexible alignée en bas à droite, et cette seule déclaration pose
+   * le bouton en bas à GAUCHE, à la même hauteur que la carte, sans sortir du
+   * flux ni dupliquer son rembourrage.
+   * ----------------------------------------------------------------------- */
+  &__motion {
+    position: relative;
+    margin-right: auto;
+    display: grid;
+    place-items: center;
+    width: var.$module;
+    height: var.$module;
+    padding: 0;
+    border: 1px solid var.$white;
+    border-radius: var.$radius-control;
+    background: rgba(0, 0, 0, 0.35);
+    color: var.$white;
+    cursor: pointer;
+    transition: background-color var.$fade;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  // Un seul glyphe pour les deux états : celui qui ne sert pas est masqué.
+  &__motion .icon-motion__play {
+    display: none;
+  }
+
+  &--paused &__motion {
+    .icon-motion__pause {
+      display: none;
+    }
+
+    .icon-motion__play {
+      display: block;
+    }
+  }
+
   &__card {
     position: relative;
     display: flex;

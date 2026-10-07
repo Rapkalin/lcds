@@ -32,7 +32,7 @@ relevée sur les maquettes, puis **désignée comme page d'accueil du site**
 
 | Section | Ce qu'elle porte |
 | --- | --- |
-| **Hero** | Visuel pleine largeur, carte d'appel |
+| **Hero** | Visuel pleine largeur — ou vidéo —, carte d'appel |
 | **Texte et galerie** | Étiquette, texte, bouton, rail de visuels défilable |
 | **Accordéon** | Étiquette, entrées dépliables, bouton |
 | **Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
@@ -68,6 +68,26 @@ C'est un champ de la **page**, pas de sa première section. Les maquettes ne
 prévoient aucun titre visible dans le hero : il est rendu **masqué
 visuellement** — invisible à l'écran, lu par les moteurs et les lecteurs
 d'écran. Sans lui, la page n'a aucun `h1`.
+
+### La vidéo du hero
+
+Le hero accepte une **vidéo de fond** à la place de la photo, téléversée en
+médiathèque comme n'importe quel fichier — aucun lien YouTube, aucun service
+tiers, donc aucun cookie à déclarer.
+
+**La photo reste obligatoire : elle devient l'image d'attente.** C'est elle
+qu'on voit pendant le chargement, c'est elle que voient les visiteurs qui ont
+demandé moins d'animations dans leur système, et c'est elle qui reste si le
+navigateur refuse de lancer la lecture. Le hero n'est donc jamais vide.
+
+**La vidéo joue en boucle et sans son**, et un bouton posé en bas à gauche
+permet de l'arrêter : au-delà de cinq secondes, un mouvement automatique doit
+pouvoir être mis en pause (RGAA, critère 13.8 / WCAG 2.2.2).
+
+**Le poids du fichier part en entier chez le visiteur.** Pas de transcodage, pas
+de qualité adaptative : une vidéo de 30 Mo est une vidéo de 30 Mo pour tout le
+monde, y compris en 4G. Viser quelques mégaoctets, en MP4 (H.264), au cadrage de
+la photo.
 
 ### Les formes de cadre
 

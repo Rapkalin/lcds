@@ -7,6 +7,22 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.33.0
+
+### Ajouté
+
+- **Le hero de l'accueil accepte une vidéo de fond**, téléversée en médiathèque,
+  à la place de la photo. Elle joue en boucle et sans son, et un bouton en bas à
+  gauche permet de l'arrêter. La photo reste contribuée : elle devient l'image
+  d'attente, et c'est elle seule que voient les visiteurs qui ont demandé moins
+  d'animations dans leur système.
+
+> La lecture est lancée par le script, jamais par l'attribut `autoplay` : posé
+> dans le balisage, il aurait fait jouer quelques images avant que la préférence
+> d'animation puisse être lue. Sans JavaScript, le hero affiche la photo.
+>
+> Aucune maquette ne dessine ni la vidéo ni son bouton d'arrêt.
+
 ## 2.32.0
 
 ### Ajouté
