@@ -87,6 +87,7 @@ $headingId = $title === '' ? '' : wp_unique_id('section-titre-');
             <?php foreach ($people as $person) : ?>
                 <?php get_template_part('components/person-card', null, [
                     'image' => isset($person['image']) ? (int) $person['image'] : 0,
+                    'hover' => isset($person['hover']) ? (int) $person['hover'] : 0,
                     'name' => isset($person['name']) ? (string) $person['name'] : '',
                     'role' => isset($person['role']) ? (string) $person['role'] : '',
                     'bio' => isset($person['bio']) ? (string) $person['bio'] : '',

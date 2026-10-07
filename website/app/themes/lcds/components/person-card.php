@@ -13,6 +13,9 @@
  *   image int    Identifiant d'attachement du portrait. Absent : le cadre reste
  *                dessiné, comme sur la maquette où dix-sept cartes sur
  *                vingt-neuf attendent encore leur photo.
+ *   hover int    Second portrait, posé SUR le premier et révélé au survol de la
+ *                carte. Facultatif, et IGNORÉ sans portrait de repos : il n'y
+ *                aurait alors rien à remplacer, et il se verrait en permanence.
  *   name  string Nom de la personne.
  *   role  string Fonction, rendue en capitales par le CSS.
  *   bio   string Texte révélé par le bouton. Vide : PAS DE BOUTON — un bouton
@@ -30,6 +33,7 @@ if (! defined('ABSPATH')) {
 }
 
 $image = isset($args['image']) ? (int) $args['image'] : 0;
+$hover = $image === 0 ? 0 : (isset($args['hover']) ? (int) $args['hover'] : 0);
 $name = isset($args['name']) ? trim((string) $args['name']) : '';
 $role = isset($args['role']) ? trim((string) $args['role']) : '';
 $bio = isset($args['bio']) ? (string) $args['bio'] : '';
@@ -41,12 +45,24 @@ if ($image === 0 && $name === '' && $role === '') {
 $panelId = $bio === '' ? '' : wp_unique_id('personne-bio-');
 
 $visual = $image === 0 ? '' : lcds_render_image($image, ['class' => 'person-card__image'], 'medium_large');
+
+// `alt` VIDÉ, et c'est le seul endroit du site qui le fait : c'est la même
+// personne que le portrait de repos, déjà nommée juste à côté. Une seconde
+// alternative la ferait annoncer deux fois sans rien apprendre.
+$hoverVisual = $hover === 0 ? '' : lcds_render_image($hover, [
+    'class' => 'person-card__image person-card__image--hover',
+    'alt' => '',
+], 'medium_large');
 ?>
 
 <article class="person-card">
     <div class="person-card__media">
         <?php if ($visual !== '') : ?>
             <?php echo $visual; ?>
+        <?php endif; ?>
+
+        <?php if ($hoverVisual !== '') : ?>
+            <?php echo $hoverVisual; ?>
         <?php endif; ?>
     </div>
 

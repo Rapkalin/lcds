@@ -7,6 +7,19 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 2.32.0
+
+### Ajouté
+
+- **Une personne de l'équipe peut porter un second portrait, révélé au survol
+  de sa carte.** Facultatif : laissé vide, la carte ne change pas. Le second
+  apparaît aussi au clavier, quand le bouton « + » de la carte prend le focus,
+  et jamais au doigt — c'est un bonus, pas une information. Il est ignoré si le
+  portrait de repos est vide.
+
+> Aucune maquette ne dessine cet état. Le fondu reprend la durée des autres
+> survols du site, et se coupe sous `prefers-reduced-motion`.
+
 ## 2.31.0
 
 ### Ajouté

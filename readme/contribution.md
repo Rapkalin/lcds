@@ -229,7 +229,7 @@ profite à l'autre.
 | Groupes → Étiquette | « les docteurs », « le secrétariat »… |
 | Groupes → Couleur de la puce | Rouge sur la maquette, pour les cinq |
 | Groupes → Texte | La présentation du groupe, sous l'étiquette |
-| Groupes → Personnes | Une entrée par carte |
+| Groupes → Personnes | Une entrée par carte : portrait, portrait au survol (facultatif), nom, fonction, présentation |
 
 **Un groupe = une rangée qui s'ouvre par son étiquette.** Elle occupe la
 première case de la grille ; les cartes suivent, trois par rangée, et
@@ -247,6 +247,18 @@ resserrer la grille.
 bustes deux fois plus hauts que larges : c'est le carré du haut qui s'affiche.
 Une photo cadrée large perd donc ses côtés, et une photo où le visage est bas
 perd le visage.
+
+**Le second portrait est facultatif, et c'est le survol de la carte.** Rempli,
+il remplace le portrait quand la souris passe sur la carte, et revient quand
+elle en sort — au clavier, il apparaît aussi quand le bouton « + » de la carte
+prend le focus. Prenez les deux photos **au même endroit et au même cadrage** :
+elles se superposent exactement, et tout ce qui bouge entre les deux se voit.
+Laissé vide, la carte ne change pas au survol. Il est ignoré si le portrait de
+repos est vide : il n'y aurait rien à remplacer.
+
+**Au doigt, il n'y a pas de survol.** Sur mobile et sur tablette, le second
+portrait ne s'affiche jamais — ne lui confiez donc aucune information, c'est un
+bonus.
 
 **Le bouton « + » n'apparaît que si la présentation est remplie.** Un bouton
 qui n'ouvre rien n'est pas un bouton.

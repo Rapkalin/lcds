@@ -311,6 +311,31 @@
                                     "mime_types": ""
                                 },
                                 {
+                                    "key": "field_lcds_equipe_personne_photo_survol",
+                                    "label": "Portrait au survol",
+                                    "name": "photo_survol",
+                                    "aria-label": "",
+                                    "type": "image",
+                                    "instructions": "Facultatif. Fourni, il REMPLACE le portrait quand la souris passe sur la carte, et revient au portrait quand elle en sort. Même cadre carré, même cadrage par le haut : deux photos prises au même endroit se remplacent sans que rien ne saute. Laissé vide, la carte ne change pas au survol.",
+                                    "required": 0,
+                                    "conditional_logic": false,
+                                    "wrapper": {
+                                        "width": "",
+                                        "class": "",
+                                        "id": ""
+                                    },
+                                    "return_format": "id",
+                                    "preview_size": "medium",
+                                    "library": "all",
+                                    "min_width": "",
+                                    "min_height": "",
+                                    "min_size": "",
+                                    "max_width": "",
+                                    "max_height": "",
+                                    "max_size": "",
+                                    "mime_types": ""
+                                },
+                                {
                                     "key": "field_lcds_equipe_personne_nom",
                                     "label": "Nom",
                                     "name": "nom",

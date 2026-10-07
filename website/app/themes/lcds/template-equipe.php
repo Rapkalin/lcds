@@ -51,6 +51,7 @@ foreach ($rows as $row) {
     foreach ((is_array($row['personnes'] ?? null) ? $row['personnes'] : []) as $person) {
         $people[] = [
             'image' => lcds_attachment_id($person['photo'] ?? 0),
+            'hover' => lcds_attachment_id($person['photo_survol'] ?? 0),
             'name' => trim((string) ($person['nom'] ?? '')),
             'role' => trim((string) ($person['role'] ?? '')),
             'bio' => (string) ($person['bio'] ?? ''),

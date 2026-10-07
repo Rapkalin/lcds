@@ -44,6 +44,8 @@
 // posés dans un cadre carré : au centre, le cadrage coupait le haut du crâne.
 // Vérifié sur la maquette — elle montre le carré SUPÉRIEUR de la photo.
 .person-card__media {
+  // Cage du second portrait, qui se pose sur le premier.
+  position: relative;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   // Aplat de repli : le cadre reste dessiné tant qu'aucune photo n'est fournie,
@@ -56,6 +58,39 @@
   height: 100%;
   object-fit: cover;
   object-position: top;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Le second portrait, s'il est contribué.
+ *
+ * AUCUNE MAQUETTE NE DESSINE CET ÉTAT — `LCDS_equipe.pdf` est une page au
+ * repos. Le fondu reprend donc la durée des autres survols du site.
+ *
+ * Il est posé SUR le premier plutôt que de le remplacer : les deux restent
+ * chargés, le fondu a quelque chose à traverser, et le portrait de repos reste
+ * celui que lisent les lecteurs d'écran et l'impression.
+ *
+ * `:focus-within` en plus du survol : le bouton de la carte est son seul
+ * élément focalisable, et sans cette ligne l'effet n'existerait que pour la
+ * souris. Au doigt, il ne se déclenche pas — un second portrait est un bonus,
+ * jamais une information.
+ * ------------------------------------------------------------------------- */
+.person-card__image--hover {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var.$fade;
+}
+
+.person-card:hover .person-card__image--hover,
+.person-card:focus-within .person-card__image--hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .person-card__image--hover {
+    transition: none;
+  }
 }
 
 .person-card__foot {
