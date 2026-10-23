@@ -7,6 +7,16 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.1.3
+
+### Corrigé
+
+- **Les e-mails repartent en préprod.** En mode Sendmail, le plugin imposait
+  l'adresse d'expédition comme expéditeur technique du message, ce que le relais
+  de l'hébergeur IONOS refuse (« Sender address is not allowed ») : tous les
+  e-mails échouaient, bouton de test compris. Ce mode envoie désormais comme
+  WordPress le faisait avant le plugin. Le mode SMTP ne change pas.
+
 ## 3.1.2
 
 ### Corrigé

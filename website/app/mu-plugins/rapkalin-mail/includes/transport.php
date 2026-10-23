@@ -88,18 +88,24 @@ function rapkalin_mail_configure_transport(\PHPMailer\PHPMailer\PHPMailer $phpma
         } else {
             $phpmailer->SMTPSecure = $config['smtp_encryption'];
         }
+
+        // Left empty, the SMTP envelope sender is not the From address and the
+        // message fails SPF checks.
+        if (filter_var($phpmailer->Sender, FILTER_VALIDATE_EMAIL) === false) {
+            $phpmailer->Sender = $phpmailer->From;
+        }
     } else {
         // mail() and not isSendmail(): both hand the message to the binary in
         // sendmail_path, but isSendmail() needs popen(), which shared hosts may
         // disable. mail() is also WordPress' default, so a server with nothing
         // configured keeps sending exactly as it did before this plugin.
+        //
+        // No envelope sender here: PHPMailer would pass it as `-f`, and the
+        // IONOS relay rejects any address but its account's own
+        // ("550 Sender address is not allowed"). Cleared, not just left alone:
+        // WordPress reuses one PHPMailer per request and never resets it.
         $phpmailer->isMail();
-    }
-
-    // Left empty, the envelope sender falls back to the system default
-    // (www-data@hostname) and the message fails SPF checks.
-    if (filter_var($phpmailer->Sender, FILTER_VALIDATE_EMAIL) === false) {
-        $phpmailer->Sender = $phpmailer->From;
+        $phpmailer->Sender = '';
     }
 }
 add_action('phpmailer_init', 'rapkalin_mail_configure_transport');

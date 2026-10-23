@@ -37,6 +37,12 @@ envoie par `mail()` tant que rien n'y est enregistré.
 > préprod, l'envoi avait changé de mécanisme sans que personne ne touche à la
 > page. Corrigé en 3.1.1.
 
+> **Pas d'expéditeur d'enveloppe (`-f`) en mode Sendmail.** Le relais d'IONOS
+> (`msmtp`, compte par défaut de l'hébergement) refuse toute autre adresse que
+> la sienne : `550 Sender address is not allowed`, constaté en préprod le
+> 23/10/2026 — `mail()` sans `-f` passe, avec `-f` il échoue. En SMTP,
+> l'enveloppe reprend l'adresse d'expédition, pour le SPF.
+
 ## Le mot de passe SMTP
 
 - **Chiffré en base** (libsodium, `secretbox`). La clé est dérivée de
