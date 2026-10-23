@@ -50,8 +50,8 @@ Deux pièges déjà rencontrés :
 
 ### Le PHP que WP-CLI utilise
 
-Le déploiement **choisit lui-même** un binaire PHP ≥ 8.4 parmi `php8.4`,
-`php8.4-cli`, `php84`, `/usr/bin/php8.4`, `/usr/local/bin/php8.4`, puis `php`,
+Le déploiement **choisit lui-même** un binaire PHP ≥ 8.5 parmi `php8.5`,
+`php8.5-cli`, `php85`, `/usr/bin/php8.5`, `/usr/local/bin/php8.5`, puis `php`,
 et invoque WP-CLI avec :
 
 ```bash
@@ -70,7 +70,7 @@ Pour trouver le bon binaire sur un hébergement inconnu :
 
 ```bash
 ls /usr/bin/php* /usr/local/bin/php* 2>/dev/null
-for b in php php8.4 php8.4-cli php84; do
+for b in php php8.5 php8.5-cli php85; do
   command -v "$b" >/dev/null && printf '%-12s %s\n' "$b" "$($b -r 'echo PHP_VERSION;')"
 done
 ```

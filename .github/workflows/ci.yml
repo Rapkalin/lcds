@@ -31,10 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer PHP 8.4
+      - name: Installer PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
       # composer.lock est committé → install déterministe.
@@ -51,10 +51,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer PHP 8.4
+      - name: Installer PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
       - name: Installer les dépendances
@@ -69,10 +69,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer PHP 8.4
+      - name: Installer PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
       # Audite composer.lock contre la base d'avis de sécurité (Packagist /
@@ -105,10 +105,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer Node 20
+      - name: Installer Node 26
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '26'
           cache: npm
           cache-dependency-path: website/app/themes/lcds/package-lock.json
 

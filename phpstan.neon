@@ -8,9 +8,9 @@ includes:
 parameters:
     level: 6
 
-    # Always analyse against PHP 8.4, whatever the runtime version of the host
+    # Always analyse against PHP 8.5, whatever the runtime version of the host
     # or the CI image → reproducible result everywhere.
-    phpVersion: 80400
+    phpVersion: 80500
 
     paths:
         - website/app/themes/lcds

@@ -13,7 +13,7 @@ poussée annule le run précédent encore en cours (`concurrency`).
 | **php-tests** | `composer test` — suite Pest. |
 | **dependency-cve** | `composer audit --locked --abandoned=ignore` — audite `composer.lock` contre la base d'avis de sécurité Packagist/GitHub, sans installer `vendor/`. Un paquet abandonné (≠ vulnérable) ne fait pas échouer le job. |
 | **secret-scan** | gitleaks sur l'**historique complet** (`fetch-depth: 0`), pas seulement l'état courant. |
-| **build-front** | Node 20, `npm ci` puis `npm run build`. `dist/` n'étant pas versionné, ce job vérifie que la compilation passe toujours ; il ne publie aucun artefact. |
+| **build-front** | Node 26, `npm ci` puis `npm run build`. `dist/` n'étant pas versionné, ce job vérifie que la compilation passe toujours ; il ne publie aucun artefact. |
 
 `composer.lock` étant committé, l'installation est **déterministe**.
 

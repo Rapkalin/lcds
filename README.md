@@ -3,7 +3,7 @@
 Le site officiel de **La Clinique Du Sourire**.
 
 ![wordpress](https://img.shields.io/badge/wordpress-v7.0-0678BE.svg?style=flat-square)
-![php](https://img.shields.io/badge/PHP-v8.4-828cb7.svg?style=flat-square)
+![php](https://img.shields.io/badge/PHP-v8.5-828cb7.svg?style=flat-square)
 ![composer](https://img.shields.io/badge/composer-v2-126E75.svg?style=flat-square)
 ![Node](https://img.shields.io/badge/node-v20-644D31.svg?style=flat-square)
 ![webpack](https://img.shields.io/badge/webpack-v5-157B25.svg?style=flat-square)
@@ -60,7 +60,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 
 ## Socle technique
 
-- **Environnement Docker** — Apache + PHP 8.4, MySQL 8.4, phpMyAdmin, Mailpit et un
+- **Environnement Docker** — Apache + PHP 8.5, MySQL 8.4, phpMyAdmin, Mailpit et un
   conteneur Node pour le build du thème. Projet bind-monté, initialisation
   idempotente au démarrage.
 - **Configuration par environnement** — `config/application.php` + `config/environments/`,

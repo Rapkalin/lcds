@@ -7,6 +7,32 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.0.0
+
+### Rupture de déploiement
+
+- **Le site exige désormais PHP 8.5**, au web **et** en ligne de commande.
+  Sur un hébergement resté en 8.4, l'autoloader de Composer refuse de démarrer
+  et **toutes les pages tombent en erreur 500**. Régler l'hébergeur en 8.5
+  **avant** le prochain déploiement, puis rejouer les contrôles de
+  [`readme/deploiement.md`](readme/deploiement.md) (WebP de GD, PHP du SSH).
+  Le déploiement cherche maintenant `php8.5` pour WP-CLI.
+
+### Modifié
+
+- Environnement Docker en **PHP 8.5** et **Node 26** (Node 20 n'est plus
+  maintenu depuis avril 2026). `docker compose build php` est nécessaire après
+  la mise à jour du dépôt.
+- Toutes les dépendances PHP et front à leur dernière version : WordPress
+  7.1.3, Yoast SEO 28.7, et, côté outillage, Babel 8, webpack-cli 7,
+  sass-loader 17. Aucune vulnérabilité connue (`composer audit`, `npm audit`).
+  Rendu du front inchangé, campagne QA comprise.
+
+> En développement, les avertissements que Yoast et WP-CLI déclenchent sous
+> PHP 8.5 vont dans `debug.log` au lieu de s'imprimer dans les pages. Ceux du
+> code du projet restent affichés. Filtre temporaire, voir
+> [`readme/docker.md`](readme/docker.md).
+
 ## 2.33.0
 
 ### Ajouté

@@ -55,10 +55,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer PHP 8.4
+      - name: Installer PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
       # Les plugins GRATUITS sont téléchargés ici (wpackagist), pas versionnés.
@@ -66,10 +66,10 @@ jobs:
       - name: Installer les dépendances PHP (sans dev)
         run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
-      - name: Installer Node 20
+      - name: Installer Node 26
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '26'
           cache: npm
           cache-dependency-path: website/app/themes/lcds/package-lock.json
 
@@ -257,7 +257,7 @@ jobs:
             ROOT="$HOME/${{ inputs.remote_path }}"
             cd "$ROOT"
 
-            # WP-CLI charge l'autoloader de Composer, qui EXIGE PHP >= 8.4 : le
+            # WP-CLI charge l'autoloader de Composer, qui EXIGE PHP >= 8.5 : le
             # `platform_check.php` produit à la construction refuse net en
             # dessous, et rien ne s'exécute.
             #
@@ -272,9 +272,9 @@ jobs:
             # choisi AVEC le phar en argument.
             WP_BIN=$(command -v wp 2>/dev/null || true)
             PHP_BIN=""
-            for candidat in php8.4 php8.4-cli php84 /usr/bin/php8.4 /usr/local/bin/php8.4 php; do
+            for candidat in php8.5 php8.5-cli php85 /usr/bin/php8.5 /usr/local/bin/php8.5 php; do
               chemin=$(command -v "$candidat" 2>/dev/null) || continue
-              "$chemin" -r 'exit(PHP_VERSION_ID >= 80400 ? 0 : 1);' >/dev/null 2>&1 || continue
+              "$chemin" -r 'exit(PHP_VERSION_ID >= 80500 ? 0 : 1);' >/dev/null 2>&1 || continue
               PHP_BIN="$chemin"
               break
             done
@@ -296,7 +296,7 @@ jobs:
               # `::warning::` remonte dans le résumé du run : sans ça le message
               # se perd dans le log, et une purge sautée passe inaperçue —
               # toutes les commandes `wp` sont en `|| true`.
-              echo "::warning::Aucun PHP >= 8.4 en ligne de commande sur le serveur (défaut : $(php -v 2>/dev/null | head -1)). Amorçage des menus et purges de cache NON exécutés."
+              echo "::warning::Aucun PHP >= 8.5 en ligne de commande sur le serveur (défaut : $(php -v 2>/dev/null | head -1)). Amorçage des menus et purges de cache NON exécutés."
             else
               # Les menus et leurs entrées par défaut. L'amorçage est accroché à
               # `admin_init` dans le thème : sans cet appel, le site n'aurait pas
@@ -319,7 +319,7 @@ jobs:
             # ⚠️ L'OPcache n'est vidé que par un rechargement de PHP-FPM. À
             # décommenter avec la commande de l'hébergeur, sinon l'ancien code
             # continue de tourner après le déploiement.
-            # sudo systemctl reload php8.4-fpm
+            # sudo systemctl reload php8.5-fpm
 
       # Seul composer.lock est nécessaire ici (voir l'étape suivante) : on évite
       # de cloner tout le dépôt pour un fichier.

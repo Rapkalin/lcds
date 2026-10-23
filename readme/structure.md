@@ -13,7 +13,7 @@ lcds/
 ├── docker/
 │   ├── apache/000-default.conf # Vhost du conteneur (AllowOverride All)
 │   └── php/
-│       ├── Dockerfile          # PHP 8.4 + Apache + WP-CLI + Composer
+│       ├── Dockerfile          # PHP 8.5 + Apache + WP-CLI + Composer
 │       └── entrypoint.sh       # Dépendances -> .env -> base -> init -> apache
 ├── config/
 │   ├── application.php         # Configuration de base (lit le .env racine)

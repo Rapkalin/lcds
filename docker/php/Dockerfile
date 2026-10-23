@@ -1,5 +1,5 @@
 # =============================================================================
-# LCDS — image PHP 8.4 + Apache pour le développement.
+# LCDS — image PHP 8.5 + Apache pour le développement.
 #
 # Images publiques uniquement (pas de registre privé) : le dépôt est sur GitHub
 # et doit pouvoir être construit par n'importe qui.
@@ -8,7 +8,7 @@
 # Une image de production (code figé, opcache.validate_timestamps=0) sera à
 # ajouter le jour où une cible de déploiement existera — voir readme/ci-cd.md.
 # =============================================================================
-FROM php:8.4-apache
+FROM php:8.5-apache
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev \
@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # gd est compilé avec webp : le mu-plugin lcds-webp en dépend pour encoder les
 # sous-tailles d'images. Retirer --with-webp casserait la conversion en silence,
 # WordPress se rabattant sur le format source — voir readme/images.md.
+# No opcache here: PHP 8.5 compiles it in, and docker-php-ext-install fails on it.
 RUN docker-php-ext-configure intl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
@@ -37,8 +38,7 @@ RUN docker-php-ext-configure intl \
         zip \
         intl \
         gd \
-        exif \
-        opcache
+        exif
 
 RUN { \
         echo 'upload_max_filesize = 64M'; \
@@ -61,8 +61,13 @@ RUN { \
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-RUN curl -fsSL -o /usr/local/bin/wp \
+# The WP-CLI 2.12 phar bundles code that PHP 8.5 deprecates, compiled before
+# WordPress loads: only an ini setting reaches it. WordPress resets
+# error_reporting once booted, so the project's own deprecations still show.
+RUN curl -fsSL -o /usr/local/bin/wp-cli.phar \
         https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && printf '#!/bin/sh\nexec php -d "error_reporting=E_ALL & ~E_DEPRECATED" /usr/local/bin/wp-cli.phar "$@"\n' \
+        > /usr/local/bin/wp \
     && chmod +x /usr/local/bin/wp
 
 # Filet pour un serveur MySQL présentant un certificat auto-signé : le client

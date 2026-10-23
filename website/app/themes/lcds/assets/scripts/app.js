@@ -1,6 +1,6 @@
 // /!\ CAUTION /!\
 // This loads the css even though it is not use here do not remove it
-import css from "../styles/app.scss"
+import "../styles/app.scss"
 // /!\ END OF CAUTION /!\
 
 /**

@@ -4,11 +4,11 @@
 
 | Service | Image | Rôle | Port hôte |
 | --- | --- | --- | --- |
-| `php` | construite (`docker/php/Dockerfile`) | PHP 8.4 + Apache, sert le docroot `website/` | `APP_PORT` (8020) |
+| `php` | construite (`docker/php/Dockerfile`) | PHP 8.5 + Apache, sert le docroot `website/` | `APP_PORT` (8020) |
 | `db` | `mysql:8.4` | Base de données | `DB_PORT` (3307) |
 | `phpmyadmin` | `phpmyadmin` | Interface base | `PMA_PORT` (8021) |
 | `mailpit` | `axllent/mailpit` | Capture des mails sortants | `MAILPIT_PORT` (8025) |
-| `node` | `node:20` | Build du thème (profil `tools`) | — |
+| `node` | `node:26` | Build du thème (profil `tools`) | — |
 
 Le service `node` porte le profil `tools` : il ne démarre **pas** avec
 `docker compose up`, on l'invoque à la demande
@@ -121,6 +121,37 @@ MySQL du conteneur `db` :
 `dwp search-replace …` (PHP pur), `dwp db tables`, `dwp db size`, `dwp option`,
 `dwp plugin`, `dwp theme`, `dwp core`… phpMyAdmin reste disponible pour explorer
 la base à la souris.
+
+## Dépréciations PHP 8.5 des dépendances tierces (filtre temporaire)
+
+PHP 8.5 déprécie une syntaxe encore présente dans **Yoast SEO 28.7** (`null`
+comme clé de tableau) et dans le phar **WP-CLI 2.12.0** (`case …;` au lieu de
+`case …:`). Ce sont leurs dernières versions au 23/10/2026. En développement,
+`WP_DEBUG_DISPLAY` imprime ces avis **dans le HTML** : la mise en page casse et
+`bin/qa-front.sh` passe au rouge (13 blocs au lieu d'un, mesuré).
+
+Deux filtres, qui ne touchent **que** les dépréciations du moteur venant du
+code tiers :
+
+- `website/app/mu-plugins/lcds-third-party-deprecations.php` : les
+  `E_DEPRECATED` levées hors de `mu-plugins/` et `themes/` partent dans
+  `debug.log` au lieu de la page. **Celles de notre code restent affichées.**
+  Inactif quand `WP_DEBUG_DISPLAY` est coupé (préprod, prod).
+- Dans l'image Docker, `wp` est un lanceur qui appelle le phar avec
+  `error_reporting=E_ALL & ~E_DEPRECATED` : l'avis de WP-CLI est émis avant le
+  chargement de WordPress, aucun gestionnaire PHP ne peut l'intercepter.
+  WordPress rétablit `E_ALL` en démarrant : nos dépréciations restent visibles
+  sous WP-CLI aussi (vérifié).
+
+**À retirer** dès que Yoast et WP-CLI publient une version propre en 8.5. Pour
+le savoir : supprimer le mu-plugin et compter les avis sur l'accueil.
+
+```bash
+curl -s http://localhost:8020/ | grep -c Deprecated   # 0 attendu sans le mu-plugin
+```
+
+Hors Docker, le WP-CLI du serveur affiche encore son avis dans le journal de
+déploiement : bruit sans effet, aucune étape ne lit sa sortie.
 
 ## Dépannage
 

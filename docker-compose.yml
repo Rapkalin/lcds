@@ -3,7 +3,7 @@
 # Compose v2 (la clé "version:" est obsolète, volontairement omise)
 #
 # Services :
-#   php        : PHP 8.4 + Apache, sert le docroot website/
+#   php        : PHP 8.5 + Apache, sert le docroot website/
 #   db         : MySQL 8.4 (LTS)
 #   phpmyadmin : interface base de données
 #   mailpit    : capture les mails sortants (le formulaire de contact n'envoie
@@ -19,7 +19,7 @@
 
 services:
   # ---------------------------------------------------------------------------
-  # PHP 8.4 + Apache. L'entrypoint attend la base puis lance bin/init.sh
+  # PHP 8.5 + Apache. L'entrypoint attend la base puis lance bin/init.sh
   # (installation WordPress idempotente).
   # ---------------------------------------------------------------------------
   php:
@@ -52,7 +52,7 @@ services:
 
   # ---------------------------------------------------------------------------
   # MySQL 8.4 (LTS)
-  # L'authentification par défaut est caching_sha2_password : PHP 8.4 (mysqlnd)
+  # L'authentification par défaut est caching_sha2_password : PHP 8.5 (mysqlnd)
   # la gère nativement, et l'entrypoint teste la connexion via mysqli — le même
   # chemin que WordPress — plutôt qu'avec un client externe.
   # ---------------------------------------------------------------------------
@@ -121,14 +121,14 @@ services:
       - lcds-network
 
   # ---------------------------------------------------------------------------
-  # Node 20 — build du thème. Profil "tools" : ne démarre PAS avec
+  # Node 26 — build du thème. Profil "tools" : ne démarre PAS avec
   # `docker compose up`. Utilisation ponctuelle :
   #   docker compose run --rm node npm ci
   #   docker compose run --rm node npm run build
   #   docker compose run --rm --service-ports node npm run dev
   # ---------------------------------------------------------------------------
   node:
-    image: node:20
+    image: node:26
     container_name: lcds-node
     profiles: ["tools"]
     working_dir: /app
