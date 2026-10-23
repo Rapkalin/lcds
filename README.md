@@ -42,6 +42,7 @@ sur le serveur) — voir [`readme/installation.md`](readme/installation.md).
 | Environnement Docker, services, dépannage | [`readme/docker.md`](readme/docker.md) |
 | Arborescence et principes d'organisation | [`readme/structure.md`](readme/structure.md) |
 | Durcissement, en-têtes HTTP, CSP, formulaire de contact | [`readme/securite.md`](readme/securite.md) |
+| E-mails sortants : sendmail ou SMTP, e-mail de test | [`readme/email.md`](readme/email.md) |
 | Cache applicatif, cache pleine page, OPcache | [`readme/cache.md`](readme/cache.md) |
 | Tokens, grille, polices, invalidation des assets | [`readme/front.md`](readme/front.md) |
 | Images : conversion WebP et helper d'affichage | [`readme/images.md`](readme/images.md) |

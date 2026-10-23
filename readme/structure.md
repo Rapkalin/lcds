@@ -40,6 +40,8 @@ lcds/
 │       │   ├── bedrock-autoloader.php   # Charge les mu-plugins en sous-dossier
 │       │   ├── lcds-cache.php           # Cache applicatif (point d'entrée)
 │       │   ├── lcds-webp.php            # Conversion WebP (point d'entrée)
+│       │   ├── lcds-third-party-deprecations.php  # Dépréciations PHP 8.5 tierces hors des pages (temporaire)
+│       │   ├── rapkalin-mail/           # Transport des e-mails + Réglages → Email
 │       │   ├── enums/                   # LcdsCacheKey, LcdsCacheGroup
 │       │   ├── cache/                   # Moteur + invalidation
 │       │   └── webp/                    # Configuration + filtres de conversion

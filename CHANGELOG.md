@@ -7,6 +7,27 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.1.0
+
+### Ajouté
+
+- **Réglages → Email** : un administrateur choisit comment partent les e-mails
+  du site, par le `sendmail` du serveur ou par un relais SMTP (hôte, port,
+  chiffrement, identifiants), règle l'expéditeur, et dispose d'un bouton
+  **« Send test email »** qui affiche l'erreur exacte en cas d'échec. Le mot de
+  passe SMTP est chiffré en base et jamais réaffiché.
+
+### Modifié
+
+- Le transport des e-mails quitte le thème pour le mu-plugin `rapkalin-mail`,
+  qui sert désormais **tous** les envois du site.
+- **Quand le `.env` renseigne `SMTP_HOST`, il prime sur la page**, qui
+  l'annonce. Rien ne change donc sur un environnement déjà configuré par le
+  `.env`. Pour piloter l'envoi depuis l'admin, vider `SMTP_HOST` sur le
+  serveur — voir [`readme/email.md`](readme/email.md).
+
+> L'interface de la page est en anglais, à la demande.
+
 ## 3.0.0
 
 ### Rupture de déploiement

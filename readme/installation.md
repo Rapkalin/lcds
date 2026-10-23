@@ -137,7 +137,8 @@ Aucun mail ne sort de la machine : le `.env` pointe `SMTP_HOST` sur le conteneur
 **Mailpit**, qui capture tout et l'affiche sur <http://localhost:8025>. C'est ce
 qui permet de tester le formulaire de contact sans risquer d'écrire à un vrai
 destinataire. Pour tester un relais réel, réactiver les lignes `# LEGACY`
-correspondantes du `.env`.
+correspondantes du `.env`. Le `.env` prime sur la page Réglages → Email tant
+que `SMTP_HOST` y est renseigné — voir [`email.md`](email.md).
 
 ## Sans Docker (non recommandé)
 

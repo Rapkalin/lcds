@@ -1,13 +1,10 @@
 <?php
 
 /**
- * Contact form: SMTP transport, AJAX handler and field rendering.
+ * Contact form: AJAX handler and field rendering.
  *
- * Mail goes through wp_mail() and the `phpmailer_init` hook rather than a
- * separately-required PHPMailer: WordPress ships its own copy of the
- * PHPMailer\PHPMailer\PHPMailer class and loads it with a bare require_once, so
- * instantiating a Composer copy of the same class in the same request is a fatal
- * redeclaration waiting to happen.
+ * The outgoing transport (sendmail or SMTP, sender address) is not configured
+ * here: the rapkalin-mail mu-plugin owns it for every wp_mail() of the site.
  *
  * @package lcds
  */
@@ -54,71 +51,6 @@ function lcds_contact_allowed_uploads(): array
         'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ];
 }
-
-/**
- * Sender address, from the environment.
- *
- * This MUST go through the `wp_mail_from` filter and not through
- * `phpmailer_init`: wp_mail() calls setFrom() BEFORE firing phpmailer_init, so a
- * From set in that hook arrives too late. WordPress' own default is
- * `wordpress@{host}`, which PHPMailer rejects outright when the host carries no
- * dot (`localhost`, `localhost:8080`) — every send would fail.
- */
-function lcds_mail_from(string $from): string
-{
-    $configured = (string) env('MAIL_FROM');
-
-    return is_email($configured) ? $configured : $from;
-}
-add_filter('wp_mail_from', 'lcds_mail_from');
-
-/**
- * Sender name, from the environment.
- */
-function lcds_mail_from_name(string $name): string
-{
-    $configured = (string) env('MAIL_FROM_NAME');
-
-    return $configured !== '' ? $configured : $name;
-}
-add_filter('wp_mail_from_name', 'lcds_mail_from_name');
-
-/**
- * Point PHPMailer at the project SMTP relay when one is configured.
- *
- * Without SMTP_HOST we leave WordPress on PHP's mail(), which keeps local
- * environments working without credentials.
- */
-function lcds_configure_smtp(\PHPMailer\PHPMailer\PHPMailer $phpmailer): void
-{
-    $host = (string) env('SMTP_HOST');
-
-    if ($host === '') {
-        return;
-    }
-
-    $phpmailer->isSMTP();
-    $phpmailer->Host = $host;
-    $phpmailer->Port = (int) (env('SMTP_PORT') ?: 587);
-    $phpmailer->SMTPAuth = (bool) env('SMTP_AUTH');
-    $phpmailer->Username = (string) env('SMTP_USERNAME');
-    $phpmailer->Password = (string) env('SMTP_PASSWORD');
-
-    $secure = (string) env('SMTP_SECURE');
-
-    if ($secure === '') {
-        // Relais local sans chiffrement (Mailpit) : PHPMailer tenterait
-        // STARTTLS d'office et l'envoi échouerait.
-        $phpmailer->SMTPAutoTLS = false;
-    } else {
-        $phpmailer->SMTPSecure = $secure;
-    }
-
-    // The From is already set by the wp_mail_from / wp_mail_from_name filters
-    // above, which run early enough for wp_mail() to accept it.
-    $phpmailer->CharSet = 'UTF-8';
-}
-add_action('phpmailer_init', 'lcds_configure_smtp');
 
 /**
  * Hidden inputs every contact form must carry: the nonce that authenticates the

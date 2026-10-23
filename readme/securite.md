@@ -134,7 +134,9 @@ Point le plus exposé du site : un endpoint AJAX **non authentifié**
 Le transport passe par **`wp_mail()` + le hook `phpmailer_init`**, jamais par une
 instance PHPMailer tirée de Composer : WordPress embarque sa propre copie de
 `PHPMailer\PHPMailer\PHPMailer` et la charge par un `require_once` nu — deux
-copies dans la même requête = erreur fatale de redéclaration.
+copies dans la même requête = erreur fatale de redéclaration. Il est configuré
+par le mu-plugin `rapkalin-mail` (Réglages → Email), dont le mot de passe SMTP
+est chiffré en base — voir [`email.md`](email.md).
 
 ## 5. CI
 

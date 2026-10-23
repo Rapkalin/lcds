@@ -43,6 +43,7 @@ website/app/mu-plugins/*/
 !website/app/mu-plugins/enums/
 !website/app/mu-plugins/cache/
 !website/app/mu-plugins/webp/
+!website/app/mu-plugins/rapkalin-mail/
 
 # Drop-ins générés par WP Super Cache. À committer une fois générés si le
 # cache pleine page est activé sur le projet — voir readme/cache.md.
