@@ -89,7 +89,11 @@ function rapkalin_mail_configure_transport(\PHPMailer\PHPMailer\PHPMailer $phpma
             $phpmailer->SMTPSecure = $config['smtp_encryption'];
         }
     } else {
-        $phpmailer->isSendmail();
+        // mail() and not isSendmail(): both hand the message to the binary in
+        // sendmail_path, but isSendmail() needs popen(), which shared hosts may
+        // disable. mail() is also WordPress' default, so a server with nothing
+        // configured keeps sending exactly as it did before this plugin.
+        $phpmailer->isMail();
     }
 
     // Left empty, the envelope sender falls back to the system default

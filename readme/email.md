@@ -12,7 +12,7 @@ LCDS » n'y a pas accès (403).
 
 | Réglage | Effet |
 | --- | --- |
-| **Sendmail** | Le binaire `sendmail` du serveur (`sendmail_path` de PHP). Valeur par défaut tant que rien n'est enregistré. |
+| **Sendmail** | Le binaire `sendmail` du serveur, via la fonction `mail()` de PHP (`sendmail_path`). Valeur par défaut tant que rien n'est enregistré — c'est aussi celle de WordPress, donc un serveur sans réglage envoie exactement comme avant le plugin. |
 | **SMTP** | Le relais saisi : hôte, port, chiffrement (aucun, STARTTLS, SSL/TLS), identifiant, mot de passe. Identifiant vide = relais sans authentification. |
 | **Expéditeur** | Adresse et nom. Vides : `MAIL_FROM` / `MAIL_FROM_NAME` du `.env`. |
 | **Envoyer un e-mail de test** | Envoie avec les réglages **enregistrés** et affiche l'erreur exacte de PHPMailer en cas d'échec. |
@@ -28,6 +28,15 @@ depuis une machine de développement.
 Sur un serveur, **laisser `SMTP_HOST` vide** pour que la page décide. Un
 serveur dont le `.env` le renseigne garde le comportement d'avant la 3.1.0.
 
+La **préprod** ne renseigne pas `SMTP_HOST` : elle est pilotée par la page, et
+envoie par `mail()` tant que rien n'y est enregistré.
+
+> **Pourquoi `mail()` et pas le mode `sendmail` de PHPMailer.** Les deux
+> passent le message au même binaire, mais le mode `sendmail` l'ouvre par
+> `popen()`, qu'un mutualisé peut désactiver. La 3.1.0 l'utilisait : sur la
+> préprod, l'envoi avait changé de mécanisme sans que personne ne touche à la
+> page. Corrigé en 3.1.1.
+
 ## Le mot de passe SMTP
 
 - **Chiffré en base** (libsodium, `secretbox`). La clé est dérivée de
@@ -40,5 +49,5 @@ serveur dont le `.env` le renseigne garde le comportement d'avant la 3.1.0.
 ## Sendmail en local
 
 L'image Docker n'a pas de binaire `sendmail` : choisir Sendmail en local fait
-échouer l'envoi (« Exécution impossible : /usr/sbin/sendmail »). Sans effet
+échouer l'envoi (« Impossible d'instancier la fonction mail »). Sans effet
 tant que le `.env` local renseigne `SMTP_HOST`, ce qui est le cas par défaut.

@@ -7,6 +7,17 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.1.1
+
+### Corrigé
+
+- **L'option « Sendmail » de Réglages → Email repasse par la fonction `mail()`
+  de PHP**, comme WordPress le faisait avant la 3.1.0. Elle lançait le binaire
+  directement, par `popen()`, qu'un hébergement mutualisé peut désactiver. Or
+  c'est l'option par défaut : sur la préprod, dont le `.env` ne renseigne pas
+  `SMTP_HOST`, l'envoi avait changé de mécanisme sans aucun réglage. C'est
+  toujours le binaire `sendmail` du serveur qui expédie.
+
 ## 3.1.0
 
 ### Ajouté
