@@ -7,6 +7,21 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.1.2
+
+### Corrigé
+
+- **Le site redémarre en PHP 8.4.** La 3.0.0 exigeait PHP 8.5, que
+  l'hébergement de la préprod (IONOS) ne propose pas encore : toutes les pages
+  y auraient renvoyé une erreur 500. Le minimum redescend à 8.4 ; le poste de
+  développement reste en 8.5.
+- Le déploiement prend PHP 8.5 sur le serveur dès qu'il existe, sinon 8.4.
+
+> Pour que le projet ne redevienne pas 8.5-only par accident, les mises à jour
+> Composer sont résolues pour 8.4, l'analyse statique refuse la syntaxe propre à
+> 8.5, et la CI tourne en 8.4. Marche à suivre pour repasser en 8.5 :
+> [`readme/deploiement.md`](readme/deploiement.md).
+
 ## 3.1.1
 
 ### Corrigé

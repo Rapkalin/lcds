@@ -143,6 +143,6 @@ que `SMTP_HOST` y est renseigné — voir [`email.md`](email.md).
 ## Sans Docker (non recommandé)
 
 Le projet reste utilisable sur un Apache natif : `DocumentRoot` sur `website/`,
-`AllowOverride All`, PHP 8.5, et `DB_HOST='localhost'` dans le `.env`. Aucune
+`AllowOverride All`, PHP 8.4 ou plus, et `DB_HOST='localhost'` dans le `.env`. Aucune
 partie du code ne dépend de Docker. C'est simplement une configuration de plus à
 maintenir à la main.

@@ -3,7 +3,7 @@
 Le site officiel de **La Clinique Du Sourire**.
 
 ![wordpress](https://img.shields.io/badge/wordpress-v7.0-0678BE.svg?style=flat-square)
-![php](https://img.shields.io/badge/PHP-v8.5-828cb7.svg?style=flat-square)
+![php](https://img.shields.io/badge/PHP-v8.4%2B-828cb7.svg?style=flat-square)
 ![composer](https://img.shields.io/badge/composer-v2-126E75.svg?style=flat-square)
 ![Node](https://img.shields.io/badge/node-v20-644D31.svg?style=flat-square)
 ![webpack](https://img.shields.io/badge/webpack-v5-157B25.svg?style=flat-square)

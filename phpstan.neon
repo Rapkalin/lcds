@@ -8,9 +8,11 @@ includes:
 parameters:
     level: 6
 
-    # Always analyse against PHP 8.5, whatever the runtime version of the host
-    # or the CI image → reproducible result everywhere.
-    phpVersion: 80500
+    # The whole supported range: 8.4 is the floor (servers), 8.5 the dev image.
+    # Same result whatever the runtime version of the host or the CI image.
+    phpVersion:
+        min: 80400
+        max: 80500
 
     paths:
         - website/app/themes/lcds

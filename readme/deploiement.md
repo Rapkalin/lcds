@@ -26,6 +26,24 @@ d'abord `ci.yml` (Pint, PHPCS, PHPStan, Pest, CVE, gitleaks, build front) et
 
 ## Prérequis côté hébergeur
 
+**PHP 8.4 au minimum**, au web et en SSH. Le poste de dev tourne en 8.5, mais
+la préprod IONOS ne propose pas encore 8.5 : le projet reste donc compatible
+8.4 (`"php": ">=8.4"`). Trois verrous l'empêchent de dériver vers 8.5 :
+
+- `config.platform.php` = `8.4.1` dans `composer.json` : un `composer update`
+  lancé dans le conteneur 8.5 ne retient que des paquets installables en 8.4
+  (8.4.1 et non 8.4.0 : PHPUnit 13.4 exige 8.4.1) ;
+- PHPStan analyse la plage `80400`–`80500` : une syntaxe propre à 8.5 (opérateur
+  `|>`…) est refusée (vérifié) ;
+- la CI et la construction de l'artefact tournent en **8.4**, Pest compris.
+
+Une **fonction** propre à 8.5 (`array_first()`…) n'est pas refusée : le
+polyfill `symfony/polyfill-php85` la fournit en 8.4, ce qui est voulu.
+
+**Le jour où préprod et prod sont en 8.5** : passer `"php"` à `>=8.5`, retirer
+`config.platform`, régler `phpVersion: 80500` et la CI en 8.5, puis
+`composer update --lock`.
+
 À contrôler **avant** le premier déploiement sur un nouvel hébergement, puis
 après toute montée de version de PHP :
 
@@ -50,8 +68,9 @@ Deux pièges déjà rencontrés :
 
 ### Le PHP que WP-CLI utilise
 
-Le déploiement **choisit lui-même** un binaire PHP ≥ 8.5 parmi `php8.5`,
-`php8.5-cli`, `php85`, `/usr/bin/php8.5`, `/usr/local/bin/php8.5`, puis `php`,
+Le déploiement **choisit lui-même** un binaire PHP ≥ 8.4 : d'abord `php8.5`,
+`php8.5-cli`, `php85`, `/usr/bin/php8.5`, `/usr/local/bin/php8.5`, puis les
+mêmes en 8.4, puis `php`,
 et invoque WP-CLI avec :
 
 ```bash
@@ -70,7 +89,7 @@ Pour trouver le bon binaire sur un hébergement inconnu :
 
 ```bash
 ls /usr/bin/php* /usr/local/bin/php* 2>/dev/null
-for b in php php8.5 php8.5-cli php85; do
+for b in php php8.5 php8.5-cli php85 php8.4 php8.4-cli php84; do
   command -v "$b" >/dev/null && printf '%-12s %s\n' "$b" "$($b -r 'echo PHP_VERSION;')"
 done
 ```
