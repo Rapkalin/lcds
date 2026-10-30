@@ -7,6 +7,14 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.1.4
+
+### Modifié
+
+- **Réglages → Email n'affiche les champs SMTP que si « SMTP » est coché.** En
+  mode Sendmail, ils ne servent à rien et laissaient croire le contraire. Les
+  valeurs déjà saisies sont conservées quand on les masque.
+
 ## 3.1.3
 
 ### Corrigé

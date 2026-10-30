@@ -20,13 +20,17 @@ const RAPKALIN_MAIL_SAVE_ACTION = 'rapkalin_mail_save';
 const RAPKALIN_MAIL_TEST_ACTION = 'rapkalin_mail_test';
 
 add_action('admin_menu', static function (): void {
-    add_options_page(
+    $hookSuffix = add_options_page(
         __('Email', 'rapkalin-mail'),
         __('Email', 'rapkalin-mail'),
         RAPKALIN_MAIL_CAPABILITY,
         RAPKALIN_MAIL_PAGE,
         'rapkalin_mail_render_page',
     );
+
+    if ($hookSuffix !== false) {
+        add_action('admin_print_styles-' . $hookSuffix, 'rapkalin_mail_print_styles');
+    }
 });
 
 add_action('admin_post_' . RAPKALIN_MAIL_SAVE_ACTION, 'rapkalin_mail_handle_save');
@@ -145,6 +149,15 @@ function rapkalin_mail_render_notice(): void
     );
 }
 
+/**
+ * Hides the SMTP fields while Sendmail is selected, without JavaScript: a
+ * browser without :has() support simply shows every field.
+ */
+function rapkalin_mail_print_styles(): void
+{
+    echo '<style>.rapkalin-mail-settings:has(input[name="transport"][value="sendmail"]:checked) .rapkalin-mail-smtp { display: none; }</style>';
+}
+
 function rapkalin_mail_render_page(): void
 {
     if (! current_user_can(RAPKALIN_MAIL_CAPABILITY)) {
@@ -175,7 +188,7 @@ function rapkalin_mail_render_page(): void
             </p></div>
         <?php endif; ?>
 
-        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        <form class="rapkalin-mail-settings" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="<?php echo esc_attr(RAPKALIN_MAIL_SAVE_ACTION); ?>">
             <?php wp_nonce_field(RAPKALIN_MAIL_SAVE_ACTION); ?>
 
@@ -200,8 +213,8 @@ function rapkalin_mail_render_page(): void
                 </tr>
             </table>
 
+            <div class="rapkalin-mail-smtp">
             <h2><?php esc_html_e('SMTP relay', 'rapkalin-mail'); ?></h2>
-            <p class="description"><?php esc_html_e('Only used when SMTP is selected.', 'rapkalin-mail'); ?></p>
             <table class="form-table" role="presentation">
                 <tr>
                     <th scope="row"><label for="rapkalin-mail-host"><?php esc_html_e('Host', 'rapkalin-mail'); ?></label></th>
@@ -239,6 +252,7 @@ function rapkalin_mail_render_page(): void
                     </td>
                 </tr>
             </table>
+            </div>
 
             <h2><?php esc_html_e('Sender', 'rapkalin-mail'); ?></h2>
             <table class="form-table" role="presentation">

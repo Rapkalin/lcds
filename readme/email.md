@@ -13,7 +13,7 @@ LCDS » n'y a pas accès (403).
 | Réglage | Effet |
 | --- | --- |
 | **Sendmail** | Le binaire `sendmail` du serveur, via la fonction `mail()` de PHP (`sendmail_path`). Valeur par défaut tant que rien n'est enregistré — c'est aussi celle de WordPress, donc un serveur sans réglage envoie exactement comme avant le plugin. |
-| **SMTP** | Le relais saisi : hôte, port, chiffrement (aucun, STARTTLS, SSL/TLS), identifiant, mot de passe. Identifiant vide = relais sans authentification. |
+| **SMTP** | Champs affichés seulement quand SMTP est coché. Le relais saisi : hôte, port, chiffrement (aucun, STARTTLS, SSL/TLS), identifiant, mot de passe. Identifiant vide = relais sans authentification. |
 | **Expéditeur** | Adresse et nom. Vides : `MAIL_FROM` / `MAIL_FROM_NAME` du `.env`. |
 | **Envoyer un e-mail de test** | Envoie avec les réglages **enregistrés** et affiche l'erreur exacte de PHPMailer en cas d'échec. |
 
