@@ -30,6 +30,9 @@
  *   height int    Hauteur du rail en pixels. 629 pour la galerie d'intro, 494
  *                 pour les cartes inclinées — voir readme/front.md.
  *   modifier string Suffixe de classe posé sur le carrousel.
+ *   paged    bool  Un élément par page, pleine largeur : un glisser à la souris
+ *                  tourne alors la page dans son sens, au lieu de laisser le
+ *                  calage revenir en arrière sous une demi-largeur traînée.
  *   arrows   bool  Rendre les deux flèches de navigation. `true` par défaut.
  *                  `false` retire AUSSI le glisser-déposer à la souris : les
  *                  flèches sont l'alternative au geste qu'exige le WCAG 2.5.7,
@@ -72,6 +75,7 @@ if ($items === []) {
 $height = isset($args['height']) ? (float) $args['height'] : 629.0;
 $modifier = isset($args['modifier']) ? (string) $args['modifier'] : '';
 $isPinned = ! empty($args['pinned']);
+$isPaged = ! empty($args['paged']);
 $hasArrows = ! isset($args['arrows']) || (bool) $args['arrows'];
 $rows = [];
 
@@ -121,7 +125,7 @@ foreach ($items as $item) {
     <div class="carousel-pin" data-carousel-pin>
 <?php endif; ?>
 
-<div class="carousel<?php echo $modifier === '' ? '' : ' carousel--' . esc_attr($modifier); ?>" data-carousel<?php echo $isPinned ? ' data-carousel-pinned' : ''; ?> style="--rail-height: <?php echo esc_attr((string) $height); ?>px">
+<div class="carousel<?php echo $modifier === '' ? '' : ' carousel--' . esc_attr($modifier); ?>" data-carousel<?php echo $isPinned ? ' data-carousel-pinned' : ''; ?><?php echo $isPaged ? ' data-carousel-paged' : ''; ?> style="--rail-height: <?php echo esc_attr((string) $height); ?>px">
     <?php /* Pas de role="group" : il écrasait le rôle `list` du <ul>, et le nombre de visuels n'était plus annoncé. */ ?>
     <ul class="carousel__rail" tabindex="0" aria-label="<?php echo esc_attr($label); ?>">
         <?php foreach ($rows as $row) : ?>

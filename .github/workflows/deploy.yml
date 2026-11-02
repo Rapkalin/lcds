@@ -313,6 +313,9 @@ jobs:
               # par un contributeur — voir readme/seo.md.
               wp language plugin install --all fr_FR || true
               wp eval 'lcds_reset_seo_titles();' || true
+              # Migration 3.3.0 : un seul visuel par étape du parcours.
+              # Idempotente, rejouée sans effet aux déploiements suivants.
+              wp eval 'echo "Parcours : ", lcds_migrate_journey_visuals(), " étape(s) migrée(s).\n";' || true
               wp cache flush || true
               wp rewrite flush || true
               wp eval 'if (function_exists("wp_cache_clear_cache")) { wp_cache_clear_cache(); }' || true

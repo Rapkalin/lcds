@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Section « le parcours de soin » : étapes parcourues au défilement.
- *
- * Les largeurs des visuels d'étape viennent de LcdsMediaShape.
+ * Section « le parcours de soin » : une étape par vue, parcourues au slider.
  *
  * @package lcds
  */
@@ -16,21 +14,11 @@ $rows = lcds_sub_field('etapes');
 $steps = [];
 
 foreach ((is_array($rows) ? $rows : []) as $row) {
-    $images = [];
-
-    foreach ((is_array($row['visuels'] ?? null) ? $row['visuels'] : []) as $frame) {
-        $shape = LcdsMediaShape::fromValue($frame['forme'] ?? null, LcdsMediaShape::StepWide);
-        $images[] = [
-            'width' => $shape->width(),
-            'image' => lcds_attachment_id($frame['image'] ?? null),
-        ];
-    }
-
     $steps[] = [
         'title' => trim((string) ($row['titre'] ?? '')),
         'text' => (string) ($row['texte'] ?? ''),
         'duration' => trim((string) ($row['duree'] ?? '')),
-        'images' => $images,
+        'image' => lcds_attachment_id($row['visuel'] ?? null),
     ];
 }
 

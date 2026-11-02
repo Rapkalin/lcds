@@ -3,7 +3,7 @@
 /**
  * Formes de cadre proposées aux contributeurs — source unique de vérité.
  *
- * Les largeurs du rail et des visuels d'étape sont un CHOIX GRAPHIQUE de la
+ * Les largeurs du rail sont un CHOIX GRAPHIQUE de la
  * maquette, pas une propriété des photos. Demander un nombre à un contributeur
  * serait absurde : il choisit une forme nommée, et la largeur vit ici.
  *
@@ -26,10 +26,6 @@ enum LcdsMediaShape: string
     case Medium = 'medium';
     case Small = 'small';
 
-    // Visuels accompagnant une étape du parcours de soin.
-    case StepWide = 'step-wide';
-    case StepNarrow = 'step-narrow';
-
     /**
      * Largeur du cadre en pixels, telle que dessinée sur la maquette.
      */
@@ -40,8 +36,6 @@ enum LcdsMediaShape: string
             self::Pair => 553.0,
             self::Medium => 666.0,
             self::Small => 503.2,
-            self::StepWide => 327.0,
-            self::StepNarrow => 214.0,
         };
     }
 
@@ -55,8 +49,6 @@ enum LcdsMediaShape: string
             self::Pair => __('Deux visuels empilés (553 px)', 'lcds'),
             self::Medium => __('Moyen (666 px)', 'lcds'),
             self::Small => __('Petit (503 px)', 'lcds'),
-            self::StepWide => __('Large (327 px)', 'lcds'),
-            self::StepNarrow => __('Étroit (214 px)', 'lcds'),
         };
     }
 

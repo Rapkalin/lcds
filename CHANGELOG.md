@@ -7,6 +7,37 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.3.0
+
+### Modifié
+
+- **Le parcours de soin de l'accueil devient un slider**, d'après la nouvelle
+  maquette : une étape à la fois, avec deux flèches et une barre de progression
+  en bas à droite. On passe d'une étape à l'autre aux flèches, par défilement
+  horizontal (pavé tactile, molette horizontale), au doigt, au clavier ou en
+  faisant glisser à la souris. **La page ne se bloque plus sur cette section** :
+  la molette la fait défiler normalement.
+- **Un seul visuel par étape**, affiché en carré à gauche de l'étape. Dans
+  l'administration, le répéteur « Visuels » (forme et image) est remplacé par
+  un champ « Visuel ». La durée s'affiche désormais sous le titre.
+
+### Déploiement
+
+- **Le premier visuel de chaque étape est repris automatiquement** : le
+  déploiement (et `bin/init.sh` en local) appelle une migration qui ne fait
+  plus rien une fois passée. Elle exige WP-CLI sur le serveur, comme le reste
+  des étapes d'après déploiement : sans lui, la lancer à la main avec
+  `wp eval 'lcds_migrate_journey_visuals();'`, sinon les étapes s'affichent
+  sans visuel. Les anciens visuels restent en base.
+
+### Pour les développeurs
+
+- Le carrousel accepte `paged` : une page par élément, et un glisser à la
+  souris tourne la page dans son sens.
+- Le défilement piloté du parcours (épinglage, cadence de molette, exceptions
+  dans les volets) est retiré, ainsi que les formes « Large » et « Étroit » de
+  `LcdsMediaShape`.
+
 ## 3.2.2
 
 ### Corrigé

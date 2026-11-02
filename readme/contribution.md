@@ -35,7 +35,7 @@ relevée sur les maquettes, puis **désignée comme page d'accueil du site**
 | **Hero** | Visuel pleine largeur — ou vidéo —, carte d'appel |
 | **Texte et galerie** | Étiquette, texte, bouton, rail de visuels défilable |
 | **Accordéon** | Étiquette, entrées dépliables, bouton |
-| **Parcours en étapes** | Étiquette, étapes numérotées avec durée et visuels |
+| **Parcours en étapes** | Étiquette, étapes numérotées avec durée et un visuel, une par vue dans un slider |
 | **Carrousel de cartes** | Étiquette, bouton, cartes inclinées révélant leur texte |
 | **Informations pratiques** | Étiquette, visuel, entrées à icône |
 

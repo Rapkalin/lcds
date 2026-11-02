@@ -233,10 +233,7 @@ $sections = [
                     'Si un traitement est envisagé, nous vous proposerons un rendez-vous afin de réaliser le bilan orthodontique, indispensable pour détailler le diagnostic et les possibilités de traitement ainsi que la durée approximative de celui-ci.',
                 ),
                 'duree' => '',
-                'visuels' => [
-                    ['forme' => 'step-wide', 'image' => $media('gallery-1')],
-                    ['forme' => 'step-narrow', 'image' => $media('gallery-3')],
-                ],
+                'visuel' => $media('gallery-1'),
             ],
             [
                 'titre' => 'Bilan orthodontique',
@@ -247,34 +244,25 @@ $sections = [
                     . '<li>Des empreintes numériques pour réaliser un moulage d’étude</li>'
                     . '<li>Des clichés radiographiques (panoramique dentaire et téléradiographie de profil/face)</li></ul>',
                 'duree' => '30 min',
-                'visuels' => [
-                    ['forme' => 'step-narrow', 'image' => $media('gallery-4')],
-                    ['forme' => 'step-wide', 'image' => $media('gallery-2a')],
-                ],
+                'visuel' => $media('gallery-4'),
             ],
             [
                 'titre' => 'Compte-rendu',
                 'texte' => $p('Au terme du bilan orthodontique, l’analyse des différents éléments du dossier orthodontique permettent d’établir un plan de traitement précis, qui sera donc abordé au rendez-vous de compte-rendu. Des documents vous seront fournis également (le devis précis comportant la durée du traitement et le type d’appareillage choisit ainsi que la demande d’entente préalable pour les patients de moins de 16 ans).'),
                 'duree' => '45 min',
-                'visuels' => [['forme' => 'step-wide', 'image' => $media('gallery-5')]],
+                'visuel' => $media('gallery-5'),
             ],
             [
                 'titre' => 'Pose de l’appareillage',
                 'texte' => $p('Pour l’appareil multi-attaches, l’orthodontiste place un écarteur afin d’écarter les lèvres et avoir une bonne visibilité sur les dents. Après un nettoyage des dents, un gel est appliqué sur chaque dent afin de les rendre un peu rugueuse, ce qui permettra à la colle qui fixe les brackets de mieux s’accrocher. Puis chaque bracket sera collé sur les dents, qui seront ensuite reliés par un fil.'),
                 'duree' => '',
-                'visuels' => [
-                    ['forme' => 'step-narrow', 'image' => $media('gallery-2b')],
-                    ['forme' => 'step-wide', 'image' => $media('gallery-1')],
-                ],
+                'visuel' => $media('gallery-2b'),
             ],
             [
                 'titre' => 'Rendez-vous de suivi de contrôle et d’activations',
                 'texte' => $p('Ce sont des rendez-vous de routine qui se répèteront environ toutes les 5 à 10 semaines. C’est lors de ces rendez-vous que l’orthodontiste change l’arc, effectue des activations d’autres appareils.'),
                 'duree' => '',
-                'visuels' => [
-                    ['forme' => 'step-narrow', 'image' => $media('gallery-3')],
-                    ['forme' => 'step-wide', 'image' => $media('gallery-4')],
-                ],
+                'visuel' => $media('gallery-3'),
             ],
             [
                 'titre' => 'Dépose de l’appareil et contention',
@@ -285,7 +273,7 @@ $sections = [
                     'Après l’alignement, les dents ont toujours tendance à revenir en position initiale. De plus, les dents bougent tout au long de la vie sous pression de la langue, des lèvres, des joues et elles se déplacent naturellement vers l’avant avec l’âge, d’où l’importance de la contention.',
                 ),
                 'duree' => '',
-                'visuels' => [],
+                'visuel' => 0,
             ],
         ],
     ]),

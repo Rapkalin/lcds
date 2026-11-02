@@ -1,10 +1,8 @@
 @use "../basics/variables" as var;
 @use "../basics/functions" as fn;
 
-// 1118 = 440 + 12 + 101 + 12 + 553 : la colonne de l'étiquette, celle du numéro
-// et celle du texte. Les parts en `fr` redonnent ces largeurs exactes sans les
-// écrire, et l'en-tête comme les étapes partagent la même grille — la barre de
-// progression est donc alignée sur le texte, pas sur l'étiquette.
+// Maquette « Desktop - 10 » : colonnes à x = 161, 613 et 726, soit
+// 440 + 12 + 101 + 12 + 553 dans les 1118 de contenu.
 @mixin journey-grid {
   display: grid;
   grid-template-columns: minmax(0, 440fr) minmax(0, 101fr) minmax(0, 553fr);
@@ -15,128 +13,72 @@
 }
 
 .journey {
+  position: relative;
+  padding: var.$section-padding 0;
   background: var.$blue-pale;
   color: var.$blue;
 
-  &__viewport {
-    // Le retrait vaut 128px sur les 900px de hauteur dessinés, soit 14,2vh :
-    // exprimé ainsi, il se resserre sur un écran bas au lieu de pousser le
-    // contenu hors de la vue.
-    --journey-inset: clamp(#{fn.toRem(32)}, 14.2vh, #{var.$section-padding});
-
-    padding: var(--journey-inset) 0;
-    // La vue est collée en haut de l'écran, et l'en-tête aussi : sur un écran
-    // bas, le retrait se resserre sous la hauteur de l'en-tête et l'étiquette
-    // passait dessous. `--header-height` est mesurée par le script ; sans lui
-    // c'est le retrait seul qui s'applique, comme avant.
-    padding-top: max(var(--journey-inset), var(--header-height, 0px));
-  }
-
+  // L'étiquette reste en place pendant que les étapes défilent sous elle : elle
+  // est donc hors du rail, posée sur le haut de la première colonne.
   &__head {
     @include journey-grid;
-    position: relative;
-  }
-
-  // Hors du flux : sur la maquette l'étiquette et la barre partagent la même
-  // ligne, mais la hauteur de l'étiquette (29px) ne doit pas repousser le rail.
-  // Dans le flux, elle décalait tout de 28px vers le bas. L'étiquette est de
-  // toute façon identique sur les six étapes, donc immobile.
-  &__label {
     position: absolute;
-    top: 0;
-    left: var.$gutter-min;
+    top: var.$section-padding;
+    right: 0;
+    left: 0;
+    pointer-events: none;
   }
 
-  &__progress {
-    grid-column: 2 / -1;
-    height: fn.toRem(1);
-    background: var.$blue-separator;
-  }
-
-  // Remplissage = étape / total. À l'arrêt sur la première étape il vaut donc
-  // 1/6, et non zéro : c'est ce que montre la maquette.
-  &__progress-fill {
-    display: block;
-    width: calc(
-      (1 + var(--journey-progress, 0) * (var(--journey-steps, 6) - 1)) / var(--journey-steps, 6) * 100%
-    );
-    height: 100%;
-    background: var.$blue;
-  }
-
-  &__track {
-    display: flex;
-    // Empilé par défaut : c'est le rendu sans JavaScript, et celui retenu quand
-    // l'utilisateur demande à réduire les animations. Le mode épinglé n'est
-    // activé que par la classe `journey--pinned`, posée par le script.
-    flex-direction: column;
-    gap: var.$section-padding;
-    margin: 0;
-    padding: 0;
-    margin-top: fn.toRem(48);
-    list-style: none;
-  }
-
-  &__step-inner {
+  &__step {
     @include journey-grid;
+    // 772 − 128 sur la maquette : du haut du titre au bas du visuel, qui tombe
+    // sur le bas des flèches.
+    min-height: fn.toRem(644);
   }
 
-  // Le numéro d'étape prend le style H3 de la maquette, relevé sur Figma :
-  // Sligoil, 24, interligne 120 %, sans interlettrage. Il portait jusqu'ici le
-  // style CTA — Inter 13 avec 8 % d'interlettrage.
-  //
-  // Deux valeurs de Figma ne se recopient PAS, et les deux sont documentées
-  // dans variables.scss :
-  //
-  //   - `font-weight: 90` est le nom de la coupe « Sligoil Micro », pas un
-  //     poids CSS. Le fichier de police porte le 400.
-  //   - `line-height: 120 %` donnerait 28,8. Figma ARRONDIT l'interligne rendu
-  //     au pixel entier, soit 29 ; `$lh-title` restitue cet entier à 24.
+  &__media {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    width: fn.toRem(327);
+    max-width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var.$radius;
+    background: var.$blue-light;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   &__number {
     grid-column: 2;
+    grid-row: 1;
     font-family: var.$font-title;
     font-size: var.$fs-step-number;
     font-weight: var.$fw-title;
     line-height: var.$lh-title;
     color: var.$turquoise;
-    // Aligné sur la première ligne du titre, comme avant : la formule compare
-    // les deux BOÎTES DE LIGNE — (58 − 29) / 2 — et reste juste si l'échelle
-    // typographique bouge.
-    padding-top: calc((#{var.$fs-h2} - #{var.$fs-step-number}) * #{var.$lh-title} / 2);
   }
 
   &__body {
     grid-column: 3;
+    grid-row: 1;
+    // Les flèches sont posées sur le bas de cette colonne.
+    padding-bottom: calc(#{var.$module} + #{fn.toRem(48)});
   }
 
-  // Le niveau dit la hiérarchie, la classe dit l'apparence : l'étape est un
-  // `h3` sous le `h2` de la section, et garde la taille relevée sur la maquette.
   &__title {
     font-size: var.$fs-h2;
-  }
-
-  // Le rythme de la maquette : 24px entre un titre et son texte, 48px entre
-  // deux blocs.
-  &__text {
-    margin-top: fn.toRem(24);
-
-    p + p {
-      margin-top: calc(#{var.$fs-p} * #{var.$lh-p});
-    }
-
-    // La liste suit son introduction sans ligne vide, contrairement à deux
-    // paragraphes successifs.
-    ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
   }
 
   &__duration {
     display: inline-flex;
     align-items: center;
-    margin-top: fn.toRem(48);
+    margin-top: fn.toRem(24);
     padding: 0 fn.toRem(16);
     height: fn.toRem(30);
     border: 1px solid var.$blue;
@@ -148,170 +90,102 @@
     white-space: nowrap;
   }
 
-  &__medias {
-    display: flex;
-    gap: var.$gutter;
-    margin-top: fn.toRem(48);
-  }
+  &__text {
+    margin-top: fn.toRem(24);
 
-  &__media {
-    flex: 0 0 auto;
-    width: var(--media-width, auto);
-    height: fn.toRem(165);
-    overflow: hidden;
-    border-radius: var.$radius;
-    // Aplat en attendant les visuels, comme sur les autres blocs. La maquette
-    // dessine un gris neutre, qui n'est que le remplissage par défaut de Figma.
-    background: var.$blue-light;
-  }
-
-  &__image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-/* ------------------------------------------------------------------------- *
- * Mode épinglé — posé par le JavaScript, jamais par défaut.
- *
- * La section est haute de plusieurs écrans ; la vue reste collée en haut et le
- * rail se décale selon l'avancement du défilement. Une seule variable pilote le
- * rail ET la barre : ils ne peuvent pas se désynchroniser.
- * ------------------------------------------------------------------------- */
-.journey--pinned {
-  // Budget de défilement d'UNE transition. C'est le seul nombre qui règle le
-  // rythme de la section : la hauteur totale en découle.
-  //
-  // 80svh valent environ 720px sur un écran de 900, et l'étape bascule à la
-  // MOITIÉ de ce budget. La section mesure donc cinq écrans : un pour la vue
-  // collée, quatre pour les cinq transitions.
-  //
-  // Valeur arbitrée en trois essais. Un écran plein par étape (six écrans de
-  // défilement) rendait le glissement très lent ; 25svh le rendaient trop
-  // nerveux ; 50svh ne laissaient que 225px à la DERNIÈRE carte avant que la
-  // section se décolle, soit deux crans de molette. Elle en a 360 ici.
-  --journey-step-scroll: 80svh;
-
-  /*
-   * L'AMORCE DU VOLET, ajoutée à la hauteur ET reprise en rembourrage bas.
-   *
-   * Chaque section chevauche la précédente de son rayon : le haut de la suivante
-   * est donc toujours 48px au-dessus du bas de celle-ci. Sans amorce, elle
-   * entrait dans la vue 48px AVANT que la dernière étape ne soit posée — le
-   * volet apparaissait pendant la dernière slide. Retour de recette.
-   *
-   * Ces 48px ne sont pas de la course : `hauteurUtile` les déduit, si bien que
-   * l'avancement, le verrou de molette et le collage du volet tombent tous les
-   * trois au même pixel. Ajoutés à la hauteur ET repris en rembourrage, ils
-   * laissent la course inchangée — `box-sizing: border-box` retrancherait sinon
-   * le rembourrage du budget de défilement.
-   *
-   * Le rembourrage vaut EXACTEMENT le chevauchement : c'est ce qui fait
-   * coïncider les instants. Une autre valeur les décale à nouveau.
-   */
-  height: calc(
-    100svh + (var(--journey-steps, 6) - 1) * var(--journey-step-scroll)
-      + #{var.$radius-section}
-  );
-  padding-bottom: var.$radius-section;
-
-  .journey__viewport {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
-  }
-
-  .journey__track {
-    flex-direction: row;
-    gap: 0;
-    transform: translateX(
-      calc(var(--journey-progress, 0) * (var(--journey-steps, 6) - 1) * -100%)
-    );
-    // L'avancement arrive par paliers d'une étape : c'est cette transition qui
-    // fait le glissement. Sans elle, la carte sauterait d'un coup.
-    transition: transform var.$journey-glide;
-    will-change: transform;
-  }
-
-  // La barre suit le même palier, avec la même courbe : les deux ne peuvent pas
-  // se désynchroniser.
-  .journey__progress-fill {
-    transition: width var.$journey-glide;
-  }
-
-  .journey__step {
-    flex: 0 0 100%;
-  }
-}
-
-/* ------------------------------------------------------------------------- *
- * Le rail ne s'arrête JAMAIS entre deux étapes.
- *
- * Le script publie la fraction brute du défilement ; l'arrondi au palier est
- * fait ici, en un seul endroit que la translation ET le remplissage lisent. Un
- * arrondi côté script aurait dû être refait à l'identique pour chacun des deux.
- *
- * Sans lui, le rail se posait n'importe où : la fin d'une étape et le début de
- * la suivante se partageaient l'écran avec un grand vide entre les deux, leur
- * colonne de texte étant à droite de leur grille.
- *
- * Sous garde de prise en charge, et non en repli de cascade : `round()` ne
- * s'évalue qu'au calcul, donc une propriété personnalisée qui l'emploie reste
- * valide à l'analyse et n'écarte pas la déclaration précédente. Sans cette
- * garde, un moteur qui l'ignore n'aurait PLUS DE TRANSLATION DU TOUT et cinq
- * étapes deviendraient inatteignables.
- * ------------------------------------------------------------------------- */
-@supports (width: round(nearest, 1px, 1px)) {
-  .journey {
-    --journey-step-index: round(nearest, var(--journey-progress, 0) * (var(--journey-steps, 6) - 1), 1);
-  }
-
-  .journey__progress-fill {
-    width: calc((1 + var(--journey-step-index)) / var(--journey-steps, 6) * 100%);
-  }
-
-  .journey--pinned .journey__track {
-    transform: translateX(calc(var(--journey-step-index) * -100%));
-  }
-}
-
-/* ------------------------------------------------------------------------- *
- * Mobile — aucune maquette ne couvre ce cas : mise en forme à revalider.
- * ------------------------------------------------------------------------- */
-// Voir block-intro : le repli intervient à 1024, avant le bloc mobile.
-@media (max-width: var.$bp-tablet) {
-  .journey {
-    &__head,
-    &__step-inner {
-      grid-template-columns: minmax(0, 1fr);
-      gap: fn.toRem(24);
+    p + p {
+      margin-top: calc(#{var.$fs-p} * #{var.$lh-p});
     }
 
-    &__progress,
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+  }
+}
+
+// Une étape pleine largeur par élément, sans gouttière : la page de défilement
+// des flèches vaut la largeur du rail, donc exactement une étape.
+.carousel--journey {
+  position: relative;
+
+  .carousel__rail {
+    align-items: stretch;
+    gap: 0;
+    height: auto;
+    padding: 0;
+    scroll-snap-type: x mandatory;
+  }
+
+  // Le calage reprendrait la main à chaque `scrollLeft` écrit par le glisser.
+  &.carousel--dragging .carousel__rail {
+    scroll-snap-type: none;
+  }
+
+  .carousel__item {
+    width: 100%;
+    height: auto;
+    scroll-snap-align: start;
+  }
+
+  .carousel__controls {
+    @include journey-grid;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .carousel__track,
+  .carousel__buttons {
+    grid-row: 1;
+    grid-column: 3;
+    pointer-events: auto;
+  }
+
+  .carousel__buttons {
+    justify-self: end;
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * Tablette et mobile — aucune maquette ne couvre ce cas : à revalider.
+ * ------------------------------------------------------------------------- */
+@media (max-width: var.$bp-tablet) {
+  .journey {
+    &__head {
+      position: static;
+      grid-template-columns: minmax(0, 1fr);
+      margin-bottom: fn.toRem(32);
+    }
+
+    &__step {
+      grid-template-columns: minmax(0, 1fr);
+      align-content: start;
+      gap: fn.toRem(24);
+      min-height: 0;
+    }
+
+    &__media,
     &__number,
     &__body {
+      grid-row: auto;
       grid-column: 1;
     }
 
-    // L'étiquette revient dans le flux : en une seule colonne, elle se
-    // superposerait à la barre de progression si elle restait détachée.
-    &__label {
-      position: static;
-      margin-bottom: fn.toRem(24);
+    &__body {
+      padding-bottom: 0;
     }
   }
-}
 
-@media (max-width: var.$bp-mobile) {
-  .journey {
-    &__medias {
-      flex-wrap: wrap;
-    }
-
-    &__media {
-      width: 100%;
-    }
+  .carousel--journey .carousel__controls {
+    position: static;
+    display: flex;
+    justify-content: space-between;
+    margin-top: fn.toRem(32);
+    pointer-events: auto;
   }
 }

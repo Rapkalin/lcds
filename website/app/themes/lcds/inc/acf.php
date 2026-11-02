@@ -259,28 +259,10 @@ function lcds_load_gallery_shapes(array $field): array
 
     return $field;
 }
-// Accroché sur la CLÉ et non sur le nom, contrairement aux puces : le champ
-// `forme` sert aussi au parcours, qui n'a pas les mêmes formes. Une galerie de
-// plus = une ligne de plus ici, sinon sa liste s'affiche vide.
+// Accroché sur la CLÉ : une galerie de plus = une ligne de plus ici, sinon sa
+// liste s'affiche vide.
 add_filter('acf/load_field/key=field_lcds_histoire_forme', 'lcds_load_gallery_shapes');
 add_filter('acf/load_field/key=field_lcds_conseils_gal_forme', 'lcds_load_gallery_shapes');
-
-/**
- * Idem pour les visuels accompagnant une étape du parcours, qui n'ont que deux
- * formes possibles.
- *
- * @param array $field Définition du champ, telle qu'ACF la charge.
- */
-function lcds_load_step_shapes(array $field): array
-{
-    $field['choices'] = LcdsMediaShape::choices([
-        LcdsMediaShape::StepWide,
-        LcdsMediaShape::StepNarrow,
-    ]);
-
-    return $field;
-}
-add_filter('acf/load_field/key=field_lcds_parcours_forme', 'lcds_load_step_shapes');
 
 /**
  * Alimente les listes de couleurs de puce depuis LcdsDotColor.
@@ -346,3 +328,46 @@ function lcds_load_focal_points(array $field): array
     return $field;
 }
 add_filter('acf/load_field/key=field_lcds_footer_cadrage', 'lcds_load_focal_points');
+
+/**
+ * Migration 3.3.0 : recopie le premier visuel de chaque étape du parcours dans
+ * le champ `visuel`, qui remplace le répéteur `visuels`.
+ *
+ * Vit dans le thème et non dans `bin/` : l'artefact de déploiement ne contient
+ * pas `bin/`. Appelée par `bin/init.sh` et par le workflow de déploiement, via
+ * WP-CLI. Idempotente : une étape déjà renseignée n'est pas touchée, et les
+ * anciennes valeurs restent en base.
+ *
+ * @return int Nombre d'étapes migrées.
+ */
+function lcds_migrate_journey_visuals(): int
+{
+    global $wpdb;
+
+    // Clés d'un répéteur dans un contenu flexible :
+    // `<flexible>_<rang>_<répéteur>_<rang>_<sous-champ>`.
+    $rows = $wpdb->get_results(
+        "SELECT meta.post_id, meta.meta_key, meta.meta_value
+           FROM {$wpdb->postmeta} AS meta
+           JOIN {$wpdb->posts} AS post ON post.ID = meta.post_id
+          WHERE post.post_type <> 'revision'
+            AND meta.meta_key REGEXP '^sections_[0-9]+_etapes_[0-9]+_visuels_0_image$'",
+    );
+    $migrated = 0;
+
+    foreach ((array) $rows as $row) {
+        $postId = (int) $row->post_id;
+        $target = (string) preg_replace('/_visuels_0_image$/', '_visuel', (string) $row->meta_key);
+        $imageId = (int) $row->meta_value;
+
+        if ($imageId === 0 || (int) get_post_meta($postId, $target, true) !== 0) {
+            continue;
+        }
+
+        update_post_meta($postId, $target, $imageId);
+        update_post_meta($postId, '_' . $target, 'field_lcds_parcours_visuel');
+        $migrated++;
+    }
+
+    return $migrated;
+}

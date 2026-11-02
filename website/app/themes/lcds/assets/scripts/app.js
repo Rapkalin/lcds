@@ -152,9 +152,9 @@ const initCarousels = () => {
             }
         };
 
-        const scrollByPage = (direction) => {
+        const scrollByPage = (direction, depuis = null) => {
             const furthest = rail.scrollWidth - rail.clientWidth;
-            const from = target === null ? rail.scrollLeft : target;
+            const from = depuis ?? (target === null ? rail.scrollLeft : target);
             target = Math.max(0, Math.min(furthest, from + direction * rail.clientWidth));
             rail.scrollTo({ left: target, behavior: behavior() });
             // L'évènement `scroll` n'arrive qu'au tick suivant : sans cet appel,
@@ -212,8 +212,20 @@ const initCarousels = () => {
         });
 
         const relacher = () => {
+            const depart = origine;
+            // Lu AVANT de retirer la classe : le calage revient avec elle et
+            // ramène aussitôt le rail à son point de départ.
+            const sens = depart === null ? 0 : Math.sign(rail.scrollLeft - depart.scroll);
+
             origine = null;
             carousel.classList.remove("carousel--dragging");
+
+            // Une page par élément : laissé au calage, le rail ne changerait
+            // d'élément qu'au-delà d'une demi-largeur d'écran traînée.
+            if (depart !== null && aGlisse && carousel.hasAttribute("data-carousel-paged")) {
+                target = null;
+                scrollByPage(sens, depart.scroll);
+            }
         };
 
         // Sur le DOCUMENT et non sur le rail : le curseur sort du rail bien
@@ -376,7 +388,7 @@ const initAccordions = () => {
  * voir deux oreilles claires. Le haut de la suivante est donc toujours 48px
  * au-dessus du bas de celle-ci, et une section figée sur sa BOÎTE laissait voir
  * ces 48px avant même d'avoir fini. Retour de recette, trois fois, sur trois
- * sections différentes : la galerie, le parcours, puis les traitements.
+ * sections différentes.
  *
  * Ces 48px ne sont pas du contenu : ils vivent dans le rembourrage bas, que la
  * section suivante recouvre de toute façon. Les déduire ne cache rien — ça
@@ -387,17 +399,15 @@ const initAccordions = () => {
  * négative entre deux sections. Les écrire deux fois les laisserait diverger, et
  * le volet réapparaîtrait au premier changement d'arrondi.
  *
- * Deux sections y ajoutent un rembourrage bas EXPLICITE de la même valeur — la
- * galerie épinglée et le parcours de soin — pour que leur fin de course tombe
- * elle aussi sur ce point. Voir pages/homepage.scss et block-journey.scss.
+ * La galerie épinglée y ajoute un rembourrage bas EXPLICITE de la même valeur,
+ * pour que sa fin de course tombe elle aussi sur ce point. Voir
+ * pages/homepage.scss.
  *
  * S'y ajoute `--volet-delai`, qui fait partir le volet de PLUS BAS ENCORE : la
  * section se fige, et il reste ce nombre de pixels avant qu'il n'attaque. La
  * feuille de style le met à zéro sur les sections dont le défilement pilote déjà
  * quelque chose — là, ce même écart avait été signalé comme un défaut.
  *
- * TROIS mécaniques lisent cette hauteur et ne peuvent pas diverger : l'avancement
- * du parcours, son verrou de molette, et le décalage de collage des volets.
  */
 const hauteurUtile = (section) => {
     const style = window.getComputedStyle(section);
@@ -405,352 +415,6 @@ const hauteurUtile = (section) => {
     return section.offsetHeight
         - (parseFloat(style.borderTopLeftRadius) || 0)
         - (parseFloat(style.getPropertyValue("--volet-delai")) || 0);
-};
-
-/**
- * Journey section: vertical scroll drives a horizontal rail, one step per notch.
- *
- * Two mechanisms, and they answer two different questions.
- *
- * The first publishes ONE number — how far through the section we are — and
- * hands it to CSS, which rounds it to the nearest step. The rail transform and
- * the progress bar read that same rounded value, so they cannot fall out of
- * sync, and the rail never rests between two cards. This is the fallback path:
- * keyboard, scrollbar, touch.
- *
- * The second confiscates the WHEEL while the pinned view fills the screen: one
- * notch moves exactly one step, and everything arriving during the cadence is
- * swallowed. Pacing is therefore governed by a TIMER, not by a distance — which
- * is what makes several quick notches count as one.
- *
- * Pinning is opt-in: the `journey--pinned` class is added here and nowhere
- * else. Without JavaScript, or when the visitor asks for reduced motion, the
- * steps stay stacked, nothing is confiscated, and every word remains reachable.
- */
-// Durée pendant laquelle le défilement est absorbé après une bascule d'étape.
-//
-// PLANCHER DUR : la transition CSS du rail, désormais 0,35s. En dessous,
-// l'étape suivante partirait avant que la précédente soit posée. Les 50ms qui
-// restent sont la marge.
-//
-// Ramenée de 600 à 500 sur un premier retour client, puis à 400 en raccourcissant
-// la transition — c'était le seul levier restant à la molette, et il fallait
-// bouger les deux ENSEMBLE : elles ne peuvent pas diverger.
-const JOURNEY_CADENCE = 400;
-
-// Silence au-delà duquel un évènement de molette ouvre un geste NEUF.
-//
-// Un geste de pavé tactile — et une roulette sous macOS — n'émet pas un
-// évènement mais une TRAÎNE, qui continue près d'une seconde après que le doigt
-// a quitté la surface. Tant que le flux ne s'interrompt pas, c'est encore le
-// même geste : il ne peut donc pas faire avancer une seconde étape, quelle que
-// soit sa durée. Une simple cadence, elle, finissait par expirer sous lui.
-const JOURNEY_REPOS = 150;
-
-// Sortie de secours, comptée depuis la dernière bascule : un défilement qui ne
-// s'interrompt JAMAIS — deux doigts qui ne se lèvent pas — avance tout de même,
-// sinon la section deviendrait un cul-de-sac.
-//
-// C'est LUI qui gouverne l'attente sur un pavé tactile, où le flux ne s'arrête
-// pas et où `JOURNEY_REPOS` ne peut donc pas reconnaître de geste neuf.
-// Ramené de 1600 à 1200 sur le même retour client.
-//
-// PLANCHER DUR : la traîne d'un geste de pavé tactile, qui dure PRÈS D'UNE
-// SECONDE après que le doigt a quitté la surface. Sous 1000, cette inertie
-// franchirait le plafond toute seule et un seul geste passerait deux cartes —
-// le défaut que ce dispositif corrige. Il reste 200ms de marge.
-const JOURNEY_PLAFOND = 1200;
-
-const initJourneys = () => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-    document.querySelectorAll("[data-journey]").forEach((journey) => {
-        let frame = null;
-
-        // Le nombre de transitions, relevé UNE fois sur la propriété que le CSS
-        // utilise lui aussi. Le recompter dans le DOM aurait créé une seconde
-        // source, et les deux auraient fini par se contredire.
-        const transitions = (Number.parseInt(
-            window.getComputedStyle(journey).getPropertyValue("--journey-steps"),
-            10,
-        ) || 1) - 1;
-
-        const update = () => {
-
-            if (!journey.classList.contains("journey--pinned")) {
-                return;
-            }
-
-            // La course utile : tout ce qui dépasse de la hauteur de la vue,
-            // amorce du volet déduite — voir `hauteurUtile`.
-            const course = hauteurUtile(journey) - window.innerHeight;
-
-            if (course <= 0) {
-                journey.style.setProperty("--journey-progress", "0");
-
-                return;
-            }
-
-            const travelled = -journey.getBoundingClientRect().top;
-            // La fraction BRUTE. L'arrondi au palier de l'étape est fait par le
-            // CSS, qui l'applique à la translation comme au remplissage : ainsi
-            // les deux lisent le même nombre arrondi, et un arrondi posé ici
-            // aurait dû être refait à l'identique pour chacun.
-            const progress = Math.min(1, Math.max(0, travelled / course));
-            journey.style.setProperty("--journey-progress", String(progress));
-        };
-
-        // Le défilement peut émettre bien plus souvent que le navigateur ne
-        // peint : on ne recalcule qu'une fois par image.
-        //
-        // On ANNULE l'image en attente et on en redemande une, plutôt que de
-        // renoncer quand il y en a déjà une. Renoncer suppose que celle-ci sera
-        // rendue : une image jamais produite — onglet en arrière-plan, budget
-        // de temps virtuel épuisé — bloquait alors la mise à jour POUR DE BON,
-        // sans rien signaler. Constaté sur le rail épinglé, qui portait le même
-        // motif : six évènements de défilement pour deux mises à jour.
-        //
-        // Le coalescement est identique, une seule image reste demandée.
-        const schedule = () => {
-            window.cancelAnimationFrame(frame);
-            frame = window.requestAnimationFrame(update);
-        };
-
-        const apply = () => {
-            if (reduceMotion.matches) {
-                journey.classList.remove("journey--pinned");
-                journey.style.removeProperty("--journey-progress");
-
-                return;
-            }
-
-            journey.classList.add("journey--pinned");
-            update();
-        };
-
-        // Une étape par cran de molette, et rien d'autre pendant la bascule.
-        //
-        // Le geste est CONFISQUÉ tant que la section est collée et qu'il reste
-        // une étape dans son sens : la page ne bouge plus d'un pixel de son
-        // fait, c'est le script qui la porte d'une étape à la suivante. Deux
-        // conséquences voulues :
-        //
-        //   - l'amplitude du geste ne compte pas, seul son SENS — une roulette
-        //     lâchée d'un coup avance d'une étape, pas de quatre ;
-        //   - tout ce qui arrive pendant la cadence est absorbé sans effet,
-        //     donc plusieurs crans rapprochés valent un seul.
-        //
-        // Les deux BOUTS rendent la main, mais pas sur le geste en cours : la
-        // carte de bout marque un ARRÊT, et il faut un second geste pour sortir.
-        // Sans quoi on n'entrerait jamais dans la section et on n'en sortirait
-        // plus.
-        //
-        // Et l'ARRIVÉE ne compte pas comme un cran : voir plus bas, c'est le
-        // geste d'entrée qui emportait la première carte.
-        //
-        // Le clavier n'est pas touché, le tactile non plus, et sous mouvement
-        // réduit la section n'est pas épinglée du tout : trois sorties de
-        // secours si le verrou se coinçait.
-        let verrou = 0;
-        let plafond = 0;
-        let dernier = 0;
-        let etaitCollee = false;
-        let arret = false;
-
-        const auCran = (event) => {
-            if (! journey.classList.contains("journey--pinned")) {
-                return;
-            }
-
-            const cadre = journey.getBoundingClientRect();
-            // La MÊME hauteur que l'avancement ci-dessus : le verrou doit rendre
-            // la main exactement quand la dernière étape est posée, sinon il
-            // confisque la molette sur une section qui n'avance plus.
-            const course = hauteurUtile(journey) - window.innerHeight;
-            const sens = Math.sign(event.deltaY);
-
-            // La section a FINI sa course : le volet la colle en place, son
-            // rectangle se fige alors que la page continue de défiler. Tout ce
-            // qui suit lit ce rectangle, et `ancrer` calcule sa cible sur
-            // `cadre.top + scrollY` — une valeur qui DÉRIVE dès que le collage
-            // prend. Mesuré : 5264 en défilement libre, 6600 une fois collée.
-            // Le verrou renvoyait donc la page 650px en arrière au premier
-            // cran vers le haut, sous le volet suivant.
-            //
-            // Le décalage de collage vaut exactement `-course` — voir
-            // `initVolets` : c'est ce qui rend l'état reconnaissable sans
-            // connaître la position de flux, inaccessible ici puisque
-            // `offsetTop` porte le décalage lui aussi.
-            //
-            // ÉGALITÉ, et non « au-delà » : une section simplement dépassée —
-            // mouvement réduit, où rien ne colle — a elle aussi un `top`
-            // inférieur à `-course`, mais elle continue de descendre. La
-            // confondre avec l'état collé faisait manquer l'ancrage d'arrivée
-            // par le bas, qui repartait alors deux étapes trop tôt.
-            const figee = course > 0 && Math.abs(cadre.top + course) <= 1;
-
-            if (figee) {
-                // Toujours DANS la section : au retour par le bas, le premier
-                // cran doit reculer d'une étape, et non rejouer l'ancrage
-                // d'arrivée qui nous remettrait là où nous sommes déjà.
-                etaitCollee = true;
-
-                // L'ARRÊT reste dû sur la dernière carte : sans lui, la traîne
-                // du geste qui vient de la poser emporte la page et le volet
-                // suivant la recouvre aussitôt.
-                if (arret && sens > 0) {
-                    const instant = performance.now();
-                    const neuf = instant - dernier > JOURNEY_REPOS || instant >= plafond;
-
-                    dernier = instant;
-
-                    if (! neuf || instant < verrou) {
-                        event.preventDefault();
-
-                        return;
-                    }
-
-                    arret = false;
-                }
-
-                return;
-            }
-
-            // `collee` : la vue épinglée occupe exactement l'écran. Hors de cet
-            // intervalle, la section entre ou sort, et le défilement lui
-            // appartient.
-            //
-            // Le bas UTILE, pas celui de la boîte : l'amorce du volet prolonge
-            // la boîte de 48px au-delà de la course, et les y inclure gardait le
-            // verrou actif sur une section qui n'avance plus. Mesuré — le cran
-            // restait confisqué sous la section, et l'ancrage d'arrivée par le
-            // bas repartait 390px trop loin.
-            const basUtile = cadre.top + hauteurUtile(journey);
-            const collee = cadre.top <= 1 && basUtile >= window.innerHeight - 1;
-
-            if (! collee) {
-                etaitCollee = false;
-
-                return;
-            }
-
-            if (course <= 0 || sens === 0 || transitions <= 0) {
-                return;
-            }
-
-            const haut = cadre.top + window.scrollY;
-            const avance = Math.min(1, Math.max(0, -cadre.top / course)) * transitions;
-            const palier = Math.round(avance);
-            const ancrer = (etape) => {
-                const instant = performance.now();
-                verrou = instant + JOURNEY_CADENCE;
-                plafond = instant + JOURNEY_PLAFOND;
-                dernier = instant;
-                // Un ARRÊT est dû sur les cartes de bout : c'est de là qu'on
-                // quitte la section, et il ne faut pas en partir sur la traîne
-                // du geste qui vient de les poser.
-                arret = etape === 0 || etape === transitions;
-                // `instant` : le défilement fluide du thème étalerait le saut, et
-                // la carte basculerait en cours de route. C'est la transition CSS
-                // qui doit porter le glissement, pas le défilement de la page.
-                window.scrollTo({
-                    top: haut + (etape / transitions) * course,
-                    behavior: "instant",
-                });
-            };
-
-            // ARRIVÉE dans la section : on s'ancre sur le BORD franchi — la
-            // première étape si l'on descend, la dernière si l'on remonte — et
-            // ce geste-ci ne compte pas comme un cran.
-            //
-            // Le bord, et non le palier atteint. Le geste d'entrée n'était pas
-            // confisqué, la section n'étant pas encore collée ; et Chrome ANIME
-            // le défilement de molette, donc la page continue de glisser après
-            // le dernier évènement, sans qu'aucun ne soit là pour l'arrêter.
-            // Elle dépassait ainsi la première carte, et s'ancrer « au plus
-            // proche » entérinait le dépassement.
-            //
-            // La reconnaissance est bornée à UNE étape du bord : au-delà, on
-            // n'arrive pas, on est déjà dedans — un visiteur amené là au clavier
-            // ou à la barre de défilement ne doit pas être ramené en arrière de
-            // plusieurs écrans à son premier coup de molette.
-            if (! etaitCollee) {
-                etaitCollee = true;
-
-                const bord = sens > 0 ? 0 : transitions;
-
-                if (Math.abs(avance - bord) <= 1) {
-                    event.preventDefault();
-                    // `ancrer` pose l'arrêt : le bord EST une carte de bout,
-                    // donc l'arrivée et la sortie se tiennent par la même règle.
-                    ancrer(bord);
-
-                    return;
-                }
-            }
-
-            const cible = palier + sens;
-            const maintenant = performance.now();
-            // Un geste NEUF se reconnaît à un SILENCE qui le précède. Tant que
-            // les évènements se suivent, c'est le même geste qui vit sur son
-            // inertie, et il a déjà eu son étape — c'est ce qui rend le
-            // blocage catégorique plutôt que seulement probable. Le plafond
-            // garde la sortie : un flux qui ne s'interrompt jamais avance tout
-            // de même.
-            const gesteNeuf = maintenant - dernier > JOURNEY_REPOS
-                || maintenant >= plafond;
-            const sortie = cible < 0 || cible > transitions;
-
-            dernier = maintenant;
-
-            // L'ARRÊT sur la carte de bout. Elle est posée, et c'est de là qu'on
-            // sort : sans cet arrêt, la traîne du geste qui vient de la poser
-            // emportait la page hors de la section et la carte n'apparaissait
-            // qu'un instant. Il faut donc un geste NEUF pour sortir, comme il en
-            // faut un pour avancer.
-            //
-            // `arret` retombe dès que la sortie est accordée : les évènements
-            // suivants du même geste ne doivent pas rattraper la page en route.
-            if (sortie && ! arret) {
-                return;
-            }
-
-            if (maintenant < verrou || ! gesteNeuf) {
-                event.preventDefault();
-
-                return;
-            }
-
-            if (sortie) {
-                arret = false;
-
-                return;
-            }
-
-            event.preventDefault();
-            ancrer(cible);
-        };
-
-        apply();
-        reduceMotion.addEventListener("change", apply);
-        // Écriture DIRECTE dans l'évènement, sans passer par une image.
-        //
-        // Le parcours de soin, lui, coalesce sur `requestAnimationFrame` parce
-        // qu'il en fait davantage. Ici le travail par évènement se réduit à une
-        // lecture de rectangle et une écriture de propriété — moins cher que la
-        // comptabilité du planificateur, et Chrome cadence déjà `scroll` sur
-        // l'image.
-        //
-        // Surtout, cette indirection ne tenait qu'à une image RENDUE. Mesuré en
-        // campagne : `update` n'était appelé qu'une fois pour six évènements, la
-        // dernière image demandée n'étant jamais produite, et le rail restait à
-        // zéro. Une mécanique de défilement ne doit pas dépendre de ça.
-        window.addEventListener("scroll", update, { passive: true });
-        window.addEventListener("resize", schedule);
-        // `passive: false` explicitement : Chrome rend passif tout écouteur de
-        // `wheel` posé sur la fenêtre, et `preventDefault` y serait sans effet.
-        window.addEventListener("wheel", auCran, { passive: false });
-    });
 };
 
 /* ------------------------------------------------------------------------- *
@@ -1434,8 +1098,7 @@ const initLogoScroll = () => {
     // Le défilement émet bien plus souvent que le navigateur ne peint. On ANNULE
     // l'image en attente et on en redemande une, plutôt que de renoncer quand il
     // y en a déjà une : renoncer suppose qu'elle sera rendue, et une image jamais
-    // produite bloquait alors la mise à jour pour de bon. Voir initJourneys, qui
-    // portait exactement ce défaut.
+    // produite bloquait alors la mise à jour pour de bon.
     const planifier = () => {
         window.cancelAnimationFrame(image);
         image = window.requestAnimationFrame(mesurer);
@@ -1657,7 +1320,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initCarousels();
     initScrollRails();
     initAccordions();
-    initJourneys();
     initVolets();
     initHeroMotion();
 });

@@ -229,8 +229,7 @@
  * l'avancement de la page se disputeraient la même position à chaque image.
  *
  * `sticky` plutôt que le `position: fixed` de la référence — qui utilise GSAP
- * et doit alors gérer elle-même le calage. Le collage natif n'a pas ce coût, et
- * c'est déjà ce que fait la vue épinglée du parcours de soin.
+ * et doit alors gérer elle-même le calage. Le collage natif n'a pas ce coût.
  * ------------------------------------------------------------------------- */
 .carousel-pin--active {
   height: calc(100svh + var(--pin-course, 0px));

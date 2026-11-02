@@ -209,7 +209,7 @@ reste ». Un jeton à changer le jour où le design le veut.
 ### Les étiquettes : 10, et pas « pleinement arrondi »
 
 Même profil — `10, 8, 6, 5, 4, 3, 2, 2, 1, 1, 0` — sur l'étiquette d'une section
-(29 de haut) et sur le badge de durée du parcours (31). **Deux hauteurs
+(29 de haut) et sur le badge de durée du parcours (30). **Deux hauteurs
 différentes, le même rayon** : c'est donc une constante, pas une demi-hauteur.
 `$radius-pill` posait une capsule là où la maquette dessine un rectangle à coins
 doux.
@@ -562,7 +562,7 @@ ne dépend pas de l'arrondi et reste.
 ## Grilles : toujours `minmax(0, Nfr)`
 
 Une piste `fr` ne descend jamais sous la largeur minimale de son contenu. Avec
-des enfants à largeur fixe — les visuels du parcours, par exemple — la colonne
+des enfants à largeur fixe — le visuel d'une étape du parcours, par exemple — la colonne
 refuse de se réduire et **les colonnes voisines se compriment à sa place**, en
 silence. `minmax(0, …)` rend le comportement explicite.
 
@@ -741,275 +741,68 @@ Le curseur « main » n'apparaît que si le rail déborde réellement de la vue
 (`carousel--draggable`, posée par le script) : sur un rail qui tient en entier,
 il promettrait un geste sans effet.
 
-## Le parcours avance par étapes, jamais entre deux
+## Le parcours de soin est un slider (3.3.0)
 
-La section « parcours de soin » est haute de plusieurs écrans, la vue reste
-collée et le rail se décale. **Deux mécanismes** cohabitent, et ils répondent à
-deux questions différentes.
+Maquette « Desktop - 10 » (`maquettes/HP/`, 02/11/2026) : **une étape par vue**,
+deux flèches et la barre de progression en bas à droite. Le défilement de la
+page n'est plus confisqué — l'ancienne vue épinglée, sa cadence de molette et
+ses cas particuliers dans les volets ont été retirés.
 
-### Un cran de molette, une étape — le rythme est un CHRONO
+### Le carrousel existant, une étape pleine largeur par élément
 
-Le geste de molette est **confisqué** tant que la vue épinglée occupe l'écran et
-qu'il reste une étape dans son sens : la page ne bouge plus de son fait, c'est
-le script qui la porte d'une étape à la suivante. Deux effets voulus :
+`block-journey.php` passe ses étapes à `components/carousel` (variante
+`journey`) : le rail natif, les flèches, la barre et le glisser à la souris sont
+ceux des technologies, que la maquette dessine à l'identique (piste 214 × 2,
+boutons de 52 espacés de 12). Seul le contenu change : chaque élément porte une
+étape entière, rendue par `components/journey-step.php`.
 
-- **seul le SENS du geste compte, pas son amplitude** — une roulette lâchée d'un
-  coup avance d'une étape, pas de quatre ;
-- **tout ce qui arrive pendant la cadence est absorbé** (`JOURNEY_CADENCE`,
-  400ms — elle couvre la transition CSS de 350ms), donc plusieurs crans
-  rapprochés valent un seul.
+- **Sans gouttière ni retrait de fin** : la page de défilement des flèches vaut
+  la largeur du rail, donc exactement une étape. Le segment de la barre vaut
+  alors un sixième de la piste, et avance d'un sixième par étape — c'est la
+  maquette (726 → 761,7 sur la première).
+- **`scroll-snap-type: x mandatory`** : la molette horizontale, le pavé tactile,
+  le doigt et le clavier se posent toujours sur une étape. Le calage est coupé
+  pendant le glisser (`carousel--dragging`), sinon il reprendrait la main à
+  chaque `scrollLeft` écrit.
+- **`paged`** (argument du carrousel, `data-carousel-paged`) : au relâchement
+  d'un glisser, le rail tourne la page **dans le sens du geste**. Laissé au seul
+  calage, il fallait traîner plus d'une demi-largeur d'écran — 720px à 1440 —
+  pour changer d'étape. Le sens est lu AVANT de retirer la classe de glisser :
+  le calage revient avec elle et ramène aussitôt le rail à son départ (mesuré :
+  un glisser de 200px restait sans effet).
 
-C'est **un chrono qui règle le rythme, plus une distance**. Chaque carte est donc
-tenue le même temps, la dernière comprise — ce que les réglages de hauteur ne
-parvenaient pas à obtenir.
+### Les cotes
 
-#### Trois constantes, et pourquoi il en faut trois
+Relevées sur le PDF à 1440 × 900, et vérifiées rendues :
 
-Une cadence fixe ne suffit pas, et c'est le premier défaut qu'elle a produit :
-**deux étapes passaient d'un seul geste.**
-
-Un geste de pavé tactile — et une roulette sous macOS — n'émet pas un évènement
-mais une **traîne**, qui continue près d'une seconde après que le doigt a quitté
-la surface. À l'expiration de la cadence, l'inertie encore vivante déclenchait une
-seconde bascule. D'où :
-
-| | rôle |
-| --- | --- |
-| `JOURNEY_CADENCE` (400ms) | plancher après une bascule ; couvre la transition CSS |
-| `JOURNEY_REPOS` (150ms) | **silence** au-delà duquel un évènement ouvre un geste NEUF |
-| `JOURNEY_PLAFOND` (1200ms) | sortie de secours, comptée depuis la dernière bascule |
-
-Un geste neuf se reconnaît à un **silence qui le précède**. Tant que les
-évènements se suivent, c'est le même geste qui vit sur son inertie, et il a déjà
-eu son étape — quelle que soit la durée de sa traîne. C'est ce qui rend le
-blocage **catégorique** et non seulement probable : une cadence fixe, elle,
-finissait par expirer sous une traîne d'une seconde et laissait passer une
-seconde carte.
-
-#### Les deux valeurs ont été abaissées, et elles ont chacune un plancher DUR
-
-Retour client : « quand j'arrive sur une étape, si je scroll plusieurs fois
-c'est bloqué […] c'est absorbé pendant trop longtemps ». La cadence est passée
-de 600 à **500ms**, le plafond de 1600 à **1200ms**, puis la cadence à
-**400ms** en raccourcissant d'abord la transition — voir plus bas.
-
-Lequel agit dépend du périphérique, et c'est ce qui rend le réglage
-contre-intuitif : à la molette, avec des crans espacés de plus de
-`JOURNEY_REPOS`, c'est la **cadence**. Au pavé tactile, où le flux ne s'arrête
-jamais et où aucun geste neuf ne peut donc être reconnu, c'est le **plafond
-seul** — donc 1,6 seconde d'attente avant l'ajustement.
-
-Ni l'un ni l'autre ne peut descendre plus bas sans casser quelque chose :
-
-| Constante | Plancher | Ce qui casse en dessous |
+| Élément | Maquette | Comment |
 | --- | --- | --- |
-| `JOURNEY_CADENCE` | **350ms** | La transition CSS du rail. L'étape suivante partirait avant que la précédente soit posée. |
-| `JOURNEY_PLAFOND` | **1000ms** | La traîne d'un pavé tactile. Elle franchirait le plafond seule, et un geste passerait deux cartes. |
+| Grille | 161 / 613 / 726 | 440 + 12 + 101 + 12 + 553, la grille d'avant |
+| Étiquette | 161, 128 | hors du rail : elle reste pendant que les étapes défilent |
+| Numéro et titre | haut de ligne à 128 | le numéro est calé en HAUT de la ligne du titre, plus centré |
+| Durée | 24 sous le titre | pastille de 30, désormais AVANT le texte |
+| Texte | 24 sous la durée | écart titre → texte : 108,2 mesuré, 108,33 rendu |
+| Visuel | 161,445 → 488,772 | carré de 327, en bas de la première colonne |
+| Flèches | 1163 et 1227, 720 → 772 | bas sur celui du visuel |
+| Étape | 644 de haut | 772 − 128 : `min-height` de `.journey__step` |
 
-> **Le second plancher est mesuré, pas supposé.** Plafond ramené à 900 : deux
-> assertions rougissent en annonçant `650px`, soit exactement une étape de trop
-> — « une traîne d'une seconde ne vaut qu'une étape » et « l'arrivée n'emporte
-> pas la première carte ». Il reste 200ms de marge à 1200.
+La durée tombe à 191 au lieu de 190 : le titre fait 38,67 de haut avec
+l'interligne du site, quand Figma l'arrondit à 38.
 
-Le seul levier restant était de **raccourcir la transition CSS**, ce qui
-abaisse mécaniquement le plancher de la cadence. Il a fini par être actionné :
-la transition du rail est passée de 0,45 s à **0,35 s** (`$journey-glide`), et
-la cadence de 500 à **400ms** dans le même mouvement. Les deux ne peuvent pas
-diverger — une cadence sous la transition ferait partir l'étape suivante avant
-que la précédente soit posée. Ça change le glissement lui-même, donc le ressenti
-du bloc : c'était le prix à payer pour repartir plus vite.
+### Un seul visuel par étape
 
-#### Étrangler par `requestAnimationFrame` : ANNULER, pas renoncer
+Le répéteur `visuels` (forme 327 ou 214, deux au plus) est devenu le champ image
+`visuel`. `lcds_migrate_journey_visuals()` (`inc/acf.php`) recopie le premier
+visuel de chaque étape ; le workflow de déploiement et `bin/init.sh` l'appellent
+à chaque passage, sans effet une fois la migration faite. Les anciennes valeurs
+restent en base, ignorées par ACF.
 
-Le motif naïf — « s'il y a déjà une image demandée, ne rien faire » — suppose
-que cette image sera rendue. Quand elle ne l'est pas (onglet en arrière-plan,
-budget de temps virtuel épuisé sous Chrome sans interface), le drapeau reste
-armé et la mise à jour ne repart **jamais**, sans rien signaler.
+### Tablette et mobile — sans maquette
 
-```js
-const schedule = () => {
-    window.cancelAnimationFrame(frame);
-    frame = window.requestAnimationFrame(update);
-};
-```
-
-Le regroupement est identique — une seule image reste demandée — mais aucun
-état ne peut se coincer. Constaté sur le rail épinglé, qui portait le premier
-motif : **six évènements de défilement pour deux mises à jour**. Le parcours de
-soin a été aligné dessus.
-
-
-Le plafond n'est pas décoratif : sans lui, un défilement **continu** — deux
-doigts qui ne se lèvent pas — n'ouvrirait jamais de geste neuf et la section
-deviendrait un cul-de-sac. Avec lui, un tel défilement avance d'une étape toutes
-les 1,6s.
-
-Les deux comportements sont éprouvés : exigence de geste neuf retirée, une traîne
-d'une seconde vaut `650px de plus`, soit une seconde étape. Plafond retiré, un
-défilement continu de deux secondes n'avance plus du tout (`0px de plus`).
-
-#### L'arrivée bloque sur le bord franchi, puis rend la main
-
-Le geste qui amène la page jusqu'à la section n'est **pas** confisqué — il ne
-peut pas l'être, la section n'étant pas encore collée. Deux choses s'ensuivaient,
-et il a fallu les corriger l'une après l'autre.
-
-**Sa traîne emportait la carte d'entrée.** Elle arrive quand la section est
-collée, trouvait un verrou libre et faisait aussitôt basculer une étape : on
-démarrait sur la deuxième carte. Le premier geste vu à l'intérieur est donc
-absorbé sans rien avancer, et la cadence est armée comme après une bascule.
-
-**Et le dépassement était entériné.** Chrome **anime** le défilement de molette :
-la page continue de glisser après le dernier évènement, sans qu'aucun ne soit là
-pour l'arrêter. S'ancrer « au palier le plus proche » revenait donc à accepter la
-glissade. L'ancrage se fait sur le **bord franchi** — la première étape si l'on
-descend, la dernière si l'on remonte — ce qui ramène la page en arrière si la
-glissade a dépassé.
-
-C'est symétrique, et pas par élégance : on arrive aussi **par le bas**, et
-c'était alors la dernière carte qui était sautée.
-
-La reconnaissance de l'arrivée est **bornée à une étape du bord**. Au-delà, on
-n'arrive pas, on est déjà dedans : un visiteur amené au milieu au clavier ou à la
-barre de défilement ne doit pas être ramené en arrière de plusieurs écrans à son
-premier coup de molette.
-
-Les quatre règles sont éprouvées, et chaque épreuve reproduit un défaut réel :
-
-| ce qu'on retire | ce qui se passe |
-| --- | --- |
-| l'ancrage sur le bord | la page reste à `650px`, deuxième carte — le défaut constaté |
-| l'exigence de geste neuf | la traîne d'entrée emporte `650px` |
-| la borne d'une étape | un visiteur au milieu est ramené à la première carte |
-| la détection d'arrivée | la page reste où la glissade l'a laissée, `1301px` |
-
-#### Les cartes de bout marquent un arrêt
-
-Le même défaut se rejoue à la **sortie**, et il fallait la même réponse. La
-dernière carte est posée par un geste ; la traîne de ce geste emportait aussitôt
-la page hors de la section, et la carte n'apparaissait qu'un instant. Elle
-marque donc un **arrêt** : il faut un second geste pour sortir, comme il en faut
-un pour avancer.
-
-C'est armé par l'ancrage lui-même — `arret` vaut vrai dès qu'on se pose sur la
-première ou la dernière étape, que ce soit par une arrivée ou par une bascule.
-L'arrivée et la sortie tiennent donc par une seule règle.
-
-L'arrêt **retombe dès que la sortie est accordée**. Sans cela, les évènements
-suivants du même geste rattrapaient la page en route et la bloquaient à
-mi-chemin — et sans le plafond, un défilement continu n'en sortait jamais. Les
-deux sont éprouvés : arrêt jamais relâché, `un second geste rend la main` passe
-au rouge dans les deux sens.
-
-#### La jonction avec le volet suivant : la section FIGÉE
-
-Depuis que chaque section est un volet, celle du parcours est **collée** une
-fois sa course finie : son rectangle ne bouge plus alors que la page continue
-de défiler. Or tout le verrou lit ce rectangle, et `ancrer` calculait sa cible
-sur `cadre.top + scrollY`. Mesuré sur la page :
-
-| `scrollY` | `cadre.top` | `cadre.top + scrollY` |
-| --- | --- | --- |
-| 0 | 5264 | 5264 |
-| 9000 | −3736 | 5264 |
-| **11000** | **−4400, figé** | **6600** |
-| 12500 | −4777 | 7723 |
-
-Le repère dérivait donc de plus de 1300px, et le premier cran vers le haut
-renvoyait la page **650px en arrière**, sous le volet. C'est le saut que le
-client a signalé, dans les deux sens.
-
-`offsetTop` ne sauve pas la mise : **il porte le décalage de collage lui
-aussi** — vérifié, il suit exactement `cadre.top + scrollY`. La position de flux
-est donc inaccessible une fois la section collée.
-
-La reconnaissance passe par le décalage : `initVolets` colle la section à
-`-course` exactement, donc **`cadre.top === -course` signifie « figée »**. Le
-verrou rend alors la main entièrement, l'animation reste sur sa dernière étape
-(`--journey-progress` plafonné à 1) et le volet suivant passe par-dessus comme
-à toutes les autres jonctions.
-
-> **Égalité, et non « au-delà ».** Sous `prefers-reduced-motion` rien ne colle,
-> et une section simplement dépassée a elle aussi un `top` inférieur à
-> `-course` — mais elle continue de descendre. Les confondre faisait manquer
-> l'ancrage d'arrivée par le bas, qui repartait deux étapes trop tôt : attrapé
-> par la recette, `arrivée par le bas : aligné sur la dernière étape (−390px)`.
-
-Un `etaitCollee` maintenu à vrai pendant l'état figé garde le retour cohérent :
-en remontant sous le volet, le premier cran **recule d'une étape** au lieu de
-rejouer l'ancrage d'arrivée, qui nous remettrait là où nous sommes déjà.
-
-> **C'est du détournement de défilement, et il faut le savoir.** À la molette,
-> un visiteur doit parcourir les six cartes pour passer la section. Quatre
-> sorties existent, et aucune n'est un accident :
->
-> - **le clavier n'est pas touché** — et `Page suivante` (≈ 810px sur un écran
->   de 900) vaut à peu près une étape (650px), donc l'expérience est la même ;
->   c'est aussi la sortie de secours si un arrêt de bout se coinçait, ce que le
->   plafond interdit déjà ;
-> - **le tactile n'est pas touché** : sur mobile, le défilement natif garde
->   l'inertie et le rebond, et c'est le chemin de repli ci-dessous qui joue ;
-> - **la barre de défilement** reste libre ;
-> - **sous `prefers-reduced-motion`, la section n'est pas épinglée du tout** :
->   rien n'est confisqué, les étapes s'empilent.
->
-> Le verrou est un **minuteur**, jamais l'attente d'un évènement qui pourrait ne
-> pas venir : il ne peut pas se coincer. Et aux deux bouts — premier palier vers
-> le haut, dernier vers le bas — le geste n'est pas confisqué, sans quoi on
-> n'entrerait jamais dans la section et on n'en sortirait plus.
-
-### La hauteur — désormais le chemin de repli
-
-```
-height: calc(100svh + (var(--journey-steps) - 1) * var(--journey-step-scroll))
---journey-step-scroll: 80svh
-```
-
-Elle valait un écran **par étape** — six écrans de défilement pour six cartes,
-donc un glissement très lent. Elle vaut 5 écrans : un pour la vue collée, quatre
-pour les cinq transitions.
-
-Depuis le verrou, cette hauteur ne règle plus le rythme à la molette — elle
-règle **la distance dont la page saute** à chaque étape (invisible, la vue étant
-épinglée) et le comportement des chemins que le verrou ne touche pas : clavier,
-barre de défilement, tactile. 80svh valent 650px de course par étape sur un
-écran de 900, soit à peu près une pression de `Page suivante` : c'est ce qui
-aligne le clavier sur la molette.
-
-**L'arrondi.** Le script publie la fraction **brute** du défilement ; le CSS la
-ramène à l'étape la plus proche. Avant, le rail se posait n'importe où : la fin
-d'une étape et le début de la suivante se partageaient l'écran avec un grand
-vide entre les deux — leur colonne de texte est à droite de leur grille, d'où
-l'impression de cartes « très écartées ».
-
-```css
-@supports (width: round(nearest, 1px, 1px)) {
-  .journey { --journey-step-index: round(nearest, var(--journey-progress) * (var(--journey-steps) - 1), 1); }
-}
-```
-
-Deux points de méthode :
-
-- **En CSS et non dans le script**, pour que la translation ET le remplissage de
-  la barre lisent le même nombre arrondi. Un arrondi côté script aurait dû être
-  refait à l'identique pour chacun.
-- **Sous `@supports` et non en repli de cascade.** `round()` ne s'évalue qu'au
-  calcul : une propriété personnalisée qui l'emploie reste valide à l'analyse et
-  n'écarte donc pas la déclaration précédente. Sans cette garde, un moteur qui
-  l'ignore n'aurait **plus de translation du tout** et cinq étapes deviendraient
-  inatteignables.
-
-> Ce qui reste supposé : le comportement des **traînes plus longues que 1,6s**.
-> Le plafond finit par céder, donc un geste dont l'inertie dépasserait cette
-> durée vaudrait deux étapes. Aucun périphérique observé ne va aussi loin — la
-> mesure porte sur une traîne d'une seconde — mais la borne existe, et c'est
-> `JOURNEY_PLAFOND` qui la déplace si le cas se présente.
->
-> Supposé aussi : **l'amplitude de la glissade de Chrome**. La campagne la rejoue
-> à 0,6 étape, ce qu'un évènement synthétisé ne peut pas produire lui-même. Une
-> glissade dépassant une étape entière ne serait plus reconnue comme une arrivée
-> et laisserait la première carte de côté ; c'est la borne de `<= 1` étape qui se
-> desserre alors.
+Sous 1024, tout s'empile : étiquette, visuel, numéro, titre, durée, texte, puis
+la barre et les flèches sous le rail. L'étiquette repasse dans le flux, sur une
+seule colonne (sur la grille à trois colonnes, elle passait sur deux lignes à
+390). À revalider avec le design.
 
 ## L'en-tête suit le défilement
 
@@ -1023,9 +816,8 @@ texte. Le cas `hero` n'a pas ce problème : le recouvrement de la photo est
 justement voulu.
 
 `--header-height` est publiée sur `:root` par le script, parce qu'aucune
-addition de jetons ne la donne. La vue épinglée du parcours s'en sert : elle est
-collée au même bord que l'en-tête, et son retrait se resserre sous 128px sur un
-écran bas — l'étiquette passait dessous.
+addition de jetons ne la donne. Les colonnes collantes s'y calent
+(`$sticky-top`).
 
 ### Aucun fond au défilement — arbitré
 
@@ -1269,16 +1061,11 @@ encore changer, et rien d'autre.
 ### L'amorce du volet : une notion, trois lectures
 
 **Une section est finie quand son travail l'est, pas quand sa boîte l'est.**
-C'est `hauteurUtile()` dans `app.js`, et elle est lue à trois endroits qui ne
-peuvent pas diverger :
+C'est `hauteurUtile()` dans `app.js`, que lit le décalage de collage des volets
+pour savoir quand une section se fige. Avant le slider (3.3.0), l'avancement et
+le verrou de molette du parcours la lisaient aussi.
 
-| Lecteur | Ce qu'il en fait |
-| --- | --- |
-| L'avancement du parcours | où en est le rail |
-| Le verrou de molette | quand rendre la main, et où ancrer |
-| Le décalage de collage des volets | quand la section se fige |
-
-Les trois répondaient à `offsetHeight`. **Trois retours de recette en sont
+Tous répondaient à `offsetHeight`. **Trois retours de recette en sont
 venus**, sur trois sections différentes — la galerie, le parcours, puis les
 traitements — avant que la règle ne soit posée une fois pour toutes.
 
@@ -1297,25 +1084,8 @@ section suivante recouvre de toute façon. Les déduire ne cache rien — ça av
 seulement le figeage au moment où le volet ENTRE dans la vue, si bien qu'il part
 de zéro sur une section immobile.
 
-Deux sections y ajoutent un rembourrage bas **explicite** de la même valeur — la
-galerie épinglée et le parcours — pour que leur fin de course tombe elle aussi
-sur ce point. Le cas du parcours, mesuré :
-
-Elle porte **48px d'amorce**, ajoutés à sa hauteur ET repris en rembourrage bas —
-`box-sizing: border-box` retrancherait sinon le rembourrage du budget de
-défilement. Résultat à 1440 × 900 :
-
-| | Avant | Après |
-| --- | --- | --- |
-| Dernière étape posée | `scrollY` 8387 | 8387 |
-| Section figée | 8387 | 8387 |
-| Volet dans la vue | **8339** | **8387** |
-| Écran recouvert à la dernière étape | 48px | **0** |
-
-> **L'amorce vaut EXACTEMENT le chevauchement.** C'est ce qui fait coïncider les
-> trois instants ; une autre valeur les décale à nouveau. Éprouvé dans les deux
-> sens : sans amorce, 48px du volet sont à l'écran avant la fin ; avec 20px de
-> trop, le volet arrive en retard.
+La galerie épinglée y ajoute un rembourrage bas **explicite** de la même
+valeur, pour que sa fin de course tombe elle aussi sur ce point.
 
 ### Le DÉLAI : le volet part de plus bas encore
 
@@ -1336,8 +1106,9 @@ fige, et il reste ce chemin avant qu'il n'attaque.
 > une respiration mais comme un défilement qui ne répond pas.
 
 **Nul sur une section dont le défilement pilote déjà quelque chose** — la galerie
-épinglée, le parcours. Là, ce même écart avait été signalé comme un DÉFAUT, deux
-fois : on vient de finir une animation et on attend la suite.
+épinglée. Là, ce même écart avait été signalé comme un DÉFAUT : on vient de
+finir une animation et on attend la suite. Le parcours, slider depuis la 3.3.0,
+a retrouvé le délai commun.
 
 #### Le délai est une CALE, pas seulement une déduction
 
@@ -1476,7 +1247,7 @@ participe pas à la mise en page. Mesuré : l'en-tête reste à 128 du début à
 
 ### Le script publie UN nombre, le CSS fait le reste
 
-Même partage que le parcours de soin. Les tailles, la distance de glissement et
+Les tailles, la distance de glissement et
 le calage vivent dans la feuille de style ; `app.js` ne publie que
 `--logo-progress`. Les réécrire des deux côtés aurait créé deux sources.
 
@@ -1929,8 +1700,7 @@ pixel de rail. Et c'est la RÉSERVE qui porte ce rapport : il n'y a aucun facteu
 #### Ce qui a été retenu, et ce qui s'en écarte
 
 - **`position: sticky` et non `fixed`.** La référence utilise GSAP et doit alors
-  calculer elle-même le calage. Le collage natif n'a pas ce coût, et c'est déjà
-  ce que fait la vue épinglée du parcours de soin.
+  calculer elle-même le calage. Le collage natif n'a pas ce coût.
 - **La bande fait un écran** (`100svh`), le carrousel centré dedans. Sans quoi la
   page se bloquerait alors qu'un morceau de la section suivante est déjà visible.
   La référence cale sa bande à 256px du haut, soit 20 % de sa hauteur de vue :
@@ -1940,11 +1710,12 @@ pixel de rail. Et c'est la RÉSERVE qui porte ce rapport : il n'y a aucun facteu
   natif est coupé, donc le script est SEUL à écrire `scrollLeft`. Deux écrivains
   se disputeraient la position à chaque image.
 
-#### Pourquoi ce n'est pas la mécanique du parcours de soin
+#### Pourquoi la molette n'est pas confisquée
 
-Le parcours **confisque la molette** et porte la page d'une étape à l'autre : un
-cran, une étape, avec un chrono qui absorbe le reste. C'est du magnétisme, et
-c'est ce que le client ne voulait pas ici.
+L'ancien parcours de soin (jusqu'à la 3.2) **confisquait la molette** et portait
+la page d'une étape à l'autre : un cran, une étape, avec un chrono qui absorbait
+le reste. C'est du magnétisme, et c'est ce que le client ne voulait pas ici — ni,
+depuis la 3.3.0, sur le parcours lui-même.
 
 Ici rien n'est confisqué : la page défile normalement, et le rail est une
 *fonction* de son avancement. D'où deux propriétés que la confiscation
@@ -1974,7 +1745,7 @@ champ ACF : c'est une décision de conception, pas un choix de contribution.
 
 #### Trois sorties de secours
 
-Comme la vue épinglée du parcours, l'épinglage **n'est pas posé** sous le point
+L'épinglage **n'est pas posé** sous le point
 de rupture (la bande mangerait toute la vue d'un téléphone, où le rail se balaie
 déjà au doigt), sous `prefers-reduced-motion` (RGAA 13.8, voir
 [`accessibilite.md`](accessibilite.md)) et sur un rail qui tient dans la vue —
@@ -2023,11 +1794,11 @@ convient :**
 
 | Écriture | Ce qui se passe |
 | --- | --- |
-| `top: 0` | La section se fige dès son premier pixel. L'intro fait 3074px et le parcours de soin 5500 sur une vue de 1100 : leur fin devient inatteignable. |
+| `top: 0` | La section se fige dès son premier pixel. L'intro fait 3074px sur une vue de 1100 : sa fin devient inatteignable. |
 | `bottom: 0` | Contre-intuitif : la contrainte tire la section vers le HAUT pour la garder dans la vue, et elle s'applique dès le premier pixel puisque le bloc conteneur est toute la page. Mesuré à 1440 × 900, défilement 0 : les technologies, qui commencent à y=9313, étaient peintes de −27 à 900, empilées en bas de l'écran avec toutes les autres. |
 
-Une section plus haute que la vue reçoit un décalage **négatif** — −4400px pour
-le parcours de soin — et se fige sur son dernier écran. C'est le comportement
+Une section plus haute que la vue reçoit un décalage **négatif** — −1846px pour
+l'intro à 1440 × 900 — et se fige sur son dernier écran. C'est le comportement
 voulu.
 
 **Et aucune ne peut être plus courte qu'un écran** : `min-height: 100svh` sur
@@ -2037,8 +1808,8 @@ technologies faisaient 927 pour une vue de 1100, soit 173px de la section
 d'avant restés visibles. Le plancher ramène leur décalage à 0 et le volet
 couvre tout l'écran.
 
-`min-height` et non `height` : l'intro fait 3074 et le parcours de soin 5500,
-et les figer à une vue rendrait leur fin inatteignable. `svh` et non `vh`,
+`min-height` et non `height` : l'intro fait 3074, et la figer à une vue rendrait
+sa fin inatteignable. `svh` et non `vh`,
 comme le hero : sur mobile, la barre d'adresse ne doit pas faire déborder la
 section d'un écran.
 
@@ -2095,7 +1866,7 @@ portent sur la règle, la campagne forçant `prefers-reduced-motion`.
 #### Désactivé sous mouvement réduit
 
 Un fond qui ne suit pas le contenu est un effet de parallaxe. La règle est donc
-sous `prefers-reduced-motion: no-preference`, comme le parcours de soin et la
+sous `prefers-reduced-motion: no-preference`, comme la galerie épinglée et la
 révélation du pied de page — RGAA 13.8, voir
 [`accessibilite.md`](accessibilite.md). Le hero y défile normalement.
 

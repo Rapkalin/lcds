@@ -35,7 +35,7 @@ coup : c’est la thématique la plus lourde du référentiel après Multimédia
 | **1.1** | 26 `<img>` sur les 5 gabarits, toutes avec un `alt` ; le texte vient de la médiathèque |
 | **1.2** | les 29 `<svg>` décoratifs portent `aria-hidden="true"` et `focusable="false"` |
 | **3.2** | Éléments de texte mesurés sur les styles réels, **0 sous le seuil** — à UNE exception près, arbitrée : le bouton « Prendre RDV », 3,84:1 au repos et 4,31:1 au survol, en 13px. Deux assertions mesurent ces rapports à chaque passage et verrouillent le seuil de 3. Voir « L'écart connu » plus bas. |
-| **3.3** | glyphes des contrôles à 10,64:1, curseur du carrousel à 5,96:1, remplissage du parcours à 8,84:1 |
+| **3.3** | glyphes des contrôles à 10,64:1, curseur des carrousels — parcours compris — à 5,96:1 |
 | **6.1** | aucun intitulé générique ; les boutons à glyphe portent un texte masqué visuellement |
 | **6.2** | 107 liens, **0 sans intitulé** |
 | **7.3** | accordéon, cartes, carrousel et panneau mobile actionnables au clavier ; rail focalisable et défilable |
@@ -59,7 +59,7 @@ coup : c’est la thématique la plus lourde du référentiel après Multimédia
 | **12.9** | `inert` retire la page du parcours, Échap referme et rend le focus au bouton |
 | **12.10** | 0 `accesskey` |
 | **13.1** | aucune limite de temps, 0 `http-equiv="refresh"` |
-| **13.8** | aucun contenu en mouvement automatique ; parcours et pied de page sont pilotés par le défilement et désactivés sous `prefers-reduced-motion` |
+| **13.8** | aucun contenu en mouvement automatique ; galerie épinglée et pied de page sont pilotés par le défilement et désactivés sous `prefers-reduced-motion` ; le parcours est un slider à flèches, sans défilement piloté |
 
 ### Non conforme
 
@@ -239,7 +239,6 @@ contraste des composants non textuels, qui ne porte que sur ce qui est
 | --- | --- | --- |
 | Bordure des boutons du carrousel | 1,79:1 | la flèche à l'intérieur est à 10,64:1 |
 | Piste du carrousel | 1,79:1 | l'état est porté par le curseur, à 5,96:1 sur la piste |
-| Piste de progression du parcours | 1,20:1 | le remplissage est à 8,84:1 sur la piste |
 | Bordure de l'étiquette de section | 1,79:1 | purement décorative, le texte porte l'information |
 
 Les relever déviateraient des cotes relevées au pixel sans gain

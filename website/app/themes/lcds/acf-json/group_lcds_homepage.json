@@ -664,12 +664,12 @@
                                     "parent_repeater": "field_lcds_parcours_etapes"
                                 },
                                 {
-                                    "key": "field_lcds_parcours_visuels",
-                                    "label": "Visuels",
-                                    "name": "visuels",
+                                    "key": "field_lcds_parcours_visuel",
+                                    "label": "Visuel",
+                                    "name": "visuel",
                                     "aria-label": "",
-                                    "type": "repeater",
-                                    "instructions": "Deux au maximum sur la maquette : un large et un étroit.",
+                                    "type": "image",
+                                    "instructions": "Affiché en carré de 327 px, à gauche de l'étape.",
                                     "required": 0,
                                     "conditional_logic": false,
                                     "wrapper": {
@@ -677,69 +677,16 @@
                                         "class": "",
                                         "id": ""
                                     },
-                                    "collapsed": "",
-                                    "min": 0,
-                                    "max": 2,
-                                    "layout": "table",
-                                    "button_label": "Ajouter un visuel",
-                                    "sub_fields": [
-                                        {
-                                            "key": "field_lcds_parcours_forme",
-                                            "label": "Forme",
-                                            "name": "forme",
-                                            "aria-label": "",
-                                            "type": "select",
-                                            "instructions": "",
-                                            "required": 0,
-                                            "conditional_logic": false,
-                                            "wrapper": {
-                                                "width": "",
-                                                "class": "",
-                                                "id": ""
-                                            },
-                                            "choices": {
-                                                "step-wide": "Large (327 px)",
-                                                "step-narrow": "Étroit (214 px)"
-                                            },
-                                            "default_value": "step-wide",
-                                            "allow_null": 0,
-                                            "multiple": 0,
-                                            "ui": 0,
-                                            "ajax": 0,
-                                            "return_format": "value",
-                                            "placeholder": "",
-                                            "create_options": 0,
-                                            "save_options": 0,
-                                            "parent_repeater": "field_lcds_parcours_visuels"
-                                        },
-                                        {
-                                            "key": "field_lcds_parcours_image",
-                                            "label": "Visuel",
-                                            "name": "image",
-                                            "aria-label": "",
-                                            "type": "image",
-                                            "instructions": "",
-                                            "required": 0,
-                                            "conditional_logic": false,
-                                            "wrapper": {
-                                                "width": "",
-                                                "class": "",
-                                                "id": ""
-                                            },
-                                            "return_format": "id",
-                                            "library": "all",
-                                            "preview_size": "thumbnail",
-                                            "mime_types": "jpg,jpeg,png,webp",
-                                            "min_width": 0,
-                                            "min_height": 0,
-                                            "min_size": 0,
-                                            "max_width": 0,
-                                            "max_height": 0,
-                                            "max_size": 0,
-                                            "parent_repeater": "field_lcds_parcours_visuels"
-                                        }
-                                    ],
-                                    "rows_per_page": 20,
+                                    "return_format": "id",
+                                    "library": "all",
+                                    "preview_size": "thumbnail",
+                                    "mime_types": "jpg,jpeg,png,webp",
+                                    "min_width": 0,
+                                    "min_height": 0,
+                                    "min_size": 0,
+                                    "max_width": 0,
+                                    "max_height": 0,
+                                    "max_size": 0,
                                     "parent_repeater": "field_lcds_parcours_etapes"
                                 }
                             ],
@@ -1183,5 +1130,5 @@
     "display_title": "",
     "allow_ai_access": false,
     "ai_description": "",
-    "modified": 1788618509
+    "modified": 1788618510
 }

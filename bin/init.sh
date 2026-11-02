@@ -148,6 +148,11 @@ wp eval 'lcds_reset_seo_titles();' --allow-root >/dev/null 2>&1 \
     && echo "==> [init] Gabarits de titre Yoast vérifiés." \
     || echo "!!! [init] Correction des gabarits de titre échouée (ignoré)."
 
+# Migration 3.3.0 : un seul visuel par étape du parcours. Idempotente.
+wp eval 'lcds_migrate_journey_visuals();' --allow-root >/dev/null 2>&1 \
+    && echo "==> [init] Visuels du parcours vérifiés." \
+    || echo "!!! [init] Migration des visuels du parcours échouée (ignoré)."
+
 # -----------------------------------------------------------------------------
 # 6) Navigation : les menus, leur rattachement aux emplacements, et leurs
 #    entrées par défaut. Sans ça l'en-tête sort vide — wp_nav_menu() est appelé

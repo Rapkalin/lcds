@@ -587,8 +587,8 @@ window.runFrontQa = async (win) => {
                 && styleOf(header, "::before").content === "none"
         );
 
-        // La hauteur est publiée pour les blocs qui doivent l'éviter : la vue
-        // épinglée du parcours est collée au même bord que l'en-tête.
+        // La hauteur est publiée pour les blocs qui doivent l'éviter : les
+        // colonnes collantes s'y calent.
         const publiee = parseFloat(
             win.getComputedStyle(doc.documentElement).getPropertyValue("--header-height")
         );
@@ -626,7 +626,8 @@ window.runFrontQa = async (win) => {
     //
     // Le défilement est instantané parce que la campagne force la préférence de
     // réduction des animations — sans quoi rien ne serait mesurable au tick près.
-    const next = doc.querySelector("[data-carousel-next]");
+    // Le parcours, rail à pages pleine largeur, a son propre bloc plus bas.
+    const next = doc.querySelector("[data-carousel]:not([data-carousel-paged]) [data-carousel-next]");
     const blocAFleches = next === null ? null : next.closest("[data-carousel]");
     const rail = blocAFleches === null ? null : blocAFleches.querySelector(".carousel__rail");
 
@@ -1145,12 +1146,12 @@ window.runFrontQa = async (win) => {
          * DÉCLARÉ à celui qu'on mesure, donc les deux bougent ensemble. Éprouvé
          * — la mutation qui étend le délai aux sections pilotées y survivait.
          *
-         * C'est une DÉCISION qu'on verrouille ici, et elle vient de deux retours
-         * de recette : sur la galerie et sur le parcours, ce même écart après la
-         * fin de l'animation avait été signalé comme un défaut.
+         * C'est une DÉCISION qu'on verrouille ici, et elle vient d'un retour de
+         * recette : sur la galerie, ce même écart après la fin de l'animation
+         * avait été signalé comme un défaut.
          */
         const pilotees = Array.from(
-            doc.querySelectorAll(".front-page > .journey, .front-page > :has(> [data-carousel-pin]:last-child)")
+            doc.querySelectorAll(".front-page > :has(> [data-carousel-pin]:last-child)")
         );
         const avecDelai = pilotees.filter(
             (noeud) => (parseFloat(styleOf(noeud).getPropertyValue("--volet-delai")) || 0) !== 0
@@ -1159,7 +1160,7 @@ window.runFrontQa = async (win) => {
         assert(
             `volet : aucun délai sur les ${pilotees.length} sections pilotées par le défilement`
             + ` (${avecDelai.length === 0 ? "aucune" : avecDelai.map((n) => n.className.split(" ")[0]).join(", ")})`,
-            pilotees.length >= 2 && avecDelai.length === 0
+            pilotees.length >= 1 && avecDelai.length === 0
         );
 
         /*
@@ -2491,11 +2492,6 @@ window.runFrontQa = async (win) => {
         const cs = styleOf(numeroEtape);
         const titreEtape = doc.querySelector(".journey__title");
         const ct = styleOf(titreEtape);
-        const centre = (node, style, avecPadding) => Math.round(
-            node.getBoundingClientRect().top
-            + (avecPadding ? parseFloat(style.paddingTop) : 0)
-            + parseFloat(style.lineHeight) / 2,
-        );
 
         assert(
             `parcours : numéro en Sligoil 24 (${cs.fontFamily.split(",")[0]} ${cs.fontSize})`,
@@ -2517,11 +2513,11 @@ window.runFrontQa = async (win) => {
             `parcours : aucun interlettrage (${cs.letterSpacing})`,
             cs.letterSpacing === "normal"
         );
-        // Le calage vertical est la seule chose que le changement de taille
-        // pouvait casser en silence : la formule compare deux boîtes de ligne.
+        // Maquette « Desktop - 10 » : les deux boîtes de ligne partent de 128.
         assert(
-            `parcours : numéro centré sur la première ligne du titre (${centre(numeroEtape, cs, true)} / ${centre(titreEtape, ct, false)})`,
-            Math.abs(centre(numeroEtape, cs, true) - centre(titreEtape, ct, false)) <= 1
+            `parcours : numéro calé sur le haut de la ligne du titre (${Math.round(numeroEtape.getBoundingClientRect().top)} / ${Math.round(titreEtape.getBoundingClientRect().top)})`,
+            Math.abs(numeroEtape.getBoundingClientRect().top - titreEtape.getBoundingClientRect().top) <= 1
+                && ct.lineHeight !== ""
         );
     }
 
@@ -2595,398 +2591,83 @@ window.runFrontQa = async (win) => {
             closed.getAttribute("aria-expanded") === "false" && panel.hidden === true);
     }
 
-    // Section parcours.
-    //
-    // La campagne force la réduction d'animations : le comportement ATTENDU est
-    // donc l'empilement, pas l'épinglage. C'est le repli accessible, et il vaut
-    // d'être vérifié — c'est aussi le rendu obtenu sans JavaScript.
-    //
-    // La mécanique épinglée est éprouvée autrement : on injecte l'avancement et
-    // on mesure ce que le CSS en fait. Cela couvre la seule partie où une erreur
-    // est probable — les deux formules — sans dépendre du défilement, dont le
-    // pilotage n'est pas fiable sous temps virtuel.
-    const journey = doc.querySelector("[data-journey]");
+    /* --------------------------------------------------------------------- *
+     * Parcours de soin : un slider, une étape par vue (maquette « Desktop - 10 »).
+     *
+     * Les cotes sont relevées sur le PDF à 1440 × 900 ; le défilement est
+     * instantané, la campagne forçant la réduction des animations.
+     * --------------------------------------------------------------------- */
+    const parcours = doc.querySelector(".journey .carousel--journey");
 
-    if (journey !== null && win.innerWidth === 1440) {
-        const round = (value) => Math.round(value);
-        const rect = (selector) => doc.querySelector(selector).getBoundingClientRect();
-        const barre = rect(".journey__progress");
+    if (parcours !== null && win.innerWidth === 1440) {
+        const section = parcours.closest(".journey");
+        const railP = parcours.querySelector(".carousel__rail");
+        const etapes = parcours.querySelectorAll(".journey__step");
+        const precedentP = parcours.querySelector("[data-carousel-prev]");
+        const suivantP = parcours.querySelector("[data-carousel-next]");
+        const haut = section.getBoundingClientRect().top;
+        const boite = (noeud) => {
+            const r = noeud.getBoundingClientRect();
 
+            return [r.left, r.top - haut, r.right, r.bottom - haut].map((v) => Math.round(v));
+        };
+        const tick = () => new Promise((resolve) => setTimeout(resolve, 60));
+
+        assert(`parcours : six étapes (${etapes.length})`, etapes.length === 6);
         assert(
-            "parcours empilé quand les animations sont réduites",
-            !journey.classList.contains("journey--pinned")
-        );
-        assert(`barre : x = 613 (${round(barre.left)})`, round(barre.left) === 613);
-        assert(`barre : largeur = 666 (${round(barre.width)})`, round(barre.width) === 666);
-        assert(`numéro : x = 613 (${round(rect(".journey__number").left)})`,
-            round(rect(".journey__number").left) === 613);
-        assert(`corps : x = 726, largeur = 553 (${round(rect(".journey__body").left)}/${round(rect(".journey__body").width)})`,
-            round(rect(".journey__body").left) === 726 && round(rect(".journey__body").width) === 553);
-        // Hauteur-indépendant : le retrait de section suit la hauteur de la vue,
-        // mais l'écart entre la barre et le titre vaut toujours 1 + 48.
-        assert(`titre : 49px sous la barre (${round(rect(".journey__title").top - barre.top)})`,
-            round(rect(".journey__title").top - barre.top) === 49);
-        assert(`six étapes (${doc.querySelectorAll(".journey__step").length})`,
-            doc.querySelectorAll(".journey__step").length === 6);
-
-        // Les deux formules, éprouvées sur trois valeurs. Le remplissage vaut
-        // (1 + p × 5) / 6, donc 1/6 au départ et non zéro : c'est la maquette.
-        journey.classList.add("journey--pinned");
-
-        // La section ne mesure plus un écran PAR ÉTAPE : un écran, plus un
-        // budget de défilement par transition. C'est ce qui rend le rail
-        // réactif à la molette. Le mesurer, et non le lire, couvre l'addition.
-        //
-        // La COURSE, pas la boîte : celle-ci porte en plus l'amorce du volet,
-        // qui ne fait rien avancer. Confondre les deux ferait rougir cette
-        // assertion sur du code juste — ou, pire, laisserait l'amorce entamer le
-        // budget de défilement sans que rien ne le signale.
-        const budget = 0.8;
-        const attenduHaut = win.innerHeight * (1 + 5 * budget);
-        const amorceParcours = parseFloat(styleOf(journey).paddingBottom) || 0;
-        const courseParcours = journey.offsetHeight - amorceParcours;
-        assert(
-            `section : ${(1 + 5 * budget).toFixed(2)} écrans de course — un pour la vue collée, le reste pour les cinq transitions (${round(courseParcours)} / ${round(attenduHaut)})`,
-            Math.abs(courseParcours - attenduHaut) < 4
+            "parcours : une page par étape, calée",
+            parcours.hasAttribute("data-carousel-paged")
+                && styleOf(railP).scrollSnapType.includes("mandatory")
+                && Math.abs(railP.scrollWidth - railP.clientWidth * etapes.length) < 2
         );
 
-        /*
-         * L'AMORCE DU VOLET vaut EXACTEMENT le chevauchement de section.
-         *
-         * Chaque section chevauche la précédente de son rayon : le haut de la
-         * suivante est donc toujours 48px au-dessus du bas de celle-ci. Sans
-         * amorce, elle entrait dans la vue 48px AVANT que la dernière étape ne
-         * soit posée, et le volet apparaissait pendant la dernière slide.
-         * Retour de recette : « sur la dernière slide, le volet est déjà là ».
-         *
-         * Ce qui est vérifié est la CONSÉQUENCE, pas la recette : le haut de la
-         * section suivante doit tomber exactement au bout de la course. Une
-         * amorce d'une autre valeur — ou un chevauchement modifié — décale les
-         * deux à nouveau, et cette assertion le voit.
-         */
-        const suivanteParcours = journey.nextElementSibling;
+        const visuel = boite(etapes[0].querySelector(".journey__media"));
+        const corps = boite(etapes[0].querySelector(".journey__body"));
+        const piste = boite(parcours.querySelector(".carousel__track"));
+        const flecheP = boite(precedentP);
+        const flecheS = boite(suivantP);
 
-        if (suivanteParcours !== null) {
-            const rayonParcours = parseFloat(styleOf(journey).borderTopLeftRadius) || 0;
-            const ecartParcours = Math.round(
-                suivanteParcours.getBoundingClientRect().top
-                - journey.getBoundingClientRect().top
-                - courseParcours
-            );
+        assert(`parcours : visuel 161,445 → 488,772 (${visuel.join(",")})`,
+            visuel.join(",") === "161,445,488,772");
+        assert(`parcours : corps à x = 726 sur 553 (${corps[0]} / ${corps[2] - corps[0]})`,
+            corps[0] === 726 && corps[2] - corps[0] === 553);
+        assert(`parcours : barre 726 → 940 à y = 745 (${piste.join(",")})`,
+            piste.join(",") === "726,745,940,747");
+        assert(`parcours : flèches 1163 et 1227, bas sur celui du visuel (${flecheP.join(",")} / ${flecheS.join(",")})`,
+            flecheP.join(",") === "1163,720,1215,772" && flecheS.join(",") === "1227,720,1279,772");
 
-            assert(
-                `parcours : le volet entre au bout de la course, pas avant (${ecartParcours}px d'écart, amorce ${round(amorceParcours)} pour un chevauchement de ${round(rayonParcours)})`,
-                Math.abs(ecartParcours) < 2 && Math.abs(amorceParcours - rayonParcours) < 1
-            );
+        const segment = () => parcours.querySelector("[data-carousel-thumb]").getBoundingClientRect();
+
+        assert(`parcours : le segment rempli vaut une étape sur six (${Math.round(segment().width)})`,
+            Math.abs(segment().width - 214 / 6) < 1);
+        assert("parcours : précédent désactivé sur la première étape", precedentP.disabled === true);
+
+        suivantP.click();
+        await tick();
+        assert(`parcours : suivant passe exactement une étape (${Math.round(railP.scrollLeft)} / ${railP.clientWidth})`,
+            Math.abs(railP.scrollLeft - railP.clientWidth) < 2 && precedentP.disabled === false);
+
+        // Au clic et non par `scrollTo` : l'état des flèches suit l'évènement
+        // `scroll`, que le temps virtuel ne livre pas toujours avant la lecture.
+        for (let rang = 1; rang < etapes.length; rang++) {
+            suivantP.click();
+            await tick();
         }
 
-        // La translation est désormais ANIMÉE : sans cette neutralisation, les
-        // trois mesures ci-dessous liraient le rail en cours de route.
-        const railParcours = doc.querySelector(".journey__track");
-        const remplissageParcours = doc.querySelector(".journey__progress-fill");
+        assert(`parcours : suivant désactivé sur la dernière étape (${Math.round(railP.scrollLeft)})`,
+            suivantP.disabled === true
+                && Math.abs(railP.scrollLeft - railP.clientWidth * (etapes.length - 1)) < 2);
 
+        railP.scrollTo({ left: 0, behavior: "auto" });
+        await tick();
+
+        // Le slider ne pilote plus le défilement de la page : la section est
+        // une section ordinaire, avec le délai de volet des autres.
         assert(
-            `translation animée (${win.getComputedStyle(railParcours).transitionProperty})`,
-            win.getComputedStyle(railParcours).transitionProperty.includes("transform")
-                && parseFloat(win.getComputedStyle(railParcours).transitionDuration) > 0
+            `parcours : section ordinaire, délai de volet commun (${styleOf(section).getPropertyValue("--volet-delai").trim()})`,
+            (parseFloat(styleOf(section).getPropertyValue("--volet-delai")) || 0) > 0
+                && ! section.hasAttribute("data-journey")
         );
-
-        railParcours.style.transition = "none";
-        remplissageParcours.style.transition = "none";
-
-        // Les fractions choisies PROUVENT l'arrondi : sans lui, 0,31 donnerait
-        // 1,55 vue et un remplissage de 283, et non 2 vues et 333.
-        //
-        // 0,9 est le cas de la DERNIÈRE carte : elle doit être entièrement en
-        // place alors qu'il reste un dixième de la course à parcourir, sinon
-        // elle n'apparaît qu'au moment où la section se décolle. Sans arrondi,
-        // 0,9 laisserait le rail à 4,5 vues, c'est-à-dire à cheval.
-        for (const [progres, remplissage, vues] of [[0, 111, 0], [0.31, 333, 2], [0.62, 444, 3], [0.9, 666, 5], [1, 666, 5]]) {
-            journey.style.setProperty("--journey-progress", String(progres));
-            assert(
-                `avancement ${progres} : remplissage ≈ ${remplissage} (${round(rect(".journey__progress-fill").width)})`,
-                Math.abs(rect(".journey__progress-fill").width - remplissage) < 1.5
-            );
-            assert(
-                `avancement ${progres} : rail décalé de ${vues} vue(s) (${round(-rect(".journey__step").left)})`,
-                Math.abs(-rect(".journey__step").left - win.innerWidth * vues) < 2
-            );
-        }
-
-        journey.style.removeProperty("--journey-progress");
-
-        // Le repli existe : un moteur sans `round()` doit garder une
-        // translation, même continue. Éprouvé sur la règle, la garde
-        // `@supports` étant vraie ici.
-        assert(
-            "translation de repli déclarée hors de la garde",
-            trouverRegle(doc, ".journey__track", (regle) => {
-                const trace = regle.style.transform;
-
-                // `null` et non `false` pour toute règle qui ne dit rien : le
-                // premier `.journey__track` de la feuille ne porte AUCUNE
-                // translation, et un `false` y aurait arrêté la recherche avant
-                // d'atteindre celle qu'on cherche.
-                return trace !== "" && !trace.includes("round(")
-                    && trace.includes("var(--journey-progress") ? true : null;
-            }) === true
-        );
-
-        /* ----------------------------------------------------------------- *
-         * Une étape par cran de molette, et rien pendant la cadence.
-         *
-         * Éprouvable sans image d'animation : le gestionnaire lit la position
-         * de la section et la corrige dans le même appel, sans passer par
-         * `requestAnimationFrame`. Les évènements sont synthétisés, c'est le
-         * seul moyen d'éprouver un geste sans périphérique.
-         * ----------------------------------------------------------------- */
-        const haut = journey.getBoundingClientRect().top + win.scrollY;
-        // La COURSE, amorce du volet déduite — la même hauteur que lit le
-        // verrou lui-même. Calculée sur la boîte, elle valait 48px de trop et
-        // l'étape attendue dérivait de 10px : l'assertion rougissait sur un
-        // verrou pourtant inchangé. Voir `hauteurUtile` dans app.js.
-        const course = courseParcours - win.innerHeight;
-        const etape = course / 5;
-        const cran = (delta) => {
-            const evenement = new win.WheelEvent("wheel", {
-                deltaY: delta,
-                cancelable: true,
-                bubbles: true,
-            });
-            win.dispatchEvent(evenement);
-
-            return evenement.defaultPrevented;
-        };
-
-        const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        const traine = async (tirs, ecart) => {
-            for (let tir = 0; tir < tirs; tir += 1) {
-                await pause(ecart);
-                cran(100);
-            }
-        };
-
-        // Hors de la section, le geste appartient à la page : sans cette borne
-        // le site entier deviendrait inutilisable à la molette. Ce cran désarme
-        // aussi l'état « collée », comme le ferait un vrai défilement d'approche.
-        win.scrollTo(0, Math.round(haut) - 40);
-        assert("hors section : le cran n'est pas confisqué", cran(100) === false);
-
-        // ARRIVÉE. Deux choses se cumulaient. Le geste d'entrée n'était pas
-        // confisqué — la section n'était pas encore collée — et Chrome ANIME le
-        // défilement de molette : la page continue de glisser après le dernier
-        // évènement, sans qu'aucun ne soit là pour l'arrêter.
-        //
-        // Le `scrollTo` ci-dessous rejoue cette glissade : 0,6 étape au-delà du
-        // bord, ce qu'un évènement synthétisé ne peut pas produire lui-même
-        // puisqu'il ne déclenche pas l'action par défaut du navigateur. C'est ce
-        // dépassement qu'il ne faut PAS entériner — s'ancrer « au plus proche »
-        // aurait ici retenu la deuxième carte.
-        win.scrollTo(0, Math.round(haut + 0.6 * etape));
-        const arrivee = cran(100);
-
-        assert("arrivée : le geste d'entrée est confisqué", arrivee === true);
-        assert(
-            `arrivée : aligné sur la première étape, sans avancer (${round(win.scrollY - haut)}px)`,
-            Math.abs(win.scrollY - haut) < 2
-        );
-
-        await traine(10, 100);
-        assert(
-            `arrivée : la traîne d'entrée n'emporte pas la première carte (${round(win.scrollY - haut)}px)`,
-            Math.abs(win.scrollY - haut) < 2
-        );
-
-        // Même chose EN REMONTANT : on arrive alors par le bas, et c'est la
-        // DERNIÈRE étape qu'il faut bloquer.
-        win.scrollTo(0, Math.round(haut + course) + 40);
-        assert("hors section par le bas : le cran n'est pas confisqué", cran(-100) === false);
-
-        win.scrollTo(0, Math.round(haut + course - 0.6 * etape));
-        const arriveeBas = cran(-100);
-
-        assert("arrivée par le bas : le geste d'entrée est confisqué", arriveeBas === true);
-        assert(
-            `arrivée par le bas : aligné sur la dernière étape (${round(win.scrollY - haut - course)}px)`,
-            Math.abs(win.scrollY - haut - course) < 2
-        );
-
-        await traine(10, 100);
-        assert(
-            `arrivée par le bas : la traîne n'emporte pas la dernière carte (${round(win.scrollY - haut - course)}px)`,
-            Math.abs(win.scrollY - haut - course) < 2
-        );
-
-        // Amené AU MILIEU de la section autrement qu'à la molette — clavier,
-        // barre de défilement — le premier cran ne doit PAS être pris pour une
-        // arrivée : le visiteur serait ramené en arrière de plusieurs écrans.
-        win.scrollTo(0, 0);
-        cran(100);
-        win.scrollTo(0, Math.round(haut + 2 * etape));
-        await pause(1800);
-        cran(100);
-        assert(
-            `au milieu : le premier cran avance, il ne ramène pas au début (${round((win.scrollY - haut) / etape)} étape(s))`,
-            Math.abs(win.scrollY - haut - 3 * etape) < 2
-        );
-
-        // Retour au premier palier pour la suite.
-        win.scrollTo(0, 0);
-        cran(100);
-        win.scrollTo(0, Math.round(haut) + 20);
-        cran(100);
-        await pause(1800);
-
-        // Le geste SUIVANT, lui, porte d'exactement une étape.
-        await pause(1800);
-        const confisque = cran(100);
-        const apresUnCran = win.scrollY;
-
-        assert("section collée : le cran est confisqué", confisque === true);
-        assert(
-            `un cran porte d'exactement une étape (${round(apresUnCran - haut)} / ${round(etape)})`,
-            Math.abs(apresUnCran - haut - etape) < 2
-        );
-
-        // Trois crans de plus AVANT la fin de la cadence : absorbés sans effet.
-        // C'est ce qui rend le geste presque idempotent — l'amplitude d'une
-        // roulette lâchée d'un coup ne compte pas.
-        const absorbes = [cran(100), cran(100), cran(100)];
-
-        assert(`crans rapprochés confisqués (${absorbes.join(", ")})`,
-            absorbes.every((prevenu) => prevenu === true));
-        assert(
-            `page immobile pendant la cadence (${round(win.scrollY)} = ${round(apresUnCran)})`,
-            Math.abs(win.scrollY - apresUnCran) < 2
-        );
-
-        // La TRAÎNE d'un geste. Un pavé tactile émet près d'une seconde après
-        // que le doigt a quitté la surface : avec une cadence fixe, cette
-        // inertie déclenchait une seconde étape — deux cartes passaient d'un
-        // seul geste.
-        await pause(1800);
-        cran(100);
-        const departTraine = win.scrollY;
-
-        await traine(10, 100);
-        assert(
-            `une traîne d'une seconde ne vaut qu'une étape (${round(win.scrollY - departTraine)}px de plus)`,
-            Math.abs(win.scrollY - departTraine) < 2
-        );
-
-        // Et le plafond : un défilement CONTINU doit finir par avancer, sinon
-        // la section devient un cul-de-sac.
-        const departContinu = win.scrollY;
-
-        await traine(40, 50);
-        assert(
-            `un défilement continu franchit le plafond (${round(win.scrollY - departContinu)}px de plus)`,
-            win.scrollY - departContinu >= etape - 2
-        );
-
-        /* ----------------------------------------------------------------- *
-         * L'ARRÊT sur les cartes de bout.
-         *
-         * La carte est posée par une bascule — et non par un `scrollTo`, sinon
-         * l'arrêt ne serait pas armé et l'assertion ne prouverait rien. Le geste
-         * qui vient de la poser ne doit pas l'emporter par sa traîne ; il faut
-         * un second geste pour sortir.
-         * ----------------------------------------------------------------- */
-        win.scrollTo(0, 0);
-        cran(100);
-        win.scrollTo(0, Math.round(haut + 4 * etape));
-        await pause(1800);
-        cran(100);
-
-        assert(
-            `dernière étape posée par une bascule (${round((win.scrollY - haut) / etape)} étape(s))`,
-            Math.abs(win.scrollY - haut - course) < 2
-        );
-
-        const surLaDerniere = win.scrollY;
-
-        assert("dernière étape : la traîne ne fait pas sortir", cran(100) === true);
-        await traine(10, 100);
-        assert(
-            `dernière étape : arrêt marqué à l'écran (${round(win.scrollY - surLaDerniere)}px)`,
-            Math.abs(win.scrollY - surLaDerniere) < 2
-        );
-
-        await pause(1800);
-        assert("dernière étape : un second geste rend la main", cran(100) === false);
-
-        // Symétrique en haut : la première carte marque le même arrêt avant de
-        // laisser remonter dans la section précédente.
-        win.scrollTo(0, 0);
-        cran(100);
-        win.scrollTo(0, Math.round(haut + etape));
-        await pause(1800);
-        cran(-100);
-
-        assert(
-            `première étape posée par une bascule (${round((win.scrollY - haut) / etape)} étape(s))`,
-            Math.abs(win.scrollY - haut) < 2
-        );
-        assert("première étape : la traîne ne fait pas remonter", cran(-100) === true);
-
-        await pause(1800);
-        assert("première étape : un second geste rend la main", cran(-100) === false);
-
-        /* ----------------------------------------------------------------- *
-         * LA JONCTION AVEC LE VOLET SUIVANT.
-         *
-         * Une fois sa course finie, la section est COLLÉE par le volet : son
-         * rectangle se fige alors que la page continue de défiler. Tout ce qui
-         * précède lit ce rectangle — `ancrer` calculait sa cible sur
-         * `cadre.top + scrollY`, qui dérivait de 1336px dès que le collage
-         * prenait. D'où un saut à la jonction, dans les deux sens.
-         *
-         * La campagne force le mouvement réduit, et la règle de collage vit
-         * sous `no-preference` : elle ne s'applique donc pas ici. On la POSE à
-         * la main — c'est la seule façon d'éprouver cette géométrie, et sans
-         * elle l'assertion ne pourrait pas échouer.
-         * ----------------------------------------------------------------- */
-        journey.style.position = "sticky";
-        journey.style.top = `${-course}px`;
-
-        win.scrollTo(0, Math.round(haut + course) + 600);
-        await pause(1800);
-
-        const departJonction = win.scrollY;
-        const remonteJonction = cran(-100);
-
-        assert(
-            "jonction : la section figée ne confisque pas le cran vers le haut",
-            remonteJonction === false
-        );
-        assert(
-            `jonction : la page ne saute pas sous le volet (${round(win.scrollY - departJonction)}px)`,
-            Math.abs(win.scrollY - departJonction) < 2
-        );
-
-        await pause(1800);
-
-        const departDescente = win.scrollY;
-        const descenteJonction = cran(100);
-
-        assert(
-            "jonction : la section figée ne confisque pas le cran vers le bas",
-            descenteJonction === false
-        );
-        assert(
-            `jonction : rien ne bouge non plus vers le bas (${round(win.scrollY - departDescente)}px)`,
-            Math.abs(win.scrollY - departDescente) < 2
-        );
-
-        journey.style.removeProperty("position");
-        journey.style.removeProperty("top");
-
-        win.scrollTo(0, 0);
-
-        railParcours.style.removeProperty("transition");
-        remplissageParcours.style.removeProperty("transition");
-        journey.style.removeProperty("--journey-progress");
-        journey.classList.remove("journey--pinned");
     }
 
     // if/else et non un `return` anticipé : la branche desktop rendait la main,
@@ -5112,7 +4793,7 @@ window.runFrontQa = async (win) => {
 
         const etiquettes = [
             [".tag", "étiquette de section"],
-            [".block-journey__duration", "badge de durée"],
+            [".journey__duration", "badge de durée"],
         ]
             .map(([sel, nom]) => [doc.querySelector(sel), nom])
             .filter(([noeud]) => noeud !== null);

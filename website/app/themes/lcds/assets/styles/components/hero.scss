@@ -227,9 +227,9 @@
   // pixel. Mesuré à 1440 × 900, défilement 0 : les technologies, qui commencent
   // à y=9313, étaient peintes de -27 à 900.
   //
-  // Coller par le HAUT ne marche pas davantage : l'intro fait 2874px et le
-  // parcours de soin 4500, tous deux plus hauts que la vue. Ils se figeraient
-  // dès leur premier pixel et leur fin serait inatteignable.
+  // Coller par le HAUT ne marche pas davantage : l'intro fait 2874px, plus
+  // haute que la vue. Elle se figerait dès son premier pixel et sa fin serait
+  // inatteignable.
   // `data-volet` est posé par `initVolets` sur les seules sections que la
   // SUIVANTE peut recouvrir. Sans lui, une section se fige sans que rien ne
   // vienne prendre sa place : on la lit jusqu'au bout et elle est mangée là où
