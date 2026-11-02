@@ -1192,6 +1192,12 @@ const initVolets = () => {
              * deçà, la section ne se fige pas du tout ; au-delà, l'étiquette est
              * franchement partie — parce qu'on a défilé dans la section, pas
              * parce qu'elle s'est figée.
+             *
+             * « Ne se fige pas » veut dire SANS `data-volet`, pas `top: 0`. Un
+             * décalage nul la figeait en haut de la vue, et tout ce qui dépasse
+             * passait sous le volet suivant sans avoir été lu. Mesuré sur les
+             * traitements, vue de 1440 × 900 : le bouton d'action n'était
+             * visible à AUCUNE position de défilement.
              */
             const entete = parseFloat(window.getComputedStyle(section).paddingTop) || 0;
             // Une section pilotée par le défilement se fige quand son TRAVAIL
@@ -1199,9 +1205,10 @@ const initVolets = () => {
             // sur la boîte laissait le volet et la section monter ENSEMBLE sur
             // les 48px de l'amorce, sans que rien ne soit recouvert.
             const course = window.innerHeight - hauteurUtile(section);
-            const decalage = course > -(garde + entete) ? 0 : course;
+            const isBarelyTaller = course < 0 && course > -(garde + entete);
+            const decalage = Math.min(course, 0);
 
-            section.toggleAttribute("data-volet", couvrable(section));
+            section.toggleAttribute("data-volet", couvrable(section) && ! isBarelyTaller);
             section.style.setProperty("--volet-top", `${decalage}px`);
 
             if (section.getBoundingClientRect().top > decalage + 1) {

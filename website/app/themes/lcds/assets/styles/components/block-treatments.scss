@@ -55,4 +55,10 @@
     grid-template-columns: minmax(0, 1fr);
     gap: fn.toRem(32);
   }
+
+  // Une seule colonne : collée, l'étiquette passerait en travers de
+  // l'accordéon qui défile dessous.
+  .block-treatments__label {
+    position: static;
+  }
 }

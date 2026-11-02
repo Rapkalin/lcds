@@ -977,12 +977,24 @@ window.runFrontQa = async (win) => {
             fratrie.push(noeud);
         }
 
+        // Une section À PEINE plus haute que la vue — de moins que le menu plus
+        // son rembourrage haut — ne se fige pas non plus : voir initVolets.
+        const aPeinePlusHaute = (noeud) => {
+            const utile = noeud.offsetHeight
+                - (parseFloat(styleOf(noeud).borderTopLeftRadius) || 0)
+                - (parseFloat(styleOf(noeud).getPropertyValue("--volet-delai")) || 0);
+            const course = win.innerHeight - utile;
+            const borne = (doc.getElementById("site-header")?.offsetHeight ?? 0)
+                + (parseFloat(styleOf(noeud).paddingTop) || 0);
+
+            return course < 0 && course > -borne;
+        };
         const marquees = fratrie.filter((noeud) => noeud.hasAttribute("data-volet"));
         const fautives = fratrie.filter((noeud) => {
             const suivante = noeud.nextElementSibling;
             const couvrable = suivante !== null && suivante.offsetHeight >= win.innerHeight - 1;
 
-            return noeud.hasAttribute("data-volet") !== couvrable;
+            return noeud.hasAttribute("data-volet") !== (couvrable && ! aPeinePlusHaute(noeud));
         });
 
         assert(
@@ -1015,16 +1027,17 @@ window.runFrontQa = async (win) => {
                 - (parseFloat(styleOf(noeud).borderTopLeftRadius) || 0)
                 - (parseFloat(styleOf(noeud).getPropertyValue("--volet-delai")) || 0);
             const course = win.innerHeight - utile;
-            // La borne vaut le menu PLUS le rembourrage haut de la section,
-            // où vit son étiquette. Le seul menu laissait un pire cas juste
-            // au-delà de lui — voir initVolets.
-            const borne = (doc.getElementById("site-header")?.offsetHeight ?? 0)
-                + (parseFloat(styleOf(noeud).paddingTop) || 0);
 
             decalages.push([
                 noeud.className.split(" ")[0],
                 noeud.style.getPropertyValue("--volet-top").trim(),
-                `${course > -borne ? 0 : course}px`,
+                `${Math.min(course, 0)}px`,
+                // Le bas d'une section FIGÉE doit atteindre le bas de la vue :
+                // figée plus haut, ce qui dépasse passe sous le volet suivant
+                // sans avoir été lu. Mesuré sur les traitements à 1440 × 900 :
+                // décalage 0 pour une course de -184, bouton d'action jamais
+                // visible.
+                noeud.hasAttribute("data-volet") && Math.min(course, 0) < parseFloat(noeud.style.getPropertyValue("--volet-top")) - 1,
             ]);
         }
 
@@ -1051,7 +1064,7 @@ window.runFrontQa = async (win) => {
             // lieu d'être franchement partie.
             const interdit = garde + (parseFloat(styleOf(noeud).paddingTop) || 0);
 
-            if (Number.isFinite(pose) && pose < 0 && pose > -interdit) {
+            if (noeud.hasAttribute("data-volet") && Number.isFinite(pose) && pose < 0 && pose > -interdit) {
                 mordus.push(`${noeud.className.split(" ")[0]} ${Math.round(pose)} > ${-interdit}`);
             }
         }
@@ -1166,7 +1179,7 @@ window.runFrontQa = async (win) => {
         const technos = doc.querySelector(".block-techno");
         const etiquetteTechno = technos === null ? null : technos.querySelector(".tag");
 
-        if (etiquetteTechno !== null) {
+        if (etiquetteTechno !== null && technos.hasAttribute("data-volet")) {
             const dans = etiquetteTechno.getBoundingClientRect().top - technos.getBoundingClientRect().top;
             const figee = (parseFloat(technos.style.getPropertyValue("--volet-top")) || 0) + dans;
             const entete = parseFloat(styleOf(technos).paddingTop) || 0;
@@ -1182,8 +1195,16 @@ window.runFrontQa = async (win) => {
 
         assert(
             `volet : décalage de collage posé sur les ${decalages.length} sections`
-            + ` (${faux.length === 0 ? "toutes justes" : faux.map((f) => f.join(" ")).join(", ")})`,
+            + ` (${faux.length === 0 ? "toutes justes" : faux.map(([nom, pose, attendu]) => `${nom} ${pose} ${attendu}`).join(", ")})`,
             decalages.length > 0 && faux.length === 0
+        );
+
+        const tronquees = decalages.filter(([, , , cacheSonBas]) => cacheSonBas);
+
+        assert(
+            `volet : aucune section figée ne cache son bas sous le volet suivant`
+            + ` (${tronquees.length === 0 ? "aucune" : tronquees.map(([nom, pose, attendu]) => `${nom} figée à ${pose} au lieu de ${attendu}`).join(", ")})`,
+            tronquees.length === 0
         );
 
         const apresHero = [];
@@ -2422,11 +2443,27 @@ window.runFrontQa = async (win) => {
     for (const [selecteur, nom] of collantes) {
         const colonne = doc.querySelector(selecteur);
 
-        if (colonne === null || win.innerWidth !== 1440) {
+        if (colonne === null) {
             continue;
         }
 
         const cs = styleOf(colonne);
+
+        // Sur une seule colonne, collée, elle peint par-dessus le contenu qui
+        // défile dessous. Mesuré à 1024 × 700 : le visuel des informations
+        // pratiques recouvrait entièrement la dernière entrée.
+        if (win.innerWidth <= 1024) {
+            assert(
+                `${nom} : la colonne ne colle plus sur une seule colonne (${cs.position})`,
+                cs.position === "static"
+            );
+
+            continue;
+        }
+
+        if (win.innerWidth !== 1440) {
+            continue;
+        }
 
         assert(
             `${nom} : la colonne est collante et a sa course (${cs.position}, align-self ${cs.alignSelf})`,

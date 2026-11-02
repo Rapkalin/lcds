@@ -58,4 +58,10 @@
     grid-template-columns: minmax(0, 1fr);
     gap: fn.toRem(48);
   }
+
+  // Une seule colonne : collé, le visuel peindrait par-dessus la liste qui
+  // défile dessous. Même repli que block-locate, block-rooms et block-team.
+  .block-info__aside {
+    position: static;
+  }
 }

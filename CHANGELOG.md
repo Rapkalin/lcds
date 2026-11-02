@@ -7,6 +7,28 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.2.2
+
+### Corrigé
+
+- **On peut de nouveau lire jusqu'au bout une section de l'accueil à peine
+  plus haute que l'écran.** Elle se figeait en haut de l'écran et la section
+  suivante recouvrait son bas avant qu'on l'ait vu : sur « les différents
+  traitements » en 1440 × 900, le bouton d'action n'apparaissait jamais. Selon
+  la taille de la fenêtre, contribuer une entrée de plus suffisait à faire
+  apparaître le défaut. Régression présente depuis la 2.19.0.
+- **Sur tablette et mobile, la colonne de gauche des « différents
+  traitements » et des « informations pratiques » ne recouvre plus le
+  contenu.** Restée collée alors que la page passe sur une seule colonne, elle
+  se peignait par-dessus : l'étiquette sur les titres de l'accordéon, le
+  visuel sur les dernières entrées des informations pratiques.
+
+### Pour les développeurs
+
+- Deux nouvelles assertions de la campagne front : aucune section figée ne
+  cache son bas sous le volet suivant, et ces deux colonnes ne collent plus
+  sous 1024 px.
+
 ## 3.2.1
 
 ### Corrigé

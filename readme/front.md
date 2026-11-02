@@ -421,6 +421,24 @@ le menu. Et le volet reste entier — quatre sections sur cinq se figent encore 
 900, les cinq à 700. Une assertion l'exige, parce que l'invariant ci-dessus se
 satisfait aussi, bêtement, en ne figeant plus rien du tout.
 
+#### « Ne se fige pas » = pas de `data-volet`, jamais `top: 0` (3.2.2)
+
+De la 2.19.0 à la 3.2.1, « ne se fige pas » était codé par un décalage **nul**.
+Or une section `sticky` à `top: 0` se fige bel et bien, en haut de la vue, et
+tout ce qui dépasse — jusqu'à menu + rembourrage, 256px — passait sous le volet
+suivant **sans jamais avoir été visible**. Mesuré à 1440 × 900 : le bouton
+d'action des traitements, introuvable à toutes les positions de défilement ;
+à 700, le bouton de carrousel des technologies.
+
+Le défaut dépend du **rapport entre la hauteur de la section et celle de la
+vue** : contribuer une entrée de plus le fait apparaître ou disparaître, d'où
+le « plus scrollable quand il y a trop d'éléments ».
+
+Une section à peine plus haute que la vue **perd donc son `data-volet`** : elle
+défile normalement, et son décalage, s'il sert, vaut toujours sa course. Une
+assertion le garde — « aucune section figée ne cache son bas » —, éprouvée en
+remettant l'ancien code : elle rougit.
+
 ### Une section ne se fige que si la SUIVANTE peut la recouvrir
 
 C'est la règle, et elle est **structurelle** : `initVolets` pose `data-volet`
