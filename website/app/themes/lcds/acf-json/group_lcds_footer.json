@@ -259,6 +259,42 @@
             "delay": 0
         },
         {
+            "key": "field_lcds_footer_surtitre_parking",
+            "label": "Sur-titre de l'adresse du parking",
+            "name": "surtitre_parking",
+            "type": "text",
+            "instructions": "Affiché sous l'adresse du cabinet. Exemple : « Adresse du parking ».",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": 60,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_lcds_footer_adresse_parking",
+            "label": "Adresse du parking",
+            "name": "adresse_parking",
+            "type": "wysiwyg",
+            "instructions": "Un paragraphe par ligne. Vide avec son sur-titre, rien n'est affiché.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "tabs": "all",
+            "toolbar": "basic",
+            "media_upload": 0,
+            "delay": 0
+        },
+        {
             "key": "field_lcds_footer_copyright",
             "label": "Mention de copyright",
             "name": "copyright",
@@ -337,5 +373,5 @@
     "active": true,
     "description": "Contenu du pied de page, commun à toutes les pages.",
     "show_in_rest": 0,
-    "modified": 1789000000
+    "modified": 1789000001
 }

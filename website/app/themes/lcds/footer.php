@@ -26,8 +26,10 @@ if (! defined('ABSPATH')) {
 
 $blocks = lcds_option('blocs');
 $blocks = is_array($blocks) ? $blocks : [];
-$overline = lcds_option_text('surtitre');
-$address = (string) lcds_option('adresse');
+$addresses = array_filter([
+    ['overline' => lcds_option_text('surtitre'), 'address' => (string) lcds_option('adresse')],
+    ['overline' => lcds_option_text('surtitre_parking'), 'address' => (string) lcds_option('adresse_parking')],
+], static fn(array $entry): bool => $entry['overline'] !== '' || $entry['address'] !== '');
 $copyright = lcds_option_text('copyright');
 $reveal = lcds_attachment_id(lcds_option('visuel'));
 
@@ -72,13 +74,15 @@ $visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
             </div>
 
             <div class="site-footer__aside">
-                <?php if ($overline !== '' || $address !== '') : ?>
+                <?php if ($addresses !== []) : ?>
                     <div class="site-footer__address">
-                        <?php if ($overline !== '') : ?>
-                            <p class="site-footer__overline"><?php echo esc_html($overline); ?></p>
-                        <?php endif; ?>
+                        <?php foreach ($addresses as $entry) : ?>
+                            <?php if ($entry['overline'] !== '') : ?>
+                                <p class="site-footer__overline"><?php echo esc_html($entry['overline']); ?></p>
+                            <?php endif; ?>
 
-                        <?php echo wp_kses_post($address); ?>
+                            <?php echo wp_kses_post($entry['address']); ?>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
 

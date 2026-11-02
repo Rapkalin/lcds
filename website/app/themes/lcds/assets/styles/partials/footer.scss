@@ -220,6 +220,10 @@
     p + p {
       margin-top: fn.toRem(4);
     }
+
+    p + .site-footer__overline {
+      margin-top: fn.toRem(24);
+    }
   }
 
   &__list {
