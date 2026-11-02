@@ -7,6 +7,25 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.2.0
+
+### Ajouté
+
+- **Le clic droit et le glisser-déposer sont bloqués sur les images et vidéos
+  du site**, appui long sur mobile compris. C'est dissuasif seulement : une
+  capture d'écran ou l'inspecteur du navigateur récupèrent toujours l'image.
+  Une image placée dans un lien garde son menu, pour qu'on puisse encore
+  ouvrir ou copier le lien.
+- **Adresse du parking dans le pied de page.** Deux nouveaux champs dans
+  Réglages → Configuration (sur-titre et adresse), affichés sous l'adresse du
+  cabinet. Vides, rien n'est affiché.
+
+### Pour les développeurs
+
+- La campagne front mesure le début du rail de la page cabinet depuis la liste
+  « Nous trouver » (256) et non plus en absolu : contribuer une entrée de plus
+  ne la fait plus échouer.
+
 ## 3.1.4
 
 ### Modifié
