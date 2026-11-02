@@ -1621,7 +1621,26 @@ const initHeroMotion = () => {
     applyPreference();
 };
 
+const PROTECTED_MEDIA = "img, video";
+
+// A media inside a link keeps its menu: blocking it would also take away
+// "open in a new tab" and "copy link".
+const isProtectedMedia = (target) =>
+    target instanceof Element && target.matches(PROTECTED_MEDIA) && target.closest("a") === null;
+
+const initMediaProtection = () => {
+    const blockOnMedia = (event) => {
+        if (isProtectedMedia(event.target)) {
+            event.preventDefault();
+        }
+    };
+
+    document.addEventListener("contextmenu", blockOnMedia);
+    document.addEventListener("dragstart", blockOnMedia);
+};
+
 document.addEventListener("DOMContentLoaded", () => {
+    initMediaProtection();
     initHeaderMenu();
     initHeaderHeight();
     initAdviceTitles();

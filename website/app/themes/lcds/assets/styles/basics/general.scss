@@ -145,6 +145,14 @@ a {
   text-decoration-line: none;
 }
 
+// iOS Safari opens its long-press menu without firing `contextmenu`, so the
+// script in app.js cannot stop it: only this property does.
+img,
+video {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
 // Retire un libellé du flux visuel en le laissant lisible par un lecteur
 // d'écran. `display: none` le retirerait aussi de l'arbre d'accessibilité.
 .screen-reader-text {
