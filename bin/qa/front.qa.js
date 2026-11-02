@@ -1582,13 +1582,19 @@ window.runFrontQa = async (win) => {
             Math.abs(boites[0].left - 726) <= 1 && Math.abs(boites[0].right - 1392) <= 1
         );
 
-        // Le premier visuel de la page tombe à 1467 : c'est lui qui valide le
-        // retrait bas de la section d'en-tête, porté là et non sur le rail.
-        // 1419 avant que la maquette ne pose un `h1` au-dessus des sections —
-        // toute la page a glissé de 48, et la maquette avec elle.
+        // 256 entre le bas de la liste « Nous trouver » (1211) et le premier
+        // visuel (1467) : c'est le retrait bas de la section d'en-tête, porté
+        // là et non sur le rail. Mesuré depuis la liste et non en absolu : une
+        // entrée contribuée de plus fait glisser tout le rail, à bon droit.
+        const listeTrouver = doc.querySelector(".block-locate .info-list");
+
+        const retrait = listeTrouver === null
+            ? null
+            : Math.round(boites[0].top - listeTrouver.getBoundingClientRect().bottom);
+
         assert(
-            `cabinet : le rail commence à 1467 + 29 (${Math.round(boites[0].top + win.scrollY)})`,
-            Math.abs(boites[0].top + win.scrollY - (1467 + 29)) <= 2
+            `cabinet : le rail commence 256 sous la liste « Nous trouver » (${retrait ?? "liste introuvable"})`,
+            retrait !== null && Math.abs(retrait - 256) <= 2
         );
 
         // Chaque titre s'aligne sur le HAUT de son premier visuel, et y reste
