@@ -7,6 +7,19 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.3.1
+
+### Sécurité
+
+- **PHPUnit passe en 13.4.5** (CVE-2026-119193, gravité moyenne : exécution de
+  code par un autre utilisateur local via le dossier temporaire partagé de la
+  couverture de code). Outil de test seulement, absent des déploiements. Pest
+  monte en 5.3.5, la 5.3.3 interdisant toute version de PHPUnit corrigée.
+  `composer audit` ne signale plus rien.
+- Au passage, mises à jour de correctif des dépendances de Pest (Symfony 8.1.10,
+  paratest, whoops). Seul `symfony/polyfill-mbstring` (1.43.3) part aussi en
+  production.
+
 ## 3.3.0
 
 ### Modifié
