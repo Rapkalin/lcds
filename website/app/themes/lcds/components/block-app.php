@@ -11,6 +11,7 @@
  *   image int    Visuel de fond, sur toute la largeur de l'écran.
  *   code  int    QR code menant à l'application.
  *   url   string Destination du QR code. Le code devient alors un lien.
+ *   new_tab bool Ouvre la destination dans un nouvel onglet.
  *
  * Le titre est un `h3` sous le `h2` de l'étiquette, exactement comme les
  * entrées d'accordéon et les étapes du parcours : le NIVEAU dit la hiérarchie,
@@ -31,6 +32,7 @@ $title = isset($args['title']) ? (string) $args['title'] : '';
 $image = isset($args['image']) ? (int) $args['image'] : 0;
 $code = isset($args['code']) ? (int) $args['code'] : 0;
 $url = isset($args['url']) ? (string) $args['url'] : '';
+$isNewTab = ! empty($args['new_tab']);
 
 // Voir block-intro : une `<section>` sans nom accessible n'est pas exposée
 // comme région, et `wp_unique_id` évite la collision si deux sections du même
@@ -75,7 +77,7 @@ $badge = $code === 0 ? '' : lcds_render_image($code, [
             <?php if ($url === '') : ?>
                 <div class="block-app__code"><?php echo $badge; ?></div>
             <?php else : ?>
-                <a class="block-app__code" href="<?php echo esc_url($url); ?>"><?php echo $badge; ?></a>
+                <a class="block-app__code" href="<?php echo esc_url($url); ?>"<?php echo $isNewTab ? ' target="_blank"' : ''; ?>><?php echo $badge; ?></a>
             <?php endif; ?>
         <?php endif; ?>
     </div>

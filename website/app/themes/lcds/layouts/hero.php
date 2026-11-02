@@ -14,14 +14,10 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$link = lcds_sub_field('carte_lien');
-$link = is_array($link) ? $link : [];
-
 get_template_part('components/hero', null, [
     'image' => lcds_attachment_id(lcds_sub_field('visuel')),
     'video' => lcds_attachment_id(lcds_sub_field('video')),
     'thumbnail' => lcds_attachment_id(lcds_sub_field('carte_vignette')),
-    'label' => trim((string) ($link['title'] ?? '')),
-    'url' => trim((string) ($link['url'] ?? '')),
+    ...lcds_link(lcds_sub_field('carte_lien')),
     'text' => lcds_sub_field_text('carte_texte'),
 ]);

@@ -28,10 +28,8 @@ $links = isset($args['liens']) && is_array($args['liens']) ? $args['liens'] : []
     <?php if ($links !== []) : ?>
         <div class="footer-call__actions">
             <?php foreach ($links as $row) : ?>
-                <?php $link = is_array($row['lien'] ?? null) ? $row['lien'] : []; ?>
                 <?php get_template_part('components/cta', null, [
-                    'label' => trim((string) ($link['title'] ?? '')),
-                    'url' => trim((string) ($link['url'] ?? '')),
+                    ...lcds_link($row['lien'] ?? null),
                     'variant' => LcdsCtaVariant::Secondary->value,
                 ]); ?>
             <?php endforeach; ?>

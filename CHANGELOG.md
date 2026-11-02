@@ -7,6 +7,15 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.2.1
+
+### Corrigé
+
+- **La case « Ouvrir dans un nouvel onglet » des boutons contribués est enfin
+  respectée.** Elle était ignorée partout : boutons des sections de l'accueil,
+  carte du hero, informations pratiques, page cabinet, page conseils, boutons
+  et QR code de l'application dans le pied de page.
+
 ## 3.2.0
 
 ### Ajouté

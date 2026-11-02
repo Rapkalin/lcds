@@ -6,6 +6,7 @@
  * Arguments (via get_template_part) :
  *   label string  Libellé, rendu en capitales par le CSS.
  *   url   string  Destination. Vide : rien n'est rendu, plutôt qu'un lien mort.
+ *   new_tab bool   Ouvre la destination dans un nouvel onglet.
  *   icon    string Glyphe de la pastille de gauche. La maquette utilise un
  *                  émoji — voir readme/front.md pour la réserve que ça pose.
  *   variant string Valeur d'un cas de `LcdsCtaVariant`. Défaut : la primaire,
@@ -29,11 +30,12 @@ if ($label === '' || $url === '') {
     return;
 }
 
+$isNewTab = ! empty($args['new_tab']);
 $icon = isset($args['icon']) ? (string) $args['icon'] : '🦷';
 $variant = LcdsCtaVariant::fromValue($args['variant'] ?? null, LcdsCtaVariant::Primary);
 ?>
 
-<a class="<?php echo esc_attr($variant->className()); ?>" href="<?php echo esc_url($url); ?>">
+<a class="<?php echo esc_attr($variant->className()); ?>" href="<?php echo esc_url($url); ?>"<?php echo $isNewTab ? ' target="_blank"' : ''; ?>>
     <?php if ($variant->hasIcon()) : ?>
         <?php
         /*

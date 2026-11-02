@@ -10,8 +10,6 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$cta = lcds_sub_field('cta');
-$cta = is_array($cta) ? $cta : [];
 $rows = lcds_sub_field('cartes');
 $cards = [];
 
@@ -27,9 +25,6 @@ foreach ((is_array($rows) ? $rows : []) as $row) {
 get_template_part('components/block-techno', null, [
     'label' => lcds_sub_field_text('etiquette'),
     'dot' => lcds_sub_field_text('puce') ?: 'orange',
-    'cta' => [
-        'label' => trim((string) ($cta['title'] ?? '')),
-        'url' => trim((string) ($cta['url'] ?? '')),
-    ],
+    'cta' => lcds_link(lcds_sub_field('cta')),
     'cards' => $cards,
 ]);

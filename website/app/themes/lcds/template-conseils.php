@@ -100,18 +100,13 @@ $heading = trim((string) lcds_field('titre_h1', $page_id));
                     ];
                 }
 
-                $link = is_array($row['lien'] ?? null) ? $row['lien'] : [];
-
                 $groups[] = [
                     'label' => trim((string) ($row['etiquette'] ?? '')),
                     'dot' => trim((string) ($row['puce'] ?? '')) ?: 'orange',
                     'heading' => trim((string) ($row['titre'] ?? '')),
                     'text' => (string) ($row['texte'] ?? ''),
                     'items' => $items,
-                    'cta' => [
-                        'label' => trim((string) ($link['title'] ?? '')),
-                        'url' => trim((string) ($link['url'] ?? '')),
-                    ],
+                    'cta' => lcds_link($row['lien'] ?? null),
                 ];
             }
 

@@ -38,17 +38,12 @@ $rows = isset($locate['entrees']) && is_array($locate['entrees']) ? $locate['ent
 $entries = [];
 
 foreach ($rows as $row) {
-    $link = is_array($row['lien'] ?? null) ? $row['lien'] : [];
-
     $entries[] = [
         'icon' => (string) ($row['icone'] ?? ''),
         'title' => trim((string) ($row['titre'] ?? '')),
         'overline' => trim((string) ($row['surtitre'] ?? '')),
         'text' => (string) ($row['texte'] ?? ''),
-        'cta' => [
-            'label' => trim((string) ($link['title'] ?? '')),
-            'url' => trim((string) ($link['url'] ?? '')),
-        ],
+        'cta' => lcds_link($row['lien'] ?? null),
     ];
 }
 

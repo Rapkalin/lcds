@@ -189,6 +189,22 @@ function lcds_attachment_id(mixed $value): int
 }
 
 /**
+ * @param mixed $value Raw value of an ACF link field (array return format).
+ *
+ * @return array{label: string, url: string, new_tab: bool}
+ */
+function lcds_link(mixed $value): array
+{
+    $link = is_array($value) ? $value : [];
+
+    return [
+        'label' => trim((string) ($link['title'] ?? '')),
+        'url' => trim((string) ($link['url'] ?? '')),
+        'new_tab' => ($link['target'] ?? '') === '_blank',
+    ];
+}
+
+/**
  * Éléments d'un rail, depuis les lignes d'un répéteur de galerie.
  *
  * Le contributeur choisit une FORME NOMMÉE ; c'est l'enum qui en donne la

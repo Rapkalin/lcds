@@ -15,6 +15,7 @@
  *   text       string     Phrase d'accroche de la carte.
  *   url        string     Destination de la carte. Vide : rien n'est cliquable,
  *                         plutôt qu'un lien mort.
+ *   new_tab    bool       Ouvre la destination dans un nouvel onglet.
  *
  * @package lcds
  */
@@ -29,6 +30,7 @@ $thumbnail = $args['thumbnail'] ?? 0;
 $label = isset($args['label']) ? (string) $args['label'] : '';
 $text = isset($args['text']) ? (string) $args['text'] : '';
 $url = isset($args['url']) ? (string) $args['url'] : '';
+$isNewTab = ! empty($args['new_tab']);
 
 $background = $image === 0 ? '' : lcds_render_image($image, [
     'class' => 'hero__image',
@@ -90,7 +92,7 @@ $card_tag = $url === '' ? 'div' : 'a';
         <div class="hero__image hero__image--placeholder" aria-hidden="true"></div>
     <?php endif; ?>
 
-    <<?php echo $card_tag; ?> class="hero__card"<?php echo $url === '' ? '' : ' href="' . esc_url($url) . '"'; ?>>
+    <<?php echo $card_tag; ?> class="hero__card"<?php echo $url === '' ? '' : ' href="' . esc_url($url) . '"' . ($isNewTab ? ' target="_blank"' : ''); ?>>
         <div class="hero__thumbnail">
             <?php if ($vignette !== '') : ?>
                 <?php echo $vignette; ?>

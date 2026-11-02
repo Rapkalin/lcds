@@ -38,7 +38,7 @@ $reveal = lcds_attachment_id(lcds_option('visuel'));
 // pages qui portent ce pied de page.
 $application = lcds_option('application');
 $application = is_array($application) ? $application : [];
-$appLink = is_array($application['lien'] ?? null) ? $application['lien'] : [];
+$appLink = lcds_link($application['lien'] ?? null);
 
 $focus = LcdsFocalPoint::fromValue(lcds_option('cadrage'), LcdsFocalPoint::Center);
 $visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
@@ -52,7 +52,8 @@ $visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
     'title' => trim((string) ($application['titre'] ?? '')),
     'image' => lcds_attachment_id($application['visuel'] ?? 0),
     'code' => lcds_attachment_id($application['code'] ?? 0),
-    'url' => trim((string) ($appLink['url'] ?? '')),
+    'url' => $appLink['url'],
+    'new_tab' => $appLink['new_tab'],
 ]); ?>
 
 <div class="footer-reveal">
