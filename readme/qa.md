@@ -6,7 +6,7 @@ Trois portes, à passer avant tout commit :
 | --- | --- |
 | `dcheck` (`composer check`) | Style PER, types natifs, PHPStan niveau 6 |
 | `dtest` (`composer test`) | Contrats des enums (cache, emplacements de menu) |
-| `bin/qa-front.sh` | Compilation, assets servis, invalidation du cache, rendu et comportement de l'en-tête |
+| `bin/qa-front.sh` | Compilation, assets servis, invalidation du cache, rendu et comportement de l'en-tête, violations de CSP et erreurs JavaScript |
 
 Les deux premières sont le garde-fou du hook de pré-commit et de la CI — voir
 [`qualite-code.md`](qualite-code.md). La troisième est locale : elle a besoin
@@ -20,8 +20,40 @@ bin/qa-front.sh              # recompile puis vérifie
 bin/qa-front.sh --no-build   # sans recompiler
 ```
 
-Prérequis : Google Chrome ou Chromium. Le script ne touche qu'à `dist/`, qui
-n'est pas versionné, et nettoie derrière lui même en cas d'interruption.
+Prérequis : Google Chrome ou Chromium, et Node 22 ou plus sur l'hôte. Le
+script ne touche qu'à `dist/`, qui n'est pas versionné, et nettoie derrière lui
+même en cas d'interruption. Seule exception, le bloc CSP ci-dessous, qui modifie
+le temps de ses scénarios la rangée du hero de l'accueil, puis la restaure.
+
+### Le bloc CSP et erreurs JavaScript
+
+La CSP est en **Report-Only** : une source manquante ne casse rien à l'écran,
+elle ne laisse qu'un évènement `securitypolicyviolation` dans le navigateur.
+Ni `curl` ni une relecture de la directive ne le voient. `bin/qa/csp.qa.mjs`
+charge donc chaque page dans un Chrome sans interface, piloté par le protocole
+DevTools, et relève :
+
+- toute **violation de CSP**, par un écouteur injecté avant les scripts de la
+  page ;
+- toute **erreur JavaScript** (exception non rattrapée, `console.error`, erreur
+  réseau) ;
+- la **présence de l'en-tête CSP** sur la réponse : sans lui, « aucune
+  violation » ne prouverait rien.
+
+Scénarios : les quatre pages et une 404 sans service tiers (et sans
+gestionnaire de consentement), puis le hero en **YouTube** (premier passage avec
+bandeau, accord donné au bandeau, accord déjà donné, refus déjà donné) et en
+**fichier de la médiathèque**. Ces deux heros n'existent pas en base : le script
+les pose, sauvegarde la rangée dans l'option `lcds_qa_csp_backup`, et la
+restaure à la fin ou à l'interruption (`trap`). Le fichier vidéo posé est un
+faux MP4 de deux octets : il prouve le balisage et le script, **pas la lecture**.
+
+Le scénario YouTube **a besoin du réseau** : le lecteur vient de
+`youtube-nocookie.com`.
+
+Éprouvé par mutation le 06/11/2026 : retirer `frame-src`, retirer
+`'inline-speculation-rules'`, lever une exception dans `main.js` ou renommer le
+service de consentement fait chacun passer le bloc au rouge.
 
 ### Ce qu'il vérifie
 

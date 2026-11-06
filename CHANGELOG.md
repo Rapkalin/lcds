@@ -32,6 +32,16 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 
 - La CSP autorise l'intégration de `https://www.youtube-nocookie.com`
   (`frame-src`), et rien d'autre.
+- **La CSP signalait une violation sur toutes les pages** : les règles de
+  préchargement des liens que WordPress écrit en ligne. Elles sont désormais
+  autorisées (`'inline-speculation-rules'`), sans ouvrir la porte à aucun autre
+  script inline.
+
+### Contribution
+
+- **`bin/qa-front.sh` relève les violations de CSP et les erreurs JavaScript**
+  sur chaque page, y compris avec un hero YouTube (avant et après consentement)
+  et un hero vidéo. Il faut désormais Node 22 ou plus sur l'hôte.
 
 ## 3.3.1
 

@@ -55,6 +55,8 @@
   # Le thème ne charge aucun script tiers : 'self' strict est tenable. Seul
   # style-src a besoin de 'unsafe-inline' (styles inline émis par le cœur).
   # frame-src : le lecteur YouTube du hero, sur le seul domaine sans cookie.
+  # 'inline-speculation-rules' : les règles de préchargement que le cœur écrit
+  # en ligne sur chaque page. Ce mot-clé n'autorise AUCUN autre script inline.
   # L'admin et le login vivent sous /wordpress-core/ et reposent sur du script
   # inline / eval (Gutenberg) : la CSP y est retirée.
   # Passage en enforce : parcourir chaque template console ouverte, corriger les
@@ -63,7 +65,7 @@
   # La condition `expr=` de mod_headers restreint l'en-tête au front. Un bloc
   # <If> ferait la même chose mais exige `AllowOverride All` : refusé, il ferait
   # tomber tout le site en 500. `expr=` relève de FileInfo, comme Header.
-  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" "expr=%{REQUEST_URI} !~ m#^/wordpress-core/#"
+  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'inline-speculation-rules'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" "expr=%{REQUEST_URI} !~ m#^/wordpress-core/#"
 </IfModule>
 
 # -----------------------------------------------------------------------------

@@ -89,12 +89,19 @@ Fichiers cachés, `wp-config.php`, `composer.json/lock`, `package*.json`, `.env`
 CSP livrée :
 
 ```
-default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
+default-src 'self'; script-src 'self' 'inline-speculation-rules';
+style-src 'self' 'unsafe-inline';
 img-src 'self' data:; font-src 'self'; connect-src 'self';
 frame-src https://www.youtube-nocookie.com;
 frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'
 ```
 
+- **`'inline-speculation-rules'`** : WordPress écrit sur chaque page un
+  `<script type="speculationrules">` inline (préchargement des liens). Avec
+  `script-src 'self'` seul, il était signalé comme violation sur **toutes** les
+  pages. Ce mot-clé n'autorise que les règles de préchargement, **aucun autre
+  script inline**. Relevé par la campagne CSP de `bin/qa-front.sh`, qui fait
+  échouer toute nouvelle source manquante — voir [`qa.md`](qa.md).
 - **`frame-src`** n'ouvre que le lecteur YouTube du hero, et seulement sur le
   domaine `youtube-nocookie.com`. Ce domaine **ne dispense pas de
   consentement** : il ne dépose pas de cookie avant la lecture, mais écrit des

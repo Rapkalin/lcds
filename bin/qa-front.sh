@@ -3,7 +3,8 @@
 # QA du front : compilation, disponibilité des assets, puis campagne
 # d'assertions jouée dans un navigateur sans interface, à deux largeurs.
 #
-# Prérequis : `docker compose up -d` et Google Chrome (ou Chromium) installé.
+# Prérequis : `docker compose up -d`, Google Chrome (ou Chromium) et Node 22 ou
+# plus sur l'hôte (pilote de la campagne CSP).
 # Rien n'est écrit hors de dist/, qui n'est pas versionné.
 #
 # Usage : bin/qa-front.sh [--no-build]
@@ -18,10 +19,12 @@ DRIVER_NAME="front.qa.js"
 SCRATCH="$(mktemp -d)"
 FAILURES=0
 RUN_BUILD=1
+CSP_SEEDED=0
 
 [ "${1:-}" = "--no-build" ] && RUN_BUILD=0
 
 cleanup() {
+    [ "$CSP_SEEDED" -eq 1 ] && csp_seed restore > /dev/null
     rm -f "$DIST/$HARNESS_NAME" "$DIST/$DRIVER_NAME"
     rm -rf "$SCRATCH"
 }
@@ -978,6 +981,169 @@ printf(
     return 0
 }
 
+# La CSP part en Report-Only : une source manquante ne bloque rien, elle ne
+# laisse qu'un évènement `securitypolicyviolation` dans le navigateur. Seule
+# une page réellement chargée peut donc dire qu'il en manque une — voir
+# bin/qa/csp.qa.mjs, qui relève aussi les erreurs JavaScript.
+#
+# Le hero YouTube et le hero vidéo n'existent pas en base : ils sont posés le
+# temps des scénarios, puis la rangée est remise à l'identique. La sauvegarde
+# vit dans une option et la restauration passe aussi par le `trap` : une
+# campagne interrompue ne laisse pas l'accueil modifié.
+csp_seed() {
+    (cd "$ROOT" && docker compose exec -T -e LCDS_QA_CSP_MODE="$1" php wp eval '
+$mode = (string) getenv("LCDS_QA_CSP_MODE");
+$pageId = (int) get_option("page_on_front");
+$fieldKeys = [
+    "video_source" => "field_lcds_hero_video_source",
+    "video_youtube" => "field_lcds_hero_youtube",
+    "video" => "field_lcds_hero_video",
+];
+$metaNames = [];
+
+foreach (array_keys($fieldKeys) as $name) {
+    $metaNames[] = "sections_0_" . $name;
+    $metaNames[] = "_sections_0_" . $name;
+}
+
+$backup = get_option("lcds_qa_csp_backup");
+
+if (is_array($backup)) {
+    foreach ($metaNames as $metaName) {
+        delete_post_meta($pageId, $metaName);
+
+        if (array_key_exists($metaName, $backup["meta"])) {
+            update_post_meta($pageId, $metaName, $backup["meta"][$metaName]);
+        }
+    }
+
+    if ((int) $backup["attachment"] > 0) {
+        wp_delete_attachment((int) $backup["attachment"], true);
+    }
+
+    delete_option("lcds_qa_csp_backup");
+}
+
+if ($mode === "restore") {
+    echo "restored";
+
+    return;
+}
+
+$sections = get_post_meta($pageId, "sections", true);
+
+if (! is_array($sections) || ($sections[0] ?? "") !== "hero") {
+    echo "no-hero";
+
+    return;
+}
+
+$saved = [];
+
+foreach ($metaNames as $metaName) {
+    if (metadata_exists("post", $pageId, $metaName)) {
+        $saved[$metaName] = get_post_meta($pageId, $metaName, true);
+    }
+}
+
+$attachment = 0;
+
+if ($mode === "file") {
+    $upload = wp_upload_bits("qa-csp.mp4", null, "qa");
+    $attachment = (int) wp_insert_attachment(
+        ["post_mime_type" => "video/mp4", "post_title" => "qa-csp", "post_status" => "inherit"],
+        $upload["file"],
+    );
+}
+
+update_option("lcds_qa_csp_backup", ["meta" => $saved, "attachment" => $attachment], false);
+
+$values = $mode === "youtube"
+    ? ["video_source" => "youtube", "video_youtube" => "https://www.youtube.com/watch?v=aqz-KE-bpKQ", "video" => ""]
+    : ["video_source" => "file", "video_youtube" => "", "video" => $attachment];
+
+foreach ($values as $name => $value) {
+    update_post_meta($pageId, "sections_0_" . $name, $value);
+    update_post_meta($pageId, "_sections_0_" . $name, $fieldKeys[$name]);
+}
+
+echo "seeded";
+' --allow-root 2>/dev/null | tr -d '\r')
+}
+
+run_csp_scenarios() {
+    local scenarios="$SCRATCH/csp-$1.json"
+
+    printf '%s' "$2" > "$scenarios"
+    "$NODE" "$ROOT/bin/qa/csp.qa.mjs" "$CHROME" "$scenarios" | sed 's/^/  /'
+    return "${PIPESTATUS[0]}"
+}
+
+check_csp() {
+    local status=0 seeded no_manager_rules
+
+    NODE="$(command -v node || true)"
+
+    if [ -z "$NODE" ] || ! "$NODE" -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2>/dev/null; then
+        printf '  FAIL :: CSP : Node 22 ou plus requis sur l hôte (WebSocket natif)\n'
+        return 1
+    fi
+
+    # Le gestionnaire de consentement n'a rien à faire là où aucun service
+    # tiers n'est intégré : ni script, ni lien « Gérer les cookies ».
+    no_manager_rules='"script[src*=tarteaucitron]": false, "[data-consent-manager]": false'
+
+    run_csp_scenarios pages "[
+        {\"label\": \"accueil\", \"url\": \"$SITE_URL/?qa-csp=1\", \"expect\": {$no_manager_rules}},
+        {\"label\": \"le cabinet\", \"url\": \"$SITE_URL/le-cabinet/?qa-csp=1\", \"expect\": {$no_manager_rules}},
+        {\"label\": \"l'équipe\", \"url\": \"$SITE_URL/l-equipe/?qa-csp=1\", \"expect\": {$no_manager_rules}},
+        {\"label\": \"conseils\", \"url\": \"$SITE_URL/conseils/?qa-csp=1\", \"expect\": {$no_manager_rules}},
+        {\"label\": \"page 404\", \"url\": \"$SITE_URL/qa-csp-page-inexistante/\", \"expect\": {$no_manager_rules}}
+    ]" || status=1
+
+    CSP_SEEDED=1
+    seeded="$(csp_seed youtube)"
+
+    if [ "$seeded" != "seeded" ]; then
+        printf '  FAIL :: CSP : hero YouTube non posé (%s)\n' "${seeded:-WP-CLI muet}"
+        status=1
+    else
+        run_csp_scenarios youtube "[
+            {\"label\": \"hero YouTube, premier passage\", \"url\": \"$SITE_URL/?qa-csp=2\",
+             \"expect\": {\"#tarteaucitronAlertBig\": true, \"[data-consent-manager]:not([hidden])\": true, \".hero__youtube iframe\": false}},
+            {\"label\": \"hero YouTube, accord donné au bandeau\", \"url\": \"$SITE_URL/?qa-csp=3\",
+             \"action\": \"tarteaucitron.userInterface.respondAll(true)\", \"settle\": 3000,
+             \"expect\": {\".hero__youtube iframe[src^='https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ']\": true, \".hero__youtube.is-ready\": true}},
+            {\"label\": \"hero YouTube, accord déjà donné\", \"url\": \"$SITE_URL/?qa-csp=4\", \"consent\": \"!youtube=true\", \"settle\": 3000,
+             \"expect\": {\".hero__youtube iframe\": true}},
+            {\"label\": \"hero YouTube, refus déjà donné\", \"url\": \"$SITE_URL/?qa-csp=5\", \"consent\": \"!youtube=false\",
+             \"expect\": {\".hero__youtube iframe\": false, \"[data-hero-motion]:not([hidden])\": false}}
+        ]" || status=1
+    fi
+
+    seeded="$(csp_seed file)"
+
+    if [ "$seeded" != "seeded" ]; then
+        printf '  FAIL :: CSP : hero vidéo non posé (%s)\n' "${seeded:-WP-CLI muet}"
+        status=1
+    else
+        run_csp_scenarios file "[
+            {\"label\": \"hero vidéo de la médiathèque\", \"url\": \"$SITE_URL/?qa-csp=6\",
+             \"expect\": {\"video[data-hero-video]\": true, \"[data-hero-motion]:not([hidden])\": true, $no_manager_rules}}
+        ]" || status=1
+    fi
+
+    if [ "$(csp_seed restore)" = "restored" ]; then
+        CSP_SEEDED=0
+        printf '  PASS :: CSP : rangée du hero remise à l identique\n'
+    else
+        printf '  FAIL :: CSP : rangée du hero NON restaurée (option lcds_qa_csp_backup)\n'
+        status=1
+    fi
+
+    return "$status"
+}
+
 echo "== Rôle de contribution =="
 check_role || FAILURES=$((FAILURES + 1))
 
@@ -998,6 +1164,9 @@ check_menus || FAILURES=$((FAILURES + 1))
 
 echo "== Conversion WebP =="
 check_webp || FAILURES=$((FAILURES + 1))
+
+echo "== CSP et erreurs JavaScript =="
+check_csp || FAILURES=$((FAILURES + 1))
 
 for width in 1440 500 320; do
     echo "== Front à ${width}px =="
