@@ -118,61 +118,27 @@ Deux points de vigilance, tous deux vérifiés par la campagne :
   **échouer la suite de tests** plutôt que de le laisser surgir. C'est
   `LcdsProfileField`, et c'est l'assertion qui porte le tout.
 
-## Le journal des connexions
+## Les journaux : connexions, activité, erreurs
 
-**Comptes → Connexions** liste qui s'est connecté et quand : date, compte, rôle.
-Il faut `list_users` pour l'ouvrir, capacité qu'un contributeur n'a pas — et
-l'allow-list refuse `users.php`, donc la page l'est aussi. Deux couches, et
-c'est voulu : la capacité seule suffirait, mais elle ne se voit pas dans le
-code de l'écran.
+Depuis la 4.0.0, ils viennent du module **`rapkalin-security`** (paquet
+Composer, voir [`deploiement.md`](deploiement.md)) : **Comptes → Connexions**,
+**Outils → Activité** et **Outils → Journal**. Son `README.md` décrit les
+écrans, la rétention (90 jours, bornée en nombre) et la protection de la
+connexion ; [`securite.md`](securite.md) dit ce qui est propre à LCDS.
 
-L'écran affiche **20 connexions par page**. Le numéro de page vient de l'URL,
-donc il est hostile par principe : `slice()` le ramène dans les bornes
-elle-même plutôt que de compter sur son appelant, sinon une page hors journal
-s'afficherait vide sans rien signaler. Les liens disparaissent quand tout tient
-sur une page.
+Un contributeur n'y a pas accès, par deux couches : le module exige
+`manage_options`, que le rôle n'a pas, et l'allow-list de LCDS refuse
+`users.php` comme `tools.php`. `bin/qa-front.sh` vérifie les deux.
 
-Les deux blocs de pagination sont des `<nav>` **nommés** : ils apparaissent
-au-dessus et au-dessous du tableau, et sans nom rien ne les distingue l'un de
-l'autre à la synthèse vocale.
+**Aucune adresse IP n'est conservée dans les journaux** — la question posée
+reste « qui, quand », pas « d'où » (vérifié par `bin/qa-front.sh`). Le module
+ne garde l'adresse que **hachée**, le temps d'un blocage après des échecs de
+connexion.
 
-La liste des comptes porte en plus une colonne **« Dernière connexion »**,
-tirée du même journal. Elle n'est **pas triable** : le journal vit dans une
-option et non dans une méta, donc la requête de la liste ne peut pas s'ordonner
-dessus.
-
-Un compte jamais connecté n'affiche pas qu'un tiret — celui-ci se lit
-« tiret » à la synthèse vocale. Le sens est porté par un texte réservé aux
-lecteurs d'écran, le tiret restant `aria-hidden`.
-
-### Ce qu'il conserve, et ce qu'il ne conserve pas
-
-| | |
-| --- | --- |
-| Conservé | identifiant du compte, identifiant de connexion, instant |
-| **Pas** conservé | **adresse IP** — la question posée est « qui, quand », pas « d'où » |
-| Rétention | **90 jours** et **200 entrées**, les deux à la fois |
-
-Une connexion est une donnée personnelle : ce qui sort des bornes est
-**supprimé**, pas masqué. La purge s'applique à chaque écriture et à chaque
-ouverture de l'écran — filtrer à l'affichage aurait laissé la donnée en base.
-
-Les deux bornes sont des constantes de `LcdsLoginLog`, et la purge est une
-fonction **pure** : l'instant lui est passé en argument, ce qui est la seule
-raison pour laquelle la rétention est vérifiable par la suite de tests.
-
-### Une option, pas une table — et ce que ça coûte
-
-Le journal vit dans une option **non autochargée**, bornée à deux cents
-entrées. Le projet n'a pas d'étape de migration au déploiement, et deux cents
-lignes ne justifient pas d'en introduire une.
-
-**La limite est réelle et assumée : deux connexions dans la même seconde
-peuvent en perdre une.** Une option se lit, se modifie et se réécrit sans
-verrou. Sur un cabinet à quelques comptes le cas ne se présente pas, mais il
-faut le savoir : **cet écran renseigne, il ne fait pas foi.** Un journal
-d'audit — qui doit être exhaustif, et couvrir aussi les tentatives échouées —
-demanderait une table et une écriture atomique.
+> Le journal de LCDS (`inc/logins.php`, option `lcds_login_log`) a été retiré en
+> 4.0.0 : ses entrées ne sont pas reprises, et l'option reste en base, non
+> autochargée, sans effet. **La colonne « Dernière connexion » de la liste des
+> comptes a disparu avec lui** : le module ne l'a pas.
 
 ## Le tableau de bord
 

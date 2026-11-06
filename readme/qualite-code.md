@@ -4,6 +4,11 @@ Trois outils garantissent la qualité d'écriture du PHP du projet (thème +
 mu-plugins). Ils sont enchaînés par `composer check`, exécutés à chaque commit
 par `.githooks/pre-commit`, et rejoués en CI.
 
+Les modules `mu-plugins/rapkalin-*` sont **exclus** des trois outils et de la
+suite de tests : ce sont des paquets Composer, contrôlés dans leurs propres
+dépôts (voir [`deploiement.md`](deploiement.md)). PHPStan connaît seulement
+leurs symboles (`scanDirectories`).
+
 > Toutes les commandes ci-dessous se lancent dans le conteneur :
 > `docker compose exec php composer <script>`, ou via les alias `dcheck` /
 > `dtest` après `source aliases.sh`. Le hook de pré-commit choisit

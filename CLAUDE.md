@@ -111,8 +111,9 @@ Règles de conduite :
 - **Jamais de secret en dur** dans le code : tout passe par le `.env`.
   Un secret committé = un secret à révoquer, même après suppression du commit.
 - **Uploads** : allow-list d'extensions **et** vérification du type MIME réel.
-- **Ne pas modifier `website/wordpress-core/`** ni le contenu des plugins : ce
-  sont des dépendances Composer, écrasées à la prochaine mise à jour.
+- **Ne pas modifier `website/wordpress-core/`**, le contenu des plugins ni les
+  modules `mu-plugins/rapkalin-*` : ce sont des dépendances Composer, écrasées à
+  la prochaine mise à jour. Un module se corrige dans son propre dépôt.
 - **Avant de committer un `.htaccess`**, relire le `git diff` : les plugins les
   régénèrent et y injectent parfois des chemins absolus propres à la machine,
   faux dans tout autre environnement. Voir [`readme/securite.md`](readme/securite.md).
@@ -123,12 +124,12 @@ Règles de conduite :
 
 ## 5. Cache
 
-- Le cache applicatif vit dans `website/app/mu-plugins/`, **pas** dans le thème.
-- **Tout ce qui fait varier la sortie doit être dans la clé** (suffixe) : le menu
-  d'en-tête est déjà mis en cache par variante mobile/desktop.
+- Le cache applicatif est le module **`rapkalin-cache`** (paquet Composer) :
+  ne pas le modifier ici, il est écrasé à chaque installation. Les clés sont
+  déclarées par le thème (enum qui implémente `RapkalinCacheEntry`).
+- **Tout ce qui fait varier la sortie doit être dans la clé** (suffixe).
 - TTL > 0 obligatoire ; cacher des scalaires/tableaux, jamais des `WP_Post`.
-- Ajouter une clé = ajouter un `case` **et** son bras dans les deux `match` de
-  `LcdsCacheKey`. Voir [`readme/cache.md`](readme/cache.md).
+  Voir [`readme/cache.md`](readme/cache.md).
 
 ---
 

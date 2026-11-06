@@ -24,8 +24,17 @@ if (! WP_DEBUG_DISPLAY) {
     return;
 }
 
-set_error_handler(
-    static function (int $level, string $message, string $file, int $line): bool {
+// PHP keeps a single error handler: the one installed earlier (the error journal
+// of rapkalin-security, loaded first by the Bedrock autoloader) is replaced, so
+// every other level is handed back to it. Registering on E_DEPRECATED alone would
+// silence that journal on every environment where this filter runs.
+$previousHandler = null;
+$previousHandler = set_error_handler(
+    static function (int $level, string $message, string $file = '', int $line = 0) use (&$previousHandler): bool {
+        if ($level !== E_DEPRECATED) {
+            return is_callable($previousHandler) && (bool) $previousHandler($level, $message, $file, $line);
+        }
+
         foreach ([WPMU_PLUGIN_DIR, WP_CONTENT_DIR . '/themes'] as $ownCodeRoot) {
             if (str_starts_with($file, $ownCodeRoot . '/')) {
                 return false;
@@ -36,5 +45,4 @@ set_error_handler(
 
         return true;
     },
-    E_DEPRECATED,
 );

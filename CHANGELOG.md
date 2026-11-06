@@ -7,6 +7,65 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 4.0.0
+
+Version majeure : le déploiement exige **PHP 8.5** sur le serveur et un
+**nouveau secret** GitHub. Voir « Avant de déployer ».
+
+### Avant de déployer
+
+- **Passer chaque domaine en PHP 8.5** dans le panneau de l'hébergeur
+  (préprod IONOS, puis production). Resté en 8.4, le site tombe en erreur sur
+  toutes les pages.
+- **Créer le secret de dépôt `COMPOSER_AUTH`** (jeton GitHub en lecture seule
+  sur les trois dépôts des modules). Sans lui, la CI et le déploiement
+  s'arrêtent à l'installation, avant tout envoi — voir
+  [`readme/deploiement.md`](readme/deploiement.md).
+
+### Modules maison installés par Composer
+
+- **`rapkalin-mail`, `rapkalin-cache` et `rapkalin-security`** viennent
+  maintenant de leurs dépôts GitHub privés, aux versions de `composer.lock`.
+  Les mettre à jour = publier une version dans leur dépôt, puis
+  `composer update rapkalin/<module>`.
+- `rapkalin-mail` ne change pas : son code est identique à la copie qui était
+  versionnée ici. Ses tests vivent désormais dans son dépôt.
+- **Le cache applicatif est celui de `rapkalin-cache`.** L'ancien
+  (`lcds-cache.php`), jamais appelé par le thème, est retiré. Nouveau : un
+  bouton **Vider le cache** dans la barre d'outils, pour les administrateurs
+  et les contributeurs LCDS.
+
+### Connexion et journaux (`rapkalin-security`)
+
+- **Tentatives de connexion limitées** : blocage temporaire après plusieurs
+  échecs, même avec le bon mot de passe ensuite.
+- **`/wp-admin`, `/login`, `/admin` et `/wp-login.php` répondent 404** : la
+  connexion se fait sur `/wordpress-core/wp-login.php`. Une adresse de
+  connexion personnalisée est possible (`LOGIN_SLUG` dans le `.env`, vide par
+  défaut).
+- **Nouveaux journaux** pour les administrateurs : *Outils → Activité*
+  (contenus, comptes, réglages) et *Outils → Journal* (erreurs PHP).
+  *Comptes → Connexions* inscrit aussi les échecs et les blocages.
+- **Le journal des connexions de LCDS est retiré**, ses entrées ne sont pas
+  reprises. **La colonne « Dernière connexion » de la liste des comptes
+  disparaît** avec lui. Toujours aucune adresse IP dans les journaux.
+
+### Déploiement
+
+- **Les commandes WP-CLI du déploiement tournent enfin sur IONOS.** Sur la
+  préprod, elles n'exécutaient rien, sans alerte : amorçage des menus, titres
+  SEO, migration du parcours (3.3.0) et purge des caches. Toutes sont
+  idempotentes ; elles s'exécuteront pour de bon au premier déploiement de la
+  4.0.0.
+- CI et construction de l'artefact en PHP 8.5.
+
+### Contribution
+
+- `bin/qa-front.sh` vérifie l'intégration de `rapkalin-security` : écrans
+  réservés aux administrateurs, connexion inscrite sans adresse IP, erreurs
+  PHP bien reçues par le journal. En développement, le filtre des dépréciations
+  tierces les lui confisquait (corrigé).
+
 ## 3.4.1
 
 ### Sécurité et maintenance

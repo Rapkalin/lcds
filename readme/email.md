@@ -2,8 +2,9 @@
 
 Tous les `wp_mail()` du site — formulaire de contact, création de compte, mot
 de passe perdu — partent par le transport que configure le mu-plugin
-**`rapkalin-mail`** (`website/app/mu-plugins/rapkalin-mail/`). Le thème n'en
-configure aucun.
+**`rapkalin-mail`** (`website/app/mu-plugins/rapkalin-mail/`), paquet Composer
+privé depuis la 4.0.0 — voir [`deploiement.md`](deploiement.md). Ses tests
+vivent dans son dépôt. Le thème n'en configure aucun.
 
 ## Réglages → Email
 

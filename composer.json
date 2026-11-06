@@ -2,7 +2,7 @@
     "name": "rapkalin/lcds",
     "description": "The La Clinique du Sourire's official website",
     "type": "project",
-    "version": "3.4.1",
+    "version": "4.0.0",
     "authors": [
         {
             "name": "Rapkalin",
@@ -13,13 +13,28 @@
         {
             "type": "composer",
             "url": "https://wpackagist.org"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Rapkalin/rapkalin-cache"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Rapkalin/rapkalin-mail"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Rapkalin/rapkalin-security"
         }
     ],
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.5",
         "composer/installers": "^2.3",
         "johnpbloch/wordpress": "^7.1.4",
         "oscarotero/env": "^2.1.1",
+        "rapkalin/rapkalin-cache": "^1.0",
+        "rapkalin/rapkalin-mail": "^1.0",
+        "rapkalin/rapkalin-security": "^1.2",
         "roots/bedrock-autoloader": "^1.1",
         "roots/bedrock-disallow-indexing": "^2.1",
         "roots/wp-config": "^1.0",
@@ -43,7 +58,7 @@
         "vendor-dir": "website/vendor",
         "optimize-autoloader": true,
         "platform": {
-            "php": "8.4.1"
+            "php": "8.5"
         },
         "preferred-install": "dist",
         "sort-packages": true,

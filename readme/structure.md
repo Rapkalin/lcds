@@ -38,12 +38,11 @@ lcds/
 │   └── app/                    # Contenu (remplace wp-content)
 │       ├── mu-plugins/
 │       │   ├── bedrock-autoloader.php   # Charge les mu-plugins en sous-dossier
-│       │   ├── lcds-cache.php           # Cache applicatif (point d'entrée)
 │       │   ├── lcds-webp.php            # Conversion WebP (point d'entrée)
 │       │   ├── lcds-third-party-deprecations.php  # Dépréciations PHP 8.5 tierces hors des pages (temporaire)
-│       │   ├── rapkalin-mail/           # Transport des e-mails + Réglages → Email
-│       │   ├── enums/                   # LcdsCacheKey, LcdsCacheGroup
-│       │   ├── cache/                   # Moteur + invalidation
+│       │   ├── rapkalin-cache/          # Cache applicatif (Composer, non versionné)
+│       │   ├── rapkalin-mail/           # Transport des e-mails + Réglages → Email (Composer, non versionné)
+│       │   ├── rapkalin-security/       # Protection de la connexion + journaux (Composer, non versionné)
 │       │   └── webp/                    # Configuration + filtres de conversion
 │       ├── plugins/            # Installés par Composer / ACF Pro (non versionné)
 │       ├── themes/lcds/        # Thème du projet

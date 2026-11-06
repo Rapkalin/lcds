@@ -22,6 +22,9 @@
 #
 # Secrets (Settings > Secrets and variables > Actions) :
 #   OBLIGATOIRES   DEPLOY_HOST · DEPLOY_USER · DEPLOY_KEY
+#   OBLIGATOIRE    COMPOSER_AUTH (secret de DÉPÔT, pas d'environnement) : jeton
+#                  en lecture seule des modules privés rapkalin-* —
+#                  {"github-oauth":{"github.com":"<jeton>"}}
 #   OPTIONNELS     DEPLOY_KEY_PASS (clé protégée par passphrase)
 #                  DEPLOY_FINGERPRINT (vérification de l'hôte, anti-MITM)
 # Un secret optionnel non défini vaut la chaîne vide et est simplement ignoré.
@@ -55,15 +58,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Installer PHP 8.4
+      - name: Installer PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
 
-      # Les plugins GRATUITS sont téléchargés ici (wpackagist), pas versionnés.
-      # Les plugins payants vivent dans shared/plugins/ côté serveur.
+      # Les plugins GRATUITS sont téléchargés ici (wpackagist), pas versionnés,
+      # comme les modules maison rapkalin-* (dépôts privés, lus avec le jeton
+      # COMPOSER_AUTH : contenu en lecture seule, ces dépôts seulement). Les
+      # plugins payants vivent dans shared/plugins/ côté serveur.
       - name: Installer les dépendances PHP (sans dev)
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
       - name: Installer Node 26
@@ -257,73 +264,77 @@ jobs:
             ROOT="$HOME/${{ inputs.remote_path }}"
             cd "$ROOT"
 
-            # WP-CLI charge l'autoloader de Composer, qui EXIGE PHP >= 8.4 : le
+            # WP-CLI charge l'autoloader de Composer, qui EXIGE PHP >= 8.5 : le
             # `platform_check.php` produit à la construction refuse net en
             # dessous, et rien ne s'exécute.
             #
             # Or sur un mutualisé le PHP de la ligne de commande N'EST PAS celui
             # du web : le panneau de l'hébergeur ne règle que le second.
             # Constaté en préproduction IONOS le 06/09/2026 — web en 8.4, SSH en
-            # 8.0.30 — exactement le piège annoncé dans readme/deploiement.md.
+            # 8.0.30. Sur IONOS, `wp` est de plus une ENVELOPPE SHELL qui lance
+            # le phar avec PHP 8.0, réglable par uiwpcli_PHP_FLAVOR (constaté
+            # sur Optelya, même hébergeur, le 25/10/2026).
             #
-            # `WP_CLI_PHP` ne servirait à rien ici : la documentation de WP-CLI
-            # le donne « only works for non-Phar installation », or l'archive
-            # phar est l'installation courante. On invoque donc le binaire
-            # choisi AVEC le phar en argument.
+            # Le choix se fait sur la SORTIE de `--info`, jamais sur le code de
+            # retour : `php8.5 <script shell>` recopie le script et sort en 0 —
+            # aucune commande wp ne tourne alors, sans alerte.
             WP_BIN=$(command -v wp 2>/dev/null || true)
             PHP_BIN=""
-            for candidat in php8.5 php8.5-cli php85 /usr/bin/php8.5 /usr/local/bin/php8.5 \
-                php8.4 php8.4-cli php84 /usr/bin/php8.4 /usr/local/bin/php8.4 php; do
-              chemin=$(command -v "$candidat" 2>/dev/null) || continue
-              "$chemin" -r 'exit(PHP_VERSION_ID >= 80400 ? 0 : 1);' >/dev/null 2>&1 || continue
-              PHP_BIN="$chemin"
+            for CANDIDATE in php8.5 php8.5-cli php85 /usr/bin/php8.5 /usr/bin/php8.5-cli /usr/local/bin/php8.5 php; do
+              CANDIDATE_PATH=$(command -v "$CANDIDATE" 2>/dev/null) || continue
+              "$CANDIDATE_PATH" -r 'exit(PHP_VERSION_ID >= 80500 ? 0 : 1);' >/dev/null 2>&1 || continue
+              PHP_BIN="$CANDIDATE_PATH"
               break
             done
 
+            wp_phar() { "$PHP_BIN" "$WP_BIN" "$@"; }
+            wp_wrapper() { uiwpcli_PHP_FLAVOR="$(basename "$PHP_BIN" -cli)" "$WP_BIN" "$@"; }
+            WP=""
             if [ -n "$WP_BIN" ] && [ -n "$PHP_BIN" ]; then
-              # Vérifié plutôt que supposé : si `wp` était une enveloppe shell
-              # et non un phar, le passer à PHP échouerait sans rien dire.
-              if "$PHP_BIN" "$WP_BIN" --version >/dev/null 2>&1; then
-                wp() { "$PHP_BIN" "$WP_BIN" "$@"; }
-                echo "WP-CLI via $PHP_BIN ($("$PHP_BIN" -r 'echo PHP_VERSION;'))."
-              else
-                echo "WP-CLI ne s'exécute pas via $PHP_BIN : on garde le \`wp\` du serveur."
-              fi
+              for RUNNER in wp_phar wp_wrapper; do
+                "$RUNNER" --info 2>/dev/null | grep -Eq '^PHP version:[[:space:]]+8\.([5-9]|[1-9][0-9])' || continue
+                WP="$RUNNER"
+                break
+              done
             fi
 
+            # `::warning::` remonte dans le résumé du run : sans ça une étape
+            # sautée passe inaperçue — toutes les commandes `wp` sont en `|| true`.
             if [ -z "$WP_BIN" ]; then
-              echo "WP-CLI absent du serveur : amorçage de la navigation et purge des caches à faire à la main."
+              echo "::warning::WP-CLI absent du serveur : amorçage de la navigation et purge des caches à faire à la main."
             elif [ -z "$PHP_BIN" ]; then
-              # `::warning::` remonte dans le résumé du run : sans ça le message
-              # se perd dans le log, et une purge sautée passe inaperçue —
-              # toutes les commandes `wp` sont en `|| true`.
-              echo "::warning::Aucun PHP >= 8.4 en ligne de commande sur le serveur (défaut : $(php -v 2>/dev/null | head -1)). Amorçage des menus et purges de cache NON exécutés."
+              echo "::warning::Aucun PHP >= 8.5 en ligne de commande sur le serveur (défaut : $(php -v 2>/dev/null | head -1)). Amorçage des menus et purges de cache NON exécutés."
+            elif [ -z "$WP" ]; then
+              echo "::warning::WP-CLI ne démarre pas avec $PHP_BIN, ni en direct ni par son enveloppe. Amorçage des menus et purges de cache NON exécutés."
             else
+              echo "WP-CLI via $WP ($("$WP" --info 2>/dev/null | grep '^PHP version:'))."
               # Les menus et leurs entrées par défaut. L'amorçage est accroché à
               # `admin_init` dans le thème : sans cet appel, le site n'aurait pas
               # de navigation avant la première visite d'un administrateur —
               # `wp_nav_menu()` est appelé avec `fallback_cb => false`.
               # Idempotent, et un menu déjà garni par un contributeur n'est
               # jamais retouché — voir readme/menus.md.
-              wp eval 'lcds_seed_default_menus();' || true
+              "$WP" eval 'lcds_seed_default_menus();' || true
               # Les traductions des plugins ne sont pas dans l'artefact : sans
               # elles, Yoast titre les 404 et la recherche en anglais sur un
               # site déclaré en fr. Le script qui suit rattrape les gabarits
               # déjà enregistrés en anglais, sans toucher à une valeur saisie
               # par un contributeur — voir readme/seo.md.
-              wp language plugin install --all fr_FR || true
-              wp eval 'lcds_reset_seo_titles();' || true
+              "$WP" language plugin install --all fr_FR || true
+              "$WP" eval 'lcds_reset_seo_titles();' || true
               # Migration 3.3.0 : un seul visuel par étape du parcours.
               # Idempotente, rejouée sans effet aux déploiements suivants.
-              wp eval 'echo "Parcours : ", lcds_migrate_journey_visuals(), " étape(s) migrée(s).\n";' || true
-              wp cache flush || true
-              wp rewrite flush || true
-              wp eval 'if (function_exists("wp_cache_clear_cache")) { wp_cache_clear_cache(); }' || true
+              "$WP" eval 'echo "Parcours : ", lcds_migrate_journey_visuals(), " étape(s) migrée(s).\n";' || true
+              "$WP" cache flush || true
+              "$WP" rewrite flush || true
+              # Données en cache et pages portent l'ancienne version (pied de
+              # page, styles) : tout est vidé, par le module rapkalin-cache.
+              "$WP" rapkalin-cache flush || true
             fi
             # ⚠️ L'OPcache n'est vidé que par un rechargement de PHP-FPM. À
             # décommenter avec la commande de l'hébergeur, sinon l'ancien code
             # continue de tourner après le déploiement.
-            # sudo systemctl reload php8.4-fpm
+            # sudo systemctl reload php8.5-fpm
 
       # Seul composer.lock est nécessaire ici (voir l'étape suivante) : on évite
       # de cloner tout le dépôt pour un fichier.

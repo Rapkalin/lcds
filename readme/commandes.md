@@ -89,8 +89,8 @@ db-import nouveau-dump.sql
 
 | Commande | Effet |
 | --- | --- |
-| `dwp eval 'wp_cache_clear_cache();'` | Purge le cache pleine page (WP Super Cache). |
-| `dwp eval 'lcds_cache_flush_all();'` | Purge tout le cache applicatif. |
+| `dwp rapkalin-cache flush` | Purge le cache applicatif et le cache pleine page. |
+| `dwp rapkalin-cache status` | État de chaque couche de cache. |
 
 ## Dépendances
 

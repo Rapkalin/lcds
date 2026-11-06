@@ -137,8 +137,10 @@ code tiers :
 
 - `website/app/mu-plugins/lcds-third-party-deprecations.php` : les
   `E_DEPRECATED` levées hors de `mu-plugins/` et `themes/` partent dans
-  `debug.log` au lieu de la page. **Celles de notre code restent affichées.**
-  Inactif quand `WP_DEBUG_DISPLAY` est coupé (préprod, prod).
+  `debug.log` au lieu de la page. **Celles de notre code restent affichées**
+  (modules `rapkalin-*` compris). Tous les autres niveaux sont rendus au
+  gestionnaire précédent, le journal des erreurs de `rapkalin-security` : PHP
+  n'en garde qu'un. Inactif quand `WP_DEBUG_DISPLAY` est coupé (préprod, prod).
 - Dans l'image Docker, `wp` est un lanceur qui appelle le phar avec
   `error_reporting=E_ALL & ~E_DEPRECATED` : l'avis de WP-CLI est émis avant le
   chargement de WordPress, aucun gestionnaire PHP ne peut l'intercepter.

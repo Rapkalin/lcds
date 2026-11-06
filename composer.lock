@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7d7ac2fcd419428ed0893f35b5ee77c5",
+    "content-hash": "925b84ed0122516140ccafeae949dfd5",
     "packages": [
         {
             "name": "composer/installers",
@@ -491,6 +491,209 @@
                 }
             ],
             "time": "2026-08-24T00:54:40+00:00"
+        },
+        {
+            "name": "rapkalin/rapkalin-cache",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:Rapkalin/rapkalin-cache.git",
+                "reference": "c4dbc965cd75fae07c8bc52843f3b50743823828"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Rapkalin/rapkalin-cache/zipball/c4dbc965cd75fae07c8bc52843f3b50743823828",
+                "reference": "c4dbc965cd75fae07c8bc52843f3b50743823828",
+                "shasum": ""
+            },
+            "require": {
+                "composer/installers": "^2.3",
+                "php": ">=8.5"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
+                "laravel/pint": "^1.32.1",
+                "pestphp/pest": "^5.3.5",
+                "php-stubs/wordpress-stubs": "^7.1",
+                "phpstan/phpstan": "^2.3.5",
+                "slevomat/coding-standard": "^8.31.3",
+                "squizlabs/php_codesniffer": "^4.0.4",
+                "szepeviktor/phpstan-wordpress": "^2.0.4"
+            },
+            "type": "wordpress-muplugin",
+            "scripts": {
+                "lint": [
+                    "pint --test"
+                ],
+                "lint:fix": [
+                    "pint"
+                ],
+                "types": [
+                    "phpcs -q"
+                ],
+                "stan": [
+                    "phpstan analyse --memory-limit=1G"
+                ],
+                "check": [
+                    "@lint",
+                    "@types",
+                    "@stan"
+                ],
+                "test": [
+                    "pest"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Rapkalin",
+                    "email": "raphael@rapkalin.fr"
+                }
+            ],
+            "description": "Cache layers kept in step: an application cache (versioned transients) and the page cache of WP Super Cache, purged together.",
+            "support": {
+                "source": "https://github.com/Rapkalin/rapkalin-cache/tree/v1.0.0",
+                "issues": "https://github.com/Rapkalin/rapkalin-cache/issues"
+            },
+            "time": "2026-11-06T14:53:28+00:00"
+        },
+        {
+            "name": "rapkalin/rapkalin-mail",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:Rapkalin/rapkalin-mail.git",
+                "reference": "94ef9ea8b7b45ba225b34d75df46ac79e83f77ce"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Rapkalin/rapkalin-mail/zipball/94ef9ea8b7b45ba225b34d75df46ac79e83f77ce",
+                "reference": "94ef9ea8b7b45ba225b34d75df46ac79e83f77ce",
+                "shasum": ""
+            },
+            "require": {
+                "composer/installers": "^2.3",
+                "oscarotero/env": "^2.1",
+                "php": ">=8.5"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
+                "laravel/pint": "^1.32.1",
+                "pestphp/pest": "^5.3.5",
+                "php-stubs/wordpress-stubs": "^7.1",
+                "phpstan/phpstan": "^2.3.5",
+                "slevomat/coding-standard": "^8.31.3",
+                "squizlabs/php_codesniffer": "^4.0.4",
+                "szepeviktor/phpstan-wordpress": "^2.0.4"
+            },
+            "type": "wordpress-muplugin",
+            "scripts": {
+                "lint": [
+                    "pint --test"
+                ],
+                "lint:fix": [
+                    "pint"
+                ],
+                "types": [
+                    "phpcs -q"
+                ],
+                "stan": [
+                    "phpstan analyse --memory-limit=1G"
+                ],
+                "check": [
+                    "@lint",
+                    "@types",
+                    "@stan"
+                ],
+                "test": [
+                    "pest"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Rapkalin",
+                    "email": "raphael@rapkalin.fr"
+                }
+            ],
+            "description": "Outgoing email through the server's sendmail binary or an SMTP relay, configured in Settings → Email.",
+            "support": {
+                "source": "https://github.com/Rapkalin/rapkalin-mail/tree/v1.0.0",
+                "issues": "https://github.com/Rapkalin/rapkalin-mail/issues"
+            },
+            "time": "2026-11-06T14:53:35+00:00"
+        },
+        {
+            "name": "rapkalin/rapkalin-security",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:Rapkalin/rapkalin-security.git",
+                "reference": "b9b69b26db450fcbd61031063fba650900ac57ba"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Rapkalin/rapkalin-security/zipball/b9b69b26db450fcbd61031063fba650900ac57ba",
+                "reference": "b9b69b26db450fcbd61031063fba650900ac57ba",
+                "shasum": ""
+            },
+            "require": {
+                "composer/installers": "^2.3",
+                "oscarotero/env": "^2.1",
+                "php": ">=8.5"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
+                "laravel/pint": "^1.32.1",
+                "pestphp/pest": "^5.3.5",
+                "php-stubs/wordpress-stubs": "^7.1",
+                "phpstan/phpstan": "^2.3.5",
+                "slevomat/coding-standard": "^8.31.3",
+                "squizlabs/php_codesniffer": "^4.0.4",
+                "szepeviktor/phpstan-wordpress": "^2.0.4"
+            },
+            "type": "wordpress-muplugin",
+            "scripts": {
+                "lint": [
+                    "pint --test"
+                ],
+                "lint:fix": [
+                    "pint"
+                ],
+                "types": [
+                    "phpcs -q"
+                ],
+                "stan": [
+                    "phpstan analyse --memory-limit=1G"
+                ],
+                "check": [
+                    "@lint",
+                    "@types",
+                    "@stan"
+                ],
+                "test": [
+                    "pest"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Rapkalin",
+                    "email": "raphael@rapkalin.fr"
+                }
+            ],
+            "description": "Login protection (limited attempts, custom login address) and journals for administrators: logins, activity, site errors.",
+            "support": {
+                "source": "https://github.com/Rapkalin/rapkalin-security/tree/v1.2.0",
+                "issues": "https://github.com/Rapkalin/rapkalin-security/issues"
+            },
+            "time": "2026-11-06T14:53:43+00:00"
         },
         {
             "name": "roots/bedrock-autoloader",
@@ -5754,11 +5957,11 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=8.4"
+        "php": ">=8.5"
     },
     "platform-dev": {},
     "platform-overrides": {
-        "php": "8.4.1"
+        "php": "8.5"
     },
     "plugin-api-version": "2.11.0"
 }

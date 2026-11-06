@@ -1,4 +1,5 @@
-# PHPStan — static analysis for the project's own PHP (theme + mu-plugins).
+# PHPStan — static analysis for the project's own PHP (theme + mu-plugins). The
+# rapkalin-* modules are Composer packages checked in their own repositories.
 # Level 6 enables missing-type-hint reporting (parameters + return types).
 # WordPress / ACF / Yoast symbols come from stub packages so their functions
 # are not reported as undefined.
@@ -8,11 +9,8 @@ includes:
 parameters:
     level: 6
 
-    # The whole supported range: 8.4 is the floor (servers), 8.5 the dev image.
-    # Same result whatever the runtime version of the host or the CI image.
-    phpVersion:
-        min: 80400
-        max: 80500
+    # No `phpVersion`: PHPStan reads config.platform.php in composer.json, the
+    # single place the PHP version is declared.
 
     paths:
         - website/app/themes/lcds
@@ -24,19 +22,22 @@ parameters:
         - website/app/themes/lcds/node_modules/*
         - website/app/mu-plugins/bedrock-autoloader.php
         - website/app/mu-plugins/bedrock-disallow-indexing/*
+        - website/app/mu-plugins/rapkalin-*
 
     # Extra symbol sources so plugin functions are known to the analyser.
     scanFiles:
         - website/vendor/php-stubs/acf-pro-stubs/acf-pro-stubs.php
         - website/vendor/php-stubs/wordpress-seo-stubs/wordpress-seo-stubs.php
 
-    # The cache module is loaded by lcds-cache.php through require_once, and the
-    # theme calls into it; PHPStan analyses files in isolation, so it needs to be
-    # told where those symbols live.
+    # Loaded through require_once by their entry files, and called from the
+    # theme: PHPStan analyses files in isolation, so it needs to be told where
+    # those symbols live. rapkalin-security: the QA campaign and nothing else,
+    # but its symbols keep the analyser honest if the theme ever calls it.
     scanDirectories:
-        - website/app/mu-plugins/enums
-        - website/app/mu-plugins/cache
         - website/app/mu-plugins/webp
+        - website/app/mu-plugins/rapkalin-cache/includes
+        - website/app/mu-plugins/rapkalin-mail/includes
+        - website/app/mu-plugins/rapkalin-security/includes
 
     ignoreErrors:
         # array<…> generics are intentionally out of scope: the project's type

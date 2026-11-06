@@ -26,23 +26,20 @@ d'abord `ci.yml` (Pint, PHPCS, PHPStan, Pest, CVE, gitleaks, build front) et
 
 ## Prérequis côté hébergeur
 
-**PHP 8.4 au minimum**, au web et en SSH. Le poste de dev tourne en 8.5, mais
-la préprod IONOS ne propose pas encore 8.5 : le projet reste donc compatible
-8.4 (`"php": ">=8.4"`). Trois verrous l'empêchent de dériver vers 8.5 :
+**PHP 8.5 au minimum**, au web et en SSH (depuis la 4.0.0 : les modules maison
+`rapkalin-*` l'exigent). La 3.1.2 avait fait redescendre le projet en 8.4 faute
+de 8.5 chez IONOS ; IONOS le propose désormais (Optelya y tourne en 8.5.12,
+`/usr/bin/php8.5-cli`), et le mutualisé OVH aussi (voir [`images.md`](images.md)).
 
-- `config.platform.php` = `8.4.1` dans `composer.json` : un `composer update`
-  lancé dans le conteneur 8.5 ne retient que des paquets installables en 8.4
-  (8.4.1 et non 8.4.0 : PHPUnit 13.4 exige 8.4.1) ;
-- PHPStan analyse la plage `80400`–`80500` : une syntaxe propre à 8.5 (opérateur
-  `|>`…) est refusée (vérifié) ;
-- la CI et la construction de l'artefact tournent en **8.4**, Pest compris.
+La version est déclarée à **un seul endroit** : `config.platform.php` = `8.5`
+dans `composer.json`. Un `composer update` ne retient que des paquets
+installables en 8.5, et PHPStan lit cette valeur (pas de `phpVersion` dans
+`phpstan.neon`). La CI et la construction de l'artefact tournent en 8.5.
 
-Une **fonction** propre à 8.5 (`array_first()`…) n'est pas refusée : le
-polyfill `symfony/polyfill-php85` la fournit en 8.4, ce qui est voulu.
-
-**Le jour où préprod et prod sont en 8.5** : passer `"php"` à `>=8.5`, retirer
-`config.platform`, régler `phpVersion: 80500` et la CI en 8.5, puis
-`composer update --lock`.
+> ⚠️ **Le PHP du web se règle au panneau de l'hébergeur, domaine par domaine.**
+> Un serveur resté en 8.4 sert une erreur sur toutes les pages : le
+> `platform_check.php` de Composer refuse de charger l'autoloader. Passer le
+> domaine en 8.5 **avant** de déployer.
 
 À contrôler **avant** le premier déploiement sur un nouvel hébergement, puis
 après toute montée de version de PHP :
@@ -68,33 +65,90 @@ Deux pièges déjà rencontrés :
 
 ### Le PHP que WP-CLI utilise
 
-Le déploiement **choisit lui-même** un binaire PHP ≥ 8.4 : d'abord `php8.5`,
-`php8.5-cli`, `php85`, `/usr/bin/php8.5`, `/usr/local/bin/php8.5`, puis les
-mêmes en 8.4, puis `php`,
-et invoque WP-CLI avec :
+Le déploiement **choisit lui-même** un binaire PHP ≥ 8.5 (`php8.5`,
+`php8.5-cli`, `php85`, `/usr/bin/php8.5`, `/usr/bin/php8.5-cli`,
+`/usr/local/bin/php8.5`, puis `php`), puis essaie deux façons de lancer
+WP-CLI :
+
+- **le phar en direct** : `"$PHP_BIN" "$(command -v wp)" …` (et non
+  `WP_CLI_PHP`, que la documentation de WP-CLI donne *« only works for non-Phar
+  installation »*) ;
+- **l'enveloppe de l'hébergeur** : sur IONOS, `wp` est un script shell qui
+  lance le phar avec **PHP 8.0 par défaut**, réglable par la variable
+  `uiwpcli_PHP_FLAVOR` (constaté sur Optelya, même hébergeur, le 25/10/2026).
+
+La méthode est retenue sur la **sortie** de `wp --info` (PHP ≥ 8.5 exigé),
+jamais sur le code de retour : `php8.5 <script shell>` recopie le script et
+sort en 0. **C'est ce qui arrivait jusqu'à la 3.4.1** : sur la préprod IONOS,
+le workflow croyait lancer WP-CLI et n'exécutait rien — ni amorçage des menus,
+ni titres SEO, ni migration du parcours, ni purge — sans aucune alerte.
+
+Si rien ne convient, ces étapes sont **sautées**, avec un `::warning::` dans
+le résumé du run.
+
+En SSH sur IONOS, **toujours** commencer par :
 
 ```bash
-"$PHP_BIN" "$(command -v wp)" eval '…'
+export uiwpcli_PHP_FLAVOR=php8.5
+wp --info | grep '^PHP version'   # doit dire 8.5
 ```
-
-Et non `WP_CLI_PHP`, que la documentation de WP-CLI donne *« only works for
-non-Phar installation »* — or l'archive phar est l'installation courante.
-
-Si aucun binaire ne convient, l'amorçage des menus et les purges de cache sont
-**sautés**, avec un `::warning::` dans le résumé du run. Ils ne faisaient déjà
-rien auparavant — toutes les commandes `wp` sont en `|| true` — mais l'échec
-était muet, noyé sous une trace de `platform_check.php`.
 
 Pour trouver le bon binaire sur un hébergement inconnu :
 
 ```bash
 ls /usr/bin/php* /usr/local/bin/php* 2>/dev/null
-for b in php php8.5 php8.5-cli php85 php8.4 php8.4-cli php84; do
+for b in php php8.5 php8.5-cli php85; do
   command -v "$b" >/dev/null && printf '%-12s %s\n' "$b" "$($b -r 'echo PHP_VERSION;')"
 done
 ```
 
 Ajouter le chemin trouvé en tête de la liste de candidats du workflow.
+
+## Modules maison (mu-plugins)
+
+`rapkalin-mail` (*Réglages → Email*, voir [`email.md`](email.md)),
+`rapkalin-security` (*Comptes → Connexions*, *Outils → Activité*, *Outils →
+Journal* et protection de la connexion, voir [`securite.md`](securite.md)) et
+`rapkalin-cache` (voir [`cache.md`](cache.md)) sont des **paquets Composer**,
+chacun dans son dépôt GitHub **privé** (depuis la 4.0.0) :
+
+| Paquet | Dépôt |
+| --- | --- |
+| `rapkalin/rapkalin-cache` | <https://github.com/Rapkalin/rapkalin-cache> |
+| `rapkalin/rapkalin-mail` | <https://github.com/Rapkalin/rapkalin-mail> |
+| `rapkalin/rapkalin-security` | <https://github.com/Rapkalin/rapkalin-security> |
+
+Composer les installe dans `website/app/mu-plugins/<module>/` (ignorés par
+Git) et ils partent avec la release, réécrits à chaque déploiement aux versions
+de `composer.lock`. Un mu-plugin n'a pas besoin d'être activé. Rien à déposer
+dans `shared/`.
+
+- **Mettre à jour un module** : publier une version dans son dépôt (en-tête
+  `Version:`, `CHANGELOG.md`, tag `vX.Y.Z`), puis ici
+  `composer update rapkalin/<module>`, committer `composer.lock` et déployer.
+- **Corriger un module** : dans son dépôt, jamais dans
+  `website/app/mu-plugins/rapkalin-*` — la prochaine installation écrase tout.
+- **Accès aux dépôts privés** : un jeton GitHub *fine-grained* dédié à LCDS,
+  en **lecture seule** (*Contents : Read-only*), limité aux trois dépôts, avec
+  une date d'expiration.
+  - **en CI** : secret de **dépôt** `COMPOSER_AUTH` (pas d'environnement : le
+    job de build n'en a pas), au format
+    `{"github-oauth":{"github.com":"<jeton>"}}`. C'est le seul secret que reçoit
+    le job de build ; la clé SSH reste réservée au job de déploiement. Une pull
+    request venue d'un fork ne le reçoit pas et échoue à l'installation ;
+  - **en local** : `auth.json` à la racine du dépôt (ignoré par Git), même
+    contenu ;
+  - **sans jeton**, `composer install` sort en **code 100** (404 sur le dépôt
+    privé) : le déploiement s'arrête avant tout envoi (vérifié le 06/11/2026) ;
+  - **à son expiration**, la CI échoue à l'installation : le renouveler aux
+    deux endroits.
+- **Contrôles** : chaque module a sa CI (Pint, PHPCS, PHPStan, Pest) dans son
+  dépôt. LCDS ne les analyse pas et n'exécute pas leurs tests ;
+  `bin/qa-front.sh` vérifie seulement leur intégration (journal des connexions).
+- **Dépôt public** : `composer.json` et `composer.lock` montrent le nom des
+  dépôts privés et leurs empreintes de commit. Ce ne sont pas des secrets, le
+  code reste privé. Les dépôts `vcs` passent avant Packagist : un paquet du même
+  nom publié sur Packagist ne serait pas pris.
 
 > Sur un mutualisé OVH, le docroot se règle par domaine : *Hébergements >
 > Multisite > Modifier > Dossier racine*. Y mettre `<remote_path>/website`, la

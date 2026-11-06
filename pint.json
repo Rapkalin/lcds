@@ -16,6 +16,9 @@
     "website/app/languages",
     "website/app/uploads",
     "website/app/mu-plugins/bedrock-disallow-indexing",
+    "website/app/mu-plugins/rapkalin-cache",
+    "website/app/mu-plugins/rapkalin-mail",
+    "website/app/mu-plugins/rapkalin-security",
     "website/app/themes/lcds/dist",
     "website/app/themes/lcds/node_modules"
   ]

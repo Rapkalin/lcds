@@ -726,176 +726,101 @@ printf(
     return 0
 }
 
+# Le journal des connexions vient du module rapkalin-security (Composer) : ses
+# propres tests vivent dans son depot. On ne verifie ici que son integration a
+# LCDS — ecran reserve aux administrateurs, connexion inscrite sans adresse IP,
+# erreurs PHP captees malgre le filtre des depreciations tierces.
 check_logins() {
     local out
 
     out="$(cd "$ROOT" && docker compose exec -T php wp eval '
 require_once ABSPATH . "wp-admin/includes/plugin.php";
 
-// L ecran doit exister pour un administrateur, et sous « Comptes » : la
-// fonction add_users_page() du coeur le rattacherait a profile.php.
 wp_set_current_user(1);
 set_current_screen("dashboard");
 do_action("admin_menu");
 
 global $submenu;
+$slug = RapkalinScreen::Logins->slug();
 $declare = "";
 
 foreach ((array) $submenu as $parent => $entrees) {
     foreach ((array) $entrees as $entree) {
-        if (($entree[2] ?? "") === LCDS_LOGIN_LOG_SCREEN) {
+        if (($entree[2] ?? "") === $slug) {
             $declare = (string) $parent;
         }
     }
 }
 
 printf(
-    "%s|l ecran est declare sous Comptes|%s\n",
+    "%s|l ecran Connexions du module est declare sous Comptes|%s\n",
     $declare === "users.php" ? "PASS" : "FAIL",
     $declare === "" ? "ABSENT du menu" : $declare,
 );
 
-// Et il doit rester hors de portee du contributeur : l allow-list refuse
-// users.php, donc toute page qui s y accroche.
+// Deux couches pour le contributeur : la capacite du module (manage_options)
+// et l allow-list de LCDS, qui refuse users.php comme tools.php.
+$contributeur = get_role(LCDS_CONTRIBUTOR_ROLE);
+
 printf(
-    "%s|l ecran est refuse au contributeur|%s\n",
-    LcdsAdminScreen::isAllowed("users.php", array("page" => LCDS_LOGIN_LOG_SCREEN)) ? "FAIL" : "PASS",
-    "allow-list",
+    "%s|les journaux sont refuses au contributeur|%s\n",
+    ($contributeur instanceof WP_Role && ! $contributeur->has_cap(RAPKALIN_SECURITY_CAPABILITY)
+        && ! LcdsAdminScreen::isAllowed("users.php", array("page" => $slug))
+        && ! LcdsAdminScreen::isAllowed("tools.php", array("page" => RapkalinScreen::Errors->slug()))) ? "PASS" : "FAIL",
+    RAPKALIN_SECURITY_CAPABILITY . " + allow-list",
 );
 
-// Une connexion doit reellement etre inscrite. On repose le journal ensuite :
+// Une connexion doit reellement etre inscrite. Le journal est repose ensuite :
 // la campagne ne laisse rien derriere elle.
-$avant = get_option(LCDS_LOGIN_LOG_OPTION, array());
+$avant = get_option(RapkalinJournal::ACTIVITY_OPTION, array());
+$pending = &rapkalin_security_pending();
+$pending["activity"] = array();
 $compte = get_userdata(1);
 do_action("wp_login", $compte->user_login, $compte);
-$apres = lcds_login_log();
+rapkalin_security_flush();
+$apres = get_option(RapkalinJournal::ACTIVITY_OPTION, array());
 
-// Lu AVANT la remise en etat : la restauration ecrit elle-meme autoload=off,
-// et l assertion ne verifiait alors que sa propre ligne.
 global $wpdb;
-$autoload = $wpdb->get_var($wpdb->prepare("SELECT autoload FROM {$wpdb->options} WHERE option_name = %s", LCDS_LOGIN_LOG_OPTION));
+$autoload = $wpdb->get_var($wpdb->prepare("SELECT autoload FROM {$wpdb->options} WHERE option_name = %s", RapkalinJournal::ACTIVITY_OPTION));
 
-// La colonne de la liste des comptes, tant que le journal porte l entree :
-// lcds_last_logins() memorise son calcul pour la duree de la requete.
-$colonnes = apply_filters("manage_users_columns", array("username" => "Identifiant"));
-$cellule = apply_filters("manage_users_custom_column", "", LCDS_LOGIN_LOG_SCREEN, 1);
-$jamais = apply_filters("manage_users_custom_column", "", LCDS_LOGIN_LOG_SCREEN, 987654);
-$intacte = apply_filters("manage_users_custom_column", "posts-a-moi", "posts", 1);
+update_option(RapkalinJournal::ACTIVITY_OPTION, $avant, false);
 
-update_option(LCDS_LOGIN_LOG_OPTION, $avant, false);
-
-printf(
-    "%s|la liste des comptes porte la colonne|%s\n",
-    isset($colonnes[LCDS_LOGIN_LOG_SCREEN]) ? "PASS" : "FAIL",
-    implode(", ", array_keys($colonnes)),
-);
-
-printf(
-    "%s|la colonne affiche une date pour un compte connecte|%s\n",
-    ($cellule !== "" && ! str_contains($cellule, "mdash")) ? "PASS" : "FAIL",
-    $cellule === "" ? "VIDE" : wp_strip_all_tags($cellule),
-);
-
-// Un tiret seul se lit « tiret » a la synthese vocale : le sens doit etre
-// porte par un texte reserve aux lecteurs d ecran.
-printf(
-    "%s|un compte jamais connecte est annonce, pas seulement tirete|%s\n",
-    (str_contains($jamais, "screen-reader-text") && str_contains($jamais, "aria-hidden")) ? "PASS" : "FAIL",
-    wp_strip_all_tags($jamais),
-);
-
-printf(
-    "%s|la colonne ne touche aucune autre colonne|%s\n",
-    $intacte === "posts-a-moi" ? "PASS" : "FAIL",
-    $intacte,
-);
+$entree = is_array($apres) ? ($apres[0] ?? array()) : array();
+$champs = array_keys($entree);
+sort($champs);
 
 printf(
     "%s|une connexion est inscrite en tete|%s\n",
-    (count($apres) === count($avant) + 1 && ($apres[0]["id"] ?? 0) === 1) ? "PASS" : "FAIL",
-    count($avant) . " puis " . count($apres) . " entrees",
+    (($entree["event"] ?? "") === RapkalinEvent::LoginSucceeded->value && ($entree["actor"] ?? "") === $compte->user_login) ? "PASS" : "FAIL",
+    ($entree["event"] ?? "aucune") . " / " . ($entree["actor"] ?? "-"),
 );
 
-// La pagination : 25 entrees fabriquees, rendues page par page. Le journal
-// est repose juste apres.
-$fabrique = array();
-
-for ($rang = 1; $rang <= 25; $rang++) {
-    $fabrique[] = array("id" => 1, "login" => "admin", "time" => time() - $rang);
-}
-
-update_option(LCDS_LOGIN_LOG_OPTION, $fabrique, false);
-$rendu = array();
-
-foreach (array(1, 2, 99) as $numero) {
-    $_GET["paged"] = $numero;
-    ob_start();
-    lcds_render_login_screen();
-    $rendu[$numero] = (string) ob_get_clean();
-}
-
-unset($_GET["paged"]);
-update_option(LCDS_LOGIN_LOG_OPTION, $avant, false);
-
-$lignes = static fn (string $html): int => substr_count($html, "<tr>") - 1;
-
+// Aucune adresse IP conservee : la question posee est « qui, quand », pas
+// « d ou ». Le module ne garde l adresse que hachee, le temps du blocage.
 printf(
-    "%s|la premiere page montre %d connexions|%d\n",
-    $lignes($rendu[1]) === LcdsLoginLog::PER_PAGE ? "PASS" : "FAIL",
-    LcdsLoginLog::PER_PAGE,
-    $lignes($rendu[1]),
+    "%s|une entree ne porte aucune adresse IP|%s\n",
+    $champs === array("actor", "event", "subject", "time") ? "PASS" : "FAIL",
+    implode(", ", $champs),
 );
 
-printf(
-    "%s|la seconde page montre le reste|%d\n",
-    $lignes($rendu[2]) === 25 - LcdsLoginLog::PER_PAGE ? "PASS" : "FAIL",
-    $lignes($rendu[2]),
-);
-
-// Un numero de page vient de l URL : il est hostile par principe.
-printf(
-    "%s|une page hors bornes retombe sur la derniere|%d\n",
-    $lignes($rendu[99]) === $lignes($rendu[2]) ? "PASS" : "FAIL",
-    $lignes($rendu[99]),
-);
-
-// Deux blocs de pagination sur la page : sans nom, rien ne les distingue a la
-// synthese vocale.
-printf(
-    "%s|la pagination est un systeme de navigation nomme|%d bloc(s)\n",
-    substr_count($rendu[1], "<nav class=\"tablenav-pages\" aria-label=") === 2 ? "PASS" : "FAIL",
-    substr_count($rendu[1], "<nav class=\"tablenav-pages\""),
-);
-
-// Et elle disparait quand il n y a qu une page.
-update_option(LCDS_LOGIN_LOG_OPTION, array_slice($fabrique, 0, 5), false);
-ob_start();
-lcds_render_login_screen();
-$courte = (string) ob_get_clean();
-update_option(LCDS_LOGIN_LOG_OPTION, $avant, false);
-
-printf(
-    "%s|aucune pagination sur une seule page|%s\n",
-    ! str_contains($courte, "tablenav-pages") ? "PASS" : "FAIL",
-    str_contains($courte, "tablenav-pages") ? "AFFICHEE" : "absente",
-);
-
-// L option ne doit pas etre autochargee : elle serait lue a CHAQUE requete du
-// site, pour un ecran que seul un administrateur ouvre.
 printf(
     "%s|le journal n est pas autocharge|%s\n",
     ($autoload === null || ! in_array($autoload, array("yes", "on"), true)) ? "PASS" : "FAIL",
     $autoload === null ? "option absente" : (string) $autoload,
 );
 
-// Aucune adresse IP : la question posee est « qui, quand », pas « d ou ».
-$champs = $apres === array() ? array() : array_keys($apres[0]);
-sort($champs);
+// PHP ne garde qu un gestionnaire d erreurs : celui de LCDS (depreciations
+// tierces) doit rendre les autres niveaux au journal du module.
+ini_set("display_errors", "0");
+$pending["errors"] = array();
+trigger_error("qa-security-capture", E_USER_WARNING);
+$captees = count($pending["errors"]);
+$pending["errors"] = array();
 
 printf(
-    "%s|une entree ne porte que compte et instant|%s\n",
-    $champs === array("id", "login", "time") ? "PASS" : "FAIL",
-    implode(", ", $champs),
+    "%s|une alerte PHP atteint le journal des erreurs|%d captee(s)\n",
+    $captees === 1 ? "PASS" : "FAIL",
+    $captees,
 );
 ' --allow-root 2>/dev/null | tr -d '\r')"
 

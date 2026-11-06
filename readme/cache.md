@@ -4,7 +4,7 @@ Trois briques distinctes, à ne pas confondre :
 
 | Brique | Rôle | Où |
 | --- | --- | --- |
-| **Cache applicatif** | Mémorise des données coûteuses à recalculer (requêtes lourdes, appels API). | `website/app/mu-plugins/` |
+| **Cache applicatif** | Mémorise des données coûteuses à recalculer (requêtes lourdes, appels API). | module `rapkalin-cache` (paquet Composer) |
 | **Cache pleine page** | Sert le HTML complet d'une page depuis un fichier statique, sans relancer WordPress. | WP Super Cache (désactivé par défaut) |
 | **OPcache** | Cache du bytecode PHP. | Réglage serveur (production) |
 
@@ -12,102 +12,39 @@ Trois briques distinctes, à ne pas confondre :
 
 ## 1. Cache applicatif
 
-Le mu-plugin `website/app/mu-plugins/lcds-cache.php` met en cache, via les
-**transients** WordPress, des données coûteuses à recalculer. C'est une **brique
-de base, à faire évoluer** selon les besoins.
+Il vient du module maison **`rapkalin-cache`**, paquet Composer privé
+(<https://github.com/Rapkalin/rapkalin-cache>) installé dans
+`website/app/mu-plugins/rapkalin-cache/` — voir [`deploiement.md`](deploiement.md).
+Son API, son invalidation et ses conventions sont dans son `README.md` ; ce
+fichier ne décrit que ce qui est propre à LCDS.
 
-> Il vit dans un **mu-plugin** et non dans le thème : le cache est de
-> l'infrastructure. Il doit rester disponible pour WP-CLI, le cron et l'admin, et
-> survivre à un changement de thème.
+> Jusqu'à la 3.4.1, LCDS avait sa propre copie (`lcds-cache.php`, enums
+> `LcdsCacheKey`/`LcdsCacheGroup`), **jamais appelée par le thème**. Le module en
+> est la version aboutie : elle a été retirée en 4.0.0.
 
-### Utilisation
+**État : aucune clé déclarée.** Le module tourne à vide. Ce qu'il fait déjà :
 
-```php
-$articles = lcds_cache_remember(LcdsCacheKey::Example, function () {
-    return get_posts(['numberposts' => 3]);
-});
-```
+- le bouton **Vider le cache** dans la barre d'outils, pour les comptes qui
+  ont `edit_others_posts` — administrateurs **et contributeurs LCDS** ;
+- `wp rapkalin-cache flush` (lancé par le déploiement) et `wp rapkalin-cache
+  status` ;
+- la purge du cache pleine page sur ce que WP Super Cache ne surveille pas
+  (options ACF, titre du site, termes), le jour où celui-ci est activé.
 
-Signature :
+### Déclarer la première clé
 
-```php
-lcds_cache_remember(
-    LcdsCacheKey $key,
-    callable $callback,
-    string $suffix = ''
-): mixed
-```
+Une enum **du thème** qui implémente `RapkalinCacheEntry`, enregistrée par le
+filtre `rapkalin_cache_entries`, puis `rapkalin_cache_remember()` — exemple
+complet dans le `README.md` du module.
 
-La fonction renvoie la valeur en cache si elle existe, sinon exécute
-`$callback`, la stocke, puis la renvoie. **Le TTL et le groupe sont portés par la
-clé** (l'enum `LcdsCacheKey`) : l'appel ne fait que choisir l'entrée et fournir
-le callback. Pour une entrée **paramétrée** (par page, par variante…), passer un
-`$suffix`.
+> ⚠️ **Tout ce qui fait varier la sortie doit être dans la clé** (son
+> `$suffix`). Langue, rôle, variante mobile/desktop, identifiant de contenu : ce
+> qui n'est pas dans la clé sera servi à tout le monde à partir du premier
+> visiteur.
 
-> ⚠️ **Tout ce qui fait varier la sortie doit être dans la clé.** Langue, rôle,
-> variante mobile/desktop, identifiant de contenu : ce qui n'est pas dans la clé
-> (ou son suffixe) sera servi à tout le monde à partir du premier visiteur.
-
-### Invalidation
-
-L'invalidation se fait par **versionnement** : plutôt que de supprimer les
-transients un par un, on incrémente une version. Les anciennes clés ne sont alors
-**plus jamais relues** (invalidation immédiate) ; leur ligne, devenue orpheline
-dans `wp_options`, est purgée plus tard par WordPress une fois son TTL dépassé.
-
-- `lcds_cache_flush_group(LcdsCacheGroup::Content)` — invalide un groupe ;
-- `lcds_cache_flush_all()` — invalide tout le cache applicatif.
-
-Hooks d'invalidation automatique (`cache/invalidation.php`) :
-
-| Groupe | Invalidé par |
-| --- | --- |
-| `Content` | publication / màj / suppression de `post` et `page` (filtrable via `lcds_cache_content_post_types`) ; création / édition / suppression de termes |
-| `Menus` | mise à jour d'un menu (`wp_update_nav_menu`) |
-| `Default` | jamais automatiquement (seulement `flush_all()` ou le TTL) |
-| *(tous)* | changement de thème (`switch_theme`) |
-
-### Déclarer une clé
-
-Les clés sont définies dans `enums/LcdsCacheKey.php` — **source unique de
-vérité** : chaque `case` porte son nom, son TTL (`ttl()`) et son groupe
-(`group()`). Pour en ajouter une :
-
-1. Ajouter un `case` et son bras dans **chaque** `match` :
-   ```php
-   case HomeSlider = 'home_slider';
-   // dans ttl()   : self::HomeSlider => 15 * MINUTE_IN_SECONDS,
-   // dans group() : self::HomeSlider => LcdsCacheGroup::Content,
-   ```
-   > Oublier le `ttl()` et/ou le `group()` lève `UnhandledMatchError`
-   > (fail-fast) : une clé a donc **toujours** un TTL et un groupe. La suite Pest
-   > (`tests/Unit/CacheKeyTest.php`) transforme cet oubli en échec de CI.
-2. L'utiliser : `lcds_cache_remember(LcdsCacheKey::HomeSlider, $callback);`
-
-### Déclarer un groupe
-
-1. Ajouter un cas à `enums/LcdsCacheGroup.php` :
-   ```php
-   case Practitioners = 'practitioners';
-   ```
-2. Câbler son invalidation dans `cache/invalidation.php` :
-   ```php
-   add_action('save_post_practitioner', function () {
-       lcds_cache_flush_group(LcdsCacheGroup::Practitioners);
-   });
-   ```
-3. Y rattacher une clé dans `LcdsCacheKey`.
-
-### Conventions
-
-- **TTL > 0 obligatoire** (un transient sans expiration serait chargé en autoload
-  à chaque requête).
-- Cacher des **scalaires / tableaux**, **pas** d'objets `WP_Post` / `WP_Query`
-  (lourds à sérialiser, état potentiellement périmé).
-- Le cache est **opportuniste** : la valeur peut disparaître à tout moment ; le
-  callback doit toujours pouvoir la recalculer. **Jamais** d'unique source de vérité.
-- **Pas de clé ré-entrante** : un callback ne doit pas re-`remember` sa propre clé.
-- Bannir `posts_per_page => -1` / `numberposts => -1` dans les requêtes cachées.
+Conventions du module, à tenir : **TTL > 0**, des **scalaires et tableaux**
+(jamais `WP_Post` ni `WP_Query`), jamais `posts_per_page => -1`, un callback qui
+peut toujours recalculer la valeur.
 
 ---
 
@@ -136,10 +73,11 @@ Le plugin est **fourni mais désactivé** (`WP_CACHE='false'`). Pour l'activer :
   conséquence (mode « mobile support », clés par langue), sinon la première
   version générée est renvoyée à tout le monde.
 
-**Purge** après un déploiement ou une grosse mise à jour de contenu :
+**Purge** après un déploiement ou une grosse mise à jour de contenu (le
+déploiement la lance lui-même) — cache applicatif et pages ensemble :
 
 ```bash
-docker compose exec php wp eval 'wp_cache_clear_cache();' --allow-root
+docker compose exec php wp rapkalin-cache flush --allow-root
 ```
 
 ---

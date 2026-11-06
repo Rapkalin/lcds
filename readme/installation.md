@@ -25,6 +25,12 @@ ln -nsf shared/.env .env      # docker compose lit le .env à la racine
 docker compose up -d
 ```
 
+> **Avant `docker compose up` : `auth.json` à la racine du dépôt** (ignoré par
+> Git). Les modules `rapkalin-*` viennent de dépôts GitHub privés : sans jeton,
+> le `composer install` du premier démarrage échoue. Contenu
+> `{"github-oauth":{"github.com":"<jeton>"}}`, jeton *fine-grained* en lecture
+> seule sur ces dépôts — voir [`deploiement.md`](deploiement.md).
+
 > **Pourquoi `shared/` ?** Ce dossier porte tout ce qui ne doit **jamais** être
 > écrasé par un déploiement ni versionné : le `.env`, les plugins sous licence
 > et, en production, les médias et le cache. Le lien `.env → shared/.env`
@@ -143,6 +149,6 @@ que `SMTP_HOST` y est renseigné — voir [`email.md`](email.md).
 ## Sans Docker (non recommandé)
 
 Le projet reste utilisable sur un Apache natif : `DocumentRoot` sur `website/`,
-`AllowOverride All`, PHP 8.4 ou plus, et `DB_HOST='localhost'` dans le `.env`. Aucune
+`AllowOverride All`, PHP 8.5 ou plus, et `DB_HOST='localhost'` dans le `.env`. Aucune
 partie du code ne dépend de Docker. C'est simplement une configuration de plus à
 maintenir à la main.

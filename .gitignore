@@ -35,15 +35,14 @@ website/app/upgrade
 bin/seed-demo.sh
 website/app/mu-plugins/lcds-local-demo.php
 
-# mu-plugins : les modules installés par Composer sont ignorés, les nôtres sont
-# versionnés par exception. AJOUTER UN MODULE = AJOUTER SA NÉGATION ICI, sinon
-# son fichier d'entrée part au déploiement sans les fichiers qu'il requiert, et
-# le site tombe en erreur fatale sur toutes les pages.
+# mu-plugins : les modules installés par Composer sont ignorés — dont les
+# modules maison rapkalin-* (dépôts privés, voir readme/deploiement.md). Les
+# dossiers propres à LCDS sont versionnés par exception. AJOUTER UN DOSSIER =
+# AJOUTER SA NÉGATION ICI, sinon son fichier d'entrée part au déploiement sans
+# les fichiers qu'il requiert, et le site tombe en erreur fatale sur toutes les
+# pages.
 website/app/mu-plugins/*/
-!website/app/mu-plugins/enums/
-!website/app/mu-plugins/cache/
 !website/app/mu-plugins/webp/
-!website/app/mu-plugins/rapkalin-mail/
 
 # Drop-ins générés par WP Super Cache. À committer une fois générés si le
 # cache pleine page est activé sur le projet — voir readme/cache.md.

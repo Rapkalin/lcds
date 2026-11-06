@@ -162,6 +162,29 @@ est chiffré en base — voir [`email.md`](email.md).
 
 Voir [`ci-cd.md`](ci-cd.md).
 
+## Connexion et journaux — module `rapkalin-security`
+
+Paquet Composer privé depuis la 4.0.0 (voir [`deploiement.md`](deploiement.md)) ;
+le détail est dans son `README.md`. Ce qu'il change pour LCDS :
+
+| Mesure | Détail |
+| --- | --- |
+| **Tentatives limitées** | Blocage temporaire après plusieurs échecs depuis une même adresse IP (plus tôt) ou sur un même identifiant. Pendant le blocage, même le bon mot de passe est refusé, avec un message qui le dit — il remplace alors le message générique du thème (`inc/security.php`), qui reste en place sinon. Adresse et identifiant **hachés**, oubliés à la fin du blocage |
+| **Raccourcis coupés** | `/login`, `/admin`, `/dashboard`, `/wp-login.php`, `/wp-admin` répondent **404** (mesuré en local le 06/11/2026). La connexion se fait sur `/wordpress-core/wp-login.php` — ou sur l'adresse personnalisée |
+| **Adresse de connexion personnalisée** | `LOGIN_SLUG` dans le `.env` (voir `.env.example`), **vide par défaut** : connexion standard. Renseignée, l'adresse réelle et l'admin pour un visiteur déconnecté répondent 404. Différente par environnement, à noter : elle vit dans `shared/.env` |
+| **Journaux** | *Comptes → Connexions*, *Outils → Activité*, *Outils → Journal* (erreurs PHP), administrateurs seulement — voir [`roles.md`](roles.md) |
+
+> L'adresse personnalisée est de la **dissimulation, pas un verrou** : elle
+> réduit le bruit des robots. La protection réelle est la limitation des
+> tentatives. Derrière un proxy ou un CDN, tous les visiteurs partageraient la
+> même adresse IP : la limite par IP serait alors à revoir.
+
+**PHP ne garde qu'un gestionnaire d'erreurs.** Le filtre temporaire des
+dépréciations tierces (`mu-plugins/lcds-third-party-deprecations.php`) remplace
+celui du journal des erreurs, chargé avant lui : il lui **rend** donc tous les
+autres niveaux. Sans ça, en développement, *Outils → Journal* ne recevait plus
+rien (constaté, puis vérifié par `bin/qa-front.sh`).
+
 ## Consentement aux cookies
 
 Le site ne dépose **aucun traceur** tant qu'aucun service tiers n'est intégré.

@@ -15,6 +15,8 @@
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>website/app/mu-plugins/bedrock-autoloader.php</exclude-pattern>
     <exclude-pattern>website/app/mu-plugins/bedrock-disallow-indexing/*</exclude-pattern>
+    <!-- Composer packages, checked in their own repositories. -->
+    <exclude-pattern>website/app/mu-plugins/rapkalin-*</exclude-pattern>
 
     <arg name="colors"/>
     <arg value="sp"/>
