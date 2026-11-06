@@ -7,6 +7,35 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.4.1
+
+### Sécurité et maintenance
+
+- **WordPress passe en 7.1.4.** Mises à jour de correctif de **Yoast SEO**
+  (28.8), **WP Super Cache** (3.1.5) et de `vlucas/phpdotenv` (5.8.0).
+  Base de données déjà à jour, aucune migration.
+- Outils de développement à jour : PHPStan 2.3.5, Slevomat 8.31.3,
+  Symfony 8.1, et côté front webpack 5.112.2, webpack-cli 7.3.1, Babel 8.1,
+  Sass 1.108. **Le CSS compilé est identique** à la règle près ; le JavaScript
+  ne change que par les fonctions d'aide que Babel injecte.
+- `composer audit` et `npm audit` : aucune vulnérabilité.
+
+### PHP 8.5
+
+- **Le code du projet est vérifié propre en PHP 8.5** : aucune dépréciation à
+  la compilation sur ses 114 fichiers, aucune à l'exécution sur le front et
+  l'administration, et la suite de tests passe en 8.5.12 comme en 8.4.27
+  (plancher des serveurs).
+- **Les deux filtres temporaires de dépréciations restent nécessaires** :
+  Yoast SEO 28.8 et WP-CLI 2.12.0, leurs dernières versions, émettent toujours
+  leurs avis en PHP 8.5.
+
+### Contribution
+
+- Le bloc CSP de `bin/qa-front.sh` pouvait passer au rouge sans raison : la
+  suppression du profil Chrome temporaire échouait parfois et emportait les
+  résultats du groupe en cours.
+
 ## 3.4.0
 
 ### Ajouté

@@ -54,7 +54,14 @@ const launchChrome = () => new Promise((resolve, reject) => {
                 close: () => new Promise((done) => {
                     chrome.removeAllListeners("exit");
                     chrome.once("exit", () => {
-                        rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+                        // Chrome's helper processes may still be writing to the
+                        // profile: a leftover temp dir must not fail the campaign.
+                        try {
+                            rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+                        } catch {
+                            // Left to the OS temp cleanup.
+                        }
+
                         done();
                     });
                     chrome.kill();
@@ -205,4 +212,5 @@ try {
     await chrome.close();
 }
 
-process.exit(hasFailure ? 1 : 0);
+// `exitCode`, not `exit()`: output piped to the shell must be flushed first.
+process.exitCode = hasFailure ? 1 : 0;

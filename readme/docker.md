@@ -126,7 +126,9 @@ la base à la souris.
 
 PHP 8.5 déprécie une syntaxe encore présente dans **Yoast SEO 28.7** (`null`
 comme clé de tableau) et dans le phar **WP-CLI 2.12.0** (`case …;` au lieu de
-`case …:`). Ce sont leurs dernières versions au 23/10/2026. En développement,
+`case …:`). Ce sont leurs dernières versions au 23/10/2026. **Revérifié le
+06/11/2026 avec Yoast 28.8** : la dépréciation est toujours là (146 avis sur un
+parcours du front et de l'administration), WP-CLI n'a rien publié depuis. En développement,
 `WP_DEBUG_DISPLAY` imprime ces avis **dans le HTML** : la mise en page casse et
 `bin/qa-front.sh` passe au rouge (13 blocs au lieu d'un, mesuré).
 
