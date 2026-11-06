@@ -37,6 +37,13 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
   autorisées (`'inline-speculation-rules'`), sans ouvrir la porte à aucun autre
   script inline.
 
+### Déploiement
+
+- **À reporter à la main dans `shared/.htaccess`** sur chaque serveur déjà en
+  place (préprod) : la ligne `Content-Security-Policy-Report-Only` change
+  (`'inline-speculation-rules'` et `frame-src`). Le serveur sert ce fichier, pas
+  celui du dépôt ; un serveur neuf l'amorce tout seul au premier déploiement.
+
 ### Contribution
 
 - **`bin/qa-front.sh` relève les violations de CSP et les erreurs JavaScript**

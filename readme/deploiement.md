@@ -416,9 +416,12 @@ un point d'entrée non authentifié en ligne.
 - **OPcache.** Il n'est pas vidé par le déploiement. Sans rechargement de
   PHP-FPM, l'ancien code continue de tourner. La commande est en commentaire à
   la fin de `deploy.yml`, à activer avec celle de l'hébergeur.
-- **`.htaccess` est versionné**, contrairement à code-cookie qui le prend dans
-  `shared/`. Il porte les en-têtes de sécurité et la CSP : c'est le dépôt qui
-  fait foi. Une modification faite directement sur le serveur (ou par un
-  `wp rewrite flush --hard`) sera **écrasée au déploiement suivant**.
+- **Le `.htaccess` servi est `shared/.htaccess`**, pas le fichier versionné :
+  le déploiement le remplace par un lien vers `shared/`, pour que chaque
+  environnement garde ses propres directives (mot de passe de la préprod). Le
+  fichier du dépôt n'amorce `shared/` qu'au **premier** déploiement ; ensuite,
+  toute divergence est seulement signalée dans le log (`!!! ATTENTION`).
+  **Une modification des en-têtes ou de la CSP doit donc être reportée à la main
+  sur chaque serveur déjà en place** — voir [`securite.md`](securite.md).
 - **La base de données n'est jamais touchée** par le déploiement. Migration de
   contenu, `search-replace` et imports restent manuels.
