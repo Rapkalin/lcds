@@ -57,6 +57,30 @@
     background: var.$blue;
   }
 
+  // Une iframe n'a pas d'`object-fit` : elle est dimensionnée sur la boîte
+  // (unités de conteneur) pour la couvrir en 16:9, puis centrée. Le surplus est
+  // rogné, comme le ferait `cover`.
+  &__youtube {
+    container-type: size;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var.$fade;
+
+    &.is-ready {
+      opacity: 1;
+    }
+
+    iframe {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100cqw, 100cqh * 16 / 9);
+      height: max(100cqh, 100cqw * 9 / 16);
+      border: 0;
+      transform: translate(-50%, -50%);
+    }
+  }
+
   /* -------------------------------------------------------------------------
    * Bouton d'arrêt de la vidéo.
    *

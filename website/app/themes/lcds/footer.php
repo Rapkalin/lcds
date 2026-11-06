@@ -90,6 +90,12 @@ $visual = $reveal === 0 ? '' : lcds_render_image($reveal, [
                 <?php lcds_footer_nav(); ?>
                 <?php lcds_footer_legal(); ?>
 
+                <?php if (lcds_has_consent_manager()) : ?>
+                    <button class="site-footer__consent" type="button" data-consent-manager hidden>
+                        <?php esc_html_e('Gérer les cookies', 'lcds'); ?>
+                    </button>
+                <?php endif; ?>
+
                 <?php if ($copyright !== '' || lcds_site_version() !== '') : ?>
                     <p class="site-footer__copyright">
                         <?php if ($copyright !== '') : ?>

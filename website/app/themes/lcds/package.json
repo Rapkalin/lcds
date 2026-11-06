@@ -16,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "countup.js": "^2.10.1",
+    "tarteaucitronjs": "1.37.0",
     "webpack": "^5.112.1",
     "webpack-cli": "^7.2.3"
   },

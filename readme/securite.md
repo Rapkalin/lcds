@@ -91,8 +91,16 @@ CSP livrée :
 ```
 default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
 img-src 'self' data:; font-src 'self'; connect-src 'self';
+frame-src https://www.youtube-nocookie.com;
 frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'
 ```
+
+- **`frame-src`** n'ouvre que le lecteur YouTube du hero, et seulement sur le
+  domaine `youtube-nocookie.com`. Ce domaine **ne dispense pas de
+  consentement** : il ne dépose pas de cookie avant la lecture, mais écrit des
+  identifiants dans le stockage local et transmet l'adresse IP du visiteur à
+  Google. L'iframe n'est donc créée qu'après l'accord du visiteur, recueilli
+  par tarteaucitron.js (voir plus bas).
 
 - **`script-src 'self'` strict** est tenable : le thème ne charge **aucun script
   tiers**, et l'emoji du cœur (script inline) est désactivé par
@@ -146,3 +154,29 @@ est chiffré en base — voir [`email.md`](email.md).
   La couverture PHP repose sur PHPStan.
 
 Voir [`ci-cd.md`](ci-cd.md).
+
+## Consentement aux cookies
+
+Le site ne dépose **aucun traceur** tant qu'aucun service tiers n'est intégré.
+Le seul aujourd'hui est la vidéo YouTube du hero, que le contributeur peut
+choisir à la place d'un fichier.
+
+- **Outil : tarteaucitron.js** (licence MIT), dépendance npm du thème. Le build
+  recopie ses fichiers minifiés dans `dist/tarteaucitron/` : il charge sa
+  langue, ses services et sa feuille depuis le dossier de son propre script, et
+  `node_modules` ne part pas au déploiement. Tout est servi par le site, donc
+  compatible avec `script-src 'self'`. Aucun appel vers les serveurs de
+  tarteaucitron : ils ne servent qu'à l'offre payante, avec une clé que le site
+  n'a pas.
+- **Chargé seulement là où il sert** : le hero l'appelle
+  (`lcds_enqueue_consent_manager()`) quand il rend une vidéo YouTube. Les autres
+  pages n'ont ni bandeau ni script.
+- **Refuser est aussi simple qu'accepter** (deux boutons de même poids), le
+  choix est mémorisé, et le lien « Gérer les cookies » du pied de page permet de
+  le **retirer** à tout moment. Ce lien n'apparaît que sur les pages qui
+  chargent le gestionnaire.
+- **Ajouter un service** (mesure d'audience, carte…) = l'ajouter à la liste
+  `tarteaucitron.job` dans `initConsentManager()` (`assets/scripts/app.js`),
+  appeler `lcds_enqueue_consent_manager()` sur les pages concernées, et ouvrir
+  la CSP au domaine du service.
+

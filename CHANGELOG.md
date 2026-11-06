@@ -7,6 +7,32 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 3.4.0
+
+### Ajouté
+
+- **La vidéo de fond du hero peut venir de YouTube.** Dans l'administration, un
+  choix « Provenance de la vidéo » propose « Fichier de la médiathèque » ou
+  « Vidéo YouTube ». Pour YouTube, on colle l'adresse de la vidéo ; un lien qui
+  ne désigne pas une vidéo est refusé à l'enregistrement. La vidéo est lue sur
+  le domaine sans cookie `youtube-nocookie.com`, en boucle, sans son, et le
+  bouton pause du hero fonctionne comme pour un fichier.
+- **Bandeau de consentement aux cookies** (tarteaucitron.js, gratuit, hébergé
+  par le site), affiché **uniquement** sur les pages qui intègrent une vidéo
+  YouTube. Tant que le visiteur n'a pas accepté, la vidéo n'est pas chargée et
+  il voit la photo. Un lien « Gérer les cookies » dans le pied de page permet
+  de revenir sur son choix.
+
+### Modifié
+
+- **Les fichiers vidéo du hero sont limités à 10 Mo.** Les consignes du champ
+  recommandent 5 à 8 Mo (MP4 H.264, sans son, 1080p, 10 à 20 secondes).
+
+### Sécurité
+
+- La CSP autorise l'intégration de `https://www.youtube-nocookie.com`
+  (`frame-src`), et rien d'autre.
+
 ## 3.3.1
 
 ### Sécurité

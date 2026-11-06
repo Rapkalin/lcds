@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const dev = process.env.NODE_ENV === "development";
 const TerserPlugin = require("terser-webpack-plugin");
@@ -22,6 +23,30 @@ let cssLoader = [
         },
     },
 ]
+
+// tarteaucitron charge ces fichiers depuis le dossier de son script, et
+// node_modules ne part pas au déploiement : ils sont recopiés dans dist/.
+const CONSENT_MANAGER_FILES = [
+    'tarteaucitron.min.js',
+    'tarteaucitron.services.min.js',
+    'lang/tarteaucitron.fr.min.js',
+    'css/tarteaucitron.min.css',
+    'LICENSE',
+];
+
+class CopyConsentManager {
+    apply(compiler) {
+        compiler.hooks.afterEmit.tap('CopyConsentManager', () => {
+            const source = path.dirname(require.resolve('tarteaucitronjs/package.json'));
+            const target = path.resolve(__dirname, 'dist/tarteaucitron');
+
+            for (const file of CONSENT_MANAGER_FILES) {
+                fs.mkdirSync(path.dirname(path.join(target, file)), { recursive: true });
+                fs.copyFileSync(path.join(source, file), path.join(target, file));
+            }
+        });
+    }
+}
 
 let config = {
     entry: './assets/scripts/app.js',
@@ -68,6 +93,7 @@ let config = {
         new MiniCssExtractPlugin({
             filename: "[name].css",
         }),
+        new CopyConsentManager(),
     ],
     resolve: {
         modules: ['node_modules']

@@ -71,23 +71,33 @@ d'écran. Sans lui, la page n'a aucun `h1`.
 
 ### La vidéo du hero
 
-Le hero accepte une **vidéo de fond** à la place de la photo, téléversée en
-médiathèque comme n'importe quel fichier — aucun lien YouTube, aucun service
-tiers, donc aucun cookie à déclarer.
+Le hero accepte une **vidéo de fond** à la place de la photo. Le contributeur
+choisit sa **provenance** :
+
+- **Fichier de la médiathèque** (recommandé) : il joue pour tous les visiteurs,
+  sans cookie ni service tiers.
+- **Vidéo YouTube** : on colle l'adresse de la vidéo. Elle est lue sur le
+  domaine `youtube-nocookie.com`, mais **seulement après que le visiteur a
+  accepté les cookies de YouTube** dans le bandeau de consentement. Sans cet
+  accord, il voit la photo. YouTube affiche aussi son logo, et brièvement le
+  titre de la vidéo ou ses boutons de lecture : on ne peut pas les masquer.
 
 **La photo reste obligatoire : elle devient l'image d'attente.** C'est elle
 qu'on voit pendant le chargement, c'est elle que voient les visiteurs qui ont
-demandé moins d'animations dans leur système, et c'est elle qui reste si le
-navigateur refuse de lancer la lecture. Le hero n'est donc jamais vide.
+demandé moins d'animations dans leur système ou refusé les cookies de YouTube,
+et c'est elle qui reste si le navigateur refuse de lancer la lecture. Le hero
+n'est donc jamais vide.
 
 **La vidéo joue en boucle et sans son**, et un bouton posé en bas à gauche
 permet de l'arrêter : au-delà de cinq secondes, un mouvement automatique doit
 pouvoir être mis en pause (RGAA, critère 13.8 / WCAG 2.2.2).
 
-**Le poids du fichier part en entier chez le visiteur.** Pas de transcodage, pas
-de qualité adaptative : une vidéo de 30 Mo est une vidéo de 30 Mo pour tout le
-monde, y compris en 4G. Viser quelques mégaoctets, en MP4 (H.264), au cadrage de
-la photo.
+**Un fichier part en entier chez le visiteur.** Pas de transcodage, pas de
+qualité adaptative : une vidéo de 30 Mo est une vidéo de 30 Mo pour tout le
+monde, y compris en 4G. Le champ refuse donc tout fichier de **plus de 10 Mo**.
+Viser **5 à 8 Mo** : MP4 (H.264), sans piste audio, 1080p au plus, 10 à
+20 secondes, au cadrage de la photo. La limite de l'hébergeur (64 Mo en local)
+ne sert alors jamais.
 
 ### Les formes de cadre
 

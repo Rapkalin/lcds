@@ -10,6 +10,9 @@
  *   video      int        Vidéo de fond. Posée, elle REMPLACE l'image : celle-ci
  *                         devient son image d'attente, et n'est donc pas rendue
  *                         une seconde fois.
+ *   youtube    string     Identifiant d'une vidéo YouTube, à la place du
+ *                         fichier. L'image reste rendue : la vidéo ne la
+ *                         recouvre qu'après le consentement du visiteur.
  *   thumbnail  int|array  Vignette de la carte, même règle.
  *   label      string     Libellé court de la carte, en capitales.
  *   text       string     Phrase d'accroche de la carte.
@@ -26,6 +29,7 @@ if (! defined('ABSPATH')) {
 
 $image = $args['image'] ?? 0;
 $video = isset($args['video']) ? (int) $args['video'] : 0;
+$youtube = isset($args['youtube']) ? (string) $args['youtube'] : '';
 $thumbnail = $args['thumbnail'] ?? 0;
 $label = isset($args['label']) ? (string) $args['label'] : '';
 $text = isset($args['text']) ? (string) $args['text'] : '';
@@ -58,6 +62,12 @@ $vignette = $thumbnail === 0 ? '' : lcds_render_image($thumbnail, [
     'loading' => 'eager',
 ], 'medium');
 
+$hasMotion = $videoUrl !== '' || $youtube !== '';
+
+if ($youtube !== '') {
+    lcds_enqueue_consent_manager();
+}
+
 $card_tag = $url === '' ? 'div' : 'a';
 ?>
 
@@ -73,7 +83,19 @@ $card_tag = $url === '' ? 'div' : 'a';
             loop
             playsinline
         ></video>
+    <?php else : ?>
+        <?php if ($background !== '') : ?>
+            <?php echo $background; ?>
+        <?php else : ?>
+            <div class="hero__image hero__image--placeholder" aria-hidden="true"></div>
+        <?php endif; ?>
 
+        <?php if ($youtube !== '') : ?>
+            <div class="hero__image hero__youtube" data-hero-youtube="<?php echo esc_attr($youtube); ?>"></div>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if ($hasMotion) : ?>
         <?php /* `hidden` tant que le script n'a pas pris la main : sans lui la vidéo ne joue pas, et un bouton qui n'arrête rien n'est pas un bouton. */ ?>
         <button
             class="hero__motion"
@@ -86,10 +108,6 @@ $card_tag = $url === '' ? 'div' : 'a';
             <?php get_template_part('components/icon-motion'); ?>
             <span class="screen-reader-text" data-hero-motion-label></span>
         </button>
-    <?php elseif ($background !== '') : ?>
-        <?php echo $background; ?>
-    <?php else : ?>
-        <div class="hero__image hero__image--placeholder" aria-hidden="true"></div>
     <?php endif; ?>
 
     <<?php echo $card_tag; ?> class="hero__card"<?php echo $url === '' ? '' : ' href="' . esc_url($url) . '"' . ($isNewTab ? ' target="_blank"' : ''); ?>>

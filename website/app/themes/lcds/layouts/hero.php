@@ -14,9 +14,12 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+$isYoutube = LcdsVideoSource::fromValue(lcds_sub_field('video_source'), LcdsVideoSource::File) === LcdsVideoSource::Youtube;
+
 get_template_part('components/hero', null, [
     'image' => lcds_attachment_id(lcds_sub_field('visuel')),
-    'video' => lcds_attachment_id(lcds_sub_field('video')),
+    'video' => $isYoutube ? 0 : lcds_attachment_id(lcds_sub_field('video')),
+    'youtube' => $isYoutube ? lcds_youtube_id(lcds_sub_field_text('video_youtube')) : '',
     'thumbnail' => lcds_attachment_id(lcds_sub_field('carte_vignette')),
     ...lcds_link(lcds_sub_field('carte_lien')),
     'text' => lcds_sub_field_text('carte_texte'),

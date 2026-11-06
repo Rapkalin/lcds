@@ -19,6 +19,8 @@ require_once __DIR__ . '/enums/LcdsDotColor.php';
 require_once __DIR__ . '/enums/LcdsInfoIcon.php';
 require_once __DIR__ . '/enums/LcdsFocalPoint.php';
 require_once __DIR__ . '/enums/LcdsAdviceSection.php';
+require_once __DIR__ . '/enums/LcdsVideoSource.php';
+require_once __DIR__ . '/youtube.php';
 
 if (! defined('ABSPATH')) {
     exit;
@@ -328,6 +330,33 @@ function lcds_load_focal_points(array $field): array
     return $field;
 }
 add_filter('acf/load_field/key=field_lcds_footer_cadrage', 'lcds_load_focal_points');
+
+/**
+ * @param array $field Définition du champ, telle qu'ACF la charge.
+ */
+function lcds_load_video_sources(array $field): array
+{
+    $field['choices'] = LcdsVideoSource::choices();
+
+    return $field;
+}
+add_filter('acf/load_field/key=field_lcds_hero_video_source', 'lcds_load_video_sources');
+
+/**
+ * @param bool|string $valid Verdict des validations précédentes.
+ * @param mixed $value Valeur saisie.
+ */
+function lcds_validate_youtube_url(bool|string $valid, mixed $value): bool|string
+{
+    if ($valid !== true || ! is_string($value) || trim($value) === '') {
+        return $valid;
+    }
+
+    return lcds_youtube_id($value) === ''
+        ? __('Ce lien ne désigne pas une vidéo YouTube. Copiez l’adresse affichée sur la page de la vidéo.', 'lcds')
+        : true;
+}
+add_filter('acf/validate_value/key=field_lcds_hero_youtube', 'lcds_validate_youtube_url', 10, 2);
 
 /**
  * Migration 3.3.0 : recopie le premier visuel de chaque étape du parcours dans

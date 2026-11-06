@@ -142,3 +142,31 @@ if (!function_exists('theme_lcds_scripts')) {
     }
     add_action('wp_enqueue_scripts', 'theme_lcds_scripts');
 }
+
+const LCDS_CONSENT_MANAGER_SCRIPT = 'dist/tarteaucitron/tarteaucitron.min.js';
+
+/**
+ * Charge le gestionnaire de consentement, sur les seules pages qui intègrent
+ * un service tiers. Appelé depuis le corps de la page : le script part donc en
+ * pied de page, et le pied de page sait s'il doit proposer d'y revenir.
+ */
+function lcds_enqueue_consent_manager(): void
+{
+    // tarteaucitron charge sa langue, ses services et sa feuille depuis le
+    // dossier de SON script : il ne peut pas être fondu dans main.js.
+    wp_enqueue_script(
+        'tarteaucitron',
+        get_template_directory_uri() . '/' . LCDS_CONSENT_MANAGER_SCRIPT,
+        [],
+        theme_lcds_asset_version(LCDS_CONSENT_MANAGER_SCRIPT),
+        [
+            'strategy' => 'defer',
+            'in_footer' => true,
+        ],
+    );
+}
+
+function lcds_has_consent_manager(): bool
+{
+    return wp_script_is('tarteaucitron', 'enqueued');
+}

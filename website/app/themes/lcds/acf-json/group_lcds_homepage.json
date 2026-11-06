@@ -69,14 +69,43 @@
                             "max_size": 0
                         },
                         {
+                            "key": "field_lcds_hero_video_source",
+                            "label": "Provenance de la vidéo",
+                            "name": "video_source",
+                            "aria-label": "",
+                            "type": "button_group",
+                            "instructions": "Un fichier téléversé joue pour tous les visiteurs. Une vidéo YouTube ne joue qu'après que le visiteur a accepté les cookies de YouTube : sinon, il voit la photo.",
+                            "required": 0,
+                            "conditional_logic": false,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "choices": {},
+                            "default_value": "file",
+                            "allow_null": 0,
+                            "other_choice": 0,
+                            "layout": "horizontal",
+                            "return_format": "value"
+                        },
+                        {
                             "key": "field_lcds_hero_video",
                             "label": "Vidéo de fond",
                             "name": "video",
                             "aria-label": "",
                             "type": "file",
-                            "instructions": "Facultative. Posée, elle joue À LA PLACE de la photo : en boucle, sans son, et le visiteur peut l'arrêter par le bouton posé en bas à gauche. MP4 (H.264) de préférence, cadrage et proportions de la photo. Le fichier part en entier chez le visiteur : au-delà de quelques mégaoctets, l'accueil met longtemps à s'animer sur une connexion ordinaire.",
+                            "instructions": "Facultative. Posée, elle joue À LA PLACE de la photo : en boucle, sans son, et le visiteur peut l'arrêter par le bouton posé en bas à gauche. MP4 (H.264) sans piste audio, 1080p au plus, 10 à 20 secondes : viser 5 à 8 Mo, 10 Mo au maximum. Le fichier part en entier chez le visiteur, dès l'arrivée sur l'accueil.",
                             "required": 0,
-                            "conditional_logic": false,
+                            "conditional_logic": [
+                                [
+                                    {
+                                        "field": "field_lcds_hero_video_source",
+                                        "operator": "==",
+                                        "value": "file"
+                                    }
+                                ]
+                            ],
                             "wrapper": {
                                 "width": "",
                                 "class": "",
@@ -85,8 +114,33 @@
                             "return_format": "id",
                             "library": "all",
                             "min_size": 0,
-                            "max_size": 0,
+                            "max_size": 10,
                             "mime_types": "mp4,webm"
+                        },
+                        {
+                            "key": "field_lcds_hero_youtube",
+                            "label": "Lien de la vidéo YouTube",
+                            "name": "video_youtube",
+                            "aria-label": "",
+                            "type": "url",
+                            "instructions": "Adresse de la vidéo, copiée depuis YouTube (par exemple https://www.youtube.com/watch?v=…). Elle joue en boucle et sans son, mais YouTube affiche toujours son logo et, brièvement, le titre de la vidéo.",
+                            "required": 1,
+                            "conditional_logic": [
+                                [
+                                    {
+                                        "field": "field_lcds_hero_video_source",
+                                        "operator": "==",
+                                        "value": "youtube"
+                                    }
+                                ]
+                            ],
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "placeholder": "https://www.youtube.com/watch?v="
                         },
                         {
                             "key": "field_lcds_hero_vignette",
@@ -1130,5 +1184,5 @@
     "display_title": "",
     "allow_ai_access": false,
     "ai_description": "",
-    "modified": 1788618510
+    "modified": 1793973459
 }

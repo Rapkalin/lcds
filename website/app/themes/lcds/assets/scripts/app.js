@@ -1228,18 +1228,11 @@ const initHeaderHeight = () => {
  * Le bouton d'arrêt suit la même règle : PHP le rend `hidden`, et il n'apparaît
  * qu'ici. Un bouton qui n'arrête rien n'est pas un bouton.
  */
-const initHeroMotion = () => {
-    const video = document.querySelector("[data-hero-video]");
-
-    if (video === null) {
-        return;
-    }
-
-    const hero = video.closest(".hero");
+const bindHeroMotion = (hero, player) => {
     const toggle = hero === null ? null : hero.querySelector("[data-hero-motion]");
     const label = toggle === null ? null : toggle.querySelector("[data-hero-motion-label]");
 
-    if (hero === null || toggle === null || label === null) {
+    if (toggle === null || label === null) {
         return;
     }
 
@@ -1260,13 +1253,17 @@ const initHeroMotion = () => {
     // le bouton proposerait d'arrêter une vidéo qui ne joue pas.
     const startPlayback = () => {
         showState(true);
-        video.play().catch(() => showState(false));
+        player.play().catch(() => showState(false));
+    };
+
+    const stopPlayback = () => {
+        player.pause();
+        showState(false);
     };
 
     const applyPreference = () => {
         if (reduceMotion.matches) {
-            video.pause();
-            showState(false);
+            stopPlayback();
 
             return;
         }
@@ -1275,20 +1272,149 @@ const initHeroMotion = () => {
     };
 
     toggle.addEventListener("click", () => {
-        if (video.paused) {
+        if (player.isPaused()) {
             startPlayback();
 
             return;
         }
 
-        video.pause();
-        showState(false);
+        stopPlayback();
     });
 
     reduceMotion.addEventListener("change", applyPreference);
 
     toggle.hidden = false;
     applyPreference();
+};
+
+const initHeroVideo = () => {
+    const video = document.querySelector("[data-hero-video]");
+
+    if (video === null) {
+        return;
+    }
+
+    bindHeroMotion(video.closest(".hero"), {
+        play: () => video.play(),
+        pause: () => video.pause(),
+        isPaused: () => video.paused,
+    });
+};
+
+const YOUTUBE_ORIGIN = "https://www.youtube-nocookie.com";
+
+/**
+ * Lecteur YouTube piloté par messages : le script de l'API IFrame de YouTube
+ * n'est pas chargé, la CSP n'autorise aucun script tiers.
+ *
+ * L'iframe n'est créée qu'à la première lecture, donc jamais sous « animations
+ * réduites » tant que le visiteur ne l'a pas demandée. Un ordre envoyé avant
+ * que le lecteur soit prêt est perdu sans erreur.
+ */
+const createYoutubePlayer = (container) => {
+    const videoId = container.dataset.heroYoutube;
+    let frame = null;
+    let isPaused = true;
+
+    const send = (command) => {
+        frame.contentWindow.postMessage(
+            JSON.stringify({ event: "command", func: command, args: [] }),
+            YOUTUBE_ORIGIN,
+        );
+    };
+
+    const mount = () => {
+        const params = new URLSearchParams({
+            autoplay: "1",
+            mute: "1",
+            loop: "1",
+            // `loop` ne boucle une vidéo seule que si elle est aussi sa propre liste.
+            playlist: videoId,
+            controls: "0",
+            disablekb: "1",
+            playsinline: "1",
+            rel: "0",
+            enablejsapi: "1",
+            origin: window.location.origin,
+        });
+
+        frame = document.createElement("iframe");
+        frame.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(videoId)}?${params}`;
+        frame.title = "";
+        frame.allow = "autoplay; encrypted-media; picture-in-picture";
+        frame.tabIndex = -1;
+        frame.setAttribute("aria-hidden", "true");
+        frame.addEventListener("load", () => container.classList.add("is-ready"), { once: true });
+        container.append(frame);
+    };
+
+    return {
+        play: () => {
+            if (frame === null) {
+                mount();
+            } else {
+                send("playVideo");
+            }
+
+            isPaused = false;
+
+            return Promise.resolve();
+        },
+        pause: () => {
+            if (frame !== null) {
+                send("pauseVideo");
+            }
+
+            isPaused = true;
+        },
+        isPaused: () => isPaused,
+    };
+};
+
+// `youtube_loaded` est émis par tarteaucitron quand le visiteur consent, ou
+// à l'arrivée s'il avait déjà consenti. Écouter AVANT d'appeler son `init`.
+const initHeroYoutube = () => {
+    const container = document.querySelector("[data-hero-youtube]");
+
+    if (container === null) {
+        return;
+    }
+
+    document.addEventListener(
+        "youtube_loaded",
+        () => bindHeroMotion(container.closest(".hero"), createYoutubePlayer(container)),
+        { once: true },
+    );
+};
+
+const initConsentManager = () => {
+    const { tarteaucitron } = window;
+
+    if (tarteaucitron === undefined) {
+        return;
+    }
+
+    tarteaucitron.init({
+        orientation: "bottom",
+        showIcon: false,
+        removeCredit: true,
+        moreInfoLink: false,
+        mandatory: false,
+        googleConsentMode: false,
+        bingConsentMode: false,
+        pianoConsentMode: false,
+        piwikConsentMode: false,
+    });
+
+    tarteaucitron.job = tarteaucitron.job || [];
+    tarteaucitron.job.push("youtube");
+
+    const manager = document.querySelector("[data-consent-manager]");
+
+    if (manager !== null) {
+        manager.addEventListener("click", () => tarteaucitron.userInterface.openPanel());
+        manager.hidden = false;
+    }
 };
 
 const PROTECTED_MEDIA = "img, video";
@@ -1321,5 +1447,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initScrollRails();
     initAccordions();
     initVolets();
-    initHeroMotion();
+    initHeroVideo();
+    initHeroYoutube();
+    initConsentManager();
 });
