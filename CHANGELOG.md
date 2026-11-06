@@ -7,6 +7,15 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 4.0.1
+
+- **`rapkalin-cache` passe en 1.1.0** : dans la barre d'outils, le bouton
+  « Supprimer le Cache » de WP Super Cache n'apparaît plus, seul reste
+  « Vider le cache », qui vide les pages **et** les données. Sans effet tant
+  que le cache de page reste inactif (le plugin est désactivé).
+- `rapkalin-mail` (1.0.0) et `rapkalin-security` (1.2.0) restent à leur
+  dernière version publiée.
+
 ## 4.0.0
 
 Version majeure : le déploiement exige **PHP 8.5** sur le serveur et un

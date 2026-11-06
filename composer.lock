@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "925b84ed0122516140ccafeae949dfd5",
+    "content-hash": "bd4a1acac8c3bd0572a4a43adc7ddf99",
     "packages": [
         {
             "name": "composer/installers",
@@ -494,16 +494,16 @@
         },
         {
             "name": "rapkalin/rapkalin-cache",
-            "version": "v1.0.0",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:Rapkalin/rapkalin-cache.git",
-                "reference": "c4dbc965cd75fae07c8bc52843f3b50743823828"
+                "reference": "87d882dcc093866f1738cb382e41d133961c613f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Rapkalin/rapkalin-cache/zipball/c4dbc965cd75fae07c8bc52843f3b50743823828",
-                "reference": "c4dbc965cd75fae07c8bc52843f3b50743823828",
+                "url": "https://api.github.com/repos/Rapkalin/rapkalin-cache/zipball/87d882dcc093866f1738cb382e41d133961c613f",
+                "reference": "87d882dcc093866f1738cb382e41d133961c613f",
                 "shasum": ""
             },
             "require": {
@@ -554,10 +554,10 @@
             ],
             "description": "Cache layers kept in step: an application cache (versioned transients) and the page cache of WP Super Cache, purged together.",
             "support": {
-                "source": "https://github.com/Rapkalin/rapkalin-cache/tree/v1.0.0",
+                "source": "https://github.com/Rapkalin/rapkalin-cache/tree/1.1.0",
                 "issues": "https://github.com/Rapkalin/rapkalin-cache/issues"
             },
-            "time": "2026-11-06T14:53:28+00:00"
+            "time": "2026-11-06T21:55:33+00:00"
         },
         {
             "name": "rapkalin/rapkalin-mail",
