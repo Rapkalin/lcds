@@ -1435,6 +1435,23 @@ const initMediaProtection = () => {
     document.addEventListener("dragstart", blockOnMedia);
 };
 
+const initFooterReveal = () => {
+    const reveal = document.querySelector(".footer-reveal");
+
+    if (reveal === null) {
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+            reveal.classList.add("is-near");
+            observer.disconnect();
+        }
+    }, { rootMargin: "0px 0px 100% 0px" });
+
+    observer.observe(reveal);
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initMediaProtection();
     initHeaderMenu();
@@ -1450,4 +1467,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initHeroVideo();
     initHeroYoutube();
     initConsentManager();
+    initFooterReveal();
 });

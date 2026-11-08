@@ -7,6 +7,52 @@ elle que le pied de page du site affiche, via `lcds_site_version()`.
 > [`CLAUDE.md`](CLAUDE.md) : une version qui bouge sans entrée ici rend le
 > journal inutile, et une entrée sans version rend la version fausse.
 
+## 4.1.0
+
+Performances, référencement local et GEO, après un audit Lighthouse.
+
+### Avant et après le déploiement
+
+- **Reporter le `.htaccess` à la main dans `shared/.htaccess`** de chaque
+  serveur (le déploiement affiche le diff) : compression de `text/javascript`
+  et cache navigateur d'un an. Sans ce report, ni l'un ni l'autre ne s'applique.
+- **Dans Yoast, sur chaque environnement** : représentation « Organisation »,
+  nom **et logo PNG** (sans logo, aucune donnée d'organisation n'est publiée),
+  puis activer le `llms.txt`. Voir [`readme/seo.md`](readme/seo.md).
+- **Remplir *Réglages → Configuration → Fiche de l'établissement*** et les
+  méta-descriptions des quatre pages.
+- **Mettre à la corbeille « Sample Page » et « Hello world! »** s'ils sont
+  publiés : invisibles dans l'admin (menu *Articles* masqué), ils sont pourtant
+  indexables.
+
+### Ce qui change pour le visiteur
+
+- **Pages plus rapides sur mobile** (Lighthouse local) : performance 80 → 96
+  sur l'accueil, 88-91 → 98-99 ailleurs ; LCP de 4,3 s à 2,7 s sur l'accueil.
+- Le visuel du pied de page n'est plus chargé avant l'approche du pied de
+  page : il était téléchargé d'emblée et pesait sur le premier affichage de
+  toutes les pages. L'effet de volet ne change pas.
+- Polices Inter réduites au latin (271 → 85 Ko de polices) et préchargées.
+- `main.js` est enfin compressé ; les fichiers statiques sont gardés un an
+  par le navigateur.
+
+### Ce qui change pour le contributeur
+
+- Nouveau groupe **« Fiche de l'établissement »** dans *Réglages →
+  Configuration* : adresse, téléphone, horaires. Rien ne s'affiche sur le site :
+  ces informations font du cabinet un `Dentist` dans les données structurées,
+  lues par les moteurs de recherche et les assistants conversationnels.
+- **Le `llms.txt` de Yoast** est écrit à la racine du site et n'est plus
+  effacé par le déploiement.
+
+### Technique
+
+- Deux fois moins de requêtes SQL par page (98-117 → 50-53) : réglages ACF en
+  `autoload` (migration `lcds_autoload_settings()`, jouée par le déploiement)
+  et images préchargées en une requête. Aucune clé de cache applicatif n'est
+  créée : le site n'a aucune liste de contenus à mettre en cache — voir
+  [`readme/cache.md`](readme/cache.md).
+
 ## 4.0.1
 
 - **`rapkalin-cache` passe en 1.1.0** : dans la barre d'outils, le bouton

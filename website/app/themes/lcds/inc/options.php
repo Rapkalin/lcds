@@ -38,9 +38,40 @@ function lcds_register_options_page(): void
         'redirect' => false,
         'update_button' => __('Enregistrer', 'lcds'),
         'updated_message' => __('Configuration enregistrée.', 'lcds'),
+        'autoload' => true,
     ]);
 }
 add_action('acf/init', 'lcds_register_options_page');
+
+/**
+ * Switches the settings already stored to autoload.
+ *
+ * ACF applies `autoload` only when a value is written, and `update_option()`
+ * returns early on an unchanged value: saving the page again would leave every
+ * untouched field outside autoload, one query each on every page.
+ *
+ * @return int Number of options switched.
+ */
+function lcds_autoload_settings(): int
+{
+    global $wpdb;
+
+    $names = $wpdb->get_col($wpdb->prepare(
+        "SELECT option_name FROM {$wpdb->options}
+          WHERE (option_name LIKE %s OR option_name LIKE %s)
+            AND autoload IN ('off', 'no', 'auto-off')",
+        $wpdb->esc_like('options_') . '%',
+        $wpdb->esc_like('_options_') . '%',
+    ));
+
+    if ($names === []) {
+        return 0;
+    }
+
+    wp_set_options_autoload($names, true);
+
+    return count($names);
+}
 
 /**
  * Valeur d'un champ de la page de réglages.

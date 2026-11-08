@@ -1,0 +1,183 @@
+{
+    "key": "group_lcds_business",
+    "title": "Fiche de l'établissement",
+    "fields": [
+        {
+            "key": "field_lcds_business_etablissement",
+            "label": "Fiche de l'établissement",
+            "name": "etablissement",
+            "type": "group",
+            "instructions": "Ces informations ne s'affichent pas sur le site : elles décrivent le cabinet aux moteurs de recherche et aux assistants conversationnels (adresse, téléphone, horaires). L'adresse et la ville sont indispensables, sans elles rien n'est publié.",
+            "required": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "block",
+            "sub_fields": [
+                {
+                    "key": "field_lcds_business_rue",
+                    "label": "Rue",
+                    "name": "rue",
+                    "type": "text",
+                    "instructions": "Numéro et nom de la voie, par exemple « 2 place Saint-Maurice ».",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_business_code_postal",
+                    "label": "Code postal",
+                    "name": "code_postal",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_business_ville",
+                    "label": "Ville",
+                    "name": "ville",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_business_telephone",
+                    "label": "Téléphone",
+                    "name": "telephone",
+                    "type": "text",
+                    "instructions": "Le numéro du secrétariat, par exemple « 04 74 00 00 00 ».",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": ""
+                },
+                {
+                    "key": "field_lcds_business_horaires",
+                    "label": "Horaires d'ouverture",
+                    "name": "horaires",
+                    "type": "repeater",
+                    "instructions": "Une ligne par plage horaire. Une journée coupée par une pause demande deux lignes : matin, puis après-midi.",
+                    "required": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "collapsed": "",
+                    "min": 0,
+                    "max": 0,
+                    "layout": "table",
+                    "button_label": "Ajouter une plage",
+                    "sub_fields": [
+                        {
+                            "key": "field_lcds_business_jours",
+                            "label": "Jours",
+                            "name": "jours",
+                            "type": "checkbox",
+                            "instructions": "",
+                            "required": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "choices": {},
+                            "default_value": [],
+                            "return_format": "value",
+                            "allow_custom": 0,
+                            "layout": "horizontal",
+                            "toggle": 0,
+                            "save_custom": 0
+                        },
+                        {
+                            "key": "field_lcds_business_ouverture",
+                            "label": "Ouverture",
+                            "name": "ouverture",
+                            "type": "time_picker",
+                            "instructions": "",
+                            "required": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "display_format": "H:i",
+                            "return_format": "H:i"
+                        },
+                        {
+                            "key": "field_lcds_business_fermeture",
+                            "label": "Fermeture",
+                            "name": "fermeture",
+                            "type": "time_picker",
+                            "instructions": "",
+                            "required": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "display_format": "H:i",
+                            "return_format": "H:i"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "lcds-settings"
+            }
+        ]
+    ],
+    "menu_order": 2,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Fiche de l'établissement pour les moteurs de recherche.",
+    "show_in_rest": 0,
+    "modified": 1794150000
+}

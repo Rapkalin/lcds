@@ -3385,6 +3385,24 @@ window.runFrontQa = async (win) => {
             Math.abs(fixeHaut - fixeBas) < 1
         );
 
+        // Fixé au bas de la fenêtre, le visuel était téléchargé d'emblée et
+        // compté comme LCP de chaque page sans être vu : il n'est affiché qu'à
+        // l'approche du pied de page.
+        assert(
+            "fixé : le visuel n'est pas affiché avant l'approche du pied de page",
+            trouverRegle(doc, ".footer-reveal__media", (regle) => (
+                regle.style.position === "fixed" && regle.style.display === "none" ? true : null
+            )) === true
+        );
+
+        win.scrollTo({ top: doc.documentElement.scrollHeight, behavior: "instant" });
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        assert(
+            "le visuel est révélé au bas de la page (classe is-near)",
+            revele.classList.contains("is-near")
+        );
+        win.scrollTo({ top: 0, behavior: "instant" });
+
         assert(
             `le visuel est découvert sur la réserve (${round(media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom)}px pour ${round(hauteur)})`,
             media.getBoundingClientRect().bottom - footer.getBoundingClientRect().bottom > hauteur - 4

@@ -9,7 +9,11 @@
  * panneau bleu est donc un volet qui remonte et le découvre, alors que le
  * visuel, lui, reste rigoureusement immobile.
  *
- * Aucun JavaScript : l'effet est une pure géométrie de peinture. Le bloc réserve
+ * L'effet est une pure géométrie de peinture. Le seul JavaScript
+ * (`initFooterReveal`) retarde l'AFFICHAGE du visuel fixé jusqu'à l'approche du
+ * pied de page : fixé au bas de la fenêtre, il était sinon téléchargé d'emblée
+ * et compté comme LCP de chaque page, alors que personne ne le voit avant la
+ * fin du défilement. Sans script, `scripting: none` le rend. Le bloc réserve
  * la hauteur du visuel en bas de page ET n'y peint AUCUN fond — c'est ce trou
  * qui laisse voir le visuel fixé derrière. Partout ailleurs, `.main-content`
  * porte un aplat opaque qui le masque.
@@ -106,6 +110,17 @@
     // automatiques le recentrent dans la largeur de page.
     max-width: var.$page-max;
     margin-inline: auto;
+    display: none;
+  }
+
+  .footer-reveal.is-near .footer-reveal__media {
+    display: block;
+  }
+}
+
+@media (scripting: none) {
+  .footer-reveal__media {
+    display: block;
   }
 }
 

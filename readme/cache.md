@@ -22,7 +22,37 @@ fichier ne décrit que ce qui est propre à LCDS.
 > `LcdsCacheKey`/`LcdsCacheGroup`), **jamais appelée par le thème**. Le module en
 > est la version aboutie : elle a été retirée en 4.0.0.
 
-**État : aucune clé déclarée.** Le module tourne à vide. Ce qu'il fait déjà :
+**État : aucune clé déclarée, et c'est voulu** (relu le 08/11/2026). Le
+modèle de game-france met en cache des **listes de contenus** (`WP_Query`).
+LCDS n'en a aucune : le thème ne fait ni `get_posts` ni `WP_Query`, tout vient
+des champs ACF de quatre pages et de la page d'options. Une clé ne mettrait
+donc rien de coûteux en cache — et une clé posée sur la page d'options serait
+même **fausse** : le module n'invalide pas les données quand on l'enregistre,
+le pied de page resterait périmé jusqu'à l'expiration.
+
+Ce qui coûtait vraiment, mesuré en requêtes SQL par page (accueil / cabinet /
+équipe / conseils / 404) : **98 / 103 / 117 / 91 / 78 → 50 / 53 / 53 / 51 / 38**.
+
+| Cause | Correctif | Gain |
+| --- | --- | --- |
+| La page d'options ACF, lue champ par champ hors `autoload` | `'autoload' => true` sur la page (`inc/options.php`) | −36 à −40 |
+| Chaque image chargée seule (`get_post` + ses métas) | `LcdsAttachmentPrimer` (`inc/images.php`) : les identifiants des champs image ACF sont mis en file, puis préchargés en une requête au premier rendu | −4 à −28 |
+
+> ⚠️ **L'`autoload` d'ACF ne joue qu'à l'ÉCRITURE d'une valeur**, et
+> `update_option()` ne réécrit pas une valeur inchangée : réenregistrer la page
+> laisserait hors `autoload` tout champ non modifié. Les lignes déjà en base
+> sont donc basculées par `lcds_autoload_settings()`, jouée par `bin/init.sh` et
+> par le déploiement. Idempotente.
+>
+> Seul l'enregistrement **depuis l'écran** applique le réglage : une écriture
+> par code (`update_field()`, les scripts `bin/seed-*.php`) range encore la
+> valeur hors `autoload` — constaté le 08/11/2026. La migration suivante la
+> rattrape ; en attendant, la page fait une requête de plus par champ.
+
+Le **gros levier restant** pour le temps de réponse est le cache pleine page
+(§ 2), toujours désactivé.
+
+Ce que le module fait déjà, sans clé :
 
 - le bouton **Vider le cache** dans la barre d'outils, pour les comptes qui
   ont `edit_others_posts` — administrateurs **et contributeurs LCDS** ;

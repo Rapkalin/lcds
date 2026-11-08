@@ -247,7 +247,7 @@ son aboutissement — c'est ce que le code doit garantir, la fin de l'animation
 
 `bin/qa-front.sh` crée son profil sous un `mktemp -d` renouvelé à chaque
 exécution, et ce n'est pas une précaution d'hygiène : **`front.qa.js` est servi
-avec un `Expires` à un mois**, comme tout le JavaScript du site. Un profil
+avec un cache d'un an**, comme tout le JavaScript du site. Un profil
 réutilisé rejoue donc l'ancien pilote, et les assertions qu'on vient d'écrire
 n'existent tout simplement pas.
 

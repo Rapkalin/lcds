@@ -3,8 +3,8 @@
 /**
  * LCDS theme bootstrap.
  *
- * The application cache lives in a mu-plugin (website/app/mu-plugins/lcds-cache.php),
- * not here: it must stay available to WP-CLI, cron and the admin.
+ * The application cache lives in the rapkalin-cache mu-plugin, not here: it
+ * must stay available to WP-CLI, cron and the admin.
  *
  * @package lcds
  */
@@ -19,5 +19,6 @@ require_once __DIR__ . '/inc/acf.php';
 require_once __DIR__ . '/inc/editor.php';
 require_once __DIR__ . '/inc/options.php';
 require_once __DIR__ . '/inc/roles.php';
+require_once __DIR__ . '/inc/business.php';
 require_once __DIR__ . '/inc/seo.php';
 require_once __DIR__ . '/inc/contacts.php';

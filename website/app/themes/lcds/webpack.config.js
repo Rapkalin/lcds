@@ -53,6 +53,9 @@ let config = {
     output: {
         filename: 'main.js',
         path: path.resolve(__dirname, 'dist'),
+        // The font name stays in the file name: inc/setup.php finds the files
+        // to preload by it.
+        assetModuleFilename: '[name].[contenthash:20][ext]',
     },
     watch: dev,
     mode: "development",

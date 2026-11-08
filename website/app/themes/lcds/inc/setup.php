@@ -143,6 +143,30 @@ if (!function_exists('theme_lcds_scripts')) {
     add_action('wp_enqueue_scripts', 'theme_lcds_scripts');
 }
 
+const LCDS_PRELOADED_FONTS = ['Sligoil-Micro', 'Inter-SemiBold', 'Inter-Medium'];
+
+/**
+ * The files are read from the compiled stylesheet: preloading any other URL
+ * than the one it requests would download the font twice.
+ */
+function lcds_preload_fonts(): void
+{
+    $path = get_template_directory() . '/dist/main.css';
+    $stylesheet = is_readable($path) ? (string) file_get_contents($path) : '';
+
+    foreach (LCDS_PRELOADED_FONTS as $font) {
+        if (preg_match('/url\((' . preg_quote($font, '/') . '\.[a-f0-9]+\.woff2)\)/', $stylesheet, $match) !== 1) {
+            continue;
+        }
+
+        printf(
+            '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+            esc_url(get_template_directory_uri() . '/dist/' . $match[1]),
+        );
+    }
+}
+add_action('wp_head', 'lcds_preload_fonts', 2);
+
 const LCDS_CONSENT_MANAGER_SCRIPT = 'dist/tarteaucitron/tarteaucitron.min.js';
 
 /**

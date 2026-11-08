@@ -20,6 +20,7 @@ require_once __DIR__ . '/enums/LcdsInfoIcon.php';
 require_once __DIR__ . '/enums/LcdsFocalPoint.php';
 require_once __DIR__ . '/enums/LcdsAdviceSection.php';
 require_once __DIR__ . '/enums/LcdsVideoSource.php';
+require_once __DIR__ . '/enums/LcdsWeekDay.php';
 require_once __DIR__ . '/youtube.php';
 
 if (! defined('ABSPATH')) {
@@ -400,3 +401,14 @@ function lcds_migrate_journey_visuals(): int
 
     return $migrated;
 }
+
+/**
+ * @param array $field Définition du champ, telle qu'ACF la charge.
+ */
+function lcds_load_week_days(array $field): array
+{
+    $field['choices'] = LcdsWeekDay::choices();
+
+    return $field;
+}
+add_filter('acf/load_field/key=field_lcds_business_jours', 'lcds_load_week_days');

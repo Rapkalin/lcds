@@ -72,20 +72,24 @@
 # Compression des réponses textuelles.
 # -----------------------------------------------------------------------------
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/plain text/html text/css text/xml application/json application/javascript application/xml application/rss+xml application/atom+xml image/svg+xml
+  # text/javascript : le type qu'Apache donne aux .js depuis son mime.types
+  # récent. Sans lui, main.js partait non compressé (constaté le 08/11/2026).
+  AddOutputFilterByType DEFLATE text/plain text/html text/css text/xml text/javascript application/json application/javascript application/xml application/rss+xml application/atom+xml image/svg+xml
 </IfModule>
 
 # -----------------------------------------------------------------------------
-# Cache navigateur des assets statiques. Le build webpack produit des noms
-# stables : purge par déploiement, pas par empreinte. À revoir si un hash de
-# contenu est ajouté au nom des fichiers.
+# Cache navigateur des assets statiques : un an, `immutable`. Tenable parce que
+# chaque URL change avec son contenu : `?ver=` dérivé du mtime pour main.css /
+# main.js, nom haché pour les polices, `?v=` pour les fichiers de tarteaucitron,
+# nom unique pour les uploads. Un asset servi sous une URL FIXE dont le contenu
+# change resterait figé un an chez les visiteurs déjà venus.
 # -----------------------------------------------------------------------------
 <IfModule mod_expires.c>
   <FilesMatch "\.(css|js|jpg|jpeg|gif|png|webp|avif|svg|ico|woff|woff2|ttf|eot|otf|mp4|webm|ogg|ogv|pdf)$">
     ExpiresActive On
-    ExpiresDefault "access plus 1 month"
+    ExpiresDefault "access plus 1 year"
     <IfModule mod_headers.c>
-      Header set Cache-Control "public"
+      Header set Cache-Control "public, max-age=31536000, immutable"
     </IfModule>
   </FilesMatch>
 </IfModule>

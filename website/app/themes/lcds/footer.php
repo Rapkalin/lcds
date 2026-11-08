@@ -7,7 +7,8 @@
  * visuel est FIXÉ au bas de la fenêtre et peint derrière la page : il ne bouge
  * pas, c'est le panneau qui remonte et le découvre, comme un volet.
  *
- * Aucun JavaScript — l'effet est une pure géométrie de peinture. Voir
+ * L'effet est une pure géométrie de peinture ; le seul JavaScript retarde
+ * l'affichage du visuel jusqu'à l'approche du pied de page. Voir
  * assets/styles/partials/footer.scss, qui porte le raisonnement complet.
  *
  * Si l'utilisateur demande à réduire les animations, le visuel défile avec la

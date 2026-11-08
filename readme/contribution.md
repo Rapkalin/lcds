@@ -480,7 +480,8 @@ lien mort — d'où ce jalon plutôt que rien.
 ## « Réglages → Configuration »
 
 Cette page d'options ACF, en sous-menu de *Réglages*, porte ce qui n'appartient
-à aucune page : **Navigation** puis **Pied de page**, dans cet ordre.
+à aucune page : **Navigation**, **Pied de page** puis **Fiche de
+l'établissement**, dans cet ordre.
 
 ### Navigation — la puce de la page courante
 
@@ -558,6 +559,18 @@ L'`object-position` correspondante vit, elle, dans `partials/footer.scss` : ce
 n'est pas une constante, elle compense le débord du visuel sous les coins
 arrondis — voir
 [`../design/figma/nodes/276-1063-footer.md`](../design/figma/nodes/276-1063-footer.md).
+
+### La fiche de l'établissement
+
+Rien de ce groupe ne s'affiche sur le site : il décrit le cabinet aux moteurs
+de recherche et aux assistants conversationnels (données structurées
+`Dentist`, voir [`seo.md`](seo.md)).
+
+| Champ | Ce qu'il porte |
+| --- | --- |
+| Rue, Code postal, Ville | L'adresse du cabinet. **Rue et ville sont indispensables** : sans elles, rien n'est publié |
+| Téléphone | Le numéro du secrétariat |
+| Horaires d'ouverture | Une ligne par plage : jours cochés, ouverture, fermeture. Une journée coupée par une pause demande deux lignes |
 
 ## Ce que lit un contributeur ne parle jamais du code
 

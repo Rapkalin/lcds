@@ -153,6 +153,11 @@ wp eval 'lcds_migrate_journey_visuals();' --allow-root >/dev/null 2>&1 \
     && echo "==> [init] Visuels du parcours vérifiés." \
     || echo "!!! [init] Migration des visuels du parcours échouée (ignoré)."
 
+# Migration 4.1.0 : réglages ACF en autoload. Idempotente.
+wp eval 'lcds_autoload_settings();' --allow-root >/dev/null 2>&1 \
+    && echo "==> [init] Réglages en autoload vérifiés." \
+    || echo "!!! [init] Passage des réglages en autoload échoué (ignoré)."
+
 # -----------------------------------------------------------------------------
 # 6) Navigation : les menus, leur rattachement aux emplacements, et leurs
 #    entrées par défaut. Sans ça l'en-tête sort vide — wp_nav_menu() est appelé

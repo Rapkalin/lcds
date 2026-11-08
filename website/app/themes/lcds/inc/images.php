@@ -30,6 +30,33 @@ if (! defined('ABSPATH')) {
  * @param string           $size  Taille d'image enregistrée (cas attachement).
  * @return string Balisage de l'<img>, chaîne vide s'il n'y a rien à afficher.
  */
+final class LcdsAttachmentPrimer
+{
+    private static array $pending = [];
+
+    public static function queue(mixed $value): mixed
+    {
+        $attachmentId = lcds_attachment_id($value);
+
+        if ($attachmentId > 0) {
+            self::$pending[$attachmentId] = $attachmentId;
+        }
+
+        return $value;
+    }
+
+    public static function prime(): void
+    {
+        if (self::$pending === []) {
+            return;
+        }
+
+        _prime_post_caches(array_values(self::$pending), false, true);
+        self::$pending = [];
+    }
+}
+add_filter('acf/format_value/type=image', [LcdsAttachmentPrimer::class, 'queue']);
+
 function lcds_render_image(int|array|string $image, array $attr = [], string $size = 'large'): string
 {
     $attachment_id = 0;
@@ -41,6 +68,8 @@ function lcds_render_image(int|array|string $image, array $attr = [], string $si
     }
 
     if ($attachment_id > 0) {
+        LcdsAttachmentPrimer::prime();
+
         // Le chargement différé est posé ICI, et il n'est pas redondant avec
         // celui de WordPress. `wp_get_loading_optimization_attributes()` ne
         // décide de `loading` que DANS la boucle — `in_the_loop()`. Les

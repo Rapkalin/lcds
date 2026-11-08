@@ -98,3 +98,24 @@ function lcds_seo_metabox_below_content(): string
     return 'low';
 }
 add_filter('wpseo_metabox_prio', 'lcds_seo_metabox_below_content');
+
+/**
+ * @param array $data Organisation piece of Yoast's schema graph.
+ */
+function lcds_dentist_schema(array $data): array
+{
+    $business = lcds_option('etablissement');
+
+    return array_merge($data, lcds_business_schema(is_array($business) ? $business : []));
+}
+add_filter('wpseo_schema_organization', 'lcds_dentist_schema');
+
+/**
+ * Yoast derives the path from `get_home_path()`, which resolves to `/` under
+ * WP-CLI: a system cron running through it would never write the file.
+ */
+function lcds_llms_txt_path(): string
+{
+    return dirname(ABSPATH);
+}
+add_filter('wpseo_llmstxt_filesystem_path', 'lcds_llms_txt_path');

@@ -573,8 +573,8 @@ silence. `minmax(0, …)` rend le comportement explicite.
 | Police | Rôle | Fichier servi | Origine | Licence |
 | --- | --- | --- | --- | --- |
 | [Sligoil](https://velvetyne.fr/fonts/sligoil/) (coupe *Micro*) | Titres | `Sligoil-Micro.woff2` | Velvetyne | SIL OFL 1.1 |
-| [Inter](https://github.com/rsms/inter) Medium | Boutons d'action | `Inter-Medium.woff2` | release `v4.1` | SIL OFL 1.1 |
-| Inter SemiBold | Corps de texte | `Inter-SemiBold.woff2` | release `v4.1` | SIL OFL 1.1 |
+| [Inter](https://github.com/rsms/inter) Medium | Boutons d'action | `Inter-Medium.woff2` | release `v4.1`, sous-ensemble | SIL OFL 1.1 |
+| Inter SemiBold | Corps de texte | `Inter-SemiBold.woff2` | release `v4.1`, sous-ensemble | SIL OFL 1.1 |
 
 Les deux licences voyagent avec les fichiers, dans `assets/fonts/` : l'OFL exige
 que l'avis de copyright accompagne toute redistribution, et un thème déployé en
@@ -606,7 +606,34 @@ Sligoil existent et ne sont pas servies : aucune maquette ne les emploie.
 
 `woff2` seul, sans repli `woff` : il est pris en charge partout depuis 2017, et
 le `woff` de Sligoil pèse 10 % de plus pour ne servir personne. Coût total :
-**271 Ko**, servis avec un `Expires` d'un mois.
+**85 Ko**, servis avec un cache d'un an `immutable`.
+
+### Inter réduite au latin, Sligoil intacte
+
+Les fichiers Inter de la release couvrent tous les alphabets : 114 Ko chacun.
+Ceux de `assets/fonts/` sont réduits au **latin et au latin étendu A**
+(22 Ko) — couverture vérifiée sur tout le texte du site et de la base le
+08/11/2026 : seul l'emoji 🦷 manque, et il manquait déjà à la police complète.
+Le latin étendu A garde les noms propres (ł, ő, č…) qu'un contributeur
+saisira un jour. Pour régénérer depuis la release :
+
+```bash
+pip install fonttools brotli
+pyftsubset Inter-SemiBold.woff2 --flavor=woff2 --output-file=assets/fonts/Inter-SemiBold.woff2 \
+  --unicodes="U+0000-00FF,U+0100-017F,U+0131,U+0152-0153,U+0178,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+```
+
+**Sligoil n'est PAS réduite** : sa licence déclare un *Reserved Font Name*, et
+un sous-ensemble est une version modifiée au sens de l'OFL — il devrait changer
+de nom. Inter n'en déclare aucun.
+
+### Préchargement
+
+Les trois polices sont préchargées (`inc/setup.php`, `lcds_preload_fonts()`),
+sans quoi le navigateur ne les découvre qu'après avoir lu `main.css`. Les URL
+sont lues **dans la feuille compilée** : précharger une autre URL que celle
+qu'elle demande téléchargerait la police deux fois. C'est pour cela que webpack
+garde le nom de la police dans celui du fichier (`assetModuleFilename`).
 
 > **LIMITE ASSUMÉE : pas de 700 ni d'italique.** L'éditeur du contributeur porte
 > les boutons *gras* et *italique* ; ce qu'il écrira sera **synthétisé** par le
@@ -653,11 +680,12 @@ en page saute d'autant moins.
 ### Aucune règle webpack à ajouter
 
 **Ne pas ajouter de règle `asset/resource` pour les polices dans
-`webpack.config.js`.** Webpack 5 les gère déjà, en leur donnant un nom dérivé de
-leur contenu — vérifié : le build émet `3ce809b52c986a5c3671.woff2` et les
-trois fichiers répondent 200. Ce hachage est indispensable : `.htaccess` sert
-`dist/` avec un `Expires` à un mois, donc un nom de fichier fixe figerait la
-police chez les visiteurs déjà venus.
+`webpack.config.js`.** Webpack 5 les gère déjà ; seul leur NOM est réglé, par
+`output.assetModuleFilename` : `[name].[contenthash:20][ext]`, par exemple
+`Inter-SemiBold.209dd2c8ec4cbeb43c96.woff2`. Le nom sert au préchargement, le
+hachage est indispensable : `.htaccess` sert `dist/` avec un cache d'un an
+`immutable`, donc un nom de fichier fixe figerait la police chez les visiteurs
+déjà venus.
 
 Les `@font-face` vivent dans `basics/fonts.scss`, importé en TÊTE d'`app.scss`.
 Le chemin est `../../fonts/`, relatif au partiel et non à `app.scss` :
@@ -666,10 +694,16 @@ dans `assets/styles/fonts/`.
 
 ## Invalidation du cache des assets
 
-`main.css` et `main.js` gardent un nom fixe et sont servis avec le même
-`Expires` d'un mois. WordPress n'ajoutait que `?ver=` suivi de **sa propre
-version** : une mise en production ne parvenait donc pas aux visiteurs déjà
-venus, jusqu'à trente jours.
+`main.css` et `main.js` gardent un nom fixe et sont servis, comme tous les
+assets statiques, avec un cache d'**un an `immutable`** (`website/.htaccess`).
+WordPress n'ajoutait que `?ver=` suivi de **sa propre version** : une mise en
+production ne parvenait donc pas aux visiteurs déjà venus.
+
+> ⚠️ Le cache d'un an ne tient que parce que **chaque URL change avec son
+> contenu** : `?ver=` pour `main.css`/`main.js`, nom haché pour les polices,
+> `?v=` pour les fichiers de tarteaucitron, nom unique pour les médias. Un
+> fichier servi sous une URL fixe dont le contenu change resterait figé un an
+> chez les visiteurs.
 
 `theme_lcds_asset_version()` (dans `inc/setup.php`) dérive la version de la date
 de modification du fichier. Tout nouvel asset compilé mis en file doit passer
